@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Runalis - Original Land Expanded</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="mainMenu" class="screen active">
+    <div class="menu-card">
+      <h1>Runalis</h1>
+      <p class="subtitle">Dark fantasy life-skill RPG prototype</p>
+      <div class="menu-section">
+        <label for="profileName">New Profile</label>
+        <div class="inline-row">
+          <input id="profileName" maxlength="22" placeholder="Wayfarer name" />
+          <button id="createProfileBtn">Create</button>
+        </div>
+      </div>
+      <div class="menu-section">
+        <h2>Load Profile</h2>
+        <div id="profileList" class="profile-list"></div>
+      </div>
+      <p class="fineprint">Original Runalis land and canvas art style restored. This version only upgrades humans/player readability and adds profile saving.</p>
+    </div>
+  </div>
+
+  <div id="app" class="screen">
+    <header class="topbar">
+      <div>
+        <h1>Runalis</h1>
+        <p>Original land expanded • <span id="activeProfileLabel">No profile</span></p>
+      </div>
+      <div class="top-actions">
+        <button id="saveBtn">Save</button>
+        <button id="loadBtn">Load</button>
+        <button id="menuBtn">Menu</button>
+      </div>
+    </header>
+
+    <main class="game-shell">
+      <section class="viewport-card">
+        <canvas id="game" width="960" height="600"></canvas>
+        <div id="interactionHint" class="interaction-hint">Move with WASD / Arrows • E interact • Space attack • 1-4 abilities • ESC pause</div>
+      </section>
+
+      <aside class="panel">
+        <div class="tabs">
+          <button class="tab active" data-tab="character">Character</button>
+          <button class="tab" data-tab="skills">Skills</button>
+          <button class="tab" data-tab="inventory">Inventory</button>
+          <button class="tab" data-tab="quests">Quests</button>
+          <button class="tab" data-tab="log">Log</button>
+        </div>
+
+        <div id="character" class="tab-panel active"></div>
+        <div id="skills" class="tab-panel"></div>
+        <div id="inventory" class="tab-panel"></div>
+        <div id="quests" class="tab-panel"></div>
+        <div id="log" class="tab-panel"></div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="pauseOverlay" class="pause-overlay">
+    <div class="pause-card">
+      <h2>Paused</h2>
+      <p>Runalis waits. Your profile can be saved before leaving.</p>
+      <button id="resumeBtn">Resume</button>
+      <button id="pauseSaveBtn">Save Game</button>
+      <button id="saveQuitBtn">Save & Quit to Menu</button>
+    </div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
