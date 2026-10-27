@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '_site');
@@ -68,12 +69,26 @@ for (const relative of files) {
 }
 
 // Only this fixed generated directory may be replaced.
+// Version the complete module graph together. Updating only main.js leaves
+// cached imports (including mobile menus) from the previous release in use.
+const releaseHash = createHash('sha256');
+for (const relative of [...files].sort()) {
+  if (/\.(html|css|js)$/.test(relative)) releaseHash.update(relative).update(fs.readFileSync(path.join(root, relative)));
+}
+const release = releaseHash.digest('hex').slice(0, 16);
+const versioned = ref => `${ref.split(/[?#]/)[0]}?v=${release}`;
 if (path.dirname(output) !== path.resolve(root)) throw new Error('Output must stay inside the project');
 fs.rmSync(output, { recursive: true, force: true });
 for (const relative of files) {
   const destination = path.join(output, relative);
   fs.mkdirSync(path.dirname(destination), { recursive: true });
-  fs.copyFileSync(path.join(root, relative), destination);
+  if (relative.endsWith('.js')) {
+    const source = fs.readFileSync(path.join(root, relative), 'utf8');
+    fs.writeFileSync(destination, source.replace(/((?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s*)['"])(\.[^'"]+)(['"])/g, (_, prefix, ref, suffix) => `${prefix}${versioned(ref)}${suffix}`));
+  } else if (relative.endsWith('.html')) {
+    const source = fs.readFileSync(path.join(root, relative), 'utf8');
+    fs.writeFileSync(destination, source.replace(/((?:src|href)\s*=\s*['"])([^'"]+\.(?:js|css)(?:\?[^'"]*)?)(['"])/g, (_, prefix, ref, suffix) => `${prefix}${versioned(ref)}${suffix}`));
+  } else fs.copyFileSync(path.join(root, relative), destination);
 }
 fs.writeFileSync(path.join(output, '.nojekyll'), '');
 const bytes = [...files].reduce((sum, name) => sum + fs.statSync(path.join(output, name)).size, 0);

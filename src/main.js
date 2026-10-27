@@ -473,6 +473,10 @@ class RunalisGame {
         if (this.paused) this.togglePause(false);
         toggleGameMenuChooser(this.setUiOwner(this.player));
       },
+      multiplayer: () => {
+        if (this.dialogue?.active && !this.dialogue.actor?.networkRemote || isBlockingDomOverlayActive() || this.world?.mode === 'act1Opening') return;
+        this.onlineSession?.openMenu();
+      },
       pause: () => this.togglePause(),
       skip: () => requestAct1OpeningSkip(this)
     });

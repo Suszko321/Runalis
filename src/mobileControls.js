@@ -37,7 +37,7 @@ export function createMobileControls(game, actions) {
   const root = document.createElement('div');
   root.id = 'mobileControls';
   root.setAttribute('aria-label', 'Touch controls');
-  root.innerHTML = `<div class="mobile-tools"><button data-action="menu">Menus</button><button data-action="pause">Pause</button><button data-action="fullscreen" aria-label="Enter fullscreen">⛶</button></div>
+  root.innerHTML = `<div class="mobile-tools"><button data-action="menu">Menus</button><button data-action="multiplayer">Multiplayer</button><button data-action="pause">Pause</button><button data-action="fullscreen" aria-label="Enter fullscreen">⛶</button></div>
     <div class="mobile-gameplay"><div id="mobileStick" role="group" aria-label="Movement thumbstick"><span></span></div>
     <div class="mobile-actions">${Array.from({length:HOTBAR_SLOT_COUNT}, (_, i) => `<button data-hold="ability${i}" aria-label="Skill slot ${i+1}"><span>Skill ${i+1}</span><small></small></button>`).join('')}
     <button data-hold="attack" class="mobile-attack">Attack<small>Hold: heavy</small></button><button data-hold="sprint">Sprint</button><button data-hold="dash">Dodge</button><button data-hold="interact">Interact</button></div></div>

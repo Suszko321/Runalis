@@ -1,6 +1,7 @@
 # Password-based online co-op
 
 Load a character, then choose **Menus → Multiplayer** or **Pause → Multiplayer**.
+Touch players can also tap **Multiplayer** directly on the top toolbar.
 The host enters an 8–128 character password and chooses **Open World**. Other
 players enter the exact same password and choose **Join World**. The active
 character joins the host's current world; no room code or account is needed.
@@ -52,6 +53,7 @@ node tools/verify-online-protocol.mjs
 node tools/verify-online-presentation.mjs
 node tools/verify-online-browser.cjs
 node tools/verify-online-lifecycle-browser.cjs
+node tools/verify-mobile-multiplayer-pages.cjs
 ```
 
 The browser checks use actual native WebRTC connections through the public
@@ -71,6 +73,9 @@ The lifecycle fixture intermittently timed out loading a local test profile befo
 Offline regression coverage includes the existing 29 subclass suites and 24
 gameplay suites, mobile controls, live aiming, dialogue/preview, workshops and
 main-menu return. Static GitHub Pages packaging validates every shipped path.
+The packaged mobile check covers landscape and portrait menu access, real room
+hosting and stale menu cache isolation. Pages builds version the entire module
+graph together so phones receive consistent code when a release changes.
 
 ## Deployment and remaining validation
 

@@ -43,6 +43,9 @@ const base=process.env.RUNALIS_URL||'http://127.0.0.1:8768',out='docs/mobile-con
   }
   await page.evaluate(slots=>{mobileGame().player.loadout.abilitySlots=slots;},slots);checks.push('Every hotbar slot performs its equipped action');
   await page.locator('[data-action="menu"]').tap();await page.waitForSelector('.panel.open');assert(!(await page.locator('#mobileStick').isVisible()));
+  await page.locator('[data-menu-action="multiplayer"]').tap();await page.waitForSelector('#onlineMultiplayerOverlay.active');
+  assert(await page.locator('[data-online-host]').isVisible());assert(await page.locator('[data-online-join]').isVisible());
+  await page.locator('[data-online-close]').tap();await page.locator('[data-action="menu"]').tap();checks.push('Mobile Menus exposes Multiplayer with Open World and Join World');
   for(const tab of ['inventory','skills','quests','map','log','character']){
    await page.locator(`.tab[data-tab="${tab}"]`).tap();await page.waitForFunction(tab=>document.querySelector('#'+tab)?.classList.contains('active'),tab);
    assert(await page.locator('#'+tab).isVisible());
@@ -51,6 +54,8 @@ const base=process.env.RUNALIS_URL||'http://127.0.0.1:8768',out='docs/mobile-con
   // Menus button first returns to the chooser, then closes it.
   await page.locator('[data-action="menu"]').tap();await page.locator('[data-action="menu"]').tap();await page.waitForFunction(()=>!document.querySelector('.panel.open'));
   await page.locator('[data-action="pause"]').tap();assert(await page.evaluate(()=>mobileGame().paused));await page.locator('#resumeBtn').tap();assert(!(await page.evaluate(()=>mobileGame().paused)));checks.push('Pause/resume via touch');
+  await page.locator('[data-action="multiplayer"]').tap();await page.waitForSelector('#onlineMultiplayerOverlay.active');await page.locator('[data-online-close]').tap();
+  await page.locator('[data-action="pause"]').tap();await page.locator('#pauseMultiplayerBtn').tap();await page.waitForSelector('#onlineMultiplayerOverlay.active');assert(!(await page.evaluate(()=>mobileGame().paused)));await page.locator('[data-online-close]').tap();checks.push('Direct touch toolbar and Pause both open Multiplayer');
   await page.screenshot({path:out+'/landscape.png'});
   await page.evaluate(()=>Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>[{id:'Mobile test pad',index:0,connected:true,axes:[0,-1,0,0],buttons:Array.from({length:17},()=>({pressed:false,value:0}))}]}));
   await page.waitForFunction(()=>mobileGame().primaryControllerActive&&mobileGame().input.moveY<-.9);await page.locator('#mobileControls').waitFor({state:'hidden'});
