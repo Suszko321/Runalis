@@ -12,7 +12,7 @@ const owns=(p,id)=>getSelectedAbilityMorph(p,id)==='sunken'&&(p.knownAbilities?.
 export function isSunkenDamage(p,options){return !options.sunkenBurn&&options.source!=='summon'&&getAbilityById(options.sourceAbilityId)?.classId==='waverider'&&
  (options.sourceMorph==='sunken'||options.sourceMorph==null&&getSelectedAbilityMorph(p,options.sourceAbilityId)==='sunken')&&owns(p,options.sourceAbilityId);}
 function state(p,w){let s=states.get(p);if(!s||s.world!==w){s={world:w,targets:new Map(),startedAt:0,lastHit:-Infinity,depth:0,nextVisual:0};states.set(p,s);}return s;}
-export function getSunkenPressureState(p){return states.get(p)||null;}
+export function getSunkenPressureState(p){return p?.networkPresentation?p.networkPresentation.sunkenDepth:states.get(p)||null;}
 export function clearSunkenPressure(p){states.delete(p);}
 export function clearSunkenPressureSource(p,id){
  const s=states.get(p);if(!s)return;

@@ -7,6 +7,8 @@ const MUSIC_VOLUME = 0.68;
 
 let singleton = null;
 let autoUnlockInstalled = false;
+const sfxObservers=new Set();
+export function observeSfx(observer){sfxObservers.add(observer);return ()=>sfxObservers.delete(observer);}
 
 export function createAudioSystem() {
   if (singleton) return singleton;
@@ -21,6 +23,7 @@ export function unlockAudio() {
 }
 
 export function playSfx(name, options = {}) {
+  for(const observer of sfxObservers){try{observer(name,options);}catch{/* Sound playback must survive an optional observer. */}}
   createAudioSystem().play(name, options);
 }
 

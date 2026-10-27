@@ -70,7 +70,7 @@ export function createMobileControls(game, actions) {
     root.querySelectorAll('.held').forEach(el => el.classList.remove('held'));
   }
   function blocked() {
-    return game.paused || game.dialogue?.active || game.isActorInterfaceBusy(game.player) ||
+    return game.paused || game.dialogue?.active&&!game.dialogue.actor?.networkRemote || game.isActorInterfaceBusy(game.player) ||
       game.couchCoopJoinMenu?.active || game.world?.mode === 'act1Opening' ||
       !!document.querySelector('#yourOrderLedger,#characterCreatorOverlay.active,#pvpArenaOverlay.active');
   }

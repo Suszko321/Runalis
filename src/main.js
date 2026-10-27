@@ -2,6 +2,7 @@ import {updateMalakarEncounter,handleMalakarInput,handleMalakarKeyboard} from '.
 import {rememberRepeatableInstance} from './instanceEncounterMemory.js';
 import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
 import {initMobileShell, createMobileControls} from './mobileControls.js';
+import {createOnlineSession} from './onlineSession.js';
 import { getKeyboardAbilitySlot } from './abilityBindings.js';
 import {updateSimulatedSubclassPlayers} from './simulatedSubclassPlayers.js';
 import {menuDirection,directionalMenuItem} from './menuNavigation.js';
@@ -312,7 +313,8 @@ function isBlockingDomOverlayActive() {
   return [
     'characterCreatorOverlay',
     'workshopServiceOverlay',
-    'pvpArenaOverlay'
+    'pvpArenaOverlay',
+    'onlineMultiplayerOverlay'
   ].some(id => document.getElementById(id)?.classList.contains('active'));
 }
 
@@ -465,15 +467,16 @@ class RunalisGame {
     this.mobileControls = createMobileControls(this, {
       unlock: unlockAudio,
       abilityName: id => getAbilityById(id)?.name,
-      cancelCharge: () => { cancelActiveAbilityCharge(this.player); cancelActiveHeavyAttackCharge(this.player, this.world); },
+      cancelCharge: () => { this.onlineSession?.cancelCharges();cancelActiveAbilityCharge(this.player); cancelActiveHeavyAttackCharge(this.player, this.world); },
       menu: () => {
-        if (this.dialogue?.active || isBlockingDomOverlayActive() || this.world?.mode === 'act1Opening') return;
+        if (this.dialogue?.active&&!this.dialogue.actor?.networkRemote || isBlockingDomOverlayActive() || this.world?.mode === 'act1Opening') return;
         if (this.paused) this.togglePause(false);
         toggleGameMenuChooser(this.setUiOwner(this.player));
       },
       pause: () => this.togglePause(),
       skip: () => requestAct1OpeningSkip(this)
     });
+    this.onlineSession = createOnlineSession(this);
 
     if (this.developerModeOptions) {
       this.player.x = this.world.spawn?.x ?? this.player.x;
@@ -634,9 +637,9 @@ class RunalisGame {
       if (key === 'escape') {
         event.preventDefault();
 
-        if (this.dialogue?.active) {
+        if (this.dialogue?.active && !this.dialogue.actor?.networkRemote) {
           if (this.dialogue.actor && this.dialogue.actor !== this.player) return;
-          closeDialogue(this.dialogue);
+          this.closeConversation();
           this.renderOwnedUI();
           return;
         }
@@ -651,14 +654,14 @@ class RunalisGame {
 
       if (this.paused) return;
 
-      if (this.dialogue?.active) {
+      if (this.dialogue?.active && !this.dialogue.actor?.networkRemote) {
         if (this.dialogue.actor && this.dialogue.actor !== this.player) return;
         if (event.repeat) {
           event.preventDefault();
           return;
         }
 
-        const handled = updateDialogueInput(
+        const handled = this.routeDialogueInput(
           this.dialogue,
           createDialogueInputFromEvent(event),
           this.dialogue.actor || this.player,
@@ -787,7 +790,7 @@ class RunalisGame {
       unlockAudio();
       if (this.developerEditor?.handlePointerDown(event)) return;
 
-      if (this.dialogue?.active) {
+      if (this.dialogue?.active && !this.dialogue.actor?.networkRemote) {
         if (this.dialogue.actor && this.dialogue.actor !== this.player) return;
         if (event.button !== 0) return;
 
@@ -801,12 +804,12 @@ class RunalisGame {
 
         if (target) {
           if (target.type === 'close') {
-            closeDialogue(this.dialogue);
+            this.closeConversation();
             event.preventDefault();
             this.renderOwnedUI();
             return;
           }
-          updateDialogueInput(
+          this.routeDialogueInput(
             this.dialogue,
             {
               inputDevice: 'mouse',
@@ -871,6 +874,7 @@ class RunalisGame {
     };
 
     this.blur = () => {
+      this.onlineSession?.cancelCharges();
       this.mouseAimPosition = null;
       this.input.mouseAimActive = false;
       this.keys.clear();
@@ -912,6 +916,7 @@ class RunalisGame {
     if (this.destroyed) return;
     this.destroyed = true;
     this.started = false;
+    this.onlineSession?.destroy();
     this.mobileControls?.destroy();
     this.developerEditor?.destroy();
     this.developerEditor = null;
@@ -1002,6 +1007,7 @@ class RunalisGame {
       additionalControllerInputs.map(input => Number(input.slotIndex))
     );
     const invalidPlayers = getActiveCoopPlayers(this.player).filter(ally => {
+      if (ally.networkRemote) return false;
       return !allowedSlots.has(Number(ally.controllerSlotIndex));
     });
 
@@ -1126,6 +1132,7 @@ class RunalisGame {
     }
 
     for (const input of controllerInputs) {
+      if(this.onlineSession?.handleMenuInput(input))return true;
       if (controllerInputShouldWakeAudio(input)) {
         unlockAudio();
       }
@@ -1459,9 +1466,12 @@ class RunalisGame {
       this.handleControllerGlobalInput(now);
     }
 
-    if (!this.paused) {
+    if (this.onlineSession?.role === 'guest') {
+      this.onlineSession.updateGuest(dt);
+    } else if (!this.paused) {
       this.update(dt, now);
     }
+    this.onlineSession?.updateHost(dt);
 
     this.updateScreenShake(dt);
     this.buildRenderCamera();
@@ -1471,14 +1481,14 @@ class RunalisGame {
       'dialogue-active',
       !!this.dialogue?.active &&
       (this.dialogue.actor || this.player) === this.player &&
-      getActiveCoopPlayers(this.player).length === 0
+      getActiveCoopPlayers(this.player).filter(actor=>!actor.networkRemote).length === 0
     );
 
     this.drawWorld();
     this.developerEditor?.draw(this.ctx, this.renderCamera);
     renderMinimapHud(this);
 
-    if (this.dialogue?.active) {
+    if (this.dialogue?.active && !this.dialogue.actor?.networkRemote) {
       drawDialogueUI(this.ctx, this.dialogue, {
         touchControls: !!this.mobileControls && !this.primaryControllerActive,
         viewport: this.getDialogueViewport(this.dialogue.actor || this.player)
@@ -1550,14 +1560,14 @@ class RunalisGame {
     }
     updateFishingMiniGame(this, dt);
 
-    if (this.dialogue.active) {
+    if (this.dialogue.active && !this.dialogue.actor?.networkRemote) {
       const controllerInputs = this.getAllControllerInputsForUi();
       const actor = this.dialogue.actor || this.player;
 
       for (const input of controllerInputs) {
         if (!this.inputOwnsActor(input, actor)) continue;
 
-        const handled = updateDialogueInput(
+        const handled = this.routeDialogueInput(
           this.dialogue,
           createDialogueInputFromController(input),
           actor,
@@ -1749,6 +1759,7 @@ class RunalisGame {
 
   isActorInterfaceBusy(actor) {
     if (!actor) return false;
+    if(actor===this.player&&document.querySelector('#onlineMultiplayerOverlay.active'))return true;
     if(this.workshopService?.active&&this.workshopService.actor===actor)return true;
 
     if (this.dialogue?.active && (this.dialogue.actor || this.player) === actor) {
@@ -1785,6 +1796,9 @@ class RunalisGame {
 
     const actor = this.dialogue.actor || this.player;
     const serviceNpc=this.world.objects.find(o=>o.id===this.dialogue.npcObjectId);
+    if (actor.networkRemote && this.onlineSession?.delegateService(actor, action, serviceNpc)) {
+      closeDialogue(this.dialogue,{immediate:true});return true;
+    }
     this.dialogue.pendingAction = null;
     closeDialogue(this.dialogue, { immediate: true });
     if(action.type==='maraApothecary')return useMaraApothecary(this.setUiOwner(actor),serviceNpc);
@@ -1866,10 +1880,11 @@ class RunalisGame {
   }
 
   getCoopControllerInputs() {
-    return resolveControllerPlayerAssignments(
+    const local = resolveControllerPlayerAssignments(
       this.controllerInput,
       this.hostControllerSlotIndex
     ).additionalPlayers;
+    return [...local,...(this.onlineSession?.getRemoteInputs()||[])];
   }
 
   getSplitScreenMembers() {
@@ -1887,6 +1902,7 @@ class RunalisGame {
   }
 
   isSharedPartyCameraMode() {
+    if (this.onlineSession?.role) return false;
     return isSharedPartyCameraWorld(this.world);
   }
 
@@ -2671,7 +2687,18 @@ class RunalisGame {
   // ---------------------------------------------------------------------------
 
   interact() {
+    if(this.onlineSession?.role==='guest'){this.onlineInteractionRequested=true;return;}
     interact(this);
+  }
+
+  routeDialogueInput(state,input,actor,world) {
+    if(this.onlineSession?.sendDialogue(input))return true;
+    return updateDialogueInput(state,input,actor,world);
+  }
+
+  closeConversation() {
+    if(this.onlineSession?.closeDialogue())return;
+    closeDialogue(this.dialogue);
   }
 
   enterDungeon(entrance) {
@@ -2699,6 +2726,7 @@ class RunalisGame {
   // ---------------------------------------------------------------------------
 
   save(showLog = true) {
+    if (this.onlineSession?.role === 'guest') return this.onlineSession.saveGuest(showLog);
     if (this.developerEditor) {
       return this.developerEditor.save(false);
     }
@@ -2942,7 +2970,7 @@ class RunalisGame {
 
     if (this.paused) {
       this.pauseOwner = this.pauseOwner || this.uiOwner || this.player;
-      closeDialogue(this.dialogue);
+      this.closeConversation();
       cancelActiveHeavyAttackCharge(this.player, this.world);
       for (const ally of this.player.coop?.players || []) {
         cancelActiveHeavyAttackCharge(ally, this.world);

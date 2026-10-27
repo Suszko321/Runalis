@@ -145,7 +145,7 @@ export function startFishingMiniGame(game, object) {
     level
   };
 
-  ensureFishingOverlay(hostGame);
+  if(!player.networkRemote)ensureFishingOverlay(hostGame);
   updateFishingOverlay(hostGame);
   addWorldSkillEffect(game, 'fishingCast', player, object, {
     color: '#66f0ff',
@@ -155,6 +155,14 @@ export function startFishingMiniGame(game, object) {
   playSfx('fish', { volume: hasRod ? 0.82 : 0.55, throttle: 0.12 });
   game.log?.(hasRod ? 'Cast your line. Time the reel.' : 'You try to handline the water. A rod would make this easier.');
   return true;
+}
+
+export function renderOnlineFishing(game,state) {
+ if(!state){if(game.fishingMiniGame){closeFishingOverlay();game.fishingMiniGame=null;}return;}
+ const wasActive=game.fishingMiniGame?.active;
+ game.fishingMiniGame={...state,player:game.player,ownerSlot:1,object:game.world.objects.find(o=>o.id===state.objectId)};
+ if(!wasActive)ensureFishingOverlay(game);
+ updateFishingOverlay(game);
 }
 
 export function updateFishingMiniGame(game, dt) {
@@ -252,6 +260,7 @@ function applyFoodLongBuff(player, item) {
 }
 
 function finishFishingMiniGame(game, success, failMessage = null) {
+  if(game.onlineSession?.role==='guest')return game.onlineSession.sendFishing(!!failMessage);
   const state = game?.fishingMiniGame;
   if (!state?.active) return false;
 
@@ -408,6 +417,7 @@ function ensureFishingOverlay(game) {
 
 function updateFishingOverlay(game) {
   const state = game?.fishingMiniGame;
+  if(state?.player?.networkRemote)return;
   const overlay = document.getElementById('fishingMiniGameOverlay');
   if (!state?.active || !overlay) return;
 

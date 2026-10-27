@@ -14,7 +14,7 @@ import {presentClassMobility} from './classMovement.js';
 const runtimes = new WeakMap();
 const valid = e => e && e.hp > 0 && !e.dead && !e.remove && !e.friendly;
 const heavy = e => e.isBoss || e.worldBoss || e.massive || (e.radius || e.r || 14) > 25;
-export function getCombatTechniqueState(p) { return runtimes.get(p) || null; }
+export function getCombatTechniqueState(p) { return p?.networkPresentation?p.networkPresentation.techniqueState:runtimes.get(p) || null; }
 export function clearCombatTechniqueState(p,reason='cancelled') {
   const s=runtimes.get(p);
   for(const item of s?.marks||[])item.enemy.techniqueMarks=(item.enemy.techniqueMarks||[]).filter(mark=>mark.owner!==p);

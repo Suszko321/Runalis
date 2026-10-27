@@ -277,7 +277,7 @@ export function renderUI(player, logLines, game, options = {}) {
   const dialogueActive = !!game?.dialogue?.active;
   const hostPlayer = game?.hostGame?.player || game?.player || player;
   const dialogueActor = game?.dialogue?.actor || hostPlayer;
-  const activeCoopCount = (hostPlayer?.coop?.players || []).filter(ally => ally && ally.active !== false).length;
+  const activeCoopCount = (hostPlayer?.coop?.players || []).filter(ally => ally && ally.active !== false && !ally.networkRemote).length;
   const dialogueBlocksGlobalHud = dialogueActive && dialogueActor === hostPlayer && activeCoopCount === 0;
   document.body.classList.toggle('couch-coop-active', activeCoopCount > 0);
   document.body.classList.toggle('dialogue-active', dialogueBlocksGlobalHud);
@@ -347,6 +347,11 @@ function syncUiOwnerDom(player, game) {
 function syncMenuChooserActions(player, game, slot) {
   const tabs = document.querySelector('.panel .tabs');
   if (!tabs) return;
+  let multiplayer=tabs.querySelector('[data-menu-action="multiplayer"]');
+  if(slot===1&&game.onlineSession){
+    if(!multiplayer){multiplayer=document.createElement('button');multiplayer.className='tab menu-action-tab';multiplayer.dataset.menuAction='multiplayer';multiplayer.dataset.menuIcon='MP';multiplayer.textContent='Multiplayer';tabs.append(multiplayer);}
+    multiplayer.onclick=()=>{closeMainPanel(game);game.onlineSession.openMenu();};
+  }else multiplayer?.remove();
 
   const existing = tabs.querySelector('[data-menu-action="dropout"]');
   const hostGame = game?.hostGame || game;
@@ -376,7 +381,7 @@ function updateMenuOwnerBadge(player, game, slot) {
   if (!panel) return;
 
   const hostPlayer = game?.hostGame?.player || game?.player || player;
-  const activeCoopCount = (hostPlayer?.coop?.players || []).filter(ally => ally && ally.active !== false).length;
+  const activeCoopCount = (hostPlayer?.coop?.players || []).filter(ally => ally && ally.active !== false && !ally.networkRemote).length;
   const menuOpen = panel.classList.contains('open') || panel.classList.contains('menu-chooser');
   let badge = panel.querySelector(':scope > .menu-owner-badge');
 

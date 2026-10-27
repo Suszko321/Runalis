@@ -537,9 +537,11 @@ function getInteractionPriority(object) {
 
 export function talk(game, npc) {
   const actor = game.player;
+  const host=game.hostGame||game;
+  if(host.onlineSession?.role==='host'&&host.dialogue?.active&&host.dialogue.actor!==actor){game.log?.('Another player is speaking. Try again when the conversation ends.');return false;}
   const questPlayer = getQuestOwner(actor);
   const storyPlayer = questPlayer || actor;
-  (game.hostGame || game).setUiOwner?.(actor);
+  if(!actor.networkRemote)(game.hostGame || game).setUiOwner?.(actor);
 
   migratePlayer(actor);
   if (storyPlayer && storyPlayer !== actor) migratePlayer(storyPlayer);
@@ -1788,6 +1790,7 @@ function safeShake(game, strength = 6, duration = 0.18) {
 }
 
 function getInteractionRenderGame(game) {
+  if(game?.player?.networkRemote&&game.hostGame)return game.hostGame;
   return game?.player ? game : game?.hostGame;
 }
 

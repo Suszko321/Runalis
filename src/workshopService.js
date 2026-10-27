@@ -45,6 +45,7 @@ function refresh(game){
 }
 export function openWorkshopService(game,npc,category='all'){
  if(!game?.player||typeof document==='undefined')return false;
+ if(game.player.networkRemote&&(game.hostGame||game).onlineSession?.delegateService(game.player,{type:category==='weapons'?'workshopWeapons':category==='armour'?'workshopArmour':'workshopCraft'},npc))return true;
  const host=game.hostGame||game;if(host.marketShop?.active)return false;
  const session=beginWorkshopSession(game,npc,npc?.workshopService);if(!session){game.log?.('Approach the service provider to use this workshop.');return false;}
  host.setUiOwner?.(game.player);session.category=category==='craft'?'all':category;session.previousFocus=document.activeElement;

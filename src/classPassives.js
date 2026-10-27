@@ -448,7 +448,7 @@ export function getActivePassiveLabels(player, now = performance.now() / 1000) {
     });
   }
 
-  const morphResources=getSubclassResourceLabel(player);
+  const morphResources=player.networkPresentation?.resourceLabel??getSubclassResourceLabel(player);
   if(morphResources)labels.push(morphResources);
   return labels;
 }

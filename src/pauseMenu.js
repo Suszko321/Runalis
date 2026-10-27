@@ -25,6 +25,7 @@ export function ensurePauseOverlay(currentGame = null) {
         <div class="pause-button-row">
           <button id="resumeBtn" type="button">Resume</button>
           <button id="pauseSaveBtn" type="button">Save</button>
+          <button id="pauseMultiplayerBtn" type="button">Multiplayer</button>
           <button id="arenaReturnBtn" type="button" hidden>Forfeit to Orrakai</button>
           <button id="leaveSessionBtn" type="button" hidden>Leave Session</button>
           <button id="saveQuitBtn" type="button">Save & Quit</button>
@@ -39,6 +40,8 @@ export function ensurePauseOverlay(currentGame = null) {
 export function bindPauseButtons(currentGame = null) {
   const overlay = document.getElementById('pauseOverlay');
   if (overlay) overlay.__runalisGame = currentGame;
+  const multiplayer=overlay?.querySelector('#pauseMultiplayerBtn');
+  if(multiplayer)multiplayer.onclick=()=>overlay.__runalisGame?.onlineSession?.openMenu();
 
   const resume = document.getElementById('resumeBtn');
   if (resume && !resume.dataset.boundPause) {

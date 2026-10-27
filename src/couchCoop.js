@@ -285,6 +285,7 @@ export function updateCouchCoop(game, dt, now, controllerInputs = null) {
 }
 
 export function joinCouchCoopPlayer(game, slotNumber = 2, controllerSlotIndex = slotNumber - 1) {
+  if (game.onlineSession?.role||game.onlineSession?.connecting) { game.log?.('Use Multiplayer to join an open online world.'); return false; }
   const coop = ensureCouchCoop(game);
   if (!coop) return null;
 
@@ -397,7 +398,7 @@ export function getActiveLocalPlayers(player) {
   return [
     player,
     ...getActiveCoopPlayers(player)
-  ].filter(member => member && member.active !== false).slice(0, 4);
+  ].filter(member => member && member.active !== false && !member.networkRemote).slice(0, 4);
 }
 
 export function getCouchCoopActorForControllerInput(game, input) {
@@ -455,7 +456,7 @@ export function getPartyMembers(player) {
 }
 
 export function getPartyCameraFocus(player) {
-  const members = getPartyMembers(player);
+  const members = getPartyMembers(player).filter(member=>!member.networkRemote);
 
   if (!members.length) {
     return {
@@ -724,6 +725,7 @@ function normalizeCouchCoopSlots(player) {
     ally.slot = safeSlot;
     ally.playerNumber = safeSlot;
     ally.sessionSlot = safeSlot;
+    if (ally.networkRemote) { ally.controllerSlotIndex=100+safeSlot; continue; }
 
     let controllerSlotIndex = Number(ally.controllerSlotIndex);
     const defaultControllerSlotIndex = Math.max(0, Math.min(3, safeSlot - 1));
@@ -851,6 +853,13 @@ function openCouchCoopJoinMenu(game, slotNumber = 2, controllerSlotIndex = slotN
   game.log?.(`${label} joining. Choose or create a profile.`);
 }
 
+export function joinOnlineCoopPlayer(game, profile, networkId) {
+  const slot=getNextOpenCoopSlot(game.player,2);
+  if(!slot)return null;
+  const ally={...profile,networkRemote:true,networkId,profileId:'online-'+networkId,coop:undefined};
+  return completeCouchCoopJoin(game,{player:ally,isNewProfile:false,needsCharacterCreation:false},slot,100+slot);
+}
+
 function completeCouchCoopJoin(game, selected, safeSlot, controllerSlotIndex) {
   const coop = ensureCouchCoop(game);
   if (!coop || !selected?.player) return null;
@@ -881,7 +890,7 @@ function completeCouchCoopJoin(game, selected, safeSlot, controllerSlotIndex) {
   ally.dirX = game.player.dirX || 1;
   ally.dirY = game.player.dirY || 0;
   ally.scale = ally.scale || 0.96;
-  ally.origin = 'Couch Co-op Session';
+  ally.origin = ally.networkRemote?'Online World':'Couch Co-op Session';
   ally.controllerSlotIndex = Math.max(0, Math.min(3, Number(controllerSlotIndex ?? finalSlot - 1)));
   ally.profileId = selectedProfileId || createProfileId();
   ally.profileSlot = ally.profileSlot || 'player1';
@@ -1206,6 +1215,7 @@ function autosaveCouchCoopProfile(game, ally, dt) {
 }
 
 export function saveCouchCoopProfile(game, ally) {
+  if (ally?.networkRemote) return true; // Their browser owns their profile.
   if (!ally || (ally.slot || 0) < 2 || (ally.slot || 0) > 4) return false;
 
   ensurePlayerAppearance(ally);
@@ -1812,6 +1822,10 @@ function buildAllyInput(game, ally, controllerInput, keyboardInput) {
 
   if (useController) {
     const aim = resolveActorCombatAim(ally, controllerInput);
+    if(ally.networkRemote&&controllerInput.pointerAimActive){
+      aim.source=controllerInput.pointerAimSource;aim.rightStickActive=false;
+      aim.targetX=ally.x+aim.x*controllerInput.aimDistance;aim.targetY=ally.y+aim.y*controllerInput.aimDistance;
+    }
     writeCombatAimToInput(input, ally, aim, 140);
   } else {
     clearCombatAimInput(input);
@@ -1904,6 +1918,7 @@ function createAllyGameView(game, ally) {
 }
 
 function isCoopActorBusy(game, ally) {
+  if (ally.networkMenuBusy) return true;
   if (game?.dialogue?.active && game.dialogue.actor === ally) return true;
 
   const panel = document.querySelector('.panel.open');

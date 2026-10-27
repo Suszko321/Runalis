@@ -37,6 +37,7 @@ function addDirectory(relative) {
 
 add('index.html');
 add('src/main.js');
+add('src/vendor/peerjs-LICENSE.txt');
 // Some shared menu styles are loaded on demand from JavaScript.
 for (const name of fs.readdirSync(root)) if (name.endsWith('.css')) add(name);
 add('assets/art/runalis-main-menu.png');

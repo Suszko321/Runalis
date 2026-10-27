@@ -87,6 +87,7 @@ const MARKET_CATEGORIES = [
 
 export function openMarketShop(game, merchant = null) {
   if (!game?.player) return false;
+  if(game.player.networkRemote&&(game.hostGame||game).onlineSession?.delegateService(game.player,{type:'shop'},merchant))return true;
 
   const hostGame = game.hostGame || game;
   hostGame.setUiOwner?.(game.player);

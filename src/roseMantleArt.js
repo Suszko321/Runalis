@@ -16,7 +16,7 @@ export function drawRoseMantle(c,fx,camera){
  const now=m.startedAt+m.elapsed,remaining=m.until-now;if(remaining<=0)return;
  const time=Math.floor(m.elapsed*16)/16,charge=m.a._charge?.level||0;
  for(const actor of m.members){
-  if(getRoseMantle(actor,now,m.world)!==m)continue;
+  if(m.world?.networkGuest?(!actor||actor.hp<=0||m.until<=now):getRoseMantle(actor,now,m.world)!==m)continue;
   const player=actor===m.owner,elder=['elderThornbeast','thornTitan'].includes(actor.evolutionStage),r=elder?65:player?36:29,ry=elder?26:player?17:14;
   c.save();c.imageSmoothingEnabled=false;c.translate(Math.round(actor.x-camera.x),Math.round(actor.y-camera.y));c.globalAlpha*=Math.min(1,remaining/.45);
   if(fx.layer==='behind'){

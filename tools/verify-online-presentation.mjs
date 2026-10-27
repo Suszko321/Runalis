@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {wireClone,parseWire} from '../src/onlineProtocol.js';
+import {hydratePresentation} from '../src/onlinePresentation.js';
+const ability={id:'review',subclassId:'petalknight',colors:['red','pink']},pet={id:'pet'},owner={id:'owner',summons:[pet]},enemy={id:'enemy',x:20,y:30};
+const refs=new Map([[owner,'actor:guest'],[pet,'summon:guest:pet'],[enemy,'enemy:enemy']]);
+const state={owner,world:{tiles:[]},shots:[{a:ability,x:1},{a:ability,x:2}],urns:[],spirits:[],afflictions:new Map([[enemy,{effects:new Map([['family',{ability}]])}]]),prey:enemy};
+const encoded=wireClone({state,effect:{mantleVisual:{owner,members:[owner,pet],active:true,until:10}}},refs),decoded=parseWire(JSON.stringify(encoded));
+assert.equal(decoded.state.shots[0].a.id,'review');assert.equal(decoded.state.shots[1].a.id,'review','Repeated ability definitions were lost');
+const clientPet={id:'pet'},clientOwner={summons:[clientPet],networkPresentation:{subclassState:decoded.state}},clientEnemy={id:'enemy',x:25,y:35};
+const game={player:clientOwner,world:{networkGuest:true,enemies:[clientEnemy],effects:[decoded.effect],combatEffects:[]}};
+hydratePresentation(game,'guest',new Map());
+assert.equal(decoded.state.owner,clientOwner);assert.equal(decoded.state.prey,clientEnemy);assert(decoded.state.afflictions.has(clientEnemy));assert.equal(decoded.effect.mantleVisual.owner,clientOwner);assert.deepEqual(decoded.effect.mantleVisual.members,[clientOwner,clientPet]);assert.equal(decoded.effect.mantleVisual.world,game.world);
+assert(!('networkPresentation'in wireClone(clientOwner)),'Presentation leaked into a saved character');
+console.log('PASS repeated ability definitions, live actor/summon references, enemy-keyed Maps, aura ownership, and save isolation');

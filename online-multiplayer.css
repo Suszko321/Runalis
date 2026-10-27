@@ -1,0 +1,21 @@
+.online-multiplayer-overlay {display:none;position:fixed;inset:0;z-index:9500;background:#060b12e8;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));box-sizing:border-box;overflow:auto;color:#eee1c6}
+.online-multiplayer-overlay.active {display:flex;align-items:safe center;justify-content:center}
+.online-multiplayer-overlay[hidden] {display:none!important}
+.online-multiplayer-card {width:min(560px,100%);box-sizing:border-box;border:1px solid #a58b56;background:#141b22;padding:20px;box-shadow:0 12px 60px #0008}
+.online-multiplayer-card header {display:flex;justify-content:space-between;align-items:center;gap:16px}
+.online-multiplayer-card h2 {margin:4px 0 16px;color:#ead3a0;font:24px Georgia,serif}
+.online-multiplayer-card small {color:#bf9c62;letter-spacing:.12em}
+.online-multiplayer-card label {display:grid;gap:8px;font-weight:bold}
+.online-multiplayer-card input {width:100%;min-height:48px;box-sizing:border-box;font-size:16px;padding:10px}
+.online-multiplayer-card button {min-height:44px;touch-action:manipulation}
+.online-multiplayer-card p {line-height:1.5}
+.online-multiplayer-card .online-help,.online-multiplayer-card details {font-size:13px;color:#c4b9a6}
+.online-actions {display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}
+.online-actions button {flex:1;min-width:130px}
+.online-multiplayer-card [data-online-status] {color:#efd095;white-space:pre-wrap}
+.online-multiplayer-card ul {padding-left:24px}
+body.mobile-input #onlineMultiplayerOverlay button {min-height:44px!important}
+#onlineSessionStatus {position:fixed;z-index:90;top:14px;left:50%;transform:translateX(-50%);background:#101820dd;color:#e6d6b4;border:1px solid #83704b;padding:5px 10px;font:12px Georgia,serif;pointer-events:none}
+#onlineSessionStatus[hidden],body.dialogue-active #onlineSessionStatus {display:none!important}
+body.mobile-input #onlineSessionStatus {top:58px}
+@media (orientation:portrait){body.mobile-input #onlineSessionStatus{top:auto;bottom:195px}}

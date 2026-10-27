@@ -31,7 +31,7 @@ const elite=e=>!!(e.elite||e.isElite||e.eliteModifier);
 const supportParties=new WeakMap();
 export function setSubclassSupportParty(p,party){supportParties.set(p,party||[]);}
 const validParty=p=>[...new Set([p,...(p.coop?.players||[]),...(supportParties.get(p)||[])])].filter(a=>a&&a.hp>0&&a.active!==false);
-export function getSubclassCombatState(p){return states.get(p)||null;}
+export function getSubclassCombatState(p){return p?.networkPresentation?p.networkPresentation.subclassState:states.get(p)||null;}
 export function clearSubclassCombatState(p,reason='cancelled'){
   if(reason!=='worldChanged')clearSunkenPressure(p);
   endPetalStorm(p);
