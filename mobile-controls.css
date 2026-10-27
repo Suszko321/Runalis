@@ -23,6 +23,7 @@ body.mobile-input #mobileControls small {display:block;font-size:10px;color:#e5c
 .mobile-aim-reticle {position:fixed;width:24px;height:24px;transform:translate(-50%,-50%);border:1px solid #f3d18a;border-radius:50%;box-shadow:0 0 0 2px #10172588;pointer-events:none}
 .mobile-aim-reticle::after {content:'+';display:block;text-align:center;line-height:22px;color:#f3d18a}
 .mobile-aim-reticle[hidden] {display:none!important}
+html body.dialogue-active :is(#unitFramesHud,#runalisMinimapHud,#trackedQuestHud,#combatSkillHud) {visibility:hidden!important;pointer-events:none!important}
 .mobile-actions {position:absolute;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(3,72px);gap:7px}
 .mobile-actions button {width:72px;height:56px;overflow:hidden;overflow-wrap:anywhere}
 .mobile-actions .mobile-attack {border-color:#e2bf71!important;background:#3e2a22ed!important}
@@ -105,3 +106,6 @@ html:root body.mobile-input #characterCreatorOverlay .creator-selector-row butto
 html:root body.mobile-input #characterCreatorOverlay .creator-action-row {display:flex!important;flex-wrap:wrap!important;height:auto!important;position:sticky!important;bottom:0!important;padding:8px!important;background:#131512!important;z-index:2}
 html:root body.mobile-input #characterCreatorOverlay :is(.creator-action-row button,.creator-class-card) {min-height:44px!important}
 html:root body.mobile-input #characterCreatorOverlay .creator-helpbar {display:none!important}
+html:root body.mobile-input #characterCreatorOverlay .creator-step-appearance .creator-preview-panel {display:grid!important;grid-template-rows:auto 320px auto!important;width:100%!important;min-height:0!important;height:auto!important;box-sizing:border-box!important;margin:16px 0!important;overflow:visible!important}
+html:root body.mobile-input #characterCreatorOverlay .creator-step-appearance .creator-canvas-shell {height:320px!important;min-height:320px!important;overflow:hidden!important;display:flex!important;justify-content:center!important}
+html:root body.mobile-input #characterCreatorOverlay .creator-step-appearance [data-creator-preview] {width:276px!important;height:320px!important;max-width:100%!important;max-height:320px!important;object-fit:contain!important;image-rendering:pixelated}

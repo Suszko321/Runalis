@@ -786,7 +786,6 @@ class RunalisGame {
       if (event.target.closest?.('#mobileControls,#mobileRotate') || (this.mobileControls && event.target !== this.canvas)) return;
       unlockAudio();
       if (this.developerEditor?.handlePointerDown(event)) return;
-      if (this.getPrimaryControllerInput()?.connected && !this.getPrimaryControllerInput()?.mobile) return;
 
       if (this.dialogue?.active) {
         if (this.dialogue.actor && this.dialogue.actor !== this.player) return;
@@ -801,6 +800,12 @@ class RunalisGame {
         );
 
         if (target) {
+          if (target.type === 'close') {
+            closeDialogue(this.dialogue);
+            event.preventDefault();
+            this.renderOwnedUI();
+            return;
+          }
           updateDialogueInput(
             this.dialogue,
             {
@@ -818,6 +823,7 @@ class RunalisGame {
       }
 
       if (this.paused || this.couchCoopJoinMenu?.active || this.fishingMiniGame?.active || this.marketShop?.active || isBlockingDomOverlayActive()) return;
+      if (this.getPrimaryControllerInput()?.connected && !this.getPrimaryControllerInput()?.mobile) return;
       if (this.mobileControls) return;
 
       if (event.button === 0) {

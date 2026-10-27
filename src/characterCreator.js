@@ -586,6 +586,11 @@ function renderCharacterCreator(overlay, options = {}) {
     ? classStepHtml(state, selectedClass)
     : appearanceStepHtml(state, appearance, selectedClass, game);
 
+  if (state.currentStep === 'appearance' && document.body.classList.contains('mobile-input')) {
+    const panel = overlay.querySelector('.creator-appearance-panel');
+    panel.insertBefore(overlay.querySelector('.creator-preview-panel'), panel.querySelector('.creator-action-row'));
+  }
+
   bindCharacterCreatorEvents(overlay);
   startCreatorPreview(overlay);
   updateCreatorHoldVisual(overlay);
@@ -727,7 +732,7 @@ function previewPanelHtml(selectedClass, state, caption) {
         <h2>${escapeHtml(selectedClass?.name || 'Wayfarer')}</h2>
       </div>
       <div class="creator-canvas-shell">
-        <canvas width="380" height="440" data-creator-preview></canvas>
+        <canvas width="380" height="440" data-creator-preview aria-label="Character appearance preview" role="img"></canvas>
       </div>
       <div class="creator-preview-footer">
         <b>${escapeHtml(ITEMS[CLASS_STARTER_GEAR[selectedClass?.id]?.weapon]?.name || selectedClass?.startingGear || 'Starter Gear')}</b>

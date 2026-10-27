@@ -9,8 +9,9 @@ export function drawDialogueUI(ctx, dialogueState, options = {}) {
   if (!ctx || !dialogueState?.active) return;
 
   const viewport = normalizeViewport(ctx, options.viewport);
-  const box = getDialogueBox(viewport, dialogueState);
-  const layout = getDialogueLayout(box, dialogueState);
+  const box = getDialogueBox(viewport, dialogueState, ctx);
+  const leave = getDialogueLeaveRect(ctx, box);
+  const layout = getDialogueLayout(box, dialogueState, leave.y + leave.h + 10);
   const alpha = getTransitionAlpha(dialogueState);
 
   ctx.save();
@@ -33,6 +34,7 @@ export function drawDialogueUI(ctx, dialogueState, options = {}) {
   }
 
   drawDialogueFooter(ctx, layout, dialogueState, options.touchControls);
+  drawDialogueLeave(ctx, leave);
   ctx.restore();
 }
 
@@ -40,13 +42,15 @@ export function getDialoguePointerTarget(ctx, dialogueState, point, options = {}
   if (!ctx || !dialogueState?.active || !point) return null;
 
   const viewport = normalizeViewport(ctx, options.viewport);
-  const box = getDialogueBox(viewport, dialogueState);
+  const box = getDialogueBox(viewport, dialogueState, ctx);
   if (!contains(box, point.x, point.y)) return null;
+  const leave = getDialogueLeaveRect(ctx, box);
+  if (contains(leave, point.x, point.y)) return { type: 'close' };
 
   if (dialogueState.historyOpen) return { type: 'confirm' };
 
   if (dialogueState.phase === DIALOGUE_PHASES.AWAITING_CHOICE) {
-    const layout = getDialogueLayout(box, dialogueState);
+    const layout = getDialogueLayout(box, dialogueState, leave.y + leave.h + 10);
     const rows = getVisibleChoiceRows(layout, dialogueState);
     for (const row of rows) {
       if (contains(row.rect, point.x, point.y)) {
@@ -58,7 +62,13 @@ export function getDialoguePointerTarget(ctx, dialogueState, point, options = {}
   return { type: 'confirm' };
 }
 
-function getDialogueBox(viewport, dialogueState) {
+function getDialogueBox(viewport, dialogueState, ctx) {
+  // Keep the mobile toolbar reachable without letting it cover dialogue exits.
+  const display = ctx?.canvas.getBoundingClientRect?.();
+  if (ctx?.canvas.ownerDocument?.body.classList.contains('mobile-input') && display?.height > 0) {
+    const inset = Math.min(viewport.height/3,64*ctx.canvas.height/display.height);
+    viewport = {...viewport,y:viewport.y+inset,height:viewport.height-inset};
+  }
   const compact = viewport.width < 720 || viewport.height < 500;
   const marginX = compact ? 12 : Math.max(18, Math.min(34, viewport.width * 0.035));
   const marginY = compact ? 16 : 28;
@@ -81,9 +91,9 @@ function getDialogueBox(viewport, dialogueState) {
   };
 }
 
-function getDialogueLayout(box, dialogueState) {
+function getDialogueLayout(box, dialogueState, contentTop = 0) {
   const footerH = box.compact ? 28 : 34;
-  const innerTop = box.y + box.pad + (box.compact ? 34 : 8);
+  const innerTop = Math.max(contentTop, box.y + box.pad + (box.compact ? 34 : 8));
   const innerBottom = box.y + box.h - footerH - 10;
   const hasChoices = dialogueState.phase === DIALOGUE_PHASES.AWAITING_CHOICE && !dialogueState.historyOpen;
   const choiceCount = hasChoices ? dialogueState.options?.length || 0 : 0;
@@ -120,6 +130,29 @@ function getDialogueLayout(box, dialogueState) {
       h: footerH
     }
   };
+}
+
+function getDialogueLeaveRect(ctx, box) {
+  const display = ctx.canvas.getBoundingClientRect?.();
+  const sx = display?.width > 0 ? ctx.canvas.width/display.width : 1;
+  const sy = display?.height > 0 ? ctx.canvas.height/display.height : 1;
+  const w = Math.min(box.w-16, Math.max(156,146*sx));
+  const h = Math.max(44,44*sy);
+  return {x:box.x+box.w-w-8,y:box.y+8,w,h,font:Math.max(14,14*sy)};
+}
+
+function drawDialogueLeave(ctx, rect) {
+  ctx.save();
+  ctx.fillStyle = '#20202a';
+  ctx.fillRect(rect.x,rect.y,rect.w,rect.h);
+  ctx.strokeStyle = '#d7b56e';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(rect.x,rect.y,rect.w,rect.h);
+  ctx.fillStyle = '#f5e5bd';
+  ctx.font = `bold ${rect.font}px Georgia`;
+  ctx.textAlign = 'center';ctx.textBaseline = 'middle';
+  ctx.fillText('Leave conversation',rect.x+rect.w/2,rect.y+rect.h/2,rect.w-12);
+  ctx.restore();
 }
 
 function drawDialogueBackdrop(ctx, viewport) {
@@ -187,10 +220,10 @@ function drawOwnerBadge(ctx, box, dialogueState) {
 
   ctx.save();
   ctx.font = 'bold 11px Georgia';
-  ctx.textAlign = 'right';
+  ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = 'rgba(232,237,245,0.68)';
-  ctx.fillText(`Player ${dialogueState.ownerSlot} controls this conversation`, box.x + box.w - box.pad, box.y + 24);
+  ctx.fillText(`Player ${dialogueState.ownerSlot} controls this conversation`, box.x + box.pad, box.y + 48);
   ctx.restore();
 }
 
