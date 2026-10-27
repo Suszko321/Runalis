@@ -3,6 +3,7 @@ import {rememberRepeatableInstance} from './instanceEncounterMemory.js';
 import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
 import {initMobileShell, createMobileControls} from './mobileControls.js';
 import {createOnlineSession} from './onlineSession.js';
+import {installReleaseUpdates} from './releaseUpdates.js';
 import { getKeyboardAbilitySlot } from './abilityBindings.js';
 import {updateSimulatedSubclassPlayers} from './simulatedSubclassPlayers.js';
 import {menuDirection,directionalMenuItem} from './menuNavigation.js';
@@ -3272,6 +3273,7 @@ function bindMainMenuActions() {
 }
 
 boot();
+installReleaseUpdates(()=>currentGame);
 
 function startMenuMusicLoop() {
   if (menuMusicFrame) return;

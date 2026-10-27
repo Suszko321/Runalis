@@ -37,6 +37,7 @@ function addDirectory(relative) {
 }
 
 add('index.html');
+add('src/boot.js');
 add('src/main.js');
 add('src/vendor/peerjs-LICENSE.txt');
 // Some shared menu styles are loaded on demand from JavaScript.
@@ -87,9 +88,10 @@ for (const relative of files) {
     fs.writeFileSync(destination, source.replace(/((?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s*)['"])(\.[^'"]+)(['"])/g, (_, prefix, ref, suffix) => `${prefix}${versioned(ref)}${suffix}`));
   } else if (relative.endsWith('.html')) {
     const source = fs.readFileSync(path.join(root, relative), 'utf8');
-    fs.writeFileSync(destination, source.replace(/((?:src|href)\s*=\s*['"])([^'"]+\.(?:js|css)(?:\?[^'"]*)?)(['"])/g, (_, prefix, ref, suffix) => `${prefix}${versioned(ref)}${suffix}`));
+    fs.writeFileSync(destination, source.replace('name="runalis-release" content="development"',`name="runalis-release" content="${release}"`).replace(/((?:src|href)\s*=\s*['"])([^'"]+\.(?:js|css)(?:\?[^'"]*)?)(['"])/g, (_, prefix, ref, suffix) => `${prefix}${versioned(ref)}${suffix}`));
   } else fs.copyFileSync(path.join(root, relative), destination);
 }
 fs.writeFileSync(path.join(output, '.nojekyll'), '');
+fs.writeFileSync(path.join(output, 'release.json'),JSON.stringify({release})+'\n');
 const bytes = [...files].reduce((sum, name) => sum + fs.statSync(path.join(output, name)).size, 0);
 console.log(`Prepared ${files.size} game files (${(bytes / 1024 / 1024).toFixed(1)} MiB) in _site; resource paths and module filename case validated.`);
