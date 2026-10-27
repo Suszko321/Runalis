@@ -1,5 +1,5 @@
 import {createSaveState,applySaveToGame,upsertProfile} from './gameSave.js';
-import {migratePlayer} from './player.js';
+import {migratePlayer,getClassDefinition} from './player.js';
 import {joinOnlineCoopPlayer,leaveCouchCoopPlayer} from './couchCoop.js';
 import {updateDialogueInput,closeDialogue} from './dialogueSystem.js';
 import {openWorkshopService,closeWorkshopService} from './workshopService.js';
@@ -20,7 +20,9 @@ const sceneIds=new WeakMap();let nextScene=0;
 const sceneKey=world=>{if(!sceneIds.has(world))sceneIds.set(world,++nextScene);return `${sceneIds.get(world)}:${world.mode}:${world.floor||0}:${world.seed||0}`;};
 const entityIds=new WeakMap();let nextEntity=0;
 const entityId=(entity,group)=>{if(entity.id!=null)return String(entity.id);if(!entityIds.has(entity))entityIds.set(entity,`${group}-online-${++nextEntity}`);return entityIds.get(entity);};
-function usableCharacter(player){return player?.characterCreationComplete&&!!player.classId&&Array.isArray(player.inventory)&&player.inventory.length<=2000;}
+// The creator completes by choosing a class (including Classless). It has
+// never written a separate characterCreationComplete flag to real profiles.
+function usableCharacter(player){return !!getClassDefinition(player?.classId)?.id&&Array.isArray(player.inventory)&&player.inventory.length<=2000;}
 function friendlyError(error){
  if(error?.type==='unavailable-id')return 'A world already uses that password. Choose another password, or join it.';
  if(error?.type==='peer-unavailable')return 'No open world was found with that password. Check it with the host and try again.';
@@ -46,7 +48,8 @@ class OnlineSession {
   if(!globalThis.isSecureContext||!globalThis.RTCPeerConnection)throw Error('Use the secure Runalis website link or localhost in a browser that supports online play.');
   const attempt=this.attempt=(this.attempt||0)+1;
   this.lastSaveSucceeded=null;
-  if(!usableCharacter(this.game.player))throw Error('Finish creating your character before opening or joining a world.');
+  if(!getClassDefinition(this.game.player?.classId)?.id)throw Error('Choose your character’s class before opening or joining a world.');
+  if(!usableCharacter(this.game.player))throw Error('Your character inventory could not be prepared for online play. Save and reload your character, then try again.');
   if(this.game.world.mode==='act1Opening')throw Error('Finish or skip the opening cinematic first.');
   if(this.game.player.coop?.players?.some(p=>p.active!==false))throw Error('Leave the local co-op session before using online multiplayer.');
   this.connecting=true;this.menu.render();this.setStatus(kind==='host'?'Opening your world…':'Finding the host’s world…');

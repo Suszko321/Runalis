@@ -4,7 +4,7 @@ module.exports=async function launchBrowserGame(page,base='http://127.0.0.1:8768
  await page.goto(base+'/');
  await page.evaluate(async worldMode=>{
   const {createPlayer,chooseClass}=await import('/src/player.js'),{writeProfiles,createSaveState}=await import('/src/gameSave.js'),{createCapitalHubWorld}=await import('/src/hubSystem.js'),{createCaravanOpeningWorld}=await import('/src/act1OpeningSystem.js');
-  const p=createPlayer('Player smoke review');chooseClass(p,'oathkeeper');p.characterCreationComplete=true;p.act1OpeningPending=worldMode==='act1Opening';p.capitalUnlocked=true;
+  const p=createPlayer('Player smoke review');chooseClass(p,'oathkeeper');p.act1OpeningPending=worldMode==='act1Opening';p.capitalUnlocked=true;
   if(worldMode!=='act1Opening')p.story.flags.opening={introPlayed:true,maraConversationComplete:true};
   const world=worldMode==='act1Opening'?createCaravanOpeningWorld():createCapitalHubWorld();Object.assign(p,world.spawn);
   writeProfiles({playerSmoke:{id:'playerSmoke',name:p.name,updated:1,state:createSaveState({player:p,world})}});

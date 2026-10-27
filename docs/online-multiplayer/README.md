@@ -7,6 +7,9 @@ players enter the exact same password and choose **Join World**. The active
 character joins the host's current world; no room code or account is needed.
 One host and up to three guests are supported. Each device keeps a full-screen
 view and its existing keyboard/mouse, gamepad or touchscreen controls.
+Character readiness uses the selected class, including Classless; existing
+profiles do not need a separate creation-complete flag. Both devices must reload
+after this compatibility fix; older multiplayer builds prompt for a refresh.
 
 The host must keep the game tab active. Closing the world or losing the host
 ends the session. Guests can leave and rejoin while the host remains online.
