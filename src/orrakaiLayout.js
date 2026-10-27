@@ -7,7 +7,7 @@ export const ORRAKAI_BUILDINGS = [
   {id:'guild',name:'Warden’s Hall',x:29,y:8,w:15,h:9,door:6,roof:0,partition:9,rooms:['Guild chamber','Records room']},
   {id:'shrine',name:'Covenant Sanctuary',x:10,y:8,w:15,h:9,door:6,roof:2,partition:9,rooms:['Sanctuary','Vestry']},
   {id:'bank',name:'Counting House',x:17,y:22,w:12,h:9,door:3,roof:3,partition:6,rooms:['Counting room','Strongroom']},
-  {id:'smith',name:'Mara’s Forge',x:47,y:22,w:15,h:9,door:6,roof:1,partition:10,rooms:['Forge','Tool store']},
+  {id:'smith',name:'Aren’s Forge',x:47,y:22,w:15,h:9,door:6,roof:1,partition:10,rooms:['Forge','Tool store']},
   {id:'infirmary',name:'Covenant Infirmary',x:16,y:36,w:14,h:7,door:6,roof:2,partition:9,rooms:['Receiving room','Recovery ward']},
   {id:'alchemist',name:'The Root & Retort',x:46,y:36,w:12,h:7,door:3,roof:1,partition:6,rooms:['Apothecary','Herb store']},
   {id:'home',name:'Corin’s Workshop',workshopName:'Corin’s Workshop',x:7,y:23,w:8,h:8,door:1,roof:3,partition:4,rooms:['Workshop','Living quarters']}
@@ -75,7 +75,7 @@ export function reconstructOrrakai(world){
  // Retire obsolete presentation only. All NPCs, services, evidence, resources and exits survive.
  world.objects=world.objects.filter(o=>!(o.decorative||o.kind==='worldDressing'||['treeCluster','shrub','smallBoulder','brokenWall','ruinPillar','graveMarker'].includes(o.kind))||o.npcId||o.questId||o.poiId||o.kind==='poiInvestigation');
  const smith=world.objects.find(o=>o.id==='smith');
- if(smith)Object.assign(smith,{workshopService:'blacksmith',workshopName:'Mara’s Forge',workRole:'smith',stationary:true,dirX:1,dirY:0,r:14});
+ if(smith)Object.assign(smith,{name:'Aren the Smith',bodyType:'male',workshopService:'blacksmith',workshopName:'Aren’s Forge',workRole:'smith',stationary:true,dirX:1,dirY:0,r:14});
  const oldSmithFixture=world.objects.find(o=>o.id==='orrakaiBlacksmith');
  if(oldSmithFixture)Object.assign(oldSmithFixture,{serviceMarkerOnly:true,hideOnRadar:true,interactable:false,hideLabel:true});
  if(!world.objects.some(o=>o.id==='orrakaiCraftsman'))world.objects.push({id:'orrakaiCraftsman',npcId:'orrakaiCraftsman',kind:'npc',name:'Corin Reed, Craftsman',...point(9,26),r:14,workshopService:'craftsman',workshopName:'Corin’s Workshop',workRole:'craftsman',stationary:true,orrakaiResident:true,disposition:'friendly',factionId:'orrakai',dirX:-1,dirY:0,shirt:'#927449',pants:'#403c31',talk:'Good tools, proper materials, and patience. Bring your supplies to the bench; we will make something that lasts.'});
@@ -124,6 +124,14 @@ export function reconstructOrrakai(world){
 
 // Reapply only these story anchors after older published object placements.
 // Keep their legacy IDs, services and quests; never rebuild edited terrain here.
+export function ensureArenSmithIdentity(world){
+ if(world?.mode!=='capital')return world;
+ const smith=world.objects.find(o=>o.id==='smith');
+ if(smith)Object.assign(smith,{name:'Aren the Smith',displayName:'Aren the Smith',bodyType:'male',workshopName:'Aren’s Forge'});
+ const forge=world.buildings?.find(b=>b.id==='smith');if(forge)forge.name='Aren’s Forge';
+ return world;
+}
+
 export function ensureRootRetortAccess(world){
  if(world?.mode!=='capital')return world;
  const fixture=world.objects.find(o=>o.id==='orrakaiAlchemist');

@@ -76,7 +76,7 @@ const root=path.resolve('docs/enemy-visual-overhaul'),base='http://127.0.0.1:876
   });
   await playerHashes(baseline);await playerHashes(page);await page.waitForTimeout(200);
   const oldHashes=await playerHashes(baseline),newHashes=await playerHashes(page);assert.deepEqual(newHashes,oldHashes);report.originalPlayerPixels={renders:newHashes.length,identical:true};
-  const smoke=await browser.newPage({viewport:{width:1280,height:720}});smoke.on('pageerror',e=>errors.push(e.message));await smoke.goto(base+'/');await smoke.locator('#developerModeBtn').click();await smoke.locator('[name="worldState"]').selectOption('fresh');await smoke.locator('.developer-launch').click();await smoke.waitForFunction(()=>document.querySelector('#app')?.classList.contains('active'));await smoke.waitForTimeout(1000);await smoke.screenshot({path:path.join(root,'live-game.png')});report.gameLaunch=true;
+  const smoke=await browser.newPage({viewport:{width:1280,height:720}});smoke.on('pageerror',e=>errors.push(e.message));await require('./browser-game-smoke.cjs')(smoke,base);await smoke.waitForTimeout(1000);await smoke.screenshot({path:path.join(root,'live-game.png')});report.gameLaunch=true;
   report.errors=errors;report.failedRequests=failed;assert.deepEqual(errors,[]);assert.deepEqual(failed,[]);report.pass=true;
   fs.writeFileSync(path.join(root,'browser-validation.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
  }finally{await browser.close();}

@@ -952,6 +952,9 @@ function updateHeavyAttackCharge(player, world, input, dt) {
 function releaseHeavyAttackCharge(player, world, input, log, now, options = {}) {
   const state = ensureCombatState(player);
   if (!state.heavyChargeActive) return false;
+  const aim = getAimDirection(player, input);
+  state.heavyChargeAimX = aim.x;
+  state.heavyChargeAimY = aim.y;
 
   const heavy = !options.forceNormal && (
     !!options.forceHeavy ||

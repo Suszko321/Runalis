@@ -543,7 +543,8 @@ export const NPCS = {
   maraSmith: {
     id: 'maraSmith',
     objectId: 'smith',
-    name: 'Mara the Smith',
+    name: 'Aren the Smith',
+    bodyType: 'male',
     factionId: 'outpost',
     disposition: 'friendly',
     role: 'Smith',
@@ -970,7 +971,7 @@ export const DIALOGUES = {
 
   maraSmithIntro: {
     id: 'maraSmithIntro',
-    speaker: 'Mara the Smith',
+    speaker: 'Aren the Smith',
     text:
       'Weapons do not save fools. Good iron only helps the person holding it make fewer excuses.',
     options: [
@@ -2188,12 +2189,12 @@ export const QUESTS = {
 
   ironForMara: {
     id: 'ironForMara',
-    title: 'Iron for Mara',
+    title: 'Iron for Aren',
     giverNpcId: 'maraSmith',
     recommendedLevel: 2,
     type: 'gathering',
     summary:
-      'Mara needs ore to keep the outpost armed.',
+      'Aren needs ore to keep the outpost armed.',
     stages: [
       {
         id: 'collectOre',
@@ -2202,7 +2203,7 @@ export const QUESTS = {
       },
       {
         id: 'returnToMara',
-        text: 'Speak with Mara the Smith.',
+        text: 'Speak with Aren the Smith.',
         objectives: [{ type: 'talk', npcId: 'maraSmith', required: 1 }]
       }
     ],

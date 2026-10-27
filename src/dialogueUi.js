@@ -32,7 +32,7 @@ export function drawDialogueUI(ctx, dialogueState, options = {}) {
     drawDialogueChoices(ctx, layout, dialogueState);
   }
 
-  drawDialogueFooter(ctx, layout, dialogueState);
+  drawDialogueFooter(ctx, layout, dialogueState, options.touchControls);
   ctx.restore();
 }
 
@@ -341,10 +341,10 @@ function drawDialogueHistory(ctx, layout, dialogueState) {
   ctx.restore();
 }
 
-function drawDialogueFooter(ctx, layout, dialogueState) {
-  const footer = getFooterText(dialogueState);
+function drawDialogueFooter(ctx, layout, dialogueState, touchControls = false) {
+  const footer = getFooterText(dialogueState, touchControls);
   ctx.save();
-  ctx.font = `${layout.box.compact ? 9 : 11}px Georgia`;
+  ctx.font = `${touchControls ? 12 : layout.box.compact ? 9 : 11}px Georgia`;
   ctx.textAlign = 'right';
   ctx.textBaseline = 'bottom';
   ctx.fillStyle = 'rgba(232,237,245,0.62)';
@@ -352,7 +352,12 @@ function drawDialogueFooter(ctx, layout, dialogueState) {
   ctx.restore();
 }
 
-function getFooterText(dialogueState) {
+function getFooterText(dialogueState, touchControls = false) {
+  if (touchControls) {
+    if (dialogueState.phase === DIALOGUE_PHASES.TYPING) return 'Tap dialogue to reveal text';
+    if (dialogueState.phase === DIALOGUE_PHASES.AWAITING_CHOICE) return 'Tap a response to choose';
+    if (dialogueState.phase === DIALOGUE_PHASES.AWAITING_CONTINUE) return 'Tap dialogue to continue';
+  }
   if (dialogueState.historyOpen) return '↑/↓ Review   A / Enter / H Return';
   const controller = dialogueState.inputDevice === 'controller';
   if (dialogueState.phase === DIALOGUE_PHASES.OPENING) return 'Conversation opening…';

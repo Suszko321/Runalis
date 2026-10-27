@@ -1,7 +1,7 @@
 import {rememberRepeatableInstance} from './instanceEncounterMemory.js';
 import {resetFailedDungeonArena} from './dungeonArenaSystem.js';
 import {dressWorld} from './worldAuthorship.js';
-import {reconstructOrrakai, migrateOrrakaiPosition,ensureRootRetortAccess} from './orrakaiLayout.js';
+import {reconstructOrrakai, migrateOrrakaiPosition,ensureRootRetortAccess,ensureArenSmithIdentity} from './orrakaiLayout.js';
 import {migrateEchorynPosition} from './echorynLayout.js';
 import {isClassAvailable} from './classData.js';
 // hubSystem.js
@@ -254,6 +254,7 @@ export function createCapitalHubWorld(options = {}) {
   dressWorld(world);
   reconstructOrrakai(world);
   if (!options.skipPublishedOverride) applyPublishedWorldOverride(world);
+  ensureArenSmithIdentity(world);
   ensureRootRetortAccess(world);
   return world;
 }
@@ -724,14 +725,15 @@ function createCapitalObjects() {
     hubObject('townProp', 'refugeeBedrolls', 'Refugee Bedrolls', 19, 35, { propType: 'sacks', decorative: true, interactable: false, hideLabel: true }),
     hubObject('townProp', 'refugeeCartDebris', 'Damaged Refugee Cart', 18, 34, { propType: 'woodPile', decorative: true, interactable: false, hideLabel: true }),
     hubObject('townProp', 'plagueTentSupplies', 'Plague Tent Supplies', 28, 18, { propType: 'crateStack', decorative: true, interactable: false, hideLabel: true }),
-    hubObject('npc', 'smith', 'Mara the Smith', 55, 24, {
+    hubObject('npc', 'smith', 'Aren the Smith', 55, 24, {
+      bodyType: 'male',
       npcId: 'maraSmith',
       dialogueId: 'maraSmithIntro',
       factionId: 'outpost',
       disposition: 'friendly',
       dirX: -1,
       dirY: 0,
-      talk: 'Mara the Smith: "The forge is inside town now. Bring ore, coin, or anything worth repairing."'
+      talk: 'Aren the Smith: "The forge is inside town now. Bring ore, coin, or anything worth repairing."'
     }),
     hubObject('npc', 'templarTrainer', 'Sister Elian', 22, 36, {
       instructorType: 'class',

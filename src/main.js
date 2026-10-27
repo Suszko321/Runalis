@@ -1,6 +1,7 @@
 import {updateMalakarEncounter,handleMalakarInput,handleMalakarKeyboard} from './malakarEncounter.js';
 import {rememberRepeatableInstance} from './instanceEncounterMemory.js';
 import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
+import {initMobileShell, createMobileControls} from './mobileControls.js';
 import { getKeyboardAbilitySlot } from './abilityBindings.js';
 import {updateSimulatedSubclassPlayers} from './simulatedSubclassPlayers.js';
 import {menuDirection,directionalMenuItem} from './menuNavigation.js';
@@ -85,7 +86,7 @@ import {
 } from './ui.js';
 import { drawMinimapPanel, renderMinimapHud, updateMinimapExploration } from './minimapHud.js';
 
-import { TILE } from './data.js';
+import { TILE, getAbilityById } from './data.js';
 import { ACT1_OVERWORLD_DISPLAY_NAME, getDefaultWorldName, normalizePlayerFacingWorldName } from './worldNames.js';
 import { createDeveloperEditor } from './developerEditor.js';
 import { createDeveloperWorld, DEVELOPER_MAP_OPTIONS } from './developerWorldFactory.js';
@@ -256,7 +257,6 @@ import {
 
 import {
   applyCombatAimFacing,
-  clearCombatAimInput,
   resolveActorCombatAim,
   writeCombatAimToInput
 } from './combatAim.js';
@@ -351,6 +351,8 @@ function normalizeOpeningQuestFlow(player) {
 // GAME CLASS
 // -----------------------------------------------------------------------------
 
+initMobileShell();
+
 class RunalisGame {
   constructor(profileId, profileName, savedState = null, options = {}) {
     this.canvas = document.getElementById('game');
@@ -386,6 +388,7 @@ class RunalisGame {
     this.keyboardAttackHeld = false;
     this.pointerAttackHeld = false;
     this.pointerBlockHeld = false;
+    this.mouseAimPosition = null;
 
     this.input = {
       mouseX: 0,
@@ -459,6 +462,18 @@ class RunalisGame {
 
     initUI(this);
     this.bind();
+    this.mobileControls = createMobileControls(this, {
+      unlock: unlockAudio,
+      abilityName: id => getAbilityById(id)?.name,
+      cancelCharge: () => { cancelActiveAbilityCharge(this.player); cancelActiveHeavyAttackCharge(this.player, this.world); },
+      menu: () => {
+        if (this.dialogue?.active || isBlockingDomOverlayActive() || this.world?.mode === 'act1Opening') return;
+        if (this.paused) this.togglePause(false);
+        toggleGameMenuChooser(this.setUiOwner(this.player));
+      },
+      pause: () => this.togglePause(),
+      skip: () => requestAct1OpeningSkip(this)
+    });
 
     if (this.developerModeOptions) {
       this.player.x = this.world.spawn?.x ?? this.player.x;
@@ -587,14 +602,18 @@ class RunalisGame {
   }
 
   bind() {
+    this.openingSkipKeys=new Set();
     this.keydown = event => {
       unlockAudio();
       if(handleMalakarKeyboard(this,event))return;
       if (this.developerEditor?.handleKeyDown(event)) return;
       const key = event.key.toLowerCase();
+      const physicalKey=event.code||key;
+      if(this.openingSkipKeys.has(physicalKey)){event.preventDefault();return;}
 
-      if (this.world?.mode === 'act1Opening' && !isBlockingDomOverlayActive() && ['enter', 'escape', 'e', 'backspace'].includes(key)) {
+      if (this.world?.mode === 'act1Opening' && !isBlockingDomOverlayActive() && !isEditableTextTarget(event.target)) {
         event.preventDefault();
+        this.openingSkipKeys.add(physicalKey);
         requestAct1OpeningSkip(this);
         return;
       }
@@ -731,6 +750,7 @@ class RunalisGame {
     this.keyup = event => {
       if (this.developerEditor?.handleKeyUp(event)) return;
       const key = event.key.toLowerCase();
+      if(this.openingSkipKeys.delete(event.code||key)){event.preventDefault();return;}
 
       this.keys.delete(key);
 
@@ -756,14 +776,17 @@ class RunalisGame {
     };
 
     this.mousemove = event => {
+      if (this.mobileControls) return;
+      if (event.target.closest?.('#mobileControls,#mobileRotate') || event.sourceCapabilities?.firesTouchEvents) return;
       if (this.developerEditor?.handlePointerMove(event)) return;
       this.updateMousePosition(event);
     };
 
     this.mousedown = event => {
+      if (event.target.closest?.('#mobileControls,#mobileRotate') || (this.mobileControls && event.target !== this.canvas)) return;
       unlockAudio();
       if (this.developerEditor?.handlePointerDown(event)) return;
-      if (this.getPrimaryControllerInput()?.connected) return;
+      if (this.getPrimaryControllerInput()?.connected && !this.getPrimaryControllerInput()?.mobile) return;
 
       if (this.dialogue?.active) {
         if (this.dialogue.actor && this.dialogue.actor !== this.player) return;
@@ -795,6 +818,7 @@ class RunalisGame {
       }
 
       if (this.paused || this.couchCoopJoinMenu?.active || this.fishingMiniGame?.active || this.marketShop?.active || isBlockingDomOverlayActive()) return;
+      if (this.mobileControls) return;
 
       if (event.button === 0) {
         this.pointerAttackHeld = true;
@@ -814,6 +838,7 @@ class RunalisGame {
     };
 
     this.mouseup = event => {
+      if (this.mobileControls) return;
       if (this.developerEditor?.handlePointerUp(event)) return;
       if (event.button === 0) {
         this.pointerAttackHeld = false;
@@ -840,7 +865,10 @@ class RunalisGame {
     };
 
     this.blur = () => {
+      this.mouseAimPosition = null;
+      this.input.mouseAimActive = false;
       this.keys.clear();
+      this.openingSkipKeys.clear();
 
       this.input.attackHeld = false;
       this.input.attackPressed = false;
@@ -878,6 +906,7 @@ class RunalisGame {
     if (this.destroyed) return;
     this.destroyed = true;
     this.started = false;
+    this.mobileControls?.destroy();
     this.developerEditor?.destroy();
     this.developerEditor = null;
 
@@ -907,6 +936,7 @@ class RunalisGame {
 
     this.input.mouseWorldX = this.input.mouseX + this.camera.x;
     this.input.mouseWorldY = this.input.mouseY + this.camera.y;
+    if (!this.mobileControls) this.mouseAimPosition = {x:event.clientX,y:event.clientY};
   }
 
   updateControllerInputs() {
@@ -945,7 +975,7 @@ class RunalisGame {
       this.hostControllerSlotIndex
     );
 
-    return assignments.player1 || { slotIndex: -1, connected: false };
+    return assignments.player1 || this.mobileControls?.input || { slotIndex: -1, connected: false };
   }
 
   getHostControllerSlotIndex() {
@@ -984,6 +1014,7 @@ class RunalisGame {
   }
 
   getActorForControllerInput(input) {
+    if (input?.mobile) return this.player;
     return getCouchCoopActorForControllerInput(this, input);
   }
 
@@ -1415,6 +1446,7 @@ class RunalisGame {
     const now = time / 1000;
 
     this.updateControllerInputs();
+    this.mobileControls?.update(now);
     if (this.developerEditor && !this.developerEditor.shouldRunGameplay()) {
       this.developerEditor.handleControllerInput(this.controllerInput);
     } else {
@@ -1442,6 +1474,7 @@ class RunalisGame {
 
     if (this.dialogue?.active) {
       drawDialogueUI(this.ctx, this.dialogue, {
+        touchControls: !!this.mobileControls && !this.primaryControllerActive,
         viewport: this.getDialogueViewport(this.dialogue.actor || this.player)
       });
     }
@@ -1455,6 +1488,7 @@ class RunalisGame {
       this.uiTimer = 0.2;
     }
 
+    this.mobileControls?.endFrame();
     requestAnimationFrame(nextTime => this.loop(nextTime));
   }
 
@@ -2217,6 +2251,14 @@ class RunalisGame {
     const primary = this.getPrimaryControllerInput();
     let dx = 0;
     let dy = 0;
+    // A fresh mouse move can steer a charge even with an idle gamepad plugged
+    // in. Moving either stick returns aim to the controller immediately.
+    if (primary?.connected && !primary.mobile && primary.hasAim) this.mouseAimPosition = null;
+    if (this.mouseAimPosition) {
+      const rect = this.canvas.getBoundingClientRect();
+      this.input.mouseWorldX = (this.mouseAimPosition.x-rect.left)*this.canvas.width/rect.width + this.camera.x;
+      this.input.mouseWorldY = (this.mouseAimPosition.y-rect.top)*this.canvas.height/rect.height + this.camera.y;
+    }
 
     if (primary?.connected) {
       dx = primary.moveX || 0;
@@ -2226,7 +2268,10 @@ class RunalisGame {
       this.input.blockHeld = !!primary.blockHeld;
       this.input.attackHeld = !!primary.attackHeld;
 
-      const aim = resolveActorCombatAim(this.player, primary);
+      const aimInput = !primary.mobile && this.mouseAimPosition ? {
+        ...primary, mouseAimActive:true, mouseWorldX:this.input.mouseWorldX, mouseWorldY:this.input.mouseWorldY
+      } : primary;
+      const aim = resolveActorCombatAim(this.player, aimInput);
       writeCombatAimToInput(this.input, this.player, aim, 160);
       applyCombatAimFacing(this.player, aim, { onlyRightStick: !this.input.attackHeld });
     } else {
@@ -2235,7 +2280,13 @@ class RunalisGame {
       if (this.keys.has('a') || this.keys.has('arrowleft')) dx -= 1;
       if (this.keys.has('d') || this.keys.has('arrowright')) dx += 1;
 
-      clearCombatAimInput(this.input);
+      // Keep the cursor attached to its screen position as the camera moves.
+      const aim = resolveActorCombatAim(this.player, {
+        moveX:dx, moveY:dy, mouseAimActive:!!this.mouseAimPosition,
+        mouseWorldX:this.input.mouseWorldX, mouseWorldY:this.input.mouseWorldY
+      });
+      writeCombatAimToInput(this.input, this.player, aim, 160);
+      applyCombatAimFacing(this.player, aim, {onlyExplicitAim:true});
       this.input.sprintHeld = this.keys.has('shift');
       this.input.blockHeld = !!this.pointerBlockHeld;
       this.input.attackHeld = this.keyboardAttackHeld || this.pointerAttackHeld;
@@ -2571,7 +2622,7 @@ class RunalisGame {
     }
 
     const aimFacingApplied = applyCombatAimFacing(this.player, this.player.combatAim, {
-      onlyRightStick: true
+      onlyExplicitAim: true
     });
 
     if (!aimFacingApplied) {
@@ -3149,17 +3200,11 @@ function bindMainMenuActions() {
       .join('');
   }
 
-  const openSetup = () => {
-    setup?.classList.add('active');
-    setup?.setAttribute('aria-hidden', 'false');
-    mapSelect?.focus();
-  };
   const closeSetup = () => {
     setup?.classList.remove('active');
     setup?.setAttribute('aria-hidden', 'true');
   };
 
-  document.getElementById('developerModeBtn')?.addEventListener('click', openSetup);
   setup?.querySelectorAll('[data-close-developer-setup]').forEach(button => button.addEventListener('click', closeSetup));
   setup?.addEventListener('click', event => { if (event.target === setup) closeSetup(); });
   setupForm?.addEventListener('submit', event => {
@@ -3180,7 +3225,7 @@ function bindMainMenuActions() {
     else document.getElementById('profileName')?.focus();
   });
   document.getElementById('newGameBtn')?.addEventListener('click', () => document.getElementById('profileName')?.focus());
-  document.getElementById('settingsBtn')?.addEventListener('click', () => showLexiconMessage('Settings', 'Gameplay settings are available from the in-game menus. Developer Mode has separate editor preferences.'));
+  document.getElementById('settingsBtn')?.addEventListener('click', () => showLexiconMessage('Settings', 'Gameplay settings are available from the in-game menus.'));
   document.getElementById('creditsBtn')?.addEventListener('click', () => showLexiconMessage('Credits', 'Runalis — original dark-fantasy RPG project and code-drawn world.'));
   document.getElementById('quitGameBtn')?.addEventListener('click', () => {
     window.close();

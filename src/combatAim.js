@@ -1,9 +1,9 @@
 // combatAim.js
-// Shared combat aim resolution for controller-first play.
+// Shared live aim resolution for cursor, touch and controller play.
 //
 // Priority:
 // 1. Right stick, when meaningfully active.
-// 2. Mouse aim, when a caller marks mouse aim active.
+// 2. Mouse / world-touch aim, when a caller marks pointer aim active.
 // 3. Left stick movement as fallback aim.
 // 4. Active charge aim / last valid combat aim.
 // 5. Actor facing / south fallback.
@@ -35,8 +35,8 @@ export function normalizeAimVector(x, y, threshold = 0.001) {
 
 export function resolveActorCombatAim(actor, input = {}) {
   const right = normalizeAimVector(
-    input.rightStickAimX ?? input.rightStickX ?? input.rawAimX,
-    input.rightStickAimY ?? input.rightStickY ?? input.rawAimY,
+    input.rightStickAimX ?? input.rightStickX ?? input.rawAimX ?? (input.rightStickActive ? input.combatAimX ?? input.aimX : 0),
+    input.rightStickAimY ?? input.rightStickY ?? input.rawAimY ?? (input.rightStickActive ? input.combatAimY ?? input.aimY : 0),
     RIGHT_STICK_AIM_DEADZONE
   );
   const left = normalizeAimVector(
@@ -50,12 +50,12 @@ export function resolveActorCombatAim(actor, input = {}) {
   let aim = getActiveChargeAim(actor) || getLastActorAim(actor);
   let rightStickActive = false;
 
-  if (input.rightStickActive === true || right.active) {
+  if (right.active) {
     source = 'rightStick';
-    aim = right.active ? right : normalizeAimVector(input.aimX, input.aimY);
+    aim = right;
     rightStickActive = true;
   } else if (mouse.active) {
-    source = 'mouse';
+    source = input.mobile ? 'touch' : 'mouse';
     aim = mouse;
   } else if (left.active) {
     source = 'leftStick';
@@ -73,10 +73,12 @@ export function resolveActorCombatAim(actor, input = {}) {
     source,
     rightStickMagnitude: right.magnitude,
     leftStickMagnitude: left.magnitude,
-    rightStickActive
+    rightStickActive,
+    targetX: mouse.active && !rightStickActive ? Number(input.mouseWorldX) : null,
+    targetY: mouse.active && !rightStickActive ? Number(input.mouseWorldY) : null
   };
 
-  if (source === 'rightStick' || source === 'mouse' || source === 'leftStick') {
+  if (source === 'rightStick' || source === 'mouse' || source === 'touch' || source === 'leftStick') {
     actor.lastCombatAimX = resolved.x;
     actor.lastCombatAimY = resolved.y;
   }
@@ -92,12 +94,16 @@ export function writeCombatAimToInput(input, actor, aim, distance = 160) {
   input.combatAimY = aim.y;
   input.aimSource = aim.source;
   input.rightStickActive = !!aim.rightStickActive;
+  input.rightStickAimX = aim.rightStickActive ? aim.x : 0;
+  input.rightStickAimY = aim.rightStickActive ? aim.y : 0;
   input.rightStickMagnitude = aim.rightStickMagnitude || 0;
   input.leftStickMagnitude = aim.leftStickMagnitude || 0;
   input.hasAim = true;
+  input.mobile = aim.source === 'touch';
+  input.mouseAimActive = aim.source === 'mouse' || aim.source === 'touch';
 
-  input.mouseWorldX = (actor.x || 0) + aim.x * distance;
-  input.mouseWorldY = (actor.y || 0) + aim.y * distance;
+  input.mouseWorldX = Number.isFinite(aim.targetX) ? aim.targetX : (actor.x || 0) + aim.x * distance;
+  input.mouseWorldY = Number.isFinite(aim.targetY) ? aim.targetY : (actor.y || 0) + aim.y * distance;
 
   return input;
 }
@@ -108,7 +114,10 @@ export function clearCombatAimInput(input) {
   input.combatAimX = null;
   input.combatAimY = null;
   input.aimSource = null;
+  input.mouseAimActive = false;
+  input.mobile = false;
   input.rightStickActive = false;
+  input.rightStickAimX = input.rightStickAimY = 0;
   input.rightStickMagnitude = 0;
   input.leftStickMagnitude = 0;
   input.hasAim = false;
@@ -116,9 +125,10 @@ export function clearCombatAimInput(input) {
   return input;
 }
 
-export function applyCombatAimFacing(actor, aim, { onlyRightStick = false } = {}) {
+export function applyCombatAimFacing(actor, aim, { onlyRightStick = false, onlyExplicitAim = false } = {}) {
   if (!actor || !aim) return false;
   if (onlyRightStick && aim.source !== 'rightStick') return false;
+  if (onlyExplicitAim && !['rightStick','mouse','touch'].includes(aim.source)) return false;
 
   const resolved = normalizeAimVector(aim.x, aim.y);
   if (!resolved.active) return false;

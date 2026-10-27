@@ -55,9 +55,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
   await arena.locator('#morph').selectOption('sunken');
   await arena.evaluate(async()=>{const {useAbility,updateCombat}=await import('/src/combat.js');const g=combatReview.game,t=performance.now()/1000,input={hasAim:true,combatAimX:1,combatAimY:0,ability3Held:true};useAbility(3,g.player,g.world,g.log,t,input);updateCombat(g.player,g.world,input,.45,t+.45,g.log);g.world.effects.forEach(f=>f.age=.03);combatReview.draw();});
   assert(!(await arena.evaluate(()=>combatReview.game.player.activeChannel)));assert(await arena.evaluate(()=>combatReview.game.world.effects.some(f=>f.kind==='sunkenSkill')));await arena.locator('#arena').screenshot({path:'docs/skill-morphs/optional-sunken-channel.png'});
-  const smoke=await browser.newPage({viewport:{width:1280,height:720}});smoke.on('pageerror',e=>errors.push(e.message));await smoke.goto(base+'/');await smoke.locator('#developerModeBtn').click();
-  const capital=await smoke.locator('[data-developer-map] option').evaluateAll(options=>options.find(o=>/orrakai/i.test(o.textContent))?.value);if(capital)await smoke.locator('[data-developer-map]').selectOption(capital);
-  await smoke.locator('[name="worldState"]').selectOption('fresh');await smoke.locator('.developer-launch').click();await smoke.waitForFunction(()=>document.querySelector('#app')?.classList.contains('active'));
+  const smoke=await browser.newPage({viewport:{width:1280,height:720}});smoke.on('pageerror',e=>errors.push(e.message));await require('./browser-game-smoke.cjs')(smoke,base);
   assert.deepEqual(errors,[]);fs.writeFileSync('docs/skill-morphs/browser-checks.json',JSON.stringify({layouts,errors,checks:['Original tree accessible without calling','Mastery gates and optional original restoration','Mouse, refreshed detail controls and controller morph selection','Canonical hotbar assignment and independent selections','One gold point reset preserves choices','Review arena per-skill channel','Full game new-character smoke']},null,2));
   console.log(JSON.stringify({pass:true,layouts,errors},null,2));
  }finally{await browser.close();}

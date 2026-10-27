@@ -37,10 +37,7 @@ const root=path.resolve('docs/loot-overhaul');fs.mkdirSync(root,{recursive:true}
  await page.locator('#marketShopOverlay').screenshot({path:path.join(root,'mythical-merchant.png')});
  const purchaseBefore=await page.evaluate(()=>({gold:lootReview.player.gold,count:lootReview.player.inventory.length}));await page.locator('[data-market-offer="pilgrimVigilTrinket"]').click();await page.locator('[data-market-buy="pilgrimVigilTrinket"]').click();const purchase=await page.evaluate(()=>({gold:lootReview.player.gold,item:lootReview.player.inventory.findLast(e=>e.id==='pilgrimVigilTrinket')}));assert.equal(purchase.gold,purchaseBefore.gold-1250);assert.equal(purchase.item.upgradeTier,1);assert.ok(purchase.item.instanceId);report.merchantPurchase=true;
  const smoke=await browser.newPage({viewport:{width:1280,height:720}});smoke.on('pageerror',e=>errors.push(e.message));smoke.on('response',r=>{if(r.status()>=400)failed.push(r.url());});await smoke.goto('http://127.0.0.1:8768/');
- // Boot populates map options immediately before binding the menu handlers.
- // Wait for that readiness signal before clicking a visible but unbound button.
- await smoke.waitForFunction(()=>document.querySelector('[data-developer-map]')?.options.length>0);
- await smoke.locator('#developerModeBtn').click();await smoke.locator('[name="worldState"]').selectOption('fresh');await smoke.locator('.developer-launch').click();await smoke.waitForFunction(()=>document.querySelector('#app')?.classList.contains('active'));await smoke.waitForTimeout(600);await smoke.screenshot({path:path.join(root,'live-game.png')});report.gameLaunch=true;
+ await require('./browser-game-smoke.cjs')(smoke);await smoke.waitForTimeout(600);await smoke.screenshot({path:path.join(root,'live-game.png')});report.gameLaunch=true;
  report.errors=errors;report.failedRequests=failed;assert.deepEqual(errors,[]);assert.deepEqual(failed,[]);delete report.market.text;report.pass=true;fs.writeFileSync(path.join(root,'browser-verification.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1});

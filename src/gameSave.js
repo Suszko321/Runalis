@@ -1099,7 +1099,6 @@ function getProfileMenuFocusableElements() {
     : [
         '#continueGameBtn',
         '#newGameBtn',
-        '#developerModeBtn',
         '#settingsBtn',
         '#creditsBtn',
         '#quitGameBtn',

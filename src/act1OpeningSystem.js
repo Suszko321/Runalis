@@ -283,7 +283,7 @@ function createOpeningObjects() {
 
 function showOpeningCard(title, subtitle, duration = 5000) {
   const overlay = ensureOpeningOverlay();
-  overlay.innerHTML = `<strong>${title}</strong><span>${subtitle}</span><small>Confirm or Cancel to skip</small>`;
+  overlay.innerHTML = `<strong>${title}</strong><span>${subtitle}</span><small>Press any key to skip · Controller: A / B</small>`;
   overlay.classList.remove('blackout'); overlay.classList.add('visible');
   clearTimeout(overlay.hideTimer);
   overlay.hideTimer = window.setTimeout(() => overlay.classList.remove('visible'), duration);

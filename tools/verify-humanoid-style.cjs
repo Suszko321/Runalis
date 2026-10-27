@@ -54,7 +54,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
    const a=enemyArtReview;a.controls.pose.value='walk';a.controls.facing.value='1';a.rebuild();a.benchmark(30,36);return a.benchmark(120,36);
   });
   const smoke=await browser.newPage({viewport:{width:1280,height:720}});smoke.on('pageerror',e=>errors.push(e.message));
-  await smoke.goto('http://127.0.0.1:8768/');await smoke.locator('#developerModeBtn').click();await smoke.locator('[name="worldState"]').selectOption('fresh');await smoke.locator('.developer-launch').click();
+  await require('./browser-game-smoke.cjs')(smoke);
   await smoke.waitForFunction(()=>document.querySelector('#app')?.classList.contains('active'));await smoke.waitForTimeout(800);report.liveGameLaunch=true;
   await smoke.screenshot({path:'docs/humanoid-art-style/live-game.png'});
   assert.deepEqual(errors,[]);assert.deepEqual(missing,[]);

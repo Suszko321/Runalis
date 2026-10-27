@@ -2114,6 +2114,17 @@ function ensureQuestLog(player) {
 
   if (!player.quests.active) player.quests.active = {};
   if (!player.quests.completed) player.quests.completed = {};
+  // Keep stable smith/quest IDs for old saves while refreshing Aren's visible
+  // identity. Inventory, objective progress and reward claims stay untouched.
+  const smithDefinition=getQuest('ironForMara');
+  for(const collection of [player.quests.active,player.quests.completed]){
+    const saved=collection.ironForMara;if(!saved||typeof saved!=='object')continue;
+    saved.title=smithDefinition.title;saved.summary=smithDefinition.summary;
+    if(collection===player.quests.active){
+      const stage=smithDefinition.stages.find(s=>s.id===saved.currentStageId)||smithDefinition.stages[saved.stageIndex||0];
+      if(stage){saved.currentStageTitle=stage.title||stage.text||'';saved.currentStageText=stage.text||'';}
+    }
+  }
   reconcileAct1QuestDefinition(player);
   reconcileBloodlineQuestDefinitions(player);
   ensureQuestStateBridge(player);

@@ -629,7 +629,7 @@ export function talkWarden(game) {
 }
 
 export function talkSmith(game) {
-  game.log('Mara the Smith: "Bring your gear, materials and coin to my forge in Orrakai."');
+  game.log('Aren the Smith: "Bring your gear, materials and coin to my forge in Orrakai."');
 
   addStatusText(game.player, 'Smith', {
     color: '#d9ad4f'
