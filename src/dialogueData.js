@@ -4,12 +4,12 @@
 export const STORY_DIALOGUE_TRIGGERS = {
   maraMercyOpening: {
     id: 'maraMercyOpening', speaker: 'Mara Vell', speakerId: 'maraVell', appendNpcQuestOptions: false,
-    text: 'Easy. You are in Orrakai, in my house, and alive despite your best effort. I am Mara Vell. Before you stand, ask what you need to ask.',
+    text: 'Easy. You are upstairs above the Root & Retort in Orrakai, and alive despite your best effort. I am Mara Vell, the apothecary’s daughter. Before you stand, ask what you need to ask.',
     options: [
-      { id: 'where', label: 'Where am I?', response: 'Orrakai. The Covenant keeps an infirmary here, but the beds were full. So you got my table, my medicine, and three nights of very poor conversation.', flagsSet: ['opening.maraAskedWhere'], excludesFlags: ['opening.maraAskedWhere'], showWhenUnavailable: true, requirementText: 'Asked' },
+      { id: 'where', label: 'Where am I?', response: 'Orrakai. The Covenant infirmary was full, so we made you a recovery bed upstairs above the family apothecary. The Root & Retort’s shop is downstairs.', flagsSet: ['opening.maraAskedWhere'], excludesFlags: ['opening.maraAskedWhere'], showWhenUnavailable: true, requirementText: 'Asked' },
       { id: 'caravan', label: 'What happened to the caravan?', response: 'The Order of the Last Dawn took it apart with purpose. They stole the sealed artifact. Some travelers escaped. Most did not.', flagsSet: ['opening.maraAskedCaravan'], excludesFlags: ['opening.maraAskedCaravan'], showWhenUnavailable: true, requirementText: 'Asked' },
       { id: 'survived', label: 'How did I survive?', response: 'You held on until Covenant outriders found the wreck. They brought you to Orrakai. I treated the wound. Survival was a joint act of stubbornness.', flagsSet: ['opening.maraAskedSurvival'], excludesFlags: ['opening.maraAskedSurvival'], showWhenUnavailable: true, requirementText: 'Asked' },
-      { id: 'next', label: 'What should I do now?', response: 'Find Warden Mael near the Covenant infirmary. He needs your account of the attack, and you need to understand what was taken.', requiresFlags: ['opening.maraAskedWhere','opening.maraAskedCaravan','opening.maraAskedSurvival'], showWhenUnavailable: true, requirementText: 'Ask the three questions first', flagsSet: ['opening.maraConversationComplete'], completesTalkObjective: 'maraVell', closeAfterResponse: true }
+      { id: 'next', label: 'What should I do now?', response: 'Take the stairs down into the Root & Retort, leave through the shop’s south door, and head west along the lower ward to Warden Mael beside the Covenant infirmary. He needs your account of the attack.', requiresFlags: ['opening.maraAskedWhere','opening.maraAskedCaravan','opening.maraAskedSurvival'], showWhenUnavailable: true, requirementText: 'Ask the three questions first', flagsSet: ['opening.maraConversationComplete'], completesTalkObjective: 'maraVell', closeAfterResponse: true }
     ],
     flagsSet: ['opening.metMara']
   },
@@ -234,7 +234,7 @@ export const STORY_DIALOGUE_TRIGGERS = {
     id: 'maraTrainerDialogue',
     speaker: 'Mara Vell',
     text:
-      'You picked a path. Good. Now learn why people survive: not because the world is kind, but because roots split stone and keep growing.',
+      'Welcome to the Root & Retort. I’m the apothecary’s daughter; I help with the remedies and anyone who needs them. Survival needs more than medicine, though. Roots split stone and keep growing. You can learn that stubbornness too.',
     options: [
       { id: 'train', label: 'Teach me Thornbinder survival.', response: 'Healing needs teeth. Vines, thorns, poison, roots. Learn all of it, then decide when mercy should bite back.', flagsSet: ['trainer.mara.introduced'] },
       { id: 'quest', label: 'How can I help Orrakai heal?', response: 'Bring living medicine. The Covenant tents have bandages and discipline; I can help them learn what the forest is changing underneath us.', startsQuest: 'maraRootsInAsh' },
@@ -326,7 +326,7 @@ export const STORY_DIALOGUE_TRIGGERS = {
     text:
       'Hold still. If you die after I wasted good medicine, I am billing your ghost.',
     options: [
-      { id: 'whoAreYou', label: 'Who are you?', response: 'Mara Vell. Healer, alchemist, and apparently the only person here willing to argue with death before breakfast.' },
+      { id: 'whoAreYou', label: 'Who are you?', response: 'Mara Vell, the apothecary’s daughter at the Root & Retort, and apparently the only person here willing to argue with death before breakfast.' },
       { id: 'whatHappened', label: 'What happened?', response: 'The Last Dawn hit your caravan, stole the sealed artifact, and burned the wagons. Covenant outriders found you before the Rot did.' },
       { id: 'leave', label: 'Leave.', close: true }
     ],

@@ -78,7 +78,7 @@ export function drawObjects(ctx, world, camera, questActor = null, actorLayers =
   activeEnvironmentProfile = getEnvironmentVisualProfile(world);
 
   const objects = (world.objects || []).filter(object => {
-    if (!object || object.depleted) return false;
+    if (!object || object.depleted || object.presentationRetired) return false;
     const p = screen(object, camera);
     return isOnScreen(ctx, p.x, p.y, Math.max(280, Number(object.drawRadius || 0)));
   });
@@ -184,6 +184,10 @@ function drawObjectUnrotated(ctx, object, camera, questActor = null) {
   const p = screen(object, camera);
 
   if (!isOnScreen(ctx, p.x, p.y, Math.max(240, Number(object.drawRadius || 0)))) return;
+  if(object.townStairs){
+    drawHouseStairs(ctx,object,p.x,p.y);
+    label(ctx,object.name,p.x,p.y-50,{priority:object.labelPriority||8});return;
+  }
   if (object.echorynEntrance) {
     const type=object.echorynEntrance;
     if(type==='root')drawForestKit(ctx,10,p.x,p.y,190,165);
@@ -4288,6 +4292,17 @@ function drawDrop(ctx, drop, x, y) {
       priority: important ? 5 : 3
     });
   }
+}
+
+function drawHouseStairs(ctx,object,x,y){
+  ctx.save();ctx.translate(Math.round(x),Math.round(y));
+  ctx.fillStyle='#201b17';ctx.fillRect(-22,-21,45,48);
+  for(let i=0;i<6;i++){
+    ctx.fillStyle=i%2?'#775a3e':'#634a33';ctx.fillRect(-19+i*3,17-i*7,34-i*2,7);
+    ctx.fillStyle='#b18c5d';ctx.fillRect(-19+i*3,17-i*7,34-i*2,2);
+  }
+  ctx.strokeStyle='#a38158';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-23,20);ctx.lineTo(-6,-24);ctx.moveTo(20,20);ctx.lineTo(27,-24);ctx.stroke();
+  ctx.fillStyle='#e2cca1';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText(object.direction==='up'?'↑':'↓',-8,-12);ctx.restore();
 }
 
 function drawTowerStairs(ctx, object, x, y) {

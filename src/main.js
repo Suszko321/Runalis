@@ -226,7 +226,8 @@ import {
 } from './pvpArenaSystem.js';
 
 import {
-  createCapitalHubWorld
+  createCapitalHubWorld,
+  useMaraApothecary
 } from './hubSystem.js';
 
 import {
@@ -1746,6 +1747,7 @@ class RunalisGame {
     const serviceNpc=this.world.objects.find(o=>o.id===this.dialogue.npcObjectId);
     this.dialogue.pendingAction = null;
     closeDialogue(this.dialogue, { immediate: true });
+    if(action.type==='maraApothecary')return useMaraApothecary(this.setUiOwner(actor),serviceNpc);
     if(['workshopWeapons','workshopArmour','workshopCraft'].includes(action.type)){
       openWorkshopService(this.setUiOwner(actor),serviceNpc,action.type==='workshopWeapons'?'weapons':action.type==='workshopArmour'?'armour':'craft');return true;
     }

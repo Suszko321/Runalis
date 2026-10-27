@@ -1,12 +1,13 @@
 // act1OpeningSystem.js
 // Canonical Act I prologue: a short, non-interactive caravan sequence followed
-// by the player's recovery in Mara Vell's Orrakai home.
+// by the player's recovery above the Root & Retort apothecary in Orrakai.
 
 import { TILE } from './data.js';
 import { createWorld } from './world.js';
 import { createCapitalHubWorld } from './hubSystem.js';
 import { openDialogue, startQuest } from './dialogueSystem.js';
 import { applyStoryFlags } from './storyProgress.js';
+import { ROOT_RETORT } from './orrakaiLayout.js';
 
 const OPENING_W = 58;
 const OPENING_H = 30;
@@ -54,11 +55,10 @@ export function createMaraHouseWorld() {
       return { biome: wall ? 'wall' : 'path', passable: !wall };
     })
   );
-  // The south threshold is the only exit.
-  tiles[height - 1][7] = { biome: 'path', passable: true };
+  // The stairs descend into the apothecary below; this floor has no street exit.
 
   return {
-    mode: 'maraHouse', name: "Mara Vell's House", regionId: 'orrakai', actId: 'act1', safeZone: true,
+    mode: 'maraHouse', name: 'The Root & Retort — Upstairs', regionId: 'orrakai', actId: 'act1', safeZone: true,
     width, height, tileSize: TILE, tiles, enemies: [], drops: [], effects: [], combatEffects: [],
     spawn: { x: MARA_HOUSE_SPAWN.x * TILE + TILE / 2, y: MARA_HOUSE_SPAWN.y * TILE + TILE / 2 },
     objects: [
@@ -71,10 +71,10 @@ export function createMaraHouseWorld() {
         dialogueId: 'maraMercyOpening', deferTalkObjective: true,
         x: 7 * TILE + TILE / 2, y: 5 * TILE + TILE / 2, r: 14, radius: 14,
         disposition: 'friendly', factionId: 'orrakai', dirX: 0, dirY: 1,
-        shirt: '#566b45', pants: '#554438', boots: '#251d18', labelPriority: 10
+        bodyType:'female',hair:'#684c38',shirt: '#566b45', pants: '#554438', boots: '#251d18', labelPriority: 10
       },
       {
-        kind: 'capitalExit', id: 'maraHouseDoor', name: 'Door to Orrakai',
+        kind: 'capitalExit', id: 'maraHouseDoor', name: 'Downstairs — Root & Retort',townStairs:true,direction:'down',
         x: 7 * TILE + TILE / 2, y: 10.5 * TILE, r: 20, radius: 20, labelPriority: 9
       }
     ],
@@ -164,8 +164,18 @@ export function recoverInOrrakai(game) {
   startQuest(game.player, 'mercy_in_orrakai');
   game.camera.x = game.player.x - game.canvas.width / 2;
   game.camera.y = game.player.y - game.canvas.height / 2;
-  game.logLines = ['You wake beneath a stranger\'s roof in Orrakai.', 'Main Quest: Mercy in Orrakai has begun.'];
+  game.logLines = ['You wake in Mara’s recovery room above the Root & Retort in Orrakai.', 'Main Quest: Mercy in Orrakai has begun.'];
   hideOpeningOverlay();
+  return true;
+}
+
+export function enterMaraHouse(game) {
+  if(!game?.player||game.world?.mode!=='capital')return false;
+  game.world=createMaraHouseWorld();game.world.opening.maraAddressDelay=Infinity;
+  Object.assign(game.player,{x:7.5*TILE,y:9.5*TILE,dirX:0,dirY:-1,moveTarget:null,currentZone:game.world.name});
+  game.player.mercyInOrrakai={...(game.player.mercyInOrrakai||{}),location:'maraHouse'};
+  game.camera.x=game.player.x-game.canvas.width/2;game.camera.y=game.player.y-game.canvas.height/2;
+  game.log?.('You climb to Mara’s room above the Root & Retort.');
   return true;
 }
 
@@ -174,21 +184,25 @@ export function leaveMaraHouse(game) {
   const hub = createCapitalHubWorld();
   hub.safeZone = true;
   game.world = hub;
-  game.player.x = 8 * TILE + TILE / 2;
-  game.player.y = 31 * TILE + TILE / 2;
+  game.player.x = (ROOT_RETORT.arrival.x+.5) * TILE;
+  game.player.y = (ROOT_RETORT.arrival.y+.5) * TILE;
+  game.player.moveTarget=null;
+  game.player.orrakaiLayoutRevision=hub.orrakaiRevision;
   game.player.dirX = 0; game.player.dirY = 1;
   game.player.currentZone = hub.name;
   game.player.mercyInOrrakai = { ...(game.player.mercyInOrrakai || {}), location: 'orrakai' };
-  game.rememberSafeLocation?.('maraHouseExit');
+  game.rememberSafeLocation?.('rootRetortDownstairs');
   game.camera.x = game.player.x - game.canvas.width / 2;
   game.camera.y = game.player.y - game.canvas.height / 2;
-  game.log?.('You step from Mara Vell\'s house into Orrakai. The Covenant infirmary lies nearby.');
+  game.log?.('You descend into the Root & Retort. The shop’s south door leads to Orrakai; the Covenant infirmary is west along the lower ward.');
   return true;
 }
 
 function updateMaraHouseArrival(game, dt) {
   const state = game.world.opening || (game.world.opening = { maraAddressDelay: 0.85 });
   const flags = game.player.story?.flags?.opening || {};
+  const resident=game.world.objects.find(object=>object.id==='maraVellOpening');
+  if(flags.maraConversationComplete&&resident?.dialogueId==='maraMercyOpening')resident.dialogueId='maraTrainerDialogue';
   if (flags.maraConversationComplete || game.dialogue?.active) return;
   state.maraAddressDelay = Number(state.maraAddressDelay ?? 0.85) - dt;
   if (state.maraAddressDelay > 0) return;

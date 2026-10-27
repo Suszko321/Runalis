@@ -841,6 +841,11 @@ function buildDialogueOptions(dialogueState, options, player, settings = {}) {
     ? (Array.isArray(options) ? options.map(option => ({ ...option })) : [])
     : appendNpcQuestOptions(dialogueState, options, player);
   const provider=dialogueState.world?.objects?.find(o=>o.id===dialogueState.npcObjectId);
+  if(provider?.apothecaryService&&dialogueState.world.mode==='capital'&&settings.appendNpcQuests!==false&&
+    !withNpcQuests.some(o=>o.action==='maraApothecary')){
+    const leave=withNpcQuests.findIndex(o=>o.id==='leave'||o.close);
+    withNpcQuests.splice(leave<0?withNpcQuests.length:leave,0,{id:'mara-restorative',text:'Prepare a restorative (Gravecap + Pale Essence, or 8 gold).',action:'maraApothecary'});
+  }
   if(provider?.workshopService&&!withNpcQuests.some(o=>String(o.action||'').startsWith('workshop'))){
     const smith=provider.workshopService==='blacksmith';
     withNpcQuests.unshift(...(smith?[

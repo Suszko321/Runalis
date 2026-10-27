@@ -1,7 +1,8 @@
 // Authored town geometry, in hidden gameplay cells. Narrative identities stay in hubSystem.
 import {TILE} from './data.js';
 
-export const ORRAKAI_REVISION = 2;
+export const ORRAKAI_REVISION = 3;
+export const ROOT_RETORT = Object.freeze({stairs:{x:55,y:39},arrival:{x:55,y:40},counter:{x:49,y:39}});
 export const ORRAKAI_BUILDINGS = [
   {id:'guild',name:'Warden’s Hall',x:29,y:8,w:15,h:9,door:6,roof:0,partition:9,rooms:['Guild chamber','Records room']},
   {id:'shrine',name:'Covenant Sanctuary',x:10,y:8,w:15,h:9,door:6,roof:2,partition:9,rooms:['Sanctuary','Vestry']},
@@ -9,7 +10,7 @@ export const ORRAKAI_BUILDINGS = [
   {id:'smith',name:'Mara’s Forge',x:47,y:22,w:15,h:9,door:6,roof:1,partition:10,rooms:['Forge','Tool store']},
   {id:'infirmary',name:'Covenant Infirmary',x:16,y:36,w:14,h:7,door:6,roof:2,partition:9,rooms:['Receiving room','Recovery ward']},
   {id:'alchemist',name:'The Root & Retort',x:46,y:36,w:12,h:7,door:3,roof:1,partition:6,rooms:['Apothecary','Herb store']},
-  {id:'home',name:'Mara Vell’s House',workshopName:'Corin’s Workshop',x:7,y:23,w:8,h:8,door:1,roof:3,partition:4,rooms:['Workshop','Living quarters']}
+  {id:'home',name:'Corin’s Workshop',workshopName:'Corin’s Workshop',x:7,y:23,w:8,h:8,door:1,roof:3,partition:4,rooms:['Workshop','Living quarters']}
 ];
 export const ORRAKAI_TERRACES = [
   {id:'upper',y:18,h:3,level:2,stairs:[[33,39],[58,62]],name:'Warden’s Rise'},
@@ -21,7 +22,7 @@ const placements = {
  orrakaiMarket:[33,25],orrakaiFoodStall:[40,23],orrakaiMarketVendor:[32,26],orrakaiBank:[20,26],orrakaiBanker:[21,25],
  orrakaiBlacksmith:[50,26],smith:[52,27],orrakaiAlchemist:[49,39],orrakaiAlchemistApprentice:[50,38],
  orrakaiTrainingYard:[54,12],orrakaiPvpArena:[62,13],mercenaryTrainer:[53,15],necromancerTrainer:[56,10],
- thornbinderTrainer:[60,16],waveriderTrainer:[50,13],lightbringerTrainer:[57,15],templarTrainer:[18,13],
+ thornbinderTrainer:[49,39],waveriderTrainer:[50,13],lightbringerTrainer:[57,15],templarTrainer:[18,13],
  orrakaiWeatheredShrine:[14,11],orrakaiTownHearth:[40,38],orrakaiTrialTower:[63,39],
  orrakaiSickVillagerObject:[27,38],orrakaiWellStoresAttendantObject:[31,28],orrakaiWaterDistributionObject:[31,37],
  orrakaiLowerGateGuardObject:[33,42],orrakaiRefugeeParentObject:[20,39],lightwardenCaelenObject:[17,11],
@@ -117,6 +118,21 @@ export function reconstructOrrakai(world){
  // Preserve the three established town discoveries in their new physical locations.
  world.authoredLocations=[['orrakai-workyard','Orrakai Workyard',54,27],['orrakai-garden','Kitchen Gardens',61,41],['orrakai-refuge','Pilgrim Shelter',22,40]].map(([id,name,x,y])=>({id,name,...point(x,y),lore:'A working refuge at the edge of the frontier.'}));
  world.enemies=[];
+ ensureRootRetortAccess(world);
+ return world;
+}
+
+// Reapply only these story anchors after older published object placements.
+// Keep their legacy IDs, services and quests; never rebuild edited terrain here.
+export function ensureRootRetortAccess(world){
+ if(world?.mode!=='capital')return world;
+ const fixture=world.objects.find(o=>o.id==='orrakaiAlchemist');
+ if(fixture)Object.assign(fixture,{name:'Root & Retort Medicines',serviceMarkerOnly:true,hideOnRadar:true,interactable:false,hideLabel:true,presentationRetired:true});
+ const mara=world.objects.find(o=>o.npcId==='maraVell');
+ if(mara)Object.assign(mara,{...point(ROOT_RETORT.counter.x,ROOT_RETORT.counter.y),apothecaryService:true,stationary:true,bodyType:'female',hair:'#684c38',shirt:'#566b45',pants:'#554438',boots:'#251d18',dirX:0,dirY:1});
+ let stairs=world.objects.find(o=>o.id==='maraHomeEntrance');
+ if(!stairs){stairs={id:'maraHomeEntrance',kind:'signpost'};world.objects.push(stairs);}
+ Object.assign(stairs,{...point(ROOT_RETORT.stairs.x,ROOT_RETORT.stairs.y),name:'Upstairs — Mara’s Room',campaignAction:'maraHome',townStairs:true,direction:'up',r:18,radius:18,labelPriority:8,talk:'Mara’s recovery room is upstairs above the Root & Retort.'});
  return world;
 }
 

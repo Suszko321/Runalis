@@ -12,7 +12,7 @@ export function getCampaignConversation(npc,p,world){
   if(mercy==='confrontEvidence'&&['wardenMael','lightwardenCaelen'].includes(id))return select('act1Confront');
   if(mercy==='returnToMara'&&id==='maraVell'&&world.mode==='maraHouse')return select('act1MaraEvening');
   if(mercy==='witnessHealingRite'&&['wardenMael','lightwardenCaelen'].includes(id))return {id:'campaign:riteReminder',speaker:npc.name,speakerId:id,text:'The lanterns are ready in the chapel square. Sister Neria is gathering the patients. We will discuss the evidence after the rite.',options:[]};
-  if(mercy==='returnToMara'&&id==='maraVell')return {id:'campaign:maraHomeReminder',speaker:'Mara Vell',speakerId:id,text:'Come to my house, west of the market steps. You need rest. The door is beside the house sign.',options:[]};
+  if(mercy==='returnToMara'&&id==='maraVell')return {id:'campaign:maraHomeReminder',speaker:'Mara Vell',speakerId:id,text:'Come upstairs above the Root & Retort. You need rest. The stairs are in the eastern herb room, beside the back of the shop.',options:[]};
   if(mercy)return null;
   const stage=p.quests?.active?.[CAMPAIGN_ID]?.currentStageId;
   const lines={

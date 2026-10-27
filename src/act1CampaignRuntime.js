@@ -4,7 +4,7 @@ import {getStoryFlag,setStoryFlag} from './storyProgress.js';
 import {getQuest} from './worldContent.js';
 import {startQuest,updateQuestStageCompletion,openDialogue} from './dialogueSystem.js';
 import {getPoiClueCount} from './poiStateSystem.js';
-import {createMaraHouseWorld} from './act1OpeningSystem.js';
+import {enterMaraHouse} from './act1OpeningSystem.js';
 import {CAMPAIGN_ID,MERCY_ID} from './act1CampaignData.js';
 import {ensureOrder} from './yourOrder.js';
 import {addItem} from './player.js';
@@ -86,8 +86,6 @@ export function updateAct1Campaign(game,dt=0){
     const mael=w.objects.find(o=>o.npcId==='wardenMael'),callworth=w.objects.find(o=>o.npcId==='lightwardenCaelen');
     const atRite=getStoryFlag(p,'mercy.riteStarted')&&!getStoryFlag(p,'mercy.riteWitnessed');
     move(mael,atRite?22:30,atRite?17:39);move(callworth,atRite?17:29,atRite?15:38);if(callworth)callworth.name='Cardinal Callworth';
-    if(!w.objects.some(o=>o.id==='maraHomeEntrance'))w.objects.push(makeObject('signpost','maraHomeEntrance','Mara Vell’s House',8,30,{campaignAction:'maraHome',talk:'Mara’s hearth is through this door.'}));
-    if(w.buildings){const b=w.buildings.find(b=>b.id==='home');if(b)b.name='Mara Vell’s House';}
     if(!w.objects.some(o=>o.id==='act1RiteChild'))w.objects.push(npc('act1RiteChild','Sick Child',18,15,{scale:.65}),npc('act1RiteElder','Elderly Patient',20,15),npc('act1MarkedVillager','Marked Villager',21,16));
     if(!w.objects.some(o=>o.id==='act1RiteMother'))w.objects.push(npc('act1RiteMother','Child’s Mother',18,16),npc('act1RiteWife','Patient’s Wife',20,16));
     const neria=w.objects.find(o=>o.npcId==='covenantHealingRite');if(atRite)move(neria,19,15);
@@ -95,11 +93,11 @@ export function updateAct1Campaign(game,dt=0){
     if(p.yourOrder?.shelterOutcome==='covenant'&&!w.objects.some(o=>o.id==='lysaHale'))w.objects.push(npc('lysaHale','Lysa Hale',28,40,{bodyType:'female',hair:'#77513f'}),npc('derrenHale','Derren Hale',29,40));
     updateRite(game,.25);
     const returnStage=p.quests?.active?.[MERCY_ID]?.currentStageId==='returnToMara';
-    const mara=w.objects.find(o=>o.npcId==='maraVell');if(mara&&returnStage){mara.dialogueId='act1MaraHomeReminder';mara.talk='Come to my house, west of the market steps. You need rest.';}
+    const mara=w.objects.find(o=>o.npcId==='maraVell');if(mara&&returnStage){mara.talk='Come upstairs above the Root & Retort. You need rest.';}
   }
   if(w.mode==='maraHouse'&&p.quests?.active?.[MERCY_ID]?.currentStageId==='returnToMara'){
     const mara=w.objects.find(o=>o.npcId==='maraVell');if(mara)mara.dialogueId='act1MaraEvening';
-    if(!w.objects.some(o=>o.id==='maelEveningVisitor'))w.objects.push(npc('maelEveningVisitor','Warden Mael',7,10));
+    if(!w.objects.some(o=>o.id==='maelEveningVisitor'))w.objects.push(npc('maelEveningVisitor','Warden Mael',9,6));
   }
   if(p.quests?.completed?.[MERCY_ID]&&!p.quests?.completed?.[CAMPAIGN_ID]&&!p.quests?.active?.[CAMPAIGN_ID])startQuest(p,CAMPAIGN_ID);
   if(p.quests?.completed?.[MERCY_ID]&&getStoryFlag(p,'order.met')&&!p.quests?.active?.yourOrder1&&!p.quests?.completed?.yourOrder1)startQuest(p,'yourOrder1');
@@ -172,7 +170,7 @@ export function handleCampaignInteraction(game,object){
   if(!object.campaignAction)return false;
   const p=game.player,o=ensureOrder(p);
   if(object.campaignAction==='maraHome'){
-    game.world=createMaraHouseWorld();Object.assign(p,game.world.spawn);game.world.opening.maraAddressDelay=Infinity;game.camera.x=p.x-game.canvas.width/2;game.camera.y=p.y-game.canvas.height/2;return true;
+    return enterMaraHouse(game);
   }
   if(object.campaignAction==='cistern'){setStoryFlag(p,'order.cistern');game.log?.('You clear the cistern, flush the foul water and secure its cover.');return true;}
   if(object.campaignAction==='archive'){

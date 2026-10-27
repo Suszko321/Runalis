@@ -560,12 +560,12 @@ export const NPCS = {
     name: 'Mara Vell',
     factionId: 'thornbound',
     disposition: 'neutral',
-    role: 'Thornbinder Trainer',
+    role: 'Apothecary’s Daughter / Thornbinder Trainer',
     tileX: 22,
     tileY: 44,
     dialogueId: 'maraTrainerDialogue',
     questIds: ['maraRootsInAsh'],
-    description: 'A sharp village healer who teaches survival magic with roots, thorns, poison, and care.'
+    description: 'The apothecary’s daughter at the Root & Retort, a sharp healer who teaches survival magic with roots, thorns, poison, and care.'
   },
 
   bram: {

@@ -33,7 +33,7 @@ import { handleMenuSheetInput, menuSheetItemVisible, revealMenuFocus } from './m
 // - B / Cancel returns focus to profile name or clears menu focus.
 // - D-pad / left stick navigates menu focus.
 
-import { createWorld } from './world.js';
+import { createWorld,isActorPositionPassable } from './world.js';
 import { createRegionWorld, createTravelRouteWorld } from './regionWorlds.js';
 import { createProceduralSideZoneWorld } from './sideZoneSystem.js';
 import { createCapitalHubWorld } from './hubSystem.js';
@@ -609,7 +609,7 @@ export function migrateSaveState(saveState, fallbackWorld = null, fallbackPlayer
   const savedWorldName = normalizePlayerFacingWorldName(normalizedState?.worldName, getDefaultWorldName(savedWorldMode));
   const loadAsCapitalHub = isOrrakaiHubSave(savedWorldMode, savedWorldName, player);
   let worldMode = loadAsCapitalHub ? 'capital' : savedWorldMode;
-  const worldName = loadAsCapitalHub ? 'Orrakai' : savedWorldName;
+  const worldName = loadAsCapitalHub ? 'Orrakai' : worldMode==='maraHouse' ? 'The Root & Retort — Upstairs' : savedWorldName;
   const worldTheme = normalizedState?.worldTheme || null;
   const worldDepth = normalizedState?.worldDepth || null;
   const worldTier = normalizedState?.worldTier || null;
@@ -672,6 +672,10 @@ export function migrateSaveState(saveState, fallbackWorld = null, fallbackPlayer
   if (continentalSurface && freshWorld.continentId === 'runalis') worldMode='overworld';
   const isCapitalWorld = worldMode === 'capital';
   if (isCapitalWorld) migrateOrrakaiPosition(freshWorld, player);
+  if(worldMode==='maraHouse')for(const actor of [player,...(player.coop?.players||[])]){
+    if(!isActorPositionPassable(freshWorld,actor.x,actor.y,actor.radius||actor.r||12))Object.assign(actor,freshWorld.spawn);
+    actor.currentZone=freshWorld.name;
+  }
   if (worldMode === 'overworld' && worldRegionId === 'hearthmereFrontier') migrateEchorynPosition(freshWorld, player);
 
   const worldTiles = isCapitalWorld

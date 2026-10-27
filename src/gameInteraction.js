@@ -517,6 +517,7 @@ export function nearestObject(game, range = INTERACTION_RANGE) {
 
 function getInteractionPriority(object) {
   if (!object) return 0;
+  if (object.townStairs) return 54;
   if (object.kind === 'npc') return 80;
   if (object.kind === 'poiInvestigation') return 62;
   if (object.kind === 'dungeonKey' || object.kind === 'dungeonChest' || object.kind === 'dungeonDoor' || object.kind === 'dungeonPuzzle' || object.kind === 'dungeonEvent') return 60;

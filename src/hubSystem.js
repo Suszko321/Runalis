@@ -1,7 +1,7 @@
 import {rememberRepeatableInstance} from './instanceEncounterMemory.js';
 import {resetFailedDungeonArena} from './dungeonArenaSystem.js';
 import {dressWorld} from './worldAuthorship.js';
-import {reconstructOrrakai, migrateOrrakaiPosition} from './orrakaiLayout.js';
+import {reconstructOrrakai, migrateOrrakaiPosition,ensureRootRetortAccess} from './orrakaiLayout.js';
 import {migrateEchorynPosition} from './echorynLayout.js';
 import {isClassAvailable} from './classData.js';
 // hubSystem.js
@@ -254,6 +254,7 @@ export function createCapitalHubWorld(options = {}) {
   dressWorld(world);
   reconstructOrrakai(world);
   if (!options.skipPublishedOverride) applyPublishedWorldOverride(world);
+  ensureRootRetortAccess(world);
   return world;
 }
 
@@ -365,7 +366,7 @@ export function useAlchemist(game) {
     removeItem(player, 'paleEssence', 1);
     addItem(player, 'shrineTonic', 1);
     gainXp(player, 'cooking', 20, game.log);
-    game.log?.('Alchemist: brewed Shrine Tonic from Gravecap and Pale Essence.');
+    game.log?.('Mara Vell: brewed Shrine Tonic from Gravecap and Pale Essence.');
     addLootText(player, 'Shrine Tonic', { color: '#b68cff' });
     return true;
   }
@@ -373,14 +374,20 @@ export function useAlchemist(game) {
   if ((player.gold || 0) >= 8) {
     player.gold -= 8;
     addItem(player, 'fieldRations', 1);
-    game.log?.('Alchemist: sold a travel restorative for 8 gold.');
+    game.log?.('Mara Vell: sold a travel restorative for 8 gold.');
     addLootText(player, 'Field Rations', { color: '#d9ad4f' });
     return true;
   }
 
-  game.log?.('Alchemist: bring Gravecap + Pale Essence, or 8 gold for a basic restorative.');
-  addStatusText(player, 'Alchemist Needs Reagents', { color: '#b68cff' });
+  game.log?.('Mara Vell: bring Gravecap + Pale Essence, or 8 gold for a basic restorative.');
+  addStatusText(player, 'Mara Needs Reagents', { color: '#b68cff' });
   return true;
+}
+
+export function useMaraApothecary(game,npc){
+  if(game?.world?.mode!=='capital'||!game.player||!(game.player.hp>0)||!npc?.apothecaryService||
+    !game.world.objects.includes(npc)||Math.hypot(game.player.x-npc.x,game.player.y-npc.y)>80)return false;
+  return useAlchemist(game);
 }
 
 export function useGuildClerk(game) {
@@ -620,7 +627,7 @@ function createCapitalObjects() {
       forceLabel: true,
       labelOffset: 34
     }),
-    hubObject('alchemistService', 'orrakaiAlchemist', 'Alchemist', 52, 31, {
+    hubObject('alchemistService', 'orrakaiAlchemist', 'Root & Retort Medicines', 52, 31, {
       r: 20,
       forceLabel: true,
       labelOffset: 34
@@ -763,6 +770,7 @@ function createCapitalObjects() {
       talk: 'Kaelen Dusk: "The dead do not sleep. They wait to be asked."'
     }),
     hubObject('npc', 'thornbinderTrainer', 'Mara Vell', 61, 24, {
+      apothecaryService:true,
       instructorType: 'class',
       classId: 'thornbinder',
       npcId: 'maraVell',
@@ -839,7 +847,7 @@ function createCapitalObjects() {
       wanderPauseMin: 0.4,
       wanderPauseMax: 1.8
     }),
-    hubObject('npc', 'orrakaiAlchemistApprentice', 'Alchemist Apprentice', 53, 31, {
+    hubObject('npc', 'orrakaiAlchemistApprentice', 'Apothecary Assistant', 53, 31, {
       factionId: 'outpost',
       disposition: 'friendly',
       dirX: -1,

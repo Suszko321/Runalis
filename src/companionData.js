@@ -7,7 +7,7 @@ export const COMPANIONS = {
     fullName: 'Mara Vell',
     trainerClassId: 'thornbinder',
     trainerSkill: 'warding',
-    storyRole: 'Orrakai healer, alchemist, and practical emotional anchor',
+    storyRole: 'The Orrakai apothecary’s daughter, Root & Retort healer, and practical emotional anchor',
     worldview: 'Endure. Heal. Grow through the cracks.',
     personality: ['sharp', 'tired', 'sarcastic', 'deeply caring'],
     combatIdentity:
