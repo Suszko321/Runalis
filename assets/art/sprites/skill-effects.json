@@ -1,0 +1,12 @@
+{
+  "name": "skill-effects",
+  "source": "C:\\Users\\austi\\Documents\\Runalis\\assets\\art\\source\\skill-effects.png",
+  "rows": 4,
+  "columns": 4,
+  "cellWidth": 160,
+  "cellHeight": 160,
+  "pivot": [
+    80,
+    80
+  ]
+}

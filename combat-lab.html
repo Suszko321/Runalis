@@ -1,0 +1,61 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Runalis · Combat Atelier</title>
+<style>body{margin:0;background:#11170f;color:#e9dcbc;font:15px system-ui}header{padding:18px 24px;border-bottom:1px solid #685738}h1{font:25px Georgia;margin:0 0 12px}nav{display:flex;gap:12px;flex-wrap:wrap}select,button,input{background:#282b20;color:#eadbb8;border:1px solid #8f7446;padding:8px}label{display:flex;align-items:center;gap:5px}canvas{max-width:100%;image-rendering:pixelated}#status{padding:15px 24px}a{color:#d6b773}</style>
+<header><h1>Runalis · Combat Atelier</h1><nav><label>Action <select id="ability"><option value="">Weapon swing</option></select></label><label>Weapon <select id="weapon"></select></label><label>Body <select id="body"><option value="male">Male</option><option value="female">Female</option></select></label><label>Facing <select id="facing"><option value="right">East</option><option value="down">South</option><option value="up">North</option><option value="left">West</option></select></label><label>Outfit <select id="outfit"><option value="none">Travel clothes</option><option value="plate">Plate</option><option value="robe">Mage</option><option value="coat">Leather</option></select></label><button id="check">Check every skill</button><button id="heavy">Light / heavy</button><button id="play">Pause / play</button><label>Slow <input id="slow" type="checkbox"></label><a href="scene-lab.html">World review</a></nav><p>Live production renderer · isolated review actors · no profile saves</p><input aria-label="Attack progress" id="progress" type="range" min="0" max="1000" value="0"></header>
+<canvas width="1100" height="530"></canvas><div id="status">Loading…</div>
+<script type="module">
+import {createPlayer} from './src/player.js';
+import {ITEMS,ABILITIES} from './src/data.js';
+import {WEAPON_MOVESETS,ensureCombatState} from './src/combatMoves.js';
+import {getGearVisualProfile} from './src/gearVisualStyle.js';
+import {drawHumanActor} from './src/humanRenderer.js?v=20260924b';
+import {drawAttackVisual,drawWorldEffects} from './src/combatVisualsRenderer.js';
+import {sampleWeaponAttackPose} from './src/playerAttackAnimation.js';
+import {getSignatureAbilityProfile} from './src/animationProfiles.js';
+import {spriteArtStatus} from './src/spriteArt.js';
+const q=s=>document.querySelector(s),canvas=q('canvas'),ctx=canvas.getContext('2d');
+const items=Object.entries(ITEMS),weapons=items.filter(([id,item])=>item.slot==='weapon'||item.type==='weapon');
+for(const [id,item] of weapons){const option=new Option(item.name||id,id);q('#weapon').add(option);}
+q('#weapon').value='noviceBlade';
+for(const ability of ABILITIES)q('#ability').add(new Option(ability.name,ability.id));
+q('#ability').onchange=()=>{elapsed=0;};
+let play=true,heavy=false,elapsed=0,last=performance.now(),failure=null;
+q('#play').onclick=()=>play=!play;q('#heavy').onclick=()=>{heavy=!heavy;elapsed=0;};q('#progress').oninput=()=>{play=false;elapsed=Number(q('#progress').value)/1000;};
+const actor=createPlayer('Review');ensureCombatState(actor);Object.assign(actor,{x:260,y:210,skin:'#eeb883',hair:'#714122',shirt:'#75502d',pants:'#484347',boots:'#654326'});
+window.addEventListener('error',e=>failure=e.message);
+q('#check').onclick=()=>{
+ const results=[];let count=0;
+ for(const ability of ABILITIES){
+  try{
+   const profile=getSignatureAbilityProfile(ability.id),duration=profile?.duration||.6;
+   for(const bodyType of ['male','female'])for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])for(const t of [0,.2,.45,.7,.99]){
+    const review=createPlayer('Skill review');Object.assign(review,{x:260,y:210,bodyType,hairStyle:bodyType==='male'?'short':'ponytail',classId:ability.classId,dirX:dx,dirY:dy,visualAction:{abilityId:ability.id,kind:/summon/i.test(ability.id)?'summon':'cast',startedAt:performance.now()/1000-t*duration,duration}});
+    const before=JSON.stringify(review);drawHumanActor(ctx,review,{x:0,y:0},{isPlayer:true});
+    if(JSON.stringify(review)!==before)throw new Error('renderer changed review actor');
+    if(profile)drawWorldEffects(ctx,{effects:[{kind:'abilityPresentation',abilityId:ability.id,effectKind:profile.effectKind,colors:profile.colors,x:260,y:190,dirX:dx,dirY:dy,radius:35,age:t,ttl:1}]},{x:0,y:0},'front');count++;
+   }
+  }catch(e){results.push(ability.name+': FAIL '+e.message);}
+ }
+ q('#results')?.remove();const result=document.createElement('pre');result.id='results';result.style.padding='16px';result.textContent=results.length?results.join('\n'):`PASS: ${ABILITIES.length} skills, ${count} rendered samples, both bodies and four directions. Review actors unchanged. Visual quality still needs inspection.`;document.body.append(result);
+};
+function frame(now){
+ const dt=Math.min(.05,(now-last)/1000);last=now;
+ const id=q('#weapon').value,item=ITEMS[id],type=getGearVisualProfile(id,item).weaponType;
+ const ability=ABILITIES.find(a=>a.id===q('#ability').value),profile=getSignatureAbilityProfile(ability?.id);
+ const set=WEAPON_MOVESETS[type]||WEAPON_MOVESETS.sword,move=set.moves.find(m=>heavy?m.comboType==='heavy':m.comboType==='light')||set.moves[0];
+ const duration=ability?(profile?.duration||.6):move.duration;
+ if(play)elapsed=(elapsed+dt/(duration*(q('#slow').checked?4:1)))%1.8;
+ const t=Math.min(1,elapsed),facing=q('#facing').value,[dx,dy]={down:[0,1],up:[0,-1],right:[1,0],left:[-1,0]}[facing];
+ Object.assign(actor,{bodyType:q('#body').value,hairStyle:q('#body').value==='female'?'ponytail':'short',dirX:dx,dirY:dy,isMoving:false});
+ actor.equipment.weapon=id;
+ const outfit=q('#outfit').value;
+ for(const slot of ['chest','helm','legs','trinket'])actor.equipment[slot]=outfit==='none'?null:items.find(([key,it])=>it.slot===slot&&(slot!=='chest'||getGearVisualProfile(key,it).silhouette===outfit))?.[0]||null;
+ Object.assign(actor.combatState,{attacking:!ability&&elapsed<1,attackMove:move,attackElapsed:t*move.duration,attackDirX:dx,attackDirY:dy});
+ actor.classId=ability?.classId||'default';
+ actor.visualAction=ability&&elapsed<1?{abilityId:ability.id,startedAt:now/1000-t*duration,duration,kind:/summon/i.test(ability.id)?'summon':/guard|ward|aegis|oath/i.test(ability.id)?'guard':'cast'}:null;
+ ctx.fillStyle='#252e23';ctx.fillRect(0,0,1100,530);ctx.save();ctx.scale(1.8,1.8);
+ try{drawHumanActor(ctx,actor,{x:0,y:0},{isPlayer:true});drawAttackVisual(ctx,actor,{x:0,y:0});if(ability&&profile&&t>profile.releasePoint&&elapsed<1)drawWorldEffects(ctx,{effects:[{kind:'abilityPresentation',abilityId:ability.id,effectKind:profile.effectKind,colors:profile.colors,x:actor.x+dx*28,y:actor.y-20+dy*28,dirX:dx,dirY:dy,radius:35,age:(t-profile.releasePoint)/(1-profile.releasePoint),ttl:1}]},{x:0,y:0},'front');}catch(e){failure=e.stack;}
+ ctx.restore();const pose=sampleWeaponAttackPose(move,type,t*move.duration,{x:dx,y:dy});
+ q('#status').textContent=failure?'FAIL: '+failure:`${item?.name} · ${elapsed<1?pose.phase:'ready'} · ${Math.round(t*100)}% · ${spriteArtStatus().filter(a=>a.ready).length}/${spriteArtStatus().length} sheets loaded`;
+ if(play)q('#progress').value=t*1000;requestAnimationFrame(frame);
+}requestAnimationFrame(frame);
+</script></html>

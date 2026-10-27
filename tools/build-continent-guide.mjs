@@ -1,0 +1,17 @@
+import fs from 'node:fs';
+import {CONTINENT_WIDTH,CONTINENT_HEIGHT,CONTINENT_REGIONS,CONTINENT_ROADS,CONTINENT_RIVERS,CONTINENT_LAKES} from '../src/continentDefinition.js';
+import {createContinentalScenes} from '../src/continentScenes.js';
+const escape=s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
+const lines=['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2880 1130"><rect width="2880" height="1130" fill="#1e2929"/><defs><clipPath id="land"><path d="M0 0H2870V800Q2700 835 2400 805T1800 815T1200 790T600 820H0Z"/></clipPath></defs><g clip-path="url(#land)">'];
+for(const r of CONTINENT_REGIONS)lines.push(`<ellipse cx="${r.x}" cy="${r.y}" rx="${r.rx}" ry="${r.ry}" fill="${r.color}" opacity=".9"/>`);
+for(const l of CONTINENT_LAKES)lines.push(`<ellipse cx="${l.x}" cy="${l.y}" rx="${l.rx}" ry="${l.ry}" fill="#365962"/>`);
+for(const r of CONTINENT_RIVERS)lines.push(`<polyline points="${r.points.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#365962" stroke-width="${r.width}" stroke-linecap="round"/>`);
+for(const r of CONTINENT_ROADS)lines.push(`<polyline points="${r.points.map(p=>p.join(',')).join(' ')}" fill="none" stroke="${r.roadClass==='imperial'?'#e5cf8a':'#b0a586'}" stroke-width="${Math.max(2,r.width)}" stroke-linecap="round"/>`);
+for(const s of createContinentalScenes().locations)lines.push(`<circle cx="${s.tileX}" cy="${s.tileY}" r="3" fill="#f1de9d"><title>${escape(s.name)}</title></circle>`);
+lines.push('</g><g fill="#f0e8ce" font-family="Georgia,serif" font-size="27" text-anchor="middle">');
+for(const r of CONTINENT_REGIONS)lines.push(`<text x="${r.x}" y="${r.id==='hearthmereFrontier'?225:r.id==='blackPinePass'?45:r.id==='aureateMarches'?390:r.id==='ascensionWastes'?95:r.id==='imperialHeartlands'?745:r.y+115}" style="paint-order:stroke;stroke:#1a2220;stroke-width:5">${escape(r.name)}</text>`);
+lines.push('<text x="55" y="62" text-anchor="start">Orrakai</text><circle cx="18" cy="35" r="6" fill="#efcd79"/></g><g font-family="Georgia,serif" fill="#ece0bf"><text x="80" y="915" font-size="48">Runalis · Continental master plan</text><text x="80" y="967" font-size="28">Echoryn → Black Pine Pass or Blackfen → Aureate → the southern highway → Zarynth Trade Ward</text><text x="80" y="1014" font-size="27">The Severed Causeway and Ascension Wastes are an optional northern branch. Acts follow story progress.</text><text x="80" y="1062" font-size="27">Detailed current regions and inhabited road sites sit within a wider geographic plan; the greater capital remains future content.</text></g></svg>');
+fs.mkdirSync('docs/world-rebuild',{recursive:true});fs.writeFileSync('docs/world-rebuild/continental-master-plan.svg',lines.join('\n'));
+const bible=CONTINENT_REGIONS.map(r=>({...r,landmarks:createContinentalScenes().locations.filter(s=>s.sourceRegionId===r.id||r.id==='blackPinePass'&&s.sourceRegionId==='pilgrimRoadRoute'||r.id==='severedCauseway'&&s.sourceRegionId==='severedCausewayRoute'||r.id==='zarynth'&&s.sourceRegionId==='zarynthApproach').map(s=>({id:s.id,name:s.name,description:s.lore,x:s.tileX,y:s.tileY}))}));
+fs.writeFileSync('docs/world-rebuild/world-bible.json',JSON.stringify({width:CONTINENT_WIDTH,height:CONTINENT_HEIGHT,regions:bible,roads:CONTINENT_ROADS,rivers:CONTINENT_RIVERS},null,2));
+console.log('Continental master plan and world bible written.');

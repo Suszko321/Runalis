@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2880 1130"><rect width="2880" height="1130" fill="#1e2929"/><defs><clipPath id="land"><path d="M0 0H2870V800Q2700 835 2400 805T1800 815T1200 790T600 820H0Z"/></clipPath></defs><g clip-path="url(#land)">
+<ellipse cx="290" cy="235" rx="365" ry="285" fill="#394b31" opacity=".9"/>
+<ellipse cx="747" cy="170" rx="175" ry="145" fill="#445047" opacity=".9"/>
+<ellipse cx="770" cy="550" rx="230" ry="190" fill="#344942" opacity=".9"/>
+<ellipse cx="1150" cy="305" rx="325" ry="245" fill="#757349" opacity=".9"/>
+<ellipse cx="1460" cy="210" rx="155" ry="115" fill="#64606b" opacity=".9"/>
+<ellipse cx="1830" cy="235" rx="315" ry="220" fill="#48414f" opacity=".9"/>
+<ellipse cx="2070" cy="610" rx="750" ry="205" fill="#69704d" opacity=".9"/>
+<ellipse cx="2715" cy="430" rx="160" ry="175" fill="#73705b" opacity=".9"/>
+<ellipse cx="122" cy="275" rx="10" ry="14" fill="#365962"/>
+<ellipse cx="86" cy="366" rx="10" ry="17" fill="#365962"/>
+<ellipse cx="272" cy="355" rx="15" ry="10" fill="#365962"/>
+<ellipse cx="239" cy="337" rx="9" ry="6" fill="#365962"/>
+<ellipse cx="793" cy="568" rx="49" ry="33" fill="#365962"/>
+<ellipse cx="1001" cy="319" rx="31" ry="24" fill="#365962"/>
+<ellipse cx="1830" cy="335" rx="40" ry="32" fill="#365962"/>
+<ellipse cx="2080" cy="680" rx="55" ry="36" fill="#365962"/>
+<polyline points="250,0 247,36 255,65 250,100 232,128 209,153 170,171 130,190 94,214 77,242 75,277 81,316 88,350 81,389 96,438 108,480" fill="none" stroke="#365962" stroke-width="9" stroke-linecap="round"/>
+<polyline points="18,80 32,98 40,124 46,151 61,178 73,194 94,214" fill="none" stroke="#365962" stroke-width="3" stroke-linecap="round"/>
+<polyline points="125,76 122,85 119,99 110,115 104,145 94,178 94,214" fill="none" stroke="#365962" stroke-width="2" stroke-linecap="round"/>
+<polyline points="181,273 202,294 219,322 245,345 276,364 306,394 336,433 355,480" fill="none" stroke="#365962" stroke-width="7" stroke-linecap="round"/>
+<polyline points="718,30 730,78 740,116 732,159 749,195 758,234 747,280 729,331 714,390 720,455 745,503 758,541 783,578 802,625 787,690 806,737 838,805" fill="none" stroke="#365962" stroke-width="8" stroke-linecap="round"/>
+<polyline points="1105,65 1085,104 1098,154 1116,202 1098,248 1107,297 1120,351 1156,405 1190,450 1238,484 1285,542 1321,605 1301,679 1338,753 1391,810" fill="none" stroke="#365962" stroke-width="10" stroke-linecap="round"/>
+<polyline points="1390,52 1400,94 1408,146 1434,189 1446,233 1452,270 1480,308 1510,341 1520,397 1542,450" fill="none" stroke="#365962" stroke-width="12" stroke-linecap="round"/>
+<polyline points="2052,160 2070,210 2040,267 2048,310 2066,355 2040,419 2058,473 2075,526 2050,583 2032,644 2068,706 2120,748 2194,800" fill="none" stroke="#365962" stroke-width="13" stroke-linecap="round"/>
+<polyline points="2510,173 2484,244 2502,297 2521,365 2510,425 2535,465 2570,491 2608,540 2610,600 2640,662 2690,722 2750,788" fill="none" stroke="#365962" stroke-width="17" stroke-linecap="round"/>
+<polyline points="17,36 26,42 35,44 42,51 52,52 60,60 68,63 76,72 88,73 98,81 110,90" fill="none" stroke="#b0a586" stroke-width="4" stroke-linecap="round"/>
+<polyline points="110,90 135,95 160,89 185,91 210,104 238,100 250,100 265,100 287,94 320,91 345,83 380,88 409,82 429,83 445,80 445,72" fill="none" stroke="#b0a586" stroke-width="4" stroke-linecap="round"/>
+<polyline points="88,73 119,58 148,49 181,54 213,61 235,55 231,76 238,90 238,100 250,100" fill="none" stroke="#b0a586" stroke-width="3" stroke-linecap="round"/>
+<polyline points="26,42 32,33 44,27" fill="none" stroke="#b0a586" stroke-width="3" stroke-linecap="round"/>
+<polyline points="32,33 37,21 48,18 53,8 70,3" fill="none" stroke="#b0a586" stroke-width="4" stroke-linecap="round"/>
+<polyline points="60,60 68,88 75,112 70,137 82,165 77,186 72,204 87,231 98,248 112,270 106,304 115,327 105,355" fill="none" stroke="#b0a586" stroke-width="3" stroke-linecap="round"/>
+<polyline points="68,63 73,58 76,51" fill="none" stroke="#b0a586" stroke-width="2" stroke-linecap="round"/>
+<polyline points="265,100 292,124 326,133 355,147 380,151 395,160 422,168 448,175 477,190 496,202 510,190" fill="none" stroke="#b0a586" stroke-width="3" stroke-linecap="round"/>
+<polyline points="445,80 467,92 490,96 512,106 533,118 550,122 565,115 565,105" fill="none" stroke="#b0a586" stroke-width="4" stroke-linecap="round"/>
+<polyline points="105,355 134,357 158,341 184,337 211,329 233,315 245,325 267,331 285,345 309,357 338,352 364,345 385,340" fill="none" stroke="#b0a586" stroke-width="3" stroke-linecap="round"/>
+<polyline points="395,160 406,193 402,222 413,252 400,281 396,310 385,340" fill="none" stroke="#b0a586" stroke-width="3" stroke-linecap="round"/>
+<polyline points="385,340 414,354 445,350 472,359 495,360 520,373 540,375 560,382 560,390" fill="none" stroke="#b0a586" stroke-width="4" stroke-linecap="round"/>
+<polyline points="510,190 525,209 532,244 515,275 507,314 495,360" fill="none" stroke="#b0a586" stroke-width="2" stroke-linecap="round"/>
+<polyline points="98,81 97,102 105,109 119,99 132,124" fill="none" stroke="#b0a586" stroke-width="2" stroke-linecap="round"/>
+<polyline points="565,115 603,131 641,154 673,175 715,209 757,204 793,179 825,195 848,225 880,260 920,240 956,208 992,196 1016,215 1056,235 1100,260 1140,249 1190,275 1244,276 1280,304" fill="none" stroke="#b0a586" stroke-width="5" stroke-linecap="round"/>
+<polyline points="603,131 638,99 680,86 721,98 762,77 805,89 848,104 899,95 940,112 931,140 932,177 956,208 992,196" fill="none" stroke="#b0a586" stroke-width="2.5" stroke-linecap="round"/>
+<polyline points="560,390 612,398 656,431 689,475 727,507 773,527 813,514 852,477 892,446 936,423 976,378 1000,342 1056,235" fill="none" stroke="#b0a586" stroke-width="2.5" stroke-linecap="round"/>
+<polyline points="689,475 673,533 713,584 767,601 814,574 813,514" fill="none" stroke="#b0a586" stroke-width="2" stroke-linecap="round"/>
+<polyline points="1244,276 1280,242 1330,212 1387,170 1425,181 1470,222 1510,206 1555,223 1600,260 1656,251 1690,220 1740,196 1790,210 1835,233 1890,205 1964,192" fill="none" stroke="#b0a586" stroke-width="4" stroke-linecap="round"/>
+<polyline points="1330,212 1352,260 1410,282 1464,275 1510,253 1555,223" fill="none" stroke="#b0a586" stroke-width="2" stroke-linecap="round"/>
+<polyline points="1280,304 1318,362 1370,415 1440,489 1490,516 1550,552 1640,570 1700,604 1760,620 1830,605 1880,630 1950,619 2000,584 2068,544 2124,514 2137,525 2190,530 2250,565 2310,583 2370,570 2430,543 2490,541 2535,519 2580,490 2640,474 2680,446 2730,430" fill="none" stroke="#e5cf8a" stroke-width="6" stroke-linecap="round"/>
+<polyline points="1550,552 1590,651 1660,713 1740,722 1800,692 1880,630" fill="none" stroke="#b0a586" stroke-width="3" stroke-linecap="round"/>
+<polyline points="1600,260 1610,324 1660,376 1720,430 1760,482 1760,620" fill="none" stroke="#b0a586" stroke-width="2.5" stroke-linecap="round"/>
+<polyline points="2580,490 2630,518 2680,512 2715,485 2730,450 2730,430 2760,408" fill="none" stroke="#e5cf8a" stroke-width="7" stroke-linecap="round"/>
+<polyline points="1190,275 1220,252 1240,221 1214,162" fill="none" stroke="#b0a586" stroke-width="2" stroke-linecap="round"/>
+<polyline points="1438,191 1437.5,201" fill="none" stroke="#b0a586" stroke-width="2.5" stroke-linecap="round"/>
+<circle cx="651" cy="154" r="3" fill="#f1de9d"><title>Black Pine Switchback</title></circle>
+<circle cx="716" cy="214" r="3" fill="#f1de9d"><title>Pass Lantern Shelter</title></circle>
+<circle cx="797" cy="178" r="3" fill="#f1de9d"><title>The Open Saddle</title></circle>
+<circle cx="815" cy="105" r="3" fill="#f1de9d"><title>The North Ridge Refuge</title></circle>
+<circle cx="995" cy="196" r="3" fill="#f1de9d"><title>Saint Orvane Outer Court</title></circle>
+<circle cx="1085" cy="246" r="3" fill="#f1de9d"><title>The Gilded Granary</title></circle>
+<circle cx="1174" cy="215" r="3" fill="#f1de9d"><title>Blueglass Aqueduct</title></circle>
+<circle cx="1224" cy="292" r="3" fill="#f1de9d"><title>Abbey Road Shelter</title></circle>
+<circle cx="1345" cy="216" r="3" fill="#f1de9d"><title>Causeway Ward Yard</title></circle>
+<circle cx="1451" cy="177" r="3" fill="#f1de9d"><title>Choir Bridge Ruins</title></circle>
+<circle cx="1578" cy="250" r="3" fill="#f1de9d"><title>Last Lantern Overlook</title></circle>
+<circle cx="1775" cy="279" r="3" fill="#f1de9d"><title>The Nameless Market</title></circle>
+<circle cx="1846" cy="177" r="3" fill="#f1de9d"><title>Worldroot Scar</title></circle>
+<circle cx="744" cy="550" r="3" fill="#f1de9d"><title>Blackfen Landing</title></circle>
+<circle cx="819" cy="484" r="3" fill="#f1de9d"><title>The Old Fen Sluice</title></circle>
+<circle cx="1435" cy="480" r="3" fill="#f1de9d"><title>The Provincial Milehouse</title></circle>
+<circle cx="1646" cy="576" r="3" fill="#f1de9d"><title>Broadwater Bridge Yard</title></circle>
+<circle cx="1837" cy="627" r="3" fill="#f1de9d"><title>Amberfield Grange</title></circle>
+<circle cx="2113" cy="511" r="3" fill="#f1de9d"><title>Kingsway Watch</title></circle>
+<circle cx="2366" cy="573" r="3" fill="#f1de9d"><title>Eastwind Caravan Yard</title></circle>
+<circle cx="2579" cy="486" r="3" fill="#f1de9d"><title>The Last Capital Mile</title></circle>
+<circle cx="2732" cy="436" r="3" fill="#f1de9d"><title>Zarynth Trade Ward</title></circle>
+</g><g fill="#f0e8ce" font-family="Georgia,serif" font-size="27" text-anchor="middle">
+<text x="290" y="225" style="paint-order:stroke;stroke:#1a2220;stroke-width:5">Echoryn Forest</text>
+<text x="747" y="45" style="paint-order:stroke;stroke:#1a2220;stroke-width:5">Black Pine Pass</text>
+<text x="770" y="665" style="paint-order:stroke;stroke:#1a2220;stroke-width:5">Blackfen Basin</text>
+<text x="1150" y="390" style="paint-order:stroke;stroke:#1a2220;stroke-width:5">The Aureate Marches</text>
+<text x="1460" y="325" style="paint-order:stroke;stroke:#1a2220;stroke-width:5">The Severed Causeway</text>
+<text x="1830" y="95" style="paint-order:stroke;stroke:#1a2220;stroke-width:5">The Ascension Wastes</text>
+<text x="2070" y="745" style="paint-order:stroke;stroke:#1a2220;stroke-width:5">Zarynth Heartlands</text>
+<text x="2715" y="545" style="paint-order:stroke;stroke:#1a2220;stroke-width:5">Zarynth Arrival Ward</text>
+<text x="55" y="62" text-anchor="start">Orrakai</text><circle cx="18" cy="35" r="6" fill="#efcd79"/></g><g font-family="Georgia,serif" fill="#ece0bf"><text x="80" y="915" font-size="48">Runalis · Continental master plan</text><text x="80" y="967" font-size="28">Echoryn → Black Pine Pass or Blackfen → Aureate → the southern highway → Zarynth Trade Ward</text><text x="80" y="1014" font-size="27">The Severed Causeway and Ascension Wastes are an optional northern branch. Acts follow story progress.</text><text x="80" y="1062" font-size="27">Detailed current regions and inhabited road sites sit within a wider geographic plan; the greater capital remains future content.</text></g></svg>

@@ -1,0 +1,58 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Runalis — Art Workshop</title>
+<style>body{margin:0;background:#111710;color:#ecdfc0;font:15px system-ui}header{padding:20px 28px;border-bottom:1px solid #776442}h1{font:26px Georgia;margin:0 0 8px}p{margin:8px 0;color:#c3bca6}button{padding:10px 18px;background:#463b25;color:#f1dfb4;border:1px solid #b59459;cursor:pointer}canvas{display:block;max-width:100%;image-rendering:pixelated}#status{font:13px monospace;padding:14px 28px;white-space:pre-wrap}a{color:#e4bb6a}</style>
+<header><h1>Runalis · Art Workshop</h1><p>Live production renderer • four directions • equipment preserved • no player saves</p><button id="walk">Walk / idle</button> <button id="gear">Equip / unequip sword</button> <a href="combat-lab.html">Skills and weapons</a>  ·  <a href="scene-lab.html">World scenes</a>  ·  <a href="index.html">Enter Runalis</a></header>
+<canvas id="lab" width="960" height="2560"></canvas><div id="status">Loading atlas…</div>
+<script type="module">
+import {drawHumanActor} from './src/humanRenderer.js?v=20260924b';
+import {drawEnemySprite,drawBossSprite,spriteArtStatus} from './src/spriteArt.js';
+import {drawObjects} from './src/objectRenderer.js';import {drawDungeonInteractable} from './src/propArt.js';
+import {drawSummonArt} from './src/summonArt.js';
+import {drawTownBuildingArt,drawLandmarkArt} from './src/environmentArt.js';
+import {drawSkillReleaseArt} from './src/combatArt.js';
+import {drawEquippedArt} from './src/equipmentArt.js';
+import {ITEMS} from './src/data.js';
+import {getGearVisualProfile} from './src/gearVisualStyle.js';
+import {drawTiles} from './src/terrainRenderer.js';
+const canvas=document.querySelector('canvas'),ctx=canvas.getContext('2d');
+let walk=true,gear=false,failed=false;
+document.querySelector('#walk').onclick=()=>walk=!walk;
+document.querySelector('#gear').onclick=()=>gear=!gear;
+window.addEventListener('error',e=>{failed=true;document.querySelector('#status').textContent=e.message;});
+const directions=[[0,1],[1,0],[0,-1],[-1,0]];
+const actors=Array.from({length:8},(_,i)=>({x:120+(i%4)*210,y:120+Math.floor(i/4)*125,dirX:directions[i%4][0],dirY:directions[i%4][1],bodyType:i<4?'male':'female',hairStyle:i<4?'short':'ponytail',hp:100,maxHp:100,skin:'#eeb883',hair:'#714122',shirt:'#75502d',pants:'#484347',boots:'#654326',equipment:{},actionState:{},combatState:{}}));
+const enemies=['hollowling','ashWolf','gravebound','demonCultist'].map((kind,i)=>({kind,x:120+i*210,y:372,dirX:1,hp:100}));
+const camera={x:0,y:0};
+const summonStages=['skeletonServant','skeletalKnight','lich','lichLord','thornling','thornbeast','elderThornbeast','thornTitan','lesserHorror','starlessHorror','manyEyedHorror','oldHorror','miniDemon','spectralHand'];
+const summons=summonStages.map(evolutionStage=>({evolutionStage,x:0,y:0,attackCooldown:0}));
+let last=performance.now();
+function frame(now){
+const dt=Math.min(.05,(now-last)/1000);last=now;
+ctx.fillStyle='#283126';ctx.fillRect(0,0,960,2560);ctx.imageSmoothingEnabled=false;
+ctx.fillStyle='#dac89b';ctx.font='14px system-ui';ctx.fillText('SOUTH                       EAST                         NORTH                         WEST',78,28);
+for(const actor of actors){actor.isMoving=walk;actor.walkTime=(actor.walkTime||0)+(walk?dt:0);actor.equipment.weapon=gear?'noviceBlade':null;drawHumanActor(ctx,actor,camera,{isPlayer:true});}
+for(const e of enemies){e.x+=walk?Math.sin(now/100)*.1:0;drawEnemySprite(ctx,e,e.x,e.y);ctx.fillStyle='#cbbb99';ctx.fillText(e.kind,e.x-40,e.y+40);}
+const props=['supplyWagon','crateStack','sacks','bedroll','lantern','barrels','well','noticePapers'];
+drawObjects(ctx,{mode:'capital',objects:props.map((propType,i)=>({kind:'townProp',propType,x:70+i*116,y:545,hideLabel:true,decorative:true}))},camera);
+for(const [i,kind] of ['roadlessBandit','archer','gravePriest','wraith','brute','exploder','basicBeast'].entries()){
+  const e={kind,x:75+i*133,y:740,hp:100,attackTell:walk&&Math.floor(now/900)%2?1:0};
+  drawEnemySprite(ctx,e,e.x,e.y);ctx.fillStyle='#cbbb99';ctx.fillText(kind,e.x-38,e.y+36);
+}
+for(const [i,type] of ['veyrWarden','hollowElk','demonLord','demonLord'].entries()){
+  const e={bossType:type,boss:{phase:i===3?3:1},attackTell:walk&&Math.floor(now/1000)%2?1:0};
+  drawBossSprite(ctx,e,120+i*235,990,type);ctx.fillStyle='#cbbb99';ctx.fillText(i===3?'Malakar · siege':type,70+i*235,1034);
+}
+ctx.fillStyle='#dac89b';ctx.fillText('TOWN BUILDINGS  ·  FORTRESSES',28,1100);
+const buildingNames=['Cottage','Blacksmith','Apothecary','Market','Guildhall','Bank','Chapel','Arena','Castle','Fort','Tower','Cult chapel'];
+for(let i=0;i<12;i++){const x=80+i%6*160,y=1230+Math.floor(i/6)*150;drawTownBuildingArt(ctx,i,x,y,110);ctx.fillStyle='#cbbb99';ctx.fillText(buildingNames[i],x-38,y+24);}
+ctx.fillStyle='#dac89b';ctx.fillText('SUMMON EVOLUTIONS  ·  WALK / ATTACK',28,1450);
+for(let i=0;i<summons.length;i++){const summon=summons[i],attack=walk&&Math.floor(now/900)%2===1;summon.x+=walk?.05:0;summon.attackCooldown=attack?1:0;drawSummonArt(ctx,summon,summon.evolutionStage,65+i%7*135,1570+Math.floor(i/7)*155);ctx.fillStyle='#cbbb99';ctx.font='11px system-ui';ctx.fillText(summon.evolutionStage,12+i%7*135,1610+Math.floor(i/7)*155);}
+ctx.font='14px system-ui';ctx.fillStyle='#dac89b';ctx.fillText('SKILL RELEASES  ·  LIGHT / BRIAR / WATER / VOID / SOUL / FIRE / ARROW / SMOKE',28,1830);
+for(const [i,kind] of ['holy','thorn','water','void','necro','fire','arrowImpact','smoke'].entries())drawSkillReleaseArt(ctx,kind,65+i*119,1910,46,(now%1500)/1500,1);
+ctx.fillStyle='#dac89b';ctx.fillText('WEAPONS  ·  GENERATED HANDHELD ART',28,2020);
+const weapons=Object.entries(ITEMS).filter(([id,it])=>it.slot==='weapon'||it.type==='weapon');
+for(let i=0;i<weapons.length;i++){const [id,item]=weapons[i];drawEquippedArt(ctx,id,getGearVisualProfile(id,item),35+i%23*40,2130+Math.floor(i/23)*110,1);}
+ctx.fillStyle='#dac89b';ctx.fillText('DUNGEON INTERACTABLES · STATE VARIANTS',28,2350);const dungeonStates=[{kind:'dungeonStairs',direction:'up'},{kind:'dungeonStairs',direction:'down'},{kind:'dungeonDoor',locked:true},{kind:'dungeonDoor',locked:false},{kind:'dungeonPuzzle',progress:1},{kind:'dungeonPuzzle',solved:true},{kind:'dungeonKey'},{kind:'dungeonExit'},{kind:'dungeonEvent'},{kind:'dungeonEvent',triggered:true}];for(let i=0;i<dungeonStates.length;i++)drawDungeonInteractable(ctx,dungeonStates[i],52+i*95,2470);if(!failed)document.querySelector('#status').textContent=spriteArtStatus().map(a=>`${a.name}: ${a.failed?'FAILED':a.ready?'ready':'loading'}`).join(' | ');
+requestAnimationFrame(frame);
+}requestAnimationFrame(frame);
+</script></html>
+

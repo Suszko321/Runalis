@@ -1,0 +1,36 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Runalis · Back-mounted weapons</title>
+<style>body{margin:0;background:#161d17;color:#e4d3b0;font:16px system-ui}header{padding:20px}button,select{padding:10px;background:#2d3125;color:#e4d3b0;border:1px solid #92754a}canvas{max-width:100%;image-rendering:pixelated}</style>
+<header><h1>Back-mounted weapons</h1><label>Weapon <select id="weapon"></select></label> <button id="swing">Test swing</button> <label><input type="checkbox" id="enemy"> Enemy targeting player</label><p id="status"></p><p>Swing to draw. Weapons return to the back six seconds after the last swing or combat threat.</p></header>
+<canvas width="1000" height="420"></canvas><script type="module">
+import {createPlayer} from './src/player.js';
+import {ITEMS} from './src/data.js';
+import {drawHumanActor} from './src/humanRenderer.js';
+import {WEAPON_MOVESETS,ensureCombatState} from './src/combatMoves.js';
+import {getGearVisualProfile} from './src/gearVisualStyle.js';
+import {sampleWeaponStance,canSheatheWeapon} from './src/weaponStance.js';
+const q=s=>document.querySelector(s),ctx=q('canvas').getContext('2d');
+const actor=createPlayer('Sheath review');actor.id='sheath-review';actor.actionState={};ensureCombatState(actor);
+Object.assign(actor,{bodyType:'male',hairStyle:'short',skin:'#eeb883',hair:'#714122',shirt:'#75502d',pants:'#484347',boots:'#654326',isMoving:false});
+for(const [id,item] of Object.entries(ITEMS))if(item.slot==='weapon'&&canSheatheWeapon({equipment:{weapon:id}})){
+ const option=document.createElement('option');option.value=id;option.textContent=item.name||id;q('#weapon').append(option);
+}
+q('#weapon').value='noviceBlade';let started=-Infinity,move=WEAPON_MOVESETS.sword.moves[0];
+q('#swing').onclick=()=>{
+ const type=getGearVisualProfile(q('#weapon').value,ITEMS[q('#weapon').value]).weaponType;
+ move=(WEAPON_MOVESETS[type]||WEAPON_MOVESETS[['mace','hammer','spear'].includes(type)?'staff':'sword']).moves[0];
+ started=performance.now()/1000;actor.combatState.attackId++;
+};
+function frame(){
+ const now=performance.now()/1000;actor.equipment.weapon=q('#weapon').value;
+ Object.assign(actor.combatState,{attacking:now-started<move.duration,attackMove:move,attackElapsed:Math.max(0,now-started)});
+ const world={enemies:q('#enemy').checked?[{hp:10,combatTargetKind:'player',combatTargetId:actor.id}]:[]};
+ const stance=sampleWeaponStance(actor,world,now);
+ ctx.fillStyle='#263025';ctx.fillRect(0,0,1000,420);
+ for(const [i,[dirX,dirY]] of [[0,1],[1,0],[0,-1],[-1,0]].entries()){
+  Object.assign(actor,{x:125+i*250,y:245,dirX,dirY});actor.combatState.attackDirX=dirX;actor.combatState.attackDirY=dirY;
+  drawHumanActor(ctx,actor,{x:0,y:0},{scale:2.7,isPlayer:true,weaponSheathed:stance.sheathed});
+ }
+ q('#status').textContent=stance.sheathed?'Weapon on back':q('#enemy').checked?'Weapon ready — enemy engaged':`Weapon in hand — returns to back in ${Math.max(0,stance.readyUntil-now).toFixed(1)} seconds`;
+ requestAnimationFrame(frame);
+}requestAnimationFrame(frame);
+</script></html>

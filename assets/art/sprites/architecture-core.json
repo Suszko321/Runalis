@@ -1,0 +1,50 @@
+{
+  "name": "architecture-core",
+  "source": "C:\\Users\\austi\\Documents\\Runalis\\assets\\art\\source\\architecture-core.png",
+  "rows": 2,
+  "columns": 3,
+  "cellWidth": 160,
+  "cellHeight": 176,
+  "pivot": [
+    80,
+    170
+  ],
+  "sourceBounds": [
+    [
+      76,
+      55,
+      475,
+      453
+    ],
+    [
+      566,
+      55,
+      964,
+      467
+    ],
+    [
+      1066,
+      129,
+      1465,
+      474
+    ],
+    [
+      67,
+      539,
+      481,
+      964
+    ],
+    [
+      589,
+      574,
+      949,
+      967
+    ],
+    [
+      1073,
+      560,
+      1475,
+      966
+    ]
+  ]
+}

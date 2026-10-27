@@ -1,0 +1,64 @@
+{
+  "source": "assets/art/source/skeleton-forge.png",
+  "mode": "builtin image generation; silhouette extraction and nearest-neighbour packing",
+  "rows": 1,
+  "columns": 4,
+  "cellWidth": 96,
+  "cellHeight": 112,
+  "pivot": [
+    48,
+    106
+  ],
+  "sourceBounds": [
+    [
+      67,
+      22,
+      384,
+      724
+    ],
+    [
+      559,
+      25,
+      942,
+      712
+    ],
+    [
+      1007,
+      29,
+      1387,
+      717
+    ],
+    [
+      1394,
+      27,
+      1965,
+      715
+    ]
+  ],
+  "spriteRects": [
+    [
+      27,
+      12,
+      42,
+      94
+    ],
+    [
+      118,
+      14,
+      51,
+      92
+    ],
+    [
+      214,
+      14,
+      51,
+      92
+    ],
+    [
+      298,
+      14,
+      76,
+      92
+    ]
+  ]
+}

@@ -1,0 +1,103 @@
+import assert from 'node:assert/strict';
+import {captureContinentalState, restoreContinentalState, applyContinentalEntityState, continentalMemory, continentalGeneratedEntities, continentalEncounterSuppressed, continentalDrops} from '../src/continentPersistence.js';
+import {createPlayer} from '../src/player.js';
+import {createSaveState, applySaveToGame, slimOverworldState, emergencySlimProfileCollection} from '../src/gameSave.js';
+import {createWorld} from '../src/world.js';
+import {createOverworldReturnState, restoreOverworldFromState} from '../src/dungeonSystem.js';
+import {CONTINENT_VERSION, migrateContinentalPosition} from '../src/continentDefinition.js';
+import {SAVE_SCHEMA_VERSION} from '../src/saveProfiles.js';
+
+const player = createPlayer('Continental persistence regression');
+player.worldMemory = {elapsed: 100, harvests: {'overworld:aureateMarches:test-ore': 450}, stones: {}, locations: {}, surveys: {}};
+const enemy = {id:'persistent-wolf', kind:'ashWolf', hp:50, maxHp:50, x:2000, y:2000, sourceRegionId:'hearthmereFrontier'};
+const ore = {id:'test-ore', kind:'ore', depleted:false, respawn:0, x:2020, y:2000, sourceRegionId:'aureateMarches'};
+const chest = {id:'reward-chest', kind:'supplyCache', claimed:false, x:2020, y:2020};
+const scenery = Array.from({length:2000}, (_,i)=>({id:`decor-${i}`,kind:'shrub',x:i,y:i,depleted:false}));
+const chunk = {objects:[ore,chest,...scenery],enemies:[enemy],drops:[]};
+const world = {mode:'overworld',continentId:'runalis',geographyVersion:1,regionId:'hearthmereFrontier',objects:chunk.objects,enemies:chunk.enemies,drops:[],continentRuntime:{chunks:new Map([['0,0',chunk]])}};
+const game = {player,world,camera:{x:0,y:0},canvas:{width:960,height:600},log:()=>{}};
+restoreContinentalState(game);
+assert.deepEqual(continentalMemory(player).entities,{},'pristine entities and 2000 scenery objects must not bloat saves');
+enemy.hp=19;ore.depleted=true;ore.respawn=350;chest.claimed=true;
+const drop = {id:'earned-drop',itemId:'ironOre',item:'ironOre',qty:2,x:2000,y:2000,ttl:90,age:10,ownerSlot:1};
+world.drops.push(drop);chunk.drops.push(drop);
+captureContinentalState(game);
+assert.equal(continentalMemory(player).entities[enemy.id].hp,19);
+assert.equal(continentalMemory(player).entities[chest.id].claimed,true);
+assert.equal(Object.keys(continentalMemory(player).entities).length,3);
+assert.equal(continentalDrops(player)[0].age,10);
+const hydration = {...enemy,hp:50};applyContinentalEntityState(hydration,player,'enemy');assert.equal(hydration.hp,19);
+const hydratedOre = {...ore,depleted:false,respawn:0};applyContinentalEntityState(hydratedOre,player);assert.equal(hydratedOre.respawn,350);
+player.worldMemory.elapsed+=20;
+captureContinentalState(game);
+assert.equal(continentalDrops(player)[0].age,30,'stream/reload must retain remaining loot lifetime');
+assert.equal(continentalMemory(player).entities[ore.id].respawnAt,450,'inactive resource capture cannot refresh an existing harvest expiry');
+enemy.hp=0;enemy.dead=true;enemy.enemyWorldLootGenerated=true;
+captureContinentalState(game);
+const killed={...enemy,hp:50,dead:false,remove:false};applyContinentalEntityState(killed,player,'enemy');assert(killed.dead&&killed.remove&&killed.hp===0&&killed.enemyWorldLootGenerated);
+drop.collected=true;world.drops=[];captureContinentalState(game);assert.equal(continentalDrops(player).length,0,'pickup cannot regenerate saved ground reward');
+assert.equal(player.worldMemory.harvests['overworld:aureateMarches:test-ore'],450,'stable legacy harvest key is retained');
+
+const temp = {id:'patrol-point7-cycle0-1',kind:'archer',hp:40,maxHp:70,damage:7,x:2040,y:2060,dynamicEncounter:true,dynamicEncounterId:'patrol-point7-cycle0',spawnedAt:100,despawnAfter:300,equipment:{weapon:'dawnNoviceBow'},combatContributors:[{actor:player}],sourceRegionId:'aureateMarches'};
+world.enemies.push(temp);captureContinentalState(game);
+const snapshots=continentalGeneratedEntities(player,'enemy',{minX:2000,minY:2000,maxX:2100,maxY:2100});
+assert.equal(snapshots.length,1);assert.equal(snapshots[0].hp,40);assert.deepEqual(snapshots[0].equipment,temp.equipment);assert(!('combatContributors' in snapshots[0]));
+assert.equal(continentalGeneratedEntities(player,'enemy',{minX:0,minY:0,maxX:100,maxY:100}).length,0,'temporary actors only hydrate in their actual chunk');
+temp.hp=0;temp.dead=true;captureContinentalState(game);assert(continentalEncounterSuppressed(player,temp.id));assert.equal(continentalGeneratedEntities(player).length,1,'pending deaths hydrate until rewards are handled');
+temp.deathHandled=true;captureContinentalState(game);assert.equal(continentalGeneratedEntities(player).length,0,'handled corpses do not hydrate as new encounters');
+player.worldMemory.elapsed=721;assert(!continentalEncounterSuppressed(player,temp.id));
+temp.remove=true;world.enemies=world.enemies.filter(e=>e!==temp);chunk.enemies=chunk.enemies.filter(e=>e!==temp);captureContinentalState(game);assert(!continentalMemory(player).entities[temp.id]);
+const overdue={id:'overdue-live-fight',kind:'ashWolf',dynamicEncounter:true,spawnedAt:1,despawnAfter:1,hp:10,maxHp:10,x:5000,y:5000};
+Object.assign(player,{x:5000,y:5000});world.enemies.push(overdue);captureContinentalState(game);
+assert(continentalGeneratedEntities(player).some(e=>e.id===overdue.id),'save during a nearby overdue encounter cannot remove that fight');
+Object.assign(player,{x:12000,y:12000});captureContinentalState(game);assert(!continentalGeneratedEntities(player).some(e=>e.id===overdue.id),'overdue encounter may expire after the party leaves');
+world.enemies=world.enemies.filter(e=>e!==overdue);
+const expiredDrop={id:'expired-inactive-drop',itemId:'ironOre',qty:1,x:2000,y:2000,ttl:1,age:0};chunk.drops.push(expiredDrop);captureContinentalState(game);player.worldMemory.elapsed+=2;captureContinentalState(game);assert(expiredDrop.collected,'inactive chunk loot must retire rather than reappear after absolute expiry');
+const cappedPlayer={x:0,y:0,worldMemory:{elapsed:10}};
+const cappedEnemies=Array.from({length:240},(_,i)=>({id:`cap-${i}`,kind:'ashWolf',dynamicEncounter:true,spawnedAt:10,despawnAfter:20,hp:10,maxHp:10,x:i,y:0}));
+captureContinentalState({player:cappedPlayer,world:{continentId:'runalis',enemies:cappedEnemies,objects:[],drops:[],continentRuntime:{chunks:new Map()}}});assert.equal(Object.keys(continentalMemory(cappedPlayer).generated).length,192,'temporary snapshots have a bounded population');
+const seen = new Set();
+for(let pass=0;pass<100;pass++) {
+  const entity={id:'persistent-wolf',kind:'ashWolf',hp:50,maxHp:50,x:2000,y:2000};
+  applyContinentalEntityState(entity,player,'enemy');assert.equal(entity.hp,0);
+  seen.add(entity.id);
+}
+assert.equal(seen.size,1,'100 hydration cycles retain stable identity and death');
+
+const sparseReturn=createOverworldReturnState(game,{id:'stable-entry',x:2000,y:2000,sourceRegionId:'hearthmereFrontier'});
+assert.equal(sparseReturn.entranceId,'stable-entry');assert.equal(sparseReturn.continentId,'runalis');assert(!sparseReturn.tiles&&!sparseReturn.objects&&!sparseReturn.enemies);
+assert.equal(slimOverworldState(sparseReturn).entranceId,'stable-entry');
+const save=createSaveState(game);assert.equal(save.version,SAVE_SCHEMA_VERSION);assert.equal(save.geographyVersion,CONTINENT_VERSION);assert.equal(save.worldTiles,null);assert.equal(save.worldObjects,null);assert.equal(save.enemies,null);
+assert(save.player.worldMemory.continent.entities['persistent-wolf'].dead);
+const emergency=emergencySlimProfileCollection({regression:{id:'regression',state:{...save,overworldState:sparseReturn}}});assert.equal(emergency.regression.state.overworldState.entranceId,'stable-entry');
+
+// Full integration requires the coordinated continental world module, not a stub.
+const continental=createWorld();assert.equal(continental.continentId,'runalis');
+const first={world:continental,player:createPlayer('Legacy region regression'),camera:{x:0,y:0},canvas:{width:960,height:600},log:()=>{}};
+const legacyPlayer=createPlayer('Legacy region regression');Object.assign(legacyPlayer,{x:36*32,y:28*32,gold:7654,worldMemory:{elapsed:110,harvests:{'overworld:aureateMarches:kept-ore':410},stones:{},locations:{},surveys:{}}});
+const legacy={version:16,player:legacyPlayer,worldMode:'overworld',worldRegionId:'aureateMarches',worldName:'The Aureate Marches',camera:{x:0,y:0}};
+assert(applySaveToGame(first,legacy));assert.deepEqual({x:first.player.x,y:first.player.y},migrateContinentalPosition('aureateMarches',legacyPlayer.x,legacyPlayer.y));
+assert.equal(first.player.gold,7654);assert.equal(first.player.worldMemory.harvests['overworld:aureateMarches:kept-ore'],410);
+const migratedSave=JSON.parse(JSON.stringify(createSaveState(first)));
+const once={x:first.player.x,y:first.player.y};
+assert(applySaveToGame(first,migratedSave));assert.deepEqual({x:first.player.x,y:first.player.y},once);
+assert(applySaveToGame(first,createSaveState(first)));assert.deepEqual({x:first.player.x,y:first.player.y},once,'save reload cannot translate continental coordinates twice');
+const restored=restoreOverworldFromState(sparseReturn);assert.equal(restored.continentId,'runalis');
+// A destination safety preview must not rewind damage dealt since the last
+// half-second persistence sample. Seamlessly unload and revisit that same ID.
+const liveEnemy=continental.continentRuntime.allEnemies.find(e=>e.hp>0&&!e.isBoss);
+assert(liveEnemy);
+const liveGame={world:continental,player:createPlayer('Live seam regression'),camera:{x:0,y:0},canvas:{width:960,height:600},log:()=>{}};
+Object.assign(liveGame.player,{x:liveEnemy.x,y:liveEnemy.y});
+continental.continentRuntime.activate([liveGame.player],liveGame.player,true);
+liveEnemy.hp=Math.max(2,liveEnemy.maxHp-7);captureContinentalState(liveGame);
+liveEnemy.hp-=1;
+const damagedHp=liveEnemy.hp;
+continental.continentRuntime.previewAt(liveEnemy.x,liveEnemy.y,liveGame.player);
+assert.equal(liveEnemy.hp,damagedHp,'destination preview must not rewind current damage to older saved HP');
+continental.continentRuntime.refresh(liveGame);
+Object.assign(liveGame.player,{x:87360,y:13760});continental.continentRuntime.refresh(liveGame);
+Object.assign(liveGame.player,{x:liveEnemy.x,y:liveEnemy.y});continental.continentRuntime.refresh(liveGame);
+assert.equal(liveEnemy.hp,damagedHp,'wounded enemy HP survives active chunk unloading and revisit');
+const payload=JSON.stringify(save);assert(payload.length<40000,`Sparse save unexpectedly large: ${payload.length} bytes`);
+console.log(JSON.stringify({result:'PASS',schema:SAVE_SCHEMA_VERSION,checks:'sparse pristine state, 100 hydrate cycles, actual chunk unload/revisit and live safety preview, wounded/dead enemies, no duplicate or refreshed expired loot, resource timer keys, 192-snapshot bound, active fight retention, cycle expiry, sparse dungeon return, emergency return metadata, legacy region migration exactly once',saveBytes:payload.length,mutatedEntities:Object.keys(continentalMemory(player).entities).length},null,2));

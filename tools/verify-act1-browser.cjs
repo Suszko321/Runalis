@@ -1,0 +1,27 @@
+const {chromium}=require(process.env.RUNALIS_NODE_MODULES+'/playwright');
+const fs=require('fs'),assert=require('assert/strict');
+(async()=>{const browser=await chromium.launch({channel:'msedge',headless:true});const page=await browser.newPage({viewport:{width:1280,height:800}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+try{
+ await page.route('**/src/main.js*',route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync('src/main.js','utf8')+'\nwindow.getCampaignReviewGame=()=>currentGame;'}));
+ await page.goto('http://127.0.0.1:8774/');
+ await page.evaluate(async()=>{const{writeProfiles}=await import('/src/gameSave.js'),{createPlayer,chooseClass}=await import('/src/player.js');const p=createPlayer('Act I Review');chooseClass(p,'oathkeeper');p.characterCreationComplete=true;p.story.flags.opening={introPlayed:true,maraConversationComplete:true};writeProfiles({campaignReview:{id:'campaignReview',name:'Act I Review',updated:1,state:{version:18,player:p,worldMode:'capital',worldName:'Orrakai'}}});});
+ await page.reload();await page.locator('[data-load="campaignReview"]').click();await page.waitForFunction(()=>!!window.getCampaignReviewGame?.(),{timeout:60000});
+ await page.waitForTimeout(1800);assert.equal(await page.evaluate(()=>getCampaignReviewGame().world.mode),'capital');
+ await page.screenshot({path:'docs/act1-campaign/orrakai-runtime.png'});
+ const result=await page.evaluate(async()=>{
+   const g=getCampaignReviewGame();const{createWorld}=await import('/src/world.js');const{updateAct1Campaign}=await import('/src/act1CampaignRuntime.js');const{setStoryFlag}=await import('/src/storyProgress.js');const{openOrderLedger}=await import('/src/yourOrder.js');
+   g.player.quests.completed.mercy_in_orrakai={id:'mercy_in_orrakai'};g.world=createWorld();Object.assign(g.player,{x:35.5*32,y:88.5*32});updateAct1Campaign(g,.3);g.world.continentRuntime.activate([g.player],g.player,true);g.camera.x=g.player.x-640;g.camera.y=g.player.y-400;g.renderCamera={...g.camera};
+   window.campaignReview={g,setStoryFlag,updateAct1Campaign,openOrderLedger};return {objects:g.world.objects.length,greyhaven:g.world.objects.some(o=>o.id==='tavinHolt')};
+ });assert(result.greyhaven);await page.waitForTimeout(1600);await page.screenshot({path:'docs/act1-campaign/greyhaven-before.png'});
+ await page.evaluate(()=>{const{g,setStoryFlag,updateAct1Campaign,openOrderLedger}=campaignReview;g.player.campaignKills={greyhavenBeastA:true,greyhavenBeastB:true};setStoryFlag(g.player,'order.restored');updateAct1Campaign(g,.3);openOrderLedger(g,true);});
+ await page.locator('#yourOrderLedger input').first().fill('The Lantern Company');await page.locator('#yourOrderLedger select').nth(0).selectOption('tree');await page.locator('#yourOrderLedger select').nth(1).selectOption('green');
+ await page.screenshot({path:'docs/act1-campaign/order-ledger.png'});await page.locator('#yourOrderLedger button[type=submit]').click();
+ assert.equal(await page.evaluate(()=>campaignReview.g.player.yourOrder.name),'The Lantern Company');await page.waitForTimeout(1200);await page.screenshot({path:'docs/act1-campaign/greyhaven-after.png'});
+ await page.evaluate(async()=>{const{g}=campaignReview;const{createCapitalHubWorld}=await import('/src/hubSystem.js');const{startQuest}=await import('/src/dialogueSystem.js');const{getQuest}=await import('/src/worldContent.js');g.world=createCapitalHubWorld();delete g.player.quests.completed.mercy_in_orrakai;startQuest(g.player,'mercy_in_orrakai');const q=g.player.quests.active.mercy_in_orrakai,s=getQuest(q.id).stages.find(s=>s.id==='witnessHealingRite');Object.assign(q,{stageIndex:7,currentStageId:s.id,objectives:s.objectives.map(o=>({...o,current:0}))});Object.assign(g.player,{x:18.5*32,y:15.5*32});campaignReview.setStoryFlag(g.player,'mercy.riteStarted');campaignReview.updateAct1Campaign(g,.3);});
+ await page.waitForTimeout(20000);await page.screenshot({path:'docs/act1-campaign/healing-rite.png'});assert(await page.evaluate(()=>campaignReview.g.player.story.flags.mercy.riteFinished));
+ await page.evaluate(async()=>{const {g}=campaignReview;const {closeDialogue}=await import('/src/dialogueSystem.js');const {createCaravanOpeningWorld}=await import('/src/act1OpeningSystem.js');closeDialogue(g.dialogue,{immediate:true});g.world=createCaravanOpeningWorld();Object.assign(g.player,g.world.spawn);g.world.opening.elapsed=23;g.world.opening.nextBeat=3;});
+ await page.waitForTimeout(1600);assert(await page.evaluate(()=>campaignReview.g.world.objects.some(o=>o.id==='openingAmbusher0')));await page.screenshot({path:'docs/act1-campaign/caravan-ambush.png'});
+ await page.evaluate(()=>{campaignReview.g.world.opening.elapsed=54;});await page.waitForTimeout(5000);assert.equal(await page.evaluate(()=>campaignReview.g.world.mode),'maraHouse');
+ assert(await page.evaluate(()=>campaignReview.g.player.story.flags.opening.wokeInOrrakai));await page.screenshot({path:'docs/act1-campaign/mara-recovery.png'});
+ assert.deepEqual(errors,[]);fs.writeFileSync('docs/act1-campaign/browser-verification.json',JSON.stringify({productionLaunch:true,ledgerForm:true,ritePlayback:true,openingSceneTransitions:true,errors,result},null,2));console.log('PASS production launch, streamed Greyhaven, founding form, healing rite, ambush/recovery transitions; no browser errors');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1});

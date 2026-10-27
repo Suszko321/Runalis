@@ -1,0 +1,42 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Runalis · Weapon Swing Review</title>
+<style>body{margin:0;background:#161d17;color:#e4d3b0;font:16px system-ui}header{padding:18px}button,select,input{padding:8px;background:#2d3125;color:#e4d3b0;border:1px solid #92754a}canvas{max-width:100%;image-rendering:pixelated}a{color:#d9bd77}</style>
+<header><h1>Weapon swing review</h1><label>Motion <select id="motion"><option value="walk">Walk</option><option value="run">Run</option><option value="attack" selected>Attack</option></select></label> <label>Weapon <select id="weapon"></select></label> <label>Move <select id="move"></select></label> <button id="play">Pause / play</button> <label>Frame <input id="phase" type="range" min="0" max="999" value="0"></label> <a href="creator-lab.html">Character creator</a><p id="status">Loading artwork</p></header>
+<canvas width="1100" height="1000"></canvas><script type="module">
+import {createPlayer} from './src/player.js';
+import {ITEMS} from './src/data.js';
+import {drawHumanActor} from './src/humanRenderer.js';
+import {getGearVisualProfile} from './src/gearVisualStyle.js';
+import {armorMotionFamily} from './src/armorMotionArt.js';
+import {WEAPON_MOVESETS,ensureCombatState} from './src/combatMoves.js';
+import {spriteArtStatus} from './src/spriteArt.js';
+const q=s=>document.querySelector(s),ctx=q('canvas').getContext('2d'),actors=[],families=['plate','leather','cloth'];
+for(const bodyType of ['male','female'])for(const family of families)for(const [dirX,dirY] of [[0,1],[1,0],[0,-1],[-1,0]]){
+ const actor=createPlayer('Motion review');ensureCombatState(actor);actor.actionState={};
+ Object.assign(actor,{bodyType,hairStyle:bodyType==='male'?'short':'ponytail',dirX,dirY,skin:'#eeb883',hair:'#714122',shirt:'#75502d',pants:'#484347',boots:'#654326'});
+ for(const slot of ['chest','legs'])actor.equipment[slot]=Object.entries(ITEMS).find(([id,item])=>item.slot===slot&&armorMotionFamily(getGearVisualProfile(id,item),slot)===family)?.[0]||null;
+ actor.equipment.weapon='noviceBlade';actors.push({actor,family,bodyType});
+}
+const meleeWeapons=Object.entries(ITEMS).filter(([id,item])=>item.slot==='weapon'&&['sword','dagger','axe','mace','hammer','spear','scythe','staff'].includes(getGearVisualProfile(id,item).weaponType));
+for(const [id,item] of meleeWeapons){const option=document.createElement('option');option.value=id;option.textContent=item.name||id;q('#weapon').append(option);}
+q('#weapon').value='noviceBlade';
+function updateMoves(){const type=getGearVisualProfile(q('#weapon').value,ITEMS[q('#weapon').value]).weaponType;const set=WEAPON_MOVESETS[type]||WEAPON_MOVESETS[['mace','hammer','spear'].includes(type)?'staff':'sword'];q('#move').replaceChildren();for(const [index,move] of set.moves.entries()){const option=document.createElement('option');option.value=index;option.textContent=move.name||move.id;q('#move').append(option);}}
+q('#weapon').onchange=updateMoves;updateMoves();
+let playing=true,phase=0,last=performance.now();q('#play').onclick=()=>playing=!playing;q('#phase').oninput=()=>{playing=false;phase=Number(q('#phase').value)/1000;};
+function frame(now){
+ const dt=Math.min(.05,(now-last)/1000);last=now;if(playing)phase=(phase+dt*.65)%1;
+ ctx.fillStyle='#263025';ctx.fillRect(0,0,1100,1000);
+ const type=getGearVisualProfile(q('#weapon').value,ITEMS[q('#weapon').value]).weaponType;const move=(WEAPON_MOVESETS[type]||WEAPON_MOVESETS[['mace','hammer','spear'].includes(type)?'staff':'sword']).moves[Number(q('#move').value)||0];let failed='';
+ for(let i=0;i<actors.length;i++){
+  const {actor,family,bodyType}=actors[i],mode=q('#motion').value;actor.equipment.weapon=q('#weapon').value;
+  Object.assign(actor,{x:75+(i%4)*260,y:110+Math.floor(i/4)*158,isMoving:mode!=='attack',walkTime:phase*(mode==='run'?4/.72:8)});
+  actor.actionState.sprinting=mode==='run';Object.assign(actor.combatState,{attacking:mode==='attack',attackMove:move,attackElapsed:phase*move.duration,attackDirX:actor.dirX,attackDirY:actor.dirY});
+  const before=JSON.stringify(actor);drawHumanActor(ctx,actor,{x:0,y:0},{scale:1.7,isPlayer:true});if(before!==JSON.stringify(actor))failed='Renderer changed actor';
+  ctx.fillStyle='#e1cca2';ctx.font='14px system-ui';ctx.fillText(`${bodyType} · ${family}`,actor.x-45,actor.y+43);
+ }
+ const sheets=spriteArtStatus(),ready=sheets.filter(a=>a.ready).length;
+ q('#status').textContent=failed||`${ready}/${sheets.length} sheets loaded · 24 equipped characters · articulated arms and shared wrist attachment · review actors unchanged`;
+ if(playing)q('#phase').value=phase*999;requestAnimationFrame(frame);
+}requestAnimationFrame(frame);
+</script></html>
+
+

@@ -1,0 +1,32 @@
+### Visual Model Audit: Runalis' Canvas Renderer (Act 1)
+
+**Scope:** Act I Prologue (`createCaravanOpeningWorld`, `createMaraHouseWorld`) against the canonical visual registry.
+
+#### 1. Asset Families Identified
+The excerpts map primarily to these registry families based on `OBJECT_GROUPS` and material selection logic:
+*   **Vegetation:** The caravan world uses a `'path'` biome but implies surrounding grass (`grass`). No explicit vegetation objects are spawned in the caravan sequence, only the road.
+*   **Prop (Town):** A significant portion of Act I relies on unregistered or locally defined props (`supplyWagon`, `lantern`, `bedroll`, `crateStack`). These map to families like `timber`, `waterClear` (via lantern), and `fieldStone`/`ashWood`.
+*   **NPC:** Two specific NPCs are instantiated: the Caravan Master/Pilgrim/Old Guard (families likely mapped to `characterCloth`) and Mara Vell (`characterCloth`). The Warden Mael and Caelen appear only post-transition or via conditional logic not present in the opening world creation.
+*   **Structure:** Minimal structure exists until Mara's house, where the `'wall'` biome acts as a proxy for `fieldStone`/`ancientStone`.
+
+#### 2. Risks & Validation Failures
+Several critical integration risks are evident in the code:
+
+*   **Missing Canonical Models:** The `prop()` helper function creates objects with `kind: 'townProp'` but passes specific IDs (e.g., `'merchantWagon'`) that do not match keys in `VISUAL_MODEL_REGISTRY`. The registry generates IDs like `object:smallBoulder`, `object:wood`.
+    *   *Risk:* `getVisualModelId()` will fail to resolve `townProp::merchantWagon`. `resolveVisualDefinition()` returns `null`, triggering `VISUAL_STATUS.MISSING_MODEL` errors during validation.
+*   **Material & Scale Mismatch:**
+    *   The `lantern` prop is assigned a `'glow'` property but lacks explicit material definition in the prop creation. If it defaults to `fieldStone`, the visual feedback (`#ef6f2f`) will fail to render correctly without a specific light-emitting material definition (e.g., `divineRelic` or custom glow).
+    *   Scales are hardcoded manually (e.g., `1.15`, `0.85`). While `expectedScale` ranges exist in the registry, manual overrides might conflict with the renderer's LOD culling logic if `rendererId` isn't explicitly set to match a canonical ID.
+*   **Collision Profile Gaps:** Most spawned props (`lantern`, `bedroll`, wagons) are set to `interactable: false`. However, the validation loop checks `if (status.definition?.collisionProfile !== 'none' && entity.collision === false)`. Since these props likely map to a `world-prop` collision profile, they will generate warnings for disabling expected collision if their logic isn't overridden.
+*   **Logic Object Exclusion:** The opening overlay (`#act1NarrativeOverlay`) is implemented via raw DOM manipulation (`appendChild`, inline styles). This bypasses the visual model pipeline entirely. While intentional for UI, it creates a dependency on `ensureOpeningOverlay()` rather than using `structure: 'act1Intro'` from the registry, creating an inconsistency in rendering architecture.
+
+#### 3. Animation Integration Points
+*   **Zero FPS Budgets:** The `ART_BUDGETS` define `animationFps: 0` for structures and props. Since wagons (`supplyWagon`) are visually animated sequences (passing by), this suggests they rely on keyframe images or static sprites rather than full skeletal animation.
+    *   *Integration Point:* Check if the `prop()` helper accepts an `animationPath` or `spritesheet` parameter currently missing. Currently, wagons appear static unless a sprite sheet is baked into their ID (which isn't supported in the current registry).
+*   **NPC States:** NPCs (`npc`, `friendly`) have no animation budget assigned other than defaults. Integration likely relies on state machines (`disposition: 'friendly'`) rather than procedural animation trees defined in the material library.
+
+#### 4. Missing Coverage
+*   **Environment Assets:** The caravan world requires a sky, distant hills, and grass to establish the "beneath a sky without birds" narrative. None of these are instantiated as objects or environment layers in `createCaravanOpeningWorld`. The renderer expects a background layer (likely handled by the game loop's `world` object properties), but specific visual assets for the "grass" biome are missing from the active object pool.
+*   **Interactive Objects:** Props like `artifactWagon` and `roadCampfire` are marked `interactable: false`. If the narrative requires the player to interact with them (e.g., taking the reliquary), the current state prevents this visual logic path. The registry would define these as `structure` or `prop`, but they lack the interaction definition to trigger quest markers.
+*   **Dynamic Lighting:** The lantern uses a `glow` hex code. Without a renderer component specifically reading `glow` properties and updating scene lights (which are typically separate from the model registry), this will likely result in a static emissive material or no visual change, failing the "fire takes the wagons" atmosphere goal.
+*   **Post-Transition Logic Objects:** The transition to Mara's house involves loading new worlds. There is no logic in the excerpts to migrate existing entity references (e.g., player inventory items) into the `VISUAL_MODEL_REGISTRY` format for seamless world switching, potentially causing flicker or missing models upon re-spawning objects in the hub.

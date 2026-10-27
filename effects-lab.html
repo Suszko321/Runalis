@@ -1,0 +1,21 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Runalis · Living spell grounds</title>
+<style>body{margin:0;background:#161d17;color:#e4d3b0;font:16px system-ui}header{padding:20px}canvas{max-width:100%;image-rendering:pixelated}button{padding:10px;background:#303427;color:#e4d3b0;border:1px solid #92754a}</style>
+<header><h1>Living spell grounds</h1><p>Consecrated ground, brambles, curse rifts and wellspring ripples. Fine boundaries show the gameplay radius.</p><button id="pause">Pause / resume</button></header>
+<canvas width="960" height="640"></canvas><script type="module">
+import {drawWorldEffects} from './src/combatVisualsRenderer.js';
+import {drawHumanActor} from './src/humanRenderer.js';
+import {createPlayer} from './src/player.js';
+const canvas=document.querySelector('canvas'),ctx=canvas.getContext('2d'),actor=createPlayer('Art review');
+actor.equipment={};actor.isMoving=false;actor.hair='#714122';actor.shirt='#75502d';actor.facialHair='shortBeard';actor.dirX=0;actor.dirY=1;
+const kinds=['oathkeeperConsecratedGround','thornbinderBramblePatch','cursedGround','wellspring'];
+const labels=['Consecrated ground','Bramble patch','Cursed ground','Wellspring'];
+let age=0,last=performance.now(),playing=true;document.querySelector('#pause').onclick=()=>playing=!playing;
+function frame(now){if(playing)age+=Math.min(.05,(now-last)/1000);last=now;ctx.fillStyle='#263025';ctx.fillRect(0,0,960,640);
+ for(let i=0;i<4;i++){
+  const x=240+i%2*480,y=155+Math.floor(i/2)*320;
+  drawWorldEffects(ctx,{effects:[{kind:kinds[i],x,y,radius:115,age:age%(4/7),ttl:10,layer:'ground'}]},{x:0,y:0},'behind');
+  actor.x=x;actor.y=y+18;drawHumanActor(ctx,actor,{x:0,y:0},{scale:1.4,isPlayer:true});
+  ctx.font='18px system-ui';ctx.fillStyle='#e4d3b0';ctx.fillText(labels[i],x-85,y+145);
+ }requestAnimationFrame(frame);
+}requestAnimationFrame(frame);
+</script></html>

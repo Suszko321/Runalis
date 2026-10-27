@@ -1,0 +1,233 @@
+[
+  {
+    "atlas": "accessories-equipped",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 22545
+  },
+  {
+    "atlas": "arcane-special",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 125154
+  },
+  {
+    "atlas": "architecture-core",
+    "frames": 6,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 211625
+  },
+  {
+    "atlas": "armor-equipped",
+    "frames": 12,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 24115
+  },
+  {
+    "atlas": "bosses-act1",
+    "frames": 12,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 382683
+  },
+  {
+    "atlas": "bosses-ascendant",
+    "frames": 12,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 373165
+  },
+  {
+    "atlas": "bosses-zephyr",
+    "frames": 9,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 336941
+  },
+  {
+    "atlas": "buildings-town",
+    "frames": 12,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 547197
+  },
+  {
+    "atlas": "combat-effects",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 94802
+  },
+  {
+    "atlas": "enemies-core",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 86034
+  },
+  {
+    "atlas": "enemies-extra",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 92346
+  },
+  {
+    "atlas": "enemies-remaining",
+    "frames": 12,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 88498
+  },
+  {
+    "atlas": "environment-props",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 141238
+  },
+  {
+    "atlas": "headgear-equipped",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 25842
+  },
+  {
+    "atlas": "heads-custom",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 30194
+  },
+  {
+    "atlas": "human-female-attack",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 72200
+  },
+  {
+    "atlas": "human-female",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 63133
+  },
+  {
+    "atlas": "human-male-attack",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 67716
+  },
+  {
+    "atlas": "human-male",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 60683
+  },
+  {
+    "atlas": "icons-core",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 29329
+  },
+  {
+    "atlas": "icons-extra",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 72579
+  },
+  {
+    "atlas": "icons-materials",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 56040
+  },
+  {
+    "atlas": "landmarks-modular",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 463119
+  },
+  {
+    "atlas": "plague-props",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 216968
+  },
+  {
+    "atlas": "props-core",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 284698
+  },
+  {
+    "atlas": "skill-effects-extra",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 145030
+  },
+  {
+    "atlas": "skill-effects",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 171378
+  },
+  {
+    "atlas": "story-props",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 250003
+  },
+  {
+    "atlas": "summons-ancient",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 216270
+  },
+  {
+    "atlas": "summons-core",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 145629
+  },
+  {
+    "atlas": "summons-evolved",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 143665
+  },
+  {
+    "atlas": "town-details",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 156103
+  },
+  {
+    "atlas": "weapons-equipped",
+    "frames": 16,
+    "bounds": "passed",
+    "binaryAlpha": "passed",
+    "bytes": 64250
+  }
+]

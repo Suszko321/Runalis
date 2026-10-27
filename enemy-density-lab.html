@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Runalis — Enemy Encounters</title>
+<style>body{margin:0;background:#141210;color:#edddbe;font:16px Georgia,serif}main{max-width:1120px;margin:auto;padding:24px}h1{font-variant:small-caps;color:#dab879;margin:0 0 12px}header{display:flex;justify-content:space-between;align-items:center;gap:20px}select,button{background:#25201b;color:#edddbe;border:1px solid #8d7450;padding:10px;font:inherit}canvas{display:block;width:100%;image-rendering:pixelated;border:1px solid #8d7450;background:#263a2b;margin:16px 0}#counter{min-height:38px;color:#ddc89f}p{line-height:1.5}#readout{color:#bdae95}a{color:#ddc89f}</style></head>
+<body><main><header><h1>Runalis · Enemy Encounters</h1><div><select id="encounter" aria-label="Encounter"></select> <button id="reset">Restart</button> <button id="pause">Pause</button></div></header>
+<p id="counter"></p><canvas id="stage" width="1120" height="630"></canvas><p>Move with <b>WASD</b> or arrow keys. Press <b>E</b> near the enemy to strike and interrupt its healing. The marked ground shows exactly where each hazard will strike.</p><p id="readout"></p><p>This practice scene uses the game’s encounter, collision and pixel art systems. It keeps your saved characters separate. <a href="/">Return to Runalis</a>.</p></main>
+<script type="module">
+import {createPlayer,chooseClass} from './src/player.js';
+import {draw} from './src/render.js';
+import {createDungeonWorld} from './src/dungeonSystem.js';
+import {updateDungeonArena,resetFailedDungeonArena} from './src/dungeonArenaSystem.js';
+import {updateEliteEncounters,getEliteHazards,clearEliteEncounters,mitigateEliteHit} from './src/eliteEncounterSystem.js';
+import {completeDungeonAfterBoss} from './src/dungeonCompletion.js';
+import {ELITE_MODIFIERS,configureEncounterEnemy} from './src/encounterData.js';
+import {isActorPositionPassable,moveActorWithCollision,findNearestActorPassablePoint} from './src/world.js';
+import {applyTargetDamage} from './src/enemyBehaviors.js';
+import {spriteArtStatus} from './src/spriteArt.js';
+const canvas=document.querySelector('#stage'),ctx=canvas.getContext('2d'),select=document.querySelector('#encounter'),keys=new Set();
+for(const [id,m] of Object.entries(ELITE_MODIFIERS))select.add(new Option(m.name,id));select.add(new Option('Dungeon boss arena','arena'));
+let world,player,enemy,time=0,paused=false,camera;
+function reset(){
+ if(world)clearEliteEncounters(world);time=0;player=createPlayer('Encounter practice');chooseClass(player,'gravecaller',()=>{});Object.assign(player,{x:970,y:700,hp:500,maxHp:500,stamina:300,maxStamina:300,dirX:-1,dirY:0});
+ if(select.value==='arena'){
+  world=createDungeonWorld({dungeonId:'ashenOrchard',floor:2,seed:'enemy-density-practice',skipPublishedOverride:true});const a=world.bossArena;const point=findNearestActorPassablePoint(world,a.x+40,a.y+a.h/2,12);Object.assign(player,point);enemy=world.enemies.find(e=>e.isDungeonMainBoss);
+  document.querySelector('#counter').textContent='Walk into the arena to commit. Its entrances seal until the required boss is defeated. Defeat opens an optional portal; it does not teleport you.';
+ }else{
+  world={mode:'overworld',name:'Encounter practice',width:80,height:60,tiles:Array.from({length:60},(_,y)=>Array.from({length:80},(_,x)=>({biome:(x+y)%13===0?'path':'grass',passable:true,variant:(x+y)%3}))),enemies:[],objects:[],effects:[],combatEffects:[],drops:[]};
+  enemy={id:`practice-${select.value}`,kind:'brute',archetype:'brute',name:'Gravefield Sentinel',x:800,y:700,r:16,radius:16,hp:200,maxHp:200,damage:14,xp:50,speed:60,aggroRange:240,isInCombat:true};
+  configureEncounterEnemy(enemy,{id:'practice',levels:[8,8],eliteChance:1,rareChance:0,championChance:0},enemy.id,{rank:'elite'});enemy.eliteModifiers=[select.value];enemy.eliteModifier=select.value;
+  if(select.value==='regenerator')enemy.hp=Math.floor(enemy.maxHp*.4);if(select.value==='molten')player.x=enemy.x+40;
+  world.enemies=[enemy];document.querySelector('#counter').textContent=ELITE_MODIFIERS[select.value].counter;
+ }
+ render();
+}
+function step(dt){
+ time+=dt;let dx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),dy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0),d=Math.hypot(dx,dy)||1;
+ moveActorWithCollision(player,world,dx/d*205*dt,dy/d*205*dt);player.isMoving=!!(dx||dy);if(player.isMoving){player.dirX=dx/d;player.dirY=dy/d;}player.walkTime=time;
+ updateDungeonArena(world,player);updateEliteEncounters(world,player,dt,time,applyTargetDamage,()=>{});
+ for(const fx of world.effects||[]){fx.ttl-=dt;fx.age=(fx.age||0)+dt;}world.effects=world.effects.filter(f=>f.ttl>0);
+ if(player.hp<=0){resetFailedDungeonArena(world);player.hp=player.maxHp;}
+}
+function render(){camera={x:player.x-canvas.width/2,y:player.y-canvas.height/2};draw(ctx,world,player,camera);document.querySelector('#readout').textContent=`Level ${enemy.combatLevel} · ${enemy.encounterTier} · Health ${Math.ceil(enemy.hp)} / ${enemy.maxHp} · Your health ${Math.ceil(player.hp)} / ${player.maxHp}${world.bossArena?' · Arena: '+world.bossArena.phase:''}`;}
+function strike(){if(Math.hypot(player.x-enemy.x,player.y-enemy.y)>90)return;enemy.hp=Math.max(0,enemy.hp-mitigateEliteHit(enemy,player,40));enemy.dead=enemy.hp<=0;if(enemy.dead&&enemy.isBoss)completeDungeonAfterBoss(world,enemy);}
+addEventListener('keydown',e=>{const key=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','e'].includes(key)){e.preventDefault();keys.add(key);if(key==='e')strike();}});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));addEventListener('blur',()=>keys.clear());
+select.addEventListener('change',reset);document.querySelector('#reset').onclick=reset;document.querySelector('#pause').onclick=()=>{paused=!paused;document.querySelector('#pause').textContent=paused?'Resume':'Pause';};
+window.enemyDensityLab={reset,step,render,advance(seconds){for(let i=0;i<Math.ceil(seconds*60);i++)step(1/60);render();},setPaused(value){paused=value;},get world(){return world;},get player(){return player;},get enemy(){return enemy;},get hazards(){return getEliteHazards(world);},spriteArtStatus};
+reset();let last=performance.now();function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(!paused)step(dt);render();requestAnimationFrame(frame);}requestAnimationFrame(frame);
+</script></body></html>

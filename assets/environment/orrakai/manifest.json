@@ -1,0 +1,17 @@
+{
+  "image": "architecture.png",
+  "source": "OpenAI built-in imagegen; visually inspected 2026-10-02",
+  "size": [1774,887],
+  "lighting": "upper left; weathered stone, timber, burgundy and Covenant ivory",
+  "smoothing": false,
+  "sprites": {
+    "guildRoof": [22,45,415,323],
+    "smithRoof": [463,58,410,315],
+    "shrineRoof": [904,40,420,334],
+    "timberRoof": [1340,57,427,315],
+    "retainingWall": [16,499,421,219],
+    "timberWall": [463,510,410,281],
+    "gate": [905,399,414,426],
+    "stairs": [1377,448,352,384]
+  }
+}

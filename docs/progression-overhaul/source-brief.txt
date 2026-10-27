@@ -1,0 +1,1698 @@
+
+--- PAGE 1 ---
+RUNALIS  —  MASTER  COMBAT,  
+PROGRESSION
+ 
+&
+ 
+SUMMONING
+ 
+OVERHAUL
+ 
+Comprehensive  Implementation  Directive  for  GPT  Astra  
+Project:  Combat  Acceleration,  Weapon  Combinations,  Infinite  Adaptive  
+Progression,
+ 
+Skill
+ 
+Mastery,
+ 
+Summoning,
+ 
+Resource
+ 
+Management,
+ 
+Enemy
+ 
+Scaling
+ 
+&
+ 
+Cooperative
+ 
+Combat
+  
+EXECUTIVE  DIRECTIVE  —  READ  BEFORE  
+IMPLEMENTATION
+ 
+You  are  undertaking  a  major,  interconnected  reconstruction  of  Runalis's  combat  and  progression  
+systems.
+ 
+This  is  a  full  implementation  project,  not  a  request  for  a  design  proposal.  
+You  must  inspect  the  existing  Runalis  source  files,  identify  how  current  mechanics  operate,  
+develop
+ 
+and
+ 
+implement
+ 
+the
+ 
+necessary
+ 
+changes,
+ 
+preserve
+ 
+established
+ 
+functionality,
+ 
+and
+ 
+verify
+ 
+the
+ 
+results
+ 
+through
+ 
+testing.
+ 
+The  goal  is  to  dramatically  improve  the  quality,  speed,  responsiveness,  satisfaction,  progression  
+depth,
+ 
+and
+ 
+long-term
+ 
+balance
+ 
+of
+ 
+Runalis.
+ 
+The  combat  system  and  progression  system  must  be  treated  as  one  interconnected  
+architecture.
+ 
+Combat  must  determine  how  characters  develop.  
+Character  progression  must  improve  combat  effectiveness.  
+Individual  abilities  must  become  more  powerful  and  visually  impressive  through  mastery.  
+All  ordinary  combat  disciplines  must  remain  accessible  to  every  class.  
+
+--- PAGE 2 ---
+Summoning  must  become  a  fully  integrated  combat  proficiency  available  to  every  character.  
+Every  system  must  support  Runalis's  philosophy  of  infinite  progression  and  player-directed  
+character
+ 
+development.
+ 
+EXECUTIVE  NOTE  1  —  MAKE  EVERYTHING  FASTER  
+THIS  IS  ONE  OF  THE  HIGHEST  PRIORITIES  OF  THE  ENTIRE  OVERHAUL.  
+Runalis  currently  needs  substantially  faster,  smoother,  more  energetic,  and  more  responsive  
+gameplay.
+ 
+Increase  the  pace  of  virtually  every  aspect  of  moment-to-moment  combat.  
+Specifically,  improve:  
+●  Player  movement  speed.  ●  Walking  and  running  responsiveness.  ●  Combat  movement  speed.  ●  Acceleration  and  deceleration.  ●  Basic  attack  speed.  ●  Light  attack  animations.  ●  Heavy  attack  animations.  ●  Weapon  swing  recovery.  ●  Melee  combination  speed.  ●  Transitions  between  combination  attacks.  ●  Skill  casting  animations.  ●  Spell  startup  times.  ●  Charge  buildup  times.  ●  Channeled  ability  responsiveness.  ●  Dodging  responsiveness.  ●  Defensive  action  transitions.  ●  Attack-to-movement  transitions.  ●  Movement-to-attack  transitions.  ●  Input  buffering.  ●  Enemy  movement  and  pursuit.  ●  Enemy  attack  chains.  ●  Boss  attacks  and  aggression.  ●  Projectile  movement  where  appropriate.  ●  Summon  movement  and  combat  responsiveness.  
+The  game  should  feel  dramatically  faster  than  its  current  implementation.  
+
+--- PAGE 3 ---
+Aim  for  responsive,  aggressive,  fluid  ARPG  combat  inspired  by  the  immediacy  and  satisfaction  
+of
+ 
+games
+ 
+such
+ 
+as
+ 
+Diablo
+ 
+III,
+ 
+while
+ 
+preserving
+ 
+Runalis's
+ 
+distinctive
+ 
+weapon
+ 
+combinations,
+ 
+dark
+ 
+fantasy
+ 
+atmosphere,
+ 
+and
+ 
+hardcore
+ 
+mechanics.
+ 
+Do  not  merely  increase  animation  playback  speed  globally.  
+Inspect  the  existing  animations,  attack  timings,  collision  frames,  movement  controllers,  state  
+transitions,
+ 
+and
+ 
+recovery
+ 
+windows.
+ 
+Increase  speed  intelligently  so  that  combat  genuinely  feels  better.  
+A  fast  attack  must  have  equally  responsive  collision  detection,  animation  transitions,  damage  
+timing,
+ 
+and
+ 
+visual
+ 
+feedback.
+ 
+Avoid  attacks  that  visually  connect  before  damage  is  registered.  
+Avoid  animation  locks  that  leave  the  player  unresponsive.  
+Speed  and  readability  
+Faster  does  not  mean  uncontrollable  or  unfair.  
+Heavy  weapons  should  still  feel  heavier  than  daggers.  
+Charged  abilities  should  still  have  meaningful  commitment.  
+Boss  attacks  must  remain  readable.  
+Different  classes  and  weapons  must  retain  their  individual  identities.  
+However,  the  entire  game's  baseline  pace  should  be  noticeably  faster.  
+Do  not  use  excessively  long  wind-ups,  recovery  animations,  or  unnecessary  delays  to  
+manufacture
+ 
+difficulty.
+ 
+Players  should  be  challenged  by  enemy  aggression,  positioning,  resource  pressure,  attack  
+patterns,
+ 
+and
+ 
+mechanical
+ 
+execution—not
+ 
+sluggish
+ 
+controls.
+ 
+Speed  validation  
+Measure  representative  current  action  timings  before  modifying  them.  
+Implement  faster  baseline  behavior,  then  compare:  
+●  Movement  distance  per  second.  ●  Attack  startup.  ●  Active  attack  frames.  
+
+--- PAGE 4 ---
+●  Recovery.  ●  Attacks  per  second.  ●  Time  between  combo  inputs.  ●  Dodge  responsiveness.  ●  Spell  startup.  ●  Charge  duration.  ●  Channel  startup  and  termination.  ●  Average  enemy  engagement  time.  
+Test  whether  faster  actions  remain  visually  and  mechanically  coherent.  
+Treat  this  as  a  comprehensive  game-feel  overhaul.  
+ 
+EXECUTIVE  NOTE  2  —  SUMMONING  IS  A  UNIVERSAL  
+COMBAT
+ 
+PROFICIENCY
+ 
+Introduce  or  fully  establish  Summoning  as  a  distinct,  infinitely  trainable  character  proficiency.  
+Summoning  must  be  treated  similarly  to  Blades,  Warding,  Bows,  and  other  combat  disciplines.  
+It  must  not  be  restricted  exclusively  to  Gravecaller  or  Thornbinder.  
+Every  playable  class  must  have  access  to  ordinary  summon  abilities.  
+Certain  classes  may  retain  exclusive  summons  as  part  of  their  unique  class  identity.  
+For  example:  
+●  Gravecaller  retains  its  exclusive  class  summons.  ●  Thornbinder  retains  its  exclusive  class  summons.  ●  Other  classes  can  obtain  universal  summons  through  scrolls,  merchants,  discoveries,  
+and
+ 
+applicable
+ 
+rewards.
+ 
+A  player  of  any  class  should  be  capable  of  dedicating  themselves  to  Summoning  and  eventually  
+becoming
+ 
+an
+ 
+extraordinarily
+ 
+powerful
+ 
+summoner.
+ 
+Summoning  must  have  its  own  XP,  level,  progression  curve,  effectiveness  modifiers,  and  UI  
+representation.
+ 
+The  player's  Combat  Level,  Summoning  Level,  and  individual  summon  skill  mastery  must  all  
+influence
+ 
+summon
+ 
+effectiveness.
+ 
+Summoning  XP  requirements  
+
+--- PAGE 5 ---
+Summoning  must  be  influenced  by  hotbar  composition.  
+If  a  character  equips  a  summon  ability  on  their  active  hotbar,  they  should  become  eligible  
+to
+ 
+receive
+ 
+Summoning
+ 
+XP
+ 
+from
+ 
+qualifying
+ 
+enemy
+ 
+defeats.
+ 
+This  requirement  is  deliberate.  
+A  player  should  be  able  to  develop  Summoning  by  choosing  to  maintain  a  summoning-oriented  
+loadout.
+ 
+However,  prevent  the  system  from  becoming  an  effortless  passive  leveling  exploit.  
+A  reasonable  implementation  is:  
+1.  Equipping  a  summon  skill  establishes  Summoning  as  an  eligible  XP  destination.  2.  Qualifying  combat  victories  allocate  a  defined  share  of  ability-related  XP  toward  
+Summoning.
+ 3.  An  actively  summoned  creature  making  meaningful  contributions  can  increase  that  
+allocation.
+ 4.  Actual  summon  participation  also  awards  mastery  XP  to  its  associated  ability.  5.  Inactive  or  unequipped  summons  receive  no  relevant  mastery  rewards.  6.  Equipping  multiple  summon  skills  must  not  multiply  the  total  available  XP  budget.  7.  Merely  equipping  a  summon  skill  must  not  create  XP  without  a  legitimate  encounter  
+reward.
+ 8.  Hotbar  swapping  immediately  before  an  enemy  dies  must  not  redirect  an  entire  
+encounter's
+ 
+XP.
+ 
+Unlike  normal  weapon  proficiencies,  Summoning  should  be  able  to  receive  some  XP  simply  
+through
+ 
+sustained
+ 
+hotbar
+ 
+specialization
+ 
+during
+ 
+legitimate
+ 
+combat,
+ 
+as
+ 
+explicitly
+ 
+intended
+ 
+here.
+ 
+A  player  who  equips  a  Wolf  Summon,  fights  enemies,  and  uses  other  attacks  should  still  
+develop
+ 
+Summoning,
+ 
+even
+ 
+if
+ 
+the
+ 
+wolf
+ 
+contributes
+ 
+relatively
+ 
+little.
+ 
+However,  meaningful  summon  use  should  be  more  efficient  than  merely  equipping  the  skill.  
+ 
+EXECUTIVE  NOTE  3  —  ORRAKAI  SKILL  MERCHANT  
+Implement  a  proper  Skill  Merchant  in  Orrakai ,  the  starting  town.  
+The  merchant  must  be  integrated  into  the  existing  town,  NPC  systems,  economy,  interaction  
+interface,
+ 
+and
+ 
+world
+ 
+presentation.
+ 
+Do  not  create  a  disconnected  debug  vendor  or  placeholder  shop.  
+
+--- PAGE 6 ---
+The  merchant  should  sell  appropriate  skill  scrolls.  
+These  may  include  universally  available  skills,  applicable  combat  techniques,  and  summon  
+abilities.
+ 
+Mandatory  starter  summon:  Wolf  
+The  merchant  must  offer  at  least  one  basic  universal  summon  skill:  
+Summon  Wolf  
+This  must  be  available  to  every  class.  
+The  scroll  must  be  readable  at  any  character  level.  
+It  must  have  no  minimum  Combat  Level,  Summoning  Level,  or  class  restriction.  
+Learning  the  scroll  permanently  unlocks  the  ability  for  the  character.  
+The  player  can  then  equip  Summon  Wolf  to  an  appropriate  hotbar  slot.  
+Summon  Wolf  must  allow  the  character  to  begin  developing  the  Summoning  proficiency  
+immediately
+ 
+through
+ 
+eligible
+ 
+combat
+ 
+progression.
+ 
+The  wolf  must  be  a  functional  companion  with:  
+●  Proper  spawning.  ●  A  suitable  visual  model  and  animations.  ●  Movement  and  navigation.  ●  Player  following.  ●  Combat  target  acquisition.  ●  Enemy  engagement.  ●  Attack  animations.  ●  Appropriate  damage.  ●  Health.  ●  Defensive  statistics.  ●  Appropriate  movement  speed.  ●  Death  and  despawning.  ●  Cooldowns  or  resummoning  rules.  ●  Persistent  skill  ownership.  ●  Summoning  proficiency  scaling.  ●  Combat  Level  scaling.  ●  Individual  mastery  scaling.  ●  Appropriate  multiplayer  behavior.  
+The  wolf  should  feel  responsive,  aggressive,  and  useful.  
+
+--- PAGE 7 ---
+It  must  not  be  another  generic  model  that  simply  follows  the  character  while  occasionally  
+dealing
+ 
+damage.
+ 
+Merchant  interaction  
+Ensure:  
+●  The  merchant  has  a  suitable  location  in  Orrakai.  ●  The  NPC  appears  naturally  integrated  into  the  town.  ●  The  merchant  has  an  appropriate  name  and  identity.  ●  The  player  can  interact  normally.  ●  The  scroll  appears  in  the  shop  inventory.  ●  The  scroll  has  an  appropriate  starter-accessible  cost.  ●  Purchasing  deducts  currency  correctly.  ●  The  scroll  enters  the  inventory.  ●  Reading  the  scroll  unlocks  Summon  Wolf.  ●  The  scroll  is  consumed  correctly  if  scrolls  are  consumable  in  the  existing  system.  ●  Learned  skills  appear  in  the  existing  skill  UI.  ●  The  skill  can  be  equipped  to  the  hotbar.  ●  Purchased  and  learned  states  persist  in  saved  games.  
+Do  not  allow  purchasing,  consuming,  or  save/load  bugs  to  duplicate  or  erase  learned  skills.  
+The  starter  Wolf  Summon  must  be  obtainable  without  requiring  high-level  content  or  advanced  
+prerequisites.
+ 
+ 
+EXECUTIVE  NOTE  4  —  DEMONSEED  SCYTHE  REWORK  
+Inspect  the  existing  legendary  weapon:  
+Demonseed  Scythe  
+The  weapon  currently  summons  a  demon  through  a  passive  effect  during  combat.  
+This  behavior  must  be  redesigned.  
+Required  change  
+Remove  the  automatic  passive  combat-triggered  summon.  
+Instead,  the  weapon  must  provide  access  to  an  actual  learnable  or  unlockable  Demon  
+Summon
+ 
+skill
+.
+ 
+
+--- PAGE 8 ---
+The  summoned  demon  must  become  an  explicit  ability  controlled  by  the  player.  
+It  must  not  automatically  appear  merely  because  the  player  enters  combat.  
+Acquisition  behavior  
+Determine  the  most  appropriate  integration  with  existing  equipment  and  skill-learning  systems.  
+Preferred  behavior:  
+●  Discovering  or  acquiring  the  Demonseed  Scythe  provides  access  to  its  associated  
+Demon
+ 
+Summon
+ 
+ability.
+ ●  The  character  must  intentionally  unlock  or  learn  the  skill  using  a  coherent  interaction.  ●  Once  learned,  the  skill  is  added  to  the  character's  skill  collection.  ●  The  player  can  assign  it  to  a  hotbar  slot.  ●  The  demon  is  summoned  by  activating  that  skill.  
+Determine  whether  the  skill  should  remain  usable  without  the  scythe  equipped  by  inspecting  the  
+established
+ 
+design
+ 
+of
+ 
+legendary
+ 
+item-granted
+ 
+skills.
+ 
+Unless  strong  existing  design  constraints  indicate  otherwise,  favor  permanently  learned  skill  
+ownership
+ 
+once
+ 
+the
+ 
+appropriate
+ 
+legendary
+ 
+unlock
+ 
+condition
+ 
+has
+ 
+been
+ 
+satisfied.
+ 
+Do  not  silently  remove  previously  earned  capabilities  from  existing  saved  characters.  
+Demon  Summon  progression  
+Demon  Summon  must  be  affected  by:  
+1.  Character  Combat  Level.  2.  Summoning  proficiency  level.  3.  Demon  Summon's  individual  skill  mastery.  4.  Appropriate  equipment  modifiers.  5.  Relevant  Fate  effects.  6.  Applicable  buffs  and  debuffs.  
+The  demon  should  feel  more  impressive  than  the  starter  wolf.  
+Give  it  appropriate  unique  attacks,  visual  effects,  animations,  and  combat  identity.  
+Do  not  make  its  statistical  scaling  fundamentally  incompatible  with  ordinary  summons.  
+Preserve  the  Demonseed  Scythe's  established  legendary  identity  and  unrelated  working  effects.  
+ 
+
+--- PAGE 9 ---
+PART  I  —  MANDATORY  SYSTEM  AUDIT  
+1.  INSPECT  ALL  RELEVANT  SOURCE  FILES  
+Before  implementation,  inspect  the  Runalis  repository  and  locate  the  actual  systems  responsible  
+for:
+ 
+Character  progression  
+●  Combat  Level.  ●  Attributes.  ●  Proficiencies.  ●  XP  rewards.  ●  XP  thresholds.  ●  Class  modifiers.  ●  Starting  equipment.  ●  Character  stats.  ●  Level-up  events.  ●  Save  data.  
+Combat  
+●  Primary  attack  execution.  ●  Light  and  heavy  attacks.  ●  Combo  detection.  ●  Weapon  animations.  ●  Attack  speed.  ●  Player  movement.  ●  Dodge  mechanics.  ●  Casting.  ●  Collision.  ●  Damage  calculation.  ●  Critical  hits.  ●  Enemy  reactions.  ●  Combat  state  transitions.  ●  Resource  consumption.  
+Skills  
+●  Class  skills.  ●  Hotbar  management.  ●  Individual  mastery.  ●  Skill  experience.  
+
+--- PAGE 10 ---
+●  Charging.  ●  Channeling.  ●  Projectiles.  ●  Summoning.  ●  Skill  animations.  ●  Skill  VFX.  ●  Cooldowns.  ●  Skill  upgrades.  
+Enemy  systems  
+●  Combat  Level.  ●  Experience  values.  ●  Enemy  statistics.  ●  AI.  ●  Aggression.  ●  Death  events.  ●  Boss  phases.  ●  Nameplates.  
+Multiplayer  
+●  Player  parties.  ●  Co-op  combat.  ●  Damage  ownership.  ●  XP  sharing.  ●  Summon  ownership.  ●  Support  contribution.  ●  Multiplayer  synchronization.  
+World  systems  
+●  Orrakai  NPCs.  ●  Merchants.  ●  Item  purchases.  ●  Scroll  reading.  ●  Skill  acquisition.  ●  Legendary  weapons.  ●  Demonseed  Scythe.  ●  Summon  persistence.  ●  Inventory  serialization.  
+Inspect  the  actual  code  before  deciding  which  systems  require  replacement,  extension,  or  
+correction.
+ 
+
+--- PAGE 11 ---
+Do  not  invent  scripts  or  claim  features  exist  without  verification.  
+2.  CURRENT  PROGRESSION  PROBLEMS  
+Pay  particular  attention  to  an  observed  leveling  discrepancy.  
+During  a  previous  playtest,  Warding  advanced  to  approximately  Level  33  while  nearly  every  
+other
+ 
+attribute
+ 
+remained
+ 
+below
+ 
+Level
+ 
+10.
+ 
+Investigate  why.  
+Potential  explanations  include:  
+●  Excessive  XP  per  Warding  action.  ●  Passive  XP  triggers.  ●  Repeated  shield  calculations.  ●  Incorrect  XP  multipliers.  ●  Multiple  XP  rewards  from  a  single  event.  ●  Inconsistent  progression  curves.  ●  Unintended  class  advantages.  ●  Duplicate  mastery  and  attribute  XP  calls.  
+Identify  and  fix  actual  causes.  
+Do  not  merely  lower  Warding  XP  arbitrarily  to  conceal  the  problem.  
+3.  AUDIT  DELIVERABLE  
+Before  implementing  structural  changes,  determine:  
+●  Which  attributes  exist.  ●  Which  attributes  are  redundant.  ●  Which  proficiencies  exist.  ●  Which  skills  belong  to  each  class.  ●  Which  weapons  belong  to  each  proficiency.  ●  Which  summons  currently  exist.  ●  How  skills  gain  mastery.  ●  How  Combat  Level  affects  combat.  ●  How  progression  affects  damage  and  defensive  statistics.  ●  How  enemies  provide  XP.  ●  How  existing  co-op  rewards  work.  ●  Which  scripts  can  safely  share  logic.  ●  Which  systems  have  save  dependencies.  
+
+--- PAGE 12 ---
+Produce  a  coherent  architecture  based  on  the  real  codebase.  
+ 
+PART  II  —  UNIFIED  CHARACTER  
+PROGRESSION
+ 
+4.  FOUR  PROGRESSION  CATEGORIES  
+Runalis  must  distinguish  four  major  progression  systems:  
+1.  Combat  Level.  2.  Core  Attributes.  3.  Combat  Proficiencies.  4.  Individual  Skill  Mastery.  
+They  must  interact  coherently  without  becoming  redundant.  
+5.  COMBAT  LEVEL  
+Combat  Level  represents  overall  character  experience  and  combat  capability.  
+Each  enemy  has  a  predetermined  base  XP  value.  
+An  enemy  worth  50  XP  grants  a  qualifying  solo  player  50  Combat  XP.  
+Combat  Level  must  not  be  calculated  from  the  average  level  of  individual  attributes.  
+Combat  Level  advances  independently.  
+Combat  Level  affects  all  relevant  combat  abilities  
+Even  an  unmastered  skill  must  become  stronger  as  a  character  gains  Combat  Levels.  
+For  example:  
+A  Combat  Level  30  character  using  a  Mastery  Level  1  spell  should  have  substantially  stronger  
+output
+ 
+than
+ 
+a
+ 
+Combat
+ 
+Level
+ 
+1
+ 
+character
+ 
+using
+ 
+the
+ 
+same
+ 
+Mastery
+ 
+Level
+ 
+1
+ 
+spell,
+ 
+assuming
+ 
+equivalent
+ 
+equipment
+ 
+and
+ 
+other
+ 
+relevant
+ 
+statistics.
+ 
+Combat  Level  should  meaningfully  contribute  to:  
+
+--- PAGE 13 ---
+●  Weapon  attacks.  ●  Combo  attacks.  ●  Offensive  skills.  ●  Healing.  ●  Defensive  abilities.  ●  Summons.  ●  Damage-over-time  effects.  ●  Appropriate  support  skills.  
+However,  effects  must  scale  appropriately  to  their  function.  
+Do  not  multiply  durations,  movement  speed,  range,  or  charges  simply  because  an  ability  is  
+associated
+ 
+with
+ 
+combat.
+ 
+Combat  Level  provides  overall  strength.  
+Proficiency  provides  specialization.  
+Mastery  improves  the  individual  skill.  
+Equipment  and  Fates  modify  the  final  result.  
+ 
+6.  CORE  ATTRIBUTES  
+Audit  the  current  attribute  system  and  establish  meaningful  distinctions.  
+The  proposed  core  attributes  are:  
+Health  
+●  Maximum  HP.  ●  General  survivability.  ●  Appropriate  injury-related  resilience.  
+Stamina  
+●  Maximum  Stamina.  ●  Physical  endurance.  ●  Recovery.  ●  Appropriate  physical-action  efficiency.  
+Defence  
+
+--- PAGE 14 ---
+●  Physical  mitigation.  ●  Guard  effectiveness.  ●  Resistance  to  interruption  where  appropriate.  
+Spirit  
+●  Maximum  magical  resource.  ●  Spirit  recovery.  ●  Magical  endurance.  
+Focus  
+●  Casting  precision.  ●  Charge  control.  ●  Channel  stability.  ●  Appropriate  magical  handling  characteristics.  
+Dexterity  
+●  Weapon  handling.  ●  Precision.  ●  Responsive  physical  actions.  ●  Limited  agility-related  advantages.  
+Focus  and  Dexterity  should  only  be  separate  attributes  if  they  meaningfully  improve  the  existing  
+game's
+ 
+design.
+ 
+If  existing  statistics  already  perform  these  functions  coherently,  avoid  unnecessary  duplication.  
+Every  attribute  must  have  an  actual  mechanical  purpose.  
+Do  not  create  attributes  that  exist  only  as  numbers.  
+ 
+7.  COMBAT  PROFICIENCIES  
+Establish  separate  combat  proficiencies.  
+These  should  include  existing  appropriate  categories,  potentially:  
+●  Blades.  ●  Scythes.  ●  Bows.  ●  Warding.  
+
+--- PAGE 15 ---
+●  Summoning.  ●  Other  established  weapon  and  magical  disciplines.  
+Derive  the  complete  list  from  the  actual  project.  
+Summoning  
+Summoning  is  mandatory.  
+It  must  have:  
+●  An  independent  level.  ●  Its  own  XP  pool.  ●  Infinite  progression.  ●  Appropriate  scaling.  ●  Relevant  character  statistics.  ●  Class-affinity  compatibility.  ●  Skill  mastery  integration.  ●  UI  representation.  
+Warding  
+Warding  represents  protective  and  defensive  magic  proficiency.  
+It  is  not  equivalent  to  physical  Defence.  
+Weapon  categories  
+Avoid  excessively  granular  categories  unless  the  associated  weapon  mechanics  justify  them.  
+Ensure  every  weapon  maps  to  an  appropriate  proficiency.  
+Any  class  must  be  capable  of  training  ordinary  combat  proficiencies.  
+ 
+8.  UNIVERSAL  ATTRIBUTE  ACCESS  
+Any  class  can  train  any  ordinary  combat  attribute  or  proficiency  indefinitely.  
+A  Fellhunter  can  eventually  master  swords.  
+A  Waverider  can  become  a  powerful  summoner.  
+An  Oathkeeper  can  pursue  offensive  magic.  
+
+--- PAGE 16 ---
+A  Gravecaller  can  specialize  in  conventional  melee  weapons.  
+The  player  must  never  encounter  arbitrary  maximum  levels  based  on  starting  class.  
+Preserve  unique  class  abilities  where  appropriate.  
+Class  identity  should  come  from  initial  advantages,  skill  identity,  starting  equipment,  and  
+established
+ 
+thematic
+ 
+abilities—not
+ 
+permanent
+ 
+restrictions
+ 
+on
+ 
+ordinary
+ 
+combat
+ 
+progression.
+ 
+ 
+PART  III  —  UNIVERSAL  SURVIVAL  
+DEVELOPMENT
+ 
+9.  HEALTH,  STAMINA,  DEFENCE  AND  SPIRIT  ALWAYS  
+LEVEL
+ 
+This  is  mandatory.  
+Every  class  must  naturally  develop:  
+●  Health.  ●  Stamina.  ●  Defence.  ●  Spirit.  
+These  four  attributes  receive  guaranteed  baseline  XP  from  eligible  combat  victories.  
+Their  development  must  not  depend  entirely  on  whether  the  player  uses  corresponding  abilities.  
+For  example:  
+A  pure  physical  character  must  still  improve  Spirit.  
+A  pure  spellcaster  must  still  improve  Stamina.  
+A  lightly  armored  character  must  still  improve  Defence.  
+A  defensive  character  must  still  improve  Health.  
+The  rate  may  vary  according  to  meaningful  combat  behavior.  
+
+--- PAGE 17 ---
+However,  every  character  should  maintain  functional  development  across  all  four  essential  
+survival
+ 
+attributes.
+ 
+These  are  foundational  statistics.  
+They  should  not  compete  so  aggressively  for  XP  that  a  normal  character  becomes  
+fundamentally
+ 
+dysfunctional.
+ 
+ 
+PART  IV  —  ADAPTIVE  XP  DISTRIBUTION  
+10.  EVERY  ENEMY  HAS  A  PREDETERMINED  XP  VALUE  
+Every  enemy  must  define  a  base  Combat  XP  reward.  
+For  example:  
+Level  1  enemy:  50  XP.  
+Higher-level  enemies  must  award  progressively  larger  XP  amounts.  
+Late-game  enemies  may  provide  thousands  or  dramatically  more  XP.  
+The  final  reward  should  be  derived  from  coherent  enemy  level,  archetype,  difficulty,  and  
+encounter
+ 
+scaling
+ 
+rules.
+ 
+Avoid  arbitrary  mismatches  between  enemy  strength  and  XP  rewards.  
+11.  XP  ALLOCATION  BUDGET  
+Each  eligible  enemy  reward  provides:  
+●  Combat  XP.  ●  A  separate  equivalent  base  budget  for  attribute  and  proficiency  XP.  ●  Applicable  skill  mastery  XP  earned  through  meaningful  skill  use.  
+For  example:  
+An  enemy  worth  50  XP  provides:  
+●  50  Combat  XP.  ●  A  50  XP  attribute/proficiency  allocation  budget.  
+
+--- PAGE 18 ---
+●  Additional  valid  mastery  progression.  
+The  attribute  budget  does  not  reduce  Combat  XP.  
+Initial  distribution  
+Use  the  following  starting  allocation  model:  
+●  30%  universal  survival  attributes.  ●  25%  weapon  proficiency  participation.  ●  35%  active  hotbar  ability  contribution.  ●  10%  meaningful  combat  participation.  
+The  exact  percentages  are  tuning  parameters.  
+Validate  them  through  tests.  
+Unassigned  portions  must  be  redistributed  consistently.  
+No  XP  should  be  unintentionally  lost  or  created  through  invalid  category  mappings.  
+Class-affinity  bonuses  are  intentionally  additional  XP  applied  after  allocation.  
+ 
+12.  UNIVERSAL  SURVIVAL  XP  
+Health,  Stamina,  Defence,  and  Spirit  must  share  a  guaranteed  allocation.  
+Additional  relevant  actions  can  accelerate  particular  attributes.  
+Examples:  
+●  Physical  combat  may  favor  Stamina.  ●  Shielding  may  favor  Defence.  ●  Magic  may  favor  Spirit.  ●  Heavy  damage  exposure  may  influence  Health  within  controlled  limits.  
+Do  not  incentivize  deliberately  taking  unnecessary  damage  to  farm  Health  XP.  
+Avoid  passive  XP  loops.  
+ 
+13.  WEAPON  XP  
+
+--- PAGE 19 ---
+Weapon  proficiency  should  be  based  on  actual  use.  
+A  sword  provides  Blades  XP.  
+A  bow  provides  Bow  XP.  
+A  scythe  provides  the  appropriate  weapon  proficiency.  
+Support  weapon  switching  during  encounters.  
+Track  contributions  across  the  encounter  rather  than  awarding  everything  according  to  the  
+weapon
+ 
+equipped
+ 
+at
+ 
+the
+ 
+instant
+ 
+of
+ 
+death.
+ 
+Weapon-combo  execution  can  also  influence  appropriate  mastery  or  participation  
+measurements.
+ 
+Do  not  create  duplicate  general  XP  rewards  from  multihit  attacks.  
+ 
+14.  HOTBAR  XP  
+Every  skill  must  define  relevant  progression  categories.  
+Examples:  
+Defensive  barrier:  
+●  Warding.  ●  Defence.  ●  Spirit.  
+Charged  spell:  
+●  Spirit.  ●  Focus.  ●  Appropriate  magical  discipline.  
+Sword  technique:  
+●  Blades.  ●  Stamina.  ●  Dexterity.  
+Mobility  skill:  
+●  Dexterity.  
+
+--- PAGE 20 ---
+●  Stamina.  
+Healing  skill:  
+●  Spirit.  ●  Warding  or  another  appropriate  discipline.  
+Summon  Wolf:  
+●  Summoning.  ●  Spirit  where  appropriate.  
+Demon  Summon:  
+●  Summoning.  ●  Spirit  and  relevant  effects  where  appropriate.  
+Player  agency  
+Equipping  specific  abilities  should  clearly  influence  progression  direction.  
+Meaningful  ability  use  should  increase  the  effectiveness  of  that  specialization.  
+Do  not  simply  count  skill  slots  without  normalization.  
+A  player  with  six  defensive  skills  should  develop  defensive  capabilities  more  quickly  than  a  
+player
+ 
+with
+ 
+no
+ 
+defensive
+ 
+skills.
+ 
+However,  unused  skills  should  generally  contribute  less  than  skills  used  meaningfully.  
+Special  Summoning  rule  
+Summoning  is  explicitly  allowed  to  receive  a  defined  base  share  of  its  hotbar  allocation  through  
+equipping
+ 
+a
+ 
+summon
+ 
+skill
+ 
+during
+ 
+a
+ 
+legitimate
+ 
+encounter.
+ 
+That  share  should  be  enhanced  through  actual  summon  contributions.  
+This  makes  Summoning  a  viable,  player-directed  progression  path  from  the  beginning  of  the  
+game.
+ 
+Avoid  allowing  multiple  equipped  summons  to  multiply  XP  beyond  the  existing  total  budget.  
+ 
+PART  V  —  CLASS  XP  AFFINITIES  
+
+--- PAGE 21 ---
+15.  TWO  CLASS  AFFINITIES  
+Every  class  must  receive  exactly  two  XP  affinities.  
+Each  affinity  gives:  
++25%  XP  in  its  applicable  category.  
+One  affinity  should  generally  correspond  to  the  class's  starting  weapon  proficiency.  
+The  other  should  represent  its  signature  combat  discipline  or  attribute.  
+For  example,  Waverider  may  receive:  
+●  Blades  +25%.  ●  Warding  +25%.  
+Verify  the  actual  starting  weapon  and  identity  before  assigning  bonuses.  
+Audit  all  eight  classes.  
+Important  restrictions  
+●  No  class  receives  exclusive  maximum  proficiency  levels.  ●  The  affinity  only  applies  when  the  category  earns  XP.  ●  The  affinity  does  not  passively  generate  XP.  ●  Bonuses  are  applied  after  allocation.  ●  Bonuses  cannot  repeatedly  multiply  themselves.  ●  Different  class  choices  must  remain  viable.  
+At  equal  actual  Combat  Level,  attributes,  proficiencies,  mastery,  equipment,  and  circumstances,  
+two
+ 
+characters
+ 
+should
+ 
+not
+ 
+have
+ 
+different
+ 
+ordinary
+ 
+proficiency
+ 
+effectiveness
+ 
+solely
+ 
+because
+ 
+one
+ 
+trained
+ 
+that
+ 
+proficiency
+ 
+through
+ 
+a
+ 
+class
+ 
+affinity.
+ 
+ 
+PART  VI  —  INFINITE  LEVELING  
+16.  NO  LEVEL  CAPS  
+All  principal  progression  systems  must  support  infinite  levels.  
+This  includes:  
+
+--- PAGE 22 ---
+●  Combat  Level.  ●  Health.  ●  Stamina.  ●  Defence.  ●  Spirit.  ●  Other  legitimate  core  attributes.  ●  Blades.  ●  Bows.  ●  Scythes.  ●  Warding.  ●  Summoning.  ●  Other  proficiencies.  ●  Individual  skill  mastery.  
+Use  numerically  stable  calculations.  
+Avoid  overflow.  
+Handle  extremely  high  XP  values.  
+Ensure  saved  games  can  store  progression  safely.  
+ 
+17.  INCREASING  XP  REQUIREMENTS  
+Use  nonlinear  XP  curves.  
+A  candidate  structure:  
+XP_next(L)  =  BaseXP  ×  (1  +  L  /  Scale)^Exponent  
+Use  configurable  coefficients.  
+High  levels  must  require  progressively  more  XP.  
+Design  targets  
+Early  game:  
+●  Relatively  frequent  advancement.  ●  Immediate  rewards.  ●  Accessible  experimentation.  
+Midgame:  
+
+--- PAGE 23 ---
+●  More  deliberate  specialization.  ●  Increasing  XP  requirements.  ●  Noticeable  mastery  growth.  
+Late  game:  
+●  Substantially  larger  XP  requirements.  ●  Greatly  increased  XP  from  difficult  enemies.  ●  Smaller  incremental  improvements.  ●  Continued  long-term  progression.  
+Extreme  late  game:  
+●  Infinite  progression  remains  functional.  ●  Level  advancement  stays  meaningful.  ●  Statistical  growth  remains  controlled.  ●  Combat  mechanics  remain  relevant.  
+Do  not  allow  late-game  reward  inflation  to  make  levels  effectively  free.  
+Analyze  both  XP  requirements  and  expected  enemy  reward  rates.  
+ 
+18.  INCREMENTAL  STAT  IMPROVEMENTS  
+Individual  levels  should  provide  modest  improvements.  
+Ten  levels  should  produce  a  recognizable  cumulative  change.  
+Use  diminishing  returns.  
+A  Level  100  sword  technique  should  clearly  outperform  a  Level  10  equivalent,  but  each  
+individual
+ 
+level
+ 
+should
+ 
+not
+ 
+create
+ 
+a
+ 
+dramatic
+ 
+jump.
+ 
+Avoid  unbounded  increases  to:  
+●  Attack  speed.  ●  Critical  chance.  ●  Damage  reduction.  ●  Range.  ●  Area.  ●  Resource  efficiency.  ●  Maximum  charges.  ●  Casting  speed.  ●  Movement  speed.  
+
+--- PAGE 24 ---
+Infinite  levels  do  not  require  uncapped  derived  statistics.  
+Use  soft  caps,  asymptotic  scaling,  and  practical  limits.  
+Prevent  combat  from  breaking  at  very  high  progression  levels.  
+ 
+PART  VII  —  UNIFIED  COMBAT  POWER  
+19.  CENTRALIZE  POWER  CALCULATIONS  
+Every  combat  ability  should  be  influenced  by  relevant  progression  systems.  
+Conceptually:  
+Ability  Effectiveness  =  
+Base
+ 
+Effectiveness
+ 
+×
+ 
+Unified
+ 
+Progression
+ 
+Modifier
+ 
+×
+ 
+Valid
+ 
+Equipment
+ 
+and
+ 
+Situational
+ 
+Modifiers
+ 
+The  progression  modifier  should  account  for:  
+●  Combat  Level.  ●  Relevant  attributes.  ●  Relevant  proficiency.  ●  Individual  mastery.  
+Use  appropriate  normalization  and  carefully  controlled  stacking.  
+Do  not  independently  multiply  several  unrestricted  progression  bonuses.  
+Examples  
+A  Combat  Level  30  character  with  Mastery  1  should  be  stronger  than  a  Combat  Level  1  
+character
+ 
+with
+ 
+Mastery
+ 
+1
+ 
+under
+ 
+otherwise
+ 
+equivalent
+ 
+circumstances.
+ 
+A  Combat  Level  30  character  with  Mastery  30  should  gain  a  further  meaningful  specialization  
+advantage.
+ 
+Higher  Blades  levels  should  improve  blade  attacks.  
+Higher  Warding  should  improve  relevant  protective  magic.  
+Higher  Summoning  should  improve  summons.  
+
+--- PAGE 25 ---
+Mastery  should  refine  the  individual  ability.  
+Equipment  and  Fates  should  provide  meaningful  but  controlled  variations.  
+ 
+PART  VIII  —  FAST,  SATISFYING  WEAPON  
+COMBAT
+ 
+20.  INCREASE  BASELINE  COMBAT  SPEED  
+This  phase  must  directly  implement  Executive  Note  1.  
+Make  all  combat  substantially  faster.  
+Reduce  unnecessarily  slow:  
+●  Wind-ups.  ●  Swings.  ●  Attack  gaps.  ●  Recovery  animations.  ●  Casting  delays.  ●  Combo  transitions.  ●  Movement  locks.  
+Improve  animation  blending  and  immediate  responsiveness.  
+Avoid  merely  accelerating  visuals  without  updating  gameplay  timing.  
+Weapon  strikes  must  feel  powerful  without  feeling  sluggish.  
+ 
+21.  ALL  WEAPONS  REQUIRE  COMBINATIONS  
+Implement  appropriate  combination  systems  for  all  primary  weapon  categories.  
+Melee  weapons  must  receive  the  most  extensive  treatment.  
+Support  light/heavy  sequences  such  as:  
+●  L  →  L  →  L.  
+
+--- PAGE 26 ---
+●  L  →  L  →  H.  ●  L  →  H  →  L.  ●  L  →  H  →  H.  ●  H  →  L  →  L.  ●  H  →  L  →  H.  ●  H  →  H  →  L.  ●  H  →  H  →  H.  
+Not  every  sequence  requires  a  unique  move  when  the  weapon's  actual  design  does  not  justify  
+it.
+ 
+However,  all  applicable  weapons  must  support  meaningful  attack  variety.  
+Weapon  differences  
+Swords:  
+●  Fast,  flowing  combinations.  ●  Sweeping  finishers.  ●  Thrusts.  ●  Counters.  
+Scythes:  
+●  Distinctive  sweeping  arcs.  ●  Wide  attacks.  ●  Unusual  attack  angles.  ●  Momentum-based  finishers.  
+Daggers:  
+●  Rapid  combinations.  ●  Repositioning.  ●  Precision.  
+Heavy  weapons:  
+●  Powerful  impact.  ●  Strong  stagger.  ●  Deliberate  but  not  excessively  slow  attacks.  
+Bows  and  ranged  weapons:  
+●  Suitable  alternative  sequences.  ●  Responsive  firing.  ●  Appropriate  charged  or  rapid  attacks.  
+
+--- PAGE 27 ---
+●  Distinct  ranged  mechanics.  
+Preserve  the  real  weapons  currently  implemented.  
+Do  not  invent  equipment  categories  that  are  not  present  unless  necessary.  
+ 
+22.  ANIMATION  AND  HIT  FEEDBACK  
+Improve:  
+●  Weapon  trails.  ●  Hit-stop  where  suitable.  ●  Attack  sounds.  ●  Impact  particles.  ●  Hit  reactions.  ●  Knockback.  ●  Stagger.  ●  Enemy  interruption.  ●  Input  buffering.  ●  Combo  transitions.  ●  Dodge  cancellation.  ●  Recovery  behavior.  
+Synchronize  visuals  and  actual  damage  timing.  
+The  game  should  feel  substantially  more  visceral.  
+Avoid  excessive  camera  shake  or  effects  that  obscure  gameplay.  
+ 
+PART  IX  —  CHARGING  AND  CHANNELING  
+23.  CHARGED  SKILLS  
+Identify  abilities  suitable  for  charging.  
+Charging  should  now  be  faster  and  more  responsive  than  the  existing  combat  baseline.  
+Support  visual  stages:  
+
+--- PAGE 28 ---
+Initial  buildup  
+●  Small  glow.  ●  Early  particle  formation.  ●  Audible  buildup.  
+Intermediate  
+●  Stronger  aura.  ●  Particle  density  increase.  ●  Growing  magical  intensity.  
+Maximum  charge  
+●  Distinct  high-power  effect.  ●  Recognizable  audio  cue.  ●  Strong  release  animation.  ●  Appropriate  mechanical  improvement.  
+Possible  mechanical  benefits:  
+●  Increased  damage.  ●  Increased  range.  ●  Wider  area.  ●  Additional  penetration.  ●  Improved  status  effects.  ●  Enhanced  projectile  behavior.  
+Charging  must  involve  meaningful  tradeoffs  without  excessive  animation  delays.  
+ 
+24.  CHANNELED  SKILLS  
+Channeled  abilities  must  feel  extraordinarily  powerful.  
+Improve:  
+●  Continuous  beam  effects.  ●  Persistent  magical  attacks.  ●  Sustained  particle  streams.  ●  Magical  auras.  ●  Area  effects.  ●  Channeling  animations.  ●  Audio  intensity.  
+
+--- PAGE 29 ---
+●  Target  reactions.  
+Improve  responsiveness.  
+Channel  startup  must  be  fast.  
+Release  and  interruption  must  work  immediately  and  predictably.  
+Sustained  channeling  should  consume  resources  appropriately.  
+Avoid  infinite  channeling  through  unrestricted  resource  regeneration.  
+ 
+PART  X  —  COMPLETE  SKILL  
+PRESENTATION
+ 
+OVERHAUL
+ 
+25.  ALL  CURRENT  SKILLS  MUST  BE  POLISHED  
+Do  not  add  unnecessary  new  skills.  
+The  existing  class  skill  collections  are  already  extensive.  
+Focus  on  execution  quality.  
+Every  active  skill  must  receive  an  individualized  review.  
+Ensure  appropriate:  
+●  Animations.  ●  Casting  effects.  ●  Visual  clarity.  ●  Particle  effects.  ●  Sound.  ●  Hit  detection.  ●  Responsiveness.  ●  Impact.  ●  Duration.  ●  Resource  cost.  ●  Combat  usefulness.  ●  Progression  scaling.  
+Different  classes  must  retain  their  distinctive  visual  identity.  
+
+--- PAGE 30 ---
+Do  not  simply  apply  generic  explosions  to  every  ability.  
+ 
+PART  XI  —  INDIVIDUAL  SKILL  MASTERY  
+26.  MASTERY  THROUGH  MEANINGFUL  USE  
+Every  applicable  skill  retains  an  independent  infinite  mastery  level.  
+Skill  mastery  should  grow  through  meaningful  use.  
+Offensive  abilities:  
+●  Damage  contribution.  ●  Relevant  encounter  impact.  
+Healing:  
+●  Effective  healing.  ●  Meaningful  support.  
+Defence:  
+●  Damage  prevented.  ●  Successful  protection.  
+Mobility:  
+●  Legitimate  repositioning  or  avoidance.  
+Aggro:  
+●  Effective  enemy  threat  manipulation.  
+Utility:  
+●  Meaningful  encounter  assistance.  
+Summoning:  
+●  Effective  summon  participation  and  other  specifically  defined  mastery-eligible  events.  
+Do  not  generate  unlimited  mastery  from  repeated  harmless  actions.  
+
+--- PAGE 31 ---
+ 
+27.  MASTERY  IMPROVES  MECHANICS  AND  VISUALS  
+Mastery  may  improve:  
+●  Damage.  ●  Range.  ●  Attack  arc.  ●  Area.  ●  Charge  characteristics.  ●  Channel  effectiveness.  ●  Resource  efficiency.  ●  Projectile  behavior.  ●  Summon  statistics.  ●  Summon  behavior.  ●  Summon  duration.  ●  Appropriate  effect  strength.  ●  Particle  complexity.  ●  Glow  intensity.  ●  Weapon  trails.  ●  Visual  impact.  
+Use  individual  mastery  profiles  for  each  ability.  
+Do  not  apply  identical  bonuses  to  all  skills.  
+Mastery  10  should  be  distinguishable  from  Mastery  1.  
+Mastery  100  should  be  significantly  more  impressive.  
+Mastery  500  should  continue  showing  refinement  without  rendering  becoming  excessive.  
+Keep  improvements  incremental  and  controlled.  
+ 
+PART  XII  —  COMPLETE  SUMMONING  
+SYSTEM
+ 
+28.  UNIVERSAL  SUMMONING  
+
+--- PAGE 32 ---
+Summoning  must  become  a  normal  combat  proficiency  available  to  every  class.  
+Maintain  exclusive  class  summon  skills  where  appropriate.  
+Universal  summons  should  be  obtainable  through:  
+●  Skill  merchants.  ●  Scrolls.  ●  Exploration.  ●  Quests.  ●  Legendary  equipment.  ●  Suitable  special  rewards.  
+The  starter  Wolf  Summon  in  Orrakai  is  mandatory.  
+The  Demonseed  Scythe  conversion  is  mandatory.  
+ 
+29.  SUMMON  STAT  SCALING  
+Every  summon  must  scale  appropriately  with:  
+●  Owner  Combat  Level.  ●  Owner  Summoning  proficiency.  ●  Individual  summon  skill  mastery.  ●  Applicable  equipment.  ●  Fate  modifiers.  ●  Relevant  temporary  effects.  
+These  factors  should  influence  appropriate  summon  properties,  including:  
+●  Maximum  Health.  ●  Damage.  ●  Defence.  ●  Movement  speed.  ●  Attack  effectiveness.  ●  Ability  effectiveness.  ●  Appropriate  duration  or  upkeep.  ●  Selected  behavioral  improvements.  
+Avoid  uncontrolled  multiplicative  scaling.  
+A  newly  acquired  summon  at  Mastery  1  should  still  be  useful  to  a  high-Combat-Level  character.  
+
+--- PAGE 33 ---
+A  heavily  mastered  summon  should  demonstrate  a  meaningful  advantage  over  the  same  
+summon
+ 
+at
+ 
+low
+ 
+mastery.
+ 
+A  character  with  very  high  Summoning  proficiency  should  generally  field  stronger  equivalent  
+summons
+ 
+than
+ 
+one
+ 
+with
+ 
+low
+ 
+Summoning
+ 
+proficiency
+ 
+at
+ 
+the
+ 
+same
+ 
+Combat
+ 
+Level.
+ 
+Ensure  progression  remains  infinite  but  controlled.  
+ 
+30.  SUMMON  AI  QUALITY  
+Summoned  creatures  must  behave  intelligently  enough  to  be  valuable  companions.  
+Implement:  
+●  Reliable  following.  ●  Efficient  navigation.  ●  Enemy  detection.  ●  Appropriate  targeting.  ●  Attack  execution.  ●  Aggression.  ●  Threat  responses.  ●  Pathfinding  recovery.  ●  Return-to-owner  behavior.  ●  Appropriate  idle  behavior.  ●  Safe  despawning.  
+Avoid  summons  repeatedly  running  in  circles,  standing  idle  during  combat,  or  becoming  stuck  
+behind
+ 
+minor
+ 
+obstacles.
+ 
+Summons  should  not  interfere  with  the  player's  movement  or  visibility.  
+Their  attacks  should  have  real  animation,  collision,  audio,  and  hit  feedback.  
+ 
+31.  SUMMON  LIMITS  AND  BALANCING  
+Define  appropriate  active  summon  limits.  
+Avoid  allowing  players  to  spawn  unlimited  entities  through  infinite  progression.  
+Different  skills  may  have  specific  summon  counts.  
+
+--- PAGE 34 ---
+Class-exclusive  summoning  mechanics  can  differ  from  universal  summons.  
+Balance:  
+●  Resource  costs.  ●  Cooldowns.  ●  Summon  durability.  ●  Attack  effectiveness.  ●  Threat  generation.  ●  Movement.  ●  Active  summon  limits.  ●  Resummoning.  
+Summons  must  be  useful  without  completely  replacing  the  player's  participation  in  combat.  
+Avoid  making  all  non-summoner  builds  inferior.  
+ 
+32.  SUMMON  XP  
+Summoning  must  interact  with  the  adaptive  XP  system.  
+Equipped  summon  skills  establish  Summoning  as  an  eligible  hotbar  XP  category.  
+Actual  summon  usage  and  meaningful  contributions  provide  stronger  progression  weighting.  
+For  example:  
+A  player  with  Summon  Wolf  equipped  earns  some  Summoning  XP  from  eligible  kills.  
+A  player  who  actively  maintains  the  wolf  and  engages  enemies  with  it  may  receive  a  larger  
+share
+ 
+of
+ 
+the
+ 
+available
+ 
+hotbar/participation
+ 
+XP
+ 
+allocation.
+ 
+Individual  Wolf  Summon  mastery  improves  primarily  through  the  wolf's  meaningful  participation.  
+Do  not  award  unlimited  XP  per  attack  tick.  
+Prevent:  
+●  Idle  summon  farming.  ●  Duplicate  summon  rewards.  ●  Repeated  harmless  targeting.  ●  Excessive  summon-slot  stacking.  ●  Repeated  despawn/resummon  exploits.  
+
+--- PAGE 35 ---
+All  allocated  proficiency  XP  must  come  from  legitimate  reward  budgets.  
+ 
+33.  DEMONSEED  SCYTHE  
+Remove  passive  automatic  demon  summoning.  
+Introduce  an  intentional  Demon  Summon  skill  unlock.  
+Preserve  ownership  and  save  compatibility.  
+Ensure  the  player  can  deliberately  activate  the  demon  through  the  hotbar.  
+Apply  Combat  Level,  Summoning,  and  individual  mastery  scaling.  
+The  demon  must  retain  an  appropriate  legendary  visual  identity.  
+ 
+34.  ORRAKAI  SKILL  MERCHANT  
+Add  a  properly  integrated  Skill  Merchant  to  Orrakai.  
+The  merchant  must  sell  Summon  Wolf.  
+Summon  Wolf  must  be:  
+●  Available  to  every  class.  ●  Readable  at  any  Combat  Level.  ●  Learnable  without  Summoning  prerequisites.  ●  Obtainable  early.  ●  Equipable  in  the  existing  hotbar.  ●  Capable  of  starting  Summoning  progression.  
+Ensure  the  shop,  inventory,  scroll  consumption,  learning,  and  save  systems  work  correctly.  
+The  skill  should  become  part  of  the  player's  permanently  learned  abilities.  
+Do  not  create  a  new  incompatible  skill-learning  system  when  the  current  scroll  framework  can  
+be
+ 
+extended.
+ 
+ 
+
+--- PAGE 36 ---
+PART  XIII  —  HEALTH,  STAMINA  AND  
+SPIRIT
+ 
+ECONOMY
+ 
+35.  RESOURCE-INTENSIVE  ENCOUNTERS  
+Combat  must  consume  meaningful  resources.  
+The  principal  combat  resources  are:  
+●  Health.  ●  Stamina.  ●  Spirit.  
+Normal  attacks,  dodging,  blocking,  spellcasting,  channeling,  charged  abilities,  summoning,  and  
+relevant
+ 
+actions
+ 
+must
+ 
+have
+ 
+appropriate
+ 
+costs.
+ 
+Combat  should  create  pressure.  
+Players  should  frequently  need  to  manage  resource  reserves  during  demanding  encounters.  
+However,  skillful  play  must  improve  efficiency.  
+Avoid  making  every  ordinary  fight  require  complete  resource  exhaustion.  
+ 
+36.  COMBAT  REGENERATION  
+During  combat:  
+●  Health  recovery  should  be  limited.  ●  Stamina  recovery  should  be  constrained  appropriately.  ●  Spirit  recovery  should  be  constrained  appropriately.  ●  Sustained  channels  should  have  meaningful  costs.  ●  Summons  should  have  appropriate  costs.  ●  Repeated  high-power  attacks  should  create  tradeoffs.  
+Do  not  make  the  accelerated  combat  pace  feel  artificially  sluggish  through  excessively  punitive  
+resource
+ 
+starvation.
+ 
+Fast,  satisfying  basic  combat  actions  must  remain  viable.  
+ 
+
+--- PAGE 37 ---
+37.  OUT-OF-COMBAT  REGENERATION  
+Outside  combat:  
+●  Health  regenerates.  ●  Stamina  regenerates.  ●  Spirit  regenerates.  
+Recovery  should  be  significantly  faster  than  combat  recovery.  
+Combat-state  transitions  must  be  reliable.  
+Brief  line-of-sight  interruptions  should  not  instantly  terminate  combat.  
+Bosses  must  not  be  exploitable  through  repeated  disengagement.  
+Out-of-combat  recovery  should  encourage  an  intense  combat/exploration  rhythm  without  
+excessive
+ 
+downtime.
+ 
+ 
+PART  XIV  —  COOPERATIVE  COMBAT  
+38.  XP  SHARING  
+Implement  the  specified  co-op  reward  rules.  
+An  enemy  worth  100  XP  is  defeated.  
+The  player  credited  with  the  final  hit  receives:  
+100  Combat  XP.  
+Other  qualifying  co-op  participants  receive:  
+50  Combat  XP  each.  
+The  equivalent  participation-adjusted  reward  establishes  each  player's  attribute/proficiency  
+allocation
+ 
+budget.
+ 
+Each  player  receives  their  own  appropriate  class-affinity  bonuses.  
+Mastery  XP  remains  tied  to  meaningful  skill  contribution.  
+
+--- PAGE 38 ---
+Do  not  require  direct  damage  for  support  characters  to  qualify.  
+ 
+39.  CO-OP  CONTRIBUTION  
+Recognize:  
+●  Damage.  ●  Effective  healing.  ●  Shielding.  ●  Aggro  management.  ●  Buffs.  ●  Relevant  debuffs.  ●  Crowd  control.  ●  Summon  contributions.  ●  Useful  utility  abilities.  
+Do  not  reward  inactive  players  merely  for  being  nearby.  
+Normalize  contributions  to  prevent  spam  exploits.  
+Summons  and  kill  credit  
+A  summon  kill  should  credit  its  owning  player.  
+Avoid  duplicate  rewards  when  multiple  summons  damage  the  same  enemy.  
+Support  allied  summon  participation.  
+Ensure  multiplayer  synchronization  and  authoritative  reward  processing.  
+ 
+40.  CO-OP  SKILL  BALANCING  
+Review  every  skill  for  multiplayer  suitability.  
+Pay  special  attention  to:  
+●  Healing.  ●  Threat  management.  ●  Summons.  ●  Defensive  barriers.  ●  Crowd  control.  
+
+--- PAGE 39 ---
+●  Buff  stacking.  ●  Ally  targeting.  ●  Revives.  ●  Aura  effects.  ●  Area  damage.  
+Prevent  combinations  that  produce  permanent  invulnerability,  unlimited  resources,  or  
+uncontrolled
+ 
+damage
+ 
+amplification.
+ 
+All  classes  should  contribute  effectively.  
+ 
+PART  XV  —  ENEMY  LEVELS  AND  
+DIFFICULTY
+ 
+41.  DISPLAY  ENEMY  COMBAT  LEVEL  
+Every  enemy  must  display  its  Combat  Level  alongside  its  name.  
+Example:  
+Level  28  —  Echoryn  Hollowguard  
+Integrate  this  with  current  nameplates  and  health  bars.  
+Maintain  clear  visibility  for:  
+●  Normal  enemies.  ●  Elites.  ●  World  bosses.  ●  Dungeon  bosses.  ●  Multiplayer  encounters.  
+Avoid  excessive  screen  clutter.  
+ 
+42.  ENEMY  XP  SCALING  
+High-level  enemies  must  provide  substantially  more  XP.  
+
+--- PAGE 40 ---
+Use  a  coherent  level/difficulty  reward  model.  
+Higher-level  content  should  reward  players  appropriately  for  its  challenge.  
+Avoid  automatic  universal  enemy  scaling.  
+Preserve  world-zone  identity  and  progression.  
+Players  should  be  able  to  encounter  enemies  far  above  their  current  level.  
+Late-game  XP  growth  must  balance  increasing  experience  requirements.  
+ 
+43.  MAKE  ENEMIES  FASTER  
+This  phase  must  directly  implement  Executive  Note  1.  
+Improve:  
+●  Pursuit  speed.  ●  Attack  startup.  ●  Attack  frequency.  ●  Combo  transitions.  ●  Repositioning.  ●  Recovery  behavior.  ●  Ability  usage.  ●  Aggressive  pressure.  
+Do  not  simply  increase  enemy  damage  or  HP.  
+Enemies  should  become  more  challenging  through  better  behavior.  
+Boss  attacks  must  remain  telegraphed  and  avoidable.  
+ 
+PART  XVI  —  BOSS  COMBAT  OVERHAUL  
+44.  BOSS  INTENSITY  
+Make  major  boss  fights  significantly  more  intense.  
+
+--- PAGE 41 ---
+Improve:  
+●  Attack  combinations.  ●  Mobility.  ●  Aggression.  ●  Special  attacks.  ●  Telegraph  presentation.  ●  Area  denial.  ●  Delayed  attacks.  ●  Phase  transitions.  ●  Punishment  windows.  ●  Animation  quality.  ●  Combat  effects.  
+Bosses  should  respond  to  positioning  and  observable  player  behavior.  
+Avoid  unfair  input-reading  mechanics.  
+Ensure  melee,  ranged,  magical,  defensive,  and  summoning  builds  remain  viable.  
+Do  not  remove  established  story  or  encounter  mechanics.  
+ 
+PART  XVII  —  PROGRESSION  UI  
+45.  CHARACTER  DEVELOPMENT  MENU  
+Clearly  display:  
+Combat  Level  
+●  Current  level.  ●  Current  XP.  ●  XP  to  next  level.  
+Core  Attributes  
+●  Health.  ●  Stamina.  ●  Defence.  ●  Spirit.  ●  Other  justified  attributes.  
+
+--- PAGE 42 ---
+Combat  Proficiencies  
+●  Blades.  ●  Scythes.  ●  Bows.  ●  Warding.  ●  Summoning.  ●  Other  established  proficiencies.  
+Individual  Skill  Mastery  
+●  Current  skill  mastery.  ●  XP  progress.  ●  Current  bonuses.  ●  Relevant  improvements.  
+Preserve  the  dark-fantasy  lexicon  interface  style.  
+Make  the  information  understandable  without  overwhelming  new  players.  
+ 
+46.  XP  FEEDBACK  
+Display  concise  combat  reward  feedback.  
+Show:  
+●  Combat  XP.  ●  Relevant  attribute  XP.  ●  Weapon  XP.  ●  Summoning  XP.  ●  Mastery  increases.  ●  Level-up  notifications.  
+Avoid  excessive  floating  text.  
+Detailed  XP  allocation  can  be  shown  in  the  character  menu  or  Chronicle.  
+ 
+PART  XVIII  —  PERFORMANCE  
+
+--- PAGE 43 ---
+47.  BABYLON.JS  PERFORMANCE  REQUIREMENTS  
+Preserve  compatibility  with  the  existing  engine.  
+Optimize:  
+●  Particle  effects.  ●  Animation  blending.  ●  Weapon  trails.  ●  Projectile  handling.  ●  Summon  AI.  ●  Summon  pathfinding.  ●  Hit  detection.  ●  Damage  events.  ●  Persistent  effects.  ●  Multiplayer  updates.  
+Use  appropriate  pooling  and  resource  reuse.  
+Avoid  repeated  unnecessary  allocations.  
+Ensure  high  mastery  does  not  create  exponential  particle  counts.  
+Verify  that  several  players  using  summons  and  powerful  abilities  simultaneously  does  not  cause  
+unacceptable
+ 
+performance
+ 
+degradation.
+ 
+Summons  must  be  subject  to  reasonable  active  entity  limits.  
+ 
+PART  XIX  —  TESTING  AND  BALANCING  
+48.  DETERMINISTIC  PROGRESSION  TESTING  
+Create  automated  simulations  covering  all  eight  classes.  
+Test:  
+●  Melee  builds.  ●  Ranged  builds.  ●  Offensive  magic.  ●  Defensive  magic.  ●  Support.  
+
+--- PAGE 44 ---
+●  Hybrid  combat.  ●  Summoning-focused  combat.  ●  Mixed  summon/melee  builds.  
+Simulate  progression  at:  
+●  Level  1.  ●  Level  10.  ●  Level  20.  ●  Level  30.  ●  Level  50.  ●  Level  100.  ●  Level  250.  ●  Level  500.  ●  Level  1000.  ●  Extreme  progression  values.  
+Measure:  
+●  XP  requirements.  ●  XP  allocation.  ●  Class  bonuses.  ●  Attribute  growth.  ●  Proficiency  growth.  ●  Summoning  growth.  ●  Skill  mastery.  ●  Damage  output.  ●  Survivability.  ●  Resource  consumption.  ●  Effective  healing.  ●  Summon  effectiveness.  ●  Time  to  defeat.  ●  Long-term  balance.  
+ 
+49.  COMBAT  TESTING  
+Test  every  weapon  category.  
+Verify:  
+●  Attack  speed.  ●  Combo  transitions.  ●  Collision.  
+
+--- PAGE 45 ---
+●  Recovery.  ●  Input  buffering.  ●  Weapon  identity.  ●  Appropriate  stamina  usage.  
+Test  every  active  skill.  
+Verify:  
+●  Casting  speed.  ●  Charging.  ●  Channeling.  ●  Damage.  ●  Defensive  effects.  ●  Resource  consumption.  ●  Visual  mastery.  ●  High-level  scaling.  ●  Interruptions.  
+Test  every  summon.  
+Verify:  
+●  Spawn.  ●  Follow.  ●  Movement.  ●  Navigation.  ●  Attack.  ●  Death.  ●  Despawn.  ●  Resummoning.  ●  XP  contribution.  ●  Mastery.  ●  Co-op  ownership.  ●  Save/load.  
+ 
+50.  XP  EXPLOIT  TESTING  
+Explicitly  test:  
+●  Skill  spam.  ●  Healing  at  full  health.  ●  Infinite  shielding.  
+
+--- PAGE 46 ---
+●  Passive  XP  loops.  ●  Harmless  target  farming.  ●  Repeated  dodging.  ●  Repeated  channeling.  ●  Idle  summoning.  ●  Summon  attack-tick  duplication.  ●  Summon  death/replacement  loops.  ●  Multiple  equipped  summons.  ●  Hotbar  swapping  before  kills.  ●  Weapon  switching.  ●  Damage-over-time  kills.  ●  Co-op  kill  credit.  ●  Repeated  encounter  resolution.  ●  Saving  during  combat.  ●  Loading  after  XP  awards.  ●  Excessive  XP  multipliers.  ●  Very  large  XP  values.  
+Prevent  duplicate  rewards  and  uncontrolled  progression.  
+ 
+PART  XX  —  SAVE  COMPATIBILITY  
+51.  PRESERVE  EXISTING  CHARACTERS  
+Do  not  discard  current  player  progression.  
+Implement  migrations  for  reorganized  attributes.  
+Ensure:  
+●  Existing  levels  persist.  ●  XP  is  correctly  retained  or  converted.  ●  Learned  skills  persist.  ●  Existing  class  identities  persist.  ●  Mastery  remains  valid.  ●  Fates  remain  compatible.  ●  Equipment  remains  valid.  ●  Demonseed  Scythe  ownership  is  preserved.  ●  Existing  summon  abilities  migrate  correctly.  ●  Merchant  unlocks  persist.  
+
+--- PAGE 47 ---
+Do  not  silently  erase  previously  earned  abilities  or  equipment  effects.  
+Test  older  saved  characters.  
+ 
+PART  XXI  —  MANDATORY  
+IMPLEMENTATION
+ 
+ORDER
+ 
+52.  EXECUTION  SEQUENCE  
+Implement  this  project  in  a  dependency-aware  sequence.  
+Stage  1  —  Audit  
+Inspect  the  complete  relevant  codebase.  
+Document  existing  systems,  conflicts,  bugs,  and  dependencies.  
+Stage  2  —  Progression  Foundation  
+Establish  Combat  Level,  core  attributes,  proficiencies,  class  affinities,  and  deterministic  XP  
+allocation.
+ 
+Stage  3  —  Scaling  Architecture  
+Integrate  Combat  Level,  attributes,  proficiencies,  mastery,  equipment,  and  Fates  into  coherent  
+combat
+ 
+calculations.
+ 
+Stage  4  —  Global  Combat  Acceleration  
+Make  movement,  attacks,  animations,  combinations,  casting,  charging,  channeling,  and  enemy  
+combat
+ 
+substantially
+ 
+faster.
+ 
+Stage  5  —  Weapon  Combination  Overhaul  
+Implement  unique,  polished  weapon  attack  sequences  and  responsive  mechanics.  
+Stage  6  —  Skill  Presentation  Overhaul  
+Improve  all  existing  abilities.  
+
+--- PAGE 48 ---
+Add  appropriate  charging  and  channeling.  
+Stage  7  —  Mastery  Integration  
+Implement  meaningful  infinite  skill  mastery  progression  and  visual  evolution.  
+Stage  8  —  Summoning  Foundation  
+Establish  Summoning  as  a  universal  proficiency.  
+Implement  scaling,  XP  eligibility,  skill  mastery,  summon  limits,  and  summon  AI.  
+Stage  9  —  Orrakai  Skill  Merchant  
+Implement  merchant  interaction,  scroll  purchasing,  and  universal  Wolf  Summon  acquisition.  
+Stage  10  —  Demonseed  Scythe  Conversion  
+Replace  passive  demon  summoning  with  intentional  Demon  Summon  skill  acquisition  and  
+activation.
+ 
+Stage  11  —  Resource  Economy  
+Balance  Health,  Stamina,  Spirit,  combat  costs,  and  regeneration.  
+Stage  12  —  Enemy  and  Boss  Improvements  
+Implement  Combat  Level  displays,  reward  scaling,  faster  enemy  behavior,  and  improved  
+bosses.
+ 
+Stage  13  —  Multiplayer  Integration  
+Implement  co-op  XP,  contribution  tracking,  support  roles,  summon  ownership,  and  
+synchronization.
+ 
+Stage  14  —  Complete  Validation  
+Run  automated  tests,  progression  simulations,  visual  testing,  actual  gameplay  testing,  save  
+testing,
+ 
+and
+ 
+performance
+ 
+checks.
+ 
+Do  not  declare  stages  complete  when  only  generic  infrastructure  exists.  
+Verify  actual  gameplay  integration.  
+ 
+
+--- PAGE 49 ---
+PART  XXII  —  REQUIRED  ACCEPTANCE  
+TESTS
+ 
+The  overhaul  is  not  complete  until  the  following  conditions  are  verified.  
+Movement  and  combat  speed  
+●  Player  movement  is  noticeably  faster.  ●  Acceleration  and  responsiveness  are  improved.  ●  Basic  attacks  are  faster.  ●  Combos  flow  naturally.  ●  Casting  is  faster.  ●  Charging  is  faster.  ●  Channels  respond  properly.  ●  Recovery  delays  are  reduced.  ●  Enemy  aggression  and  speed  are  improved.  ●  Combat  remains  readable  and  fair.  
+Progression  
+●  Combat  Level  is  independent.  ●  Core  survival  attributes  always  gain  eligible  XP.  ●  Players  influence  specialized  progression.  ●  Every  class  can  train  all  ordinary  proficiencies.  ●  Each  class  has  exactly  two  +25%  XP  affinities.  ●  All  principal  levels  are  infinite.  ●  Higher  levels  require  increasing  XP.  ●  Stat  growth  remains  controlled.  ●  Higher  Combat  Level  strengthens  relevant  low-mastery  skills.  ●  Individual  mastery  provides  additional  improvement.  ●  Warding  XP  anomalies  are  investigated  and  corrected  where  necessary.  
+Weapons  
+●  Every  applicable  weapon  has  combinations.  ●  Melee  combat  is  satisfying.  ●  Weapons  feel  different.  ●  Hit  detection  is  synchronized.  ●  Combos  interact  properly  with  progression.  
+
+--- PAGE 50 ---
+Skills  
+●  Every  existing  active  skill  remains  functional.  ●  Appropriate  abilities  support  charging.  ●  Appropriate  abilities  support  channeling.  ●  Mastery  improves  mechanics.  ●  Mastery  improves  visuals.  ●  Skill  effects  remain  performant.  
+Summoning  
+●  Summoning  exists  as  an  independent  proficiency.  ●  Summoning  supports  infinite  progression.  ●  Every  class  can  obtain  summons.  ●  Gravecaller  and  Thornbinder  retain  unique  summons.  ●  Summoning  receives  eligible  hotbar-based  XP.  ●  Active  summon  contributions  affect  progression.  ●  Combat  Level  affects  summon  power.  ●  Summoning  Level  affects  summon  power.  ●  Individual  mastery  affects  summon  power.  ●  Summon  AI  works  properly.  ●  Summon  limits  prevent  abuse.  ●  Summons  function  in  co-op.  
+Orrakai  
+●  Skill  Merchant  is  present.  ●  Merchant  interaction  works.  ●  Summon  Wolf  scroll  can  be  purchased.  ●  Every  class  can  read  the  scroll.  ●  No  level  prerequisite  exists.  ●  Summon  Wolf  becomes  permanently  learned.  ●  The  skill  can  be  equipped.  ●  The  wolf  can  fight.  ●  Summoning  can  begin  leveling  immediately.  
+Demonseed  Scythe  
+●  Passive  automatic  demon  summoning  is  removed.  ●  Demon  Summon  is  a  deliberate  learnable/unlockable  skill.  ●  Player  activation  controls  the  demon.  ●  Skill  mastery  functions.  
+
+--- PAGE 51 ---
+●  Summoning  scaling  functions.  ●  Combat  Level  scaling  functions.  ●  Existing  character  compatibility  is  preserved.  
+Resources  
+●  Health  regenerates  out  of  combat.  ●  Stamina  regenerates  out  of  combat.  ●  Spirit  regenerates  out  of  combat.  ●  Combat  consumes  meaningful  resources.  ●  Classes  remain  viable.  ●  Resource  mechanics  cannot  be  trivially  exploited.  
+Enemies  
+●  All  enemies  display  Combat  Level.  ●  XP  scales  with  level  and  difficulty.  ●  Late-game  enemies  provide  substantial  rewards.  ●  Enemies  and  bosses  are  faster  and  more  engaging.  
+Co-op  
+●  Final-hit  player  receives  100%  qualifying  XP.  ●  Other  qualifying  players  receive  50%.  ●  Support  participation  is  recognized.  ●  Summon  ownership  is  respected.  ●  No  duplicate  XP  exploit  exists.  ●  Skills  and  summons  synchronize  appropriately.  
+Technical  
+●  All  eight  classes  function.  ●  Saves  work.  ●  Performance  remains  acceptable.  ●  Combat  effects  clean  up  correctly.  ●  Tests  pass.  ●  No  major  existing  functionality  is  lost.  
+ 
+
+--- PAGE 52 ---
+PART  XXIII  —  FINAL  REPORT  
+After  implementation,  provide  a  detailed,  evidence-based  technical  report  containing:  
+1.  Scripts  audited.  2.  Systems  discovered.  3.  Bugs  identified.  4.  Combat  speed  changes.  5.  Movement  speed  changes.  6.  Attack  and  animation  timing  changes.  7.  Final  attribute  taxonomy.  8.  XP  allocation  formula.  9.  XP  progression  curves.  10.  Class-affinity  mapping.  11.  Combat-power  formula.  12.  Weapon-combo  implementation.  13.  Skill  VFX  improvements.  14.  Charged/channeling  implementations.  15.  Mastery  mechanics.  16.  Summoning  proficiency  implementation.  17.  Summoning  scaling  formulas.  18.  Orrakai  Skill  Merchant  implementation.  19.  Wolf  Summon  implementation.  20.  Demonseed  Scythe  modifications.  21.  Co-op  XP  implementation.  22.  Resource-regeneration  rules.  23.  Enemy-level  implementation.  24.  Save  migration.  25.  Tests  and  results.  26.  Performance  findings.  27.  Known  limitations.  
+Do  not  claim  an  unimplemented  feature  works.  
+Do  not  claim  tests  passed  without  running  them.  
+Do  not  substitute  planning  documents  for  completed  implementation.  
+ 
+FINAL  DESIGN  PHILOSOPHY  
+
+--- PAGE 53 ---
+Runalis  must  become  an  exceptionally  responsive,  mechanically  satisfying,  progression-rich  
+dark
+ 
+fantasy
+ 
+action
+ 
+RPG.
+ 
+The  game  should  be  substantially  faster  than  its  present  implementation.  
+Player  movement  should  be  fluid.  
+Weapon  attacks  should  be  aggressive  and  impactful.  
+Melee  combinations  should  flow  naturally.  
+Casting  should  be  responsive.  
+Charged  spells  should  build  power  quickly  with  impressive  effects.  
+Channeled  abilities  should  feel  devastating.  
+Summons  should  behave  intelligently  and  contribute  meaningfully.  
+Progression  should  reward  how  characters  actually  play.  
+Every  class  must  have  the  freedom  to  train  any  ordinary  combat  discipline.  
+Class  identity  should  create  advantages,  not  arbitrary  restrictions.  
+Combat  Level  should  improve  all  relevant  combat  abilities,  even  at  low  individual  mastery.  
+Attribute  and  proficiency  levels  should  reward  specialization.  
+Individual  mastery  should  continually  refine  each  skill.  
+Summoning  must  become  a  universal  progression  path.  
+The  starter  Wolf  Summon  in  Orrakai  must  make  that  path  available  to  every  class  from  the  
+beginning.
+ 
+The  Demonseed  Scythe  must  grant  an  intentional  demon  summoning  ability  rather  than  
+automatically
+ 
+producing
+ 
+a
+ 
+passive
+ 
+summon
+ 
+during
+ 
+combat.
+ 
+Health,  Stamina,  Defence,  and  Spirit  must  naturally  improve  across  every  character.  
+Encounters  should  be  fast,  dangerous,  resource-intensive,  and  rewarding.  
+All  progression  must  remain  infinite  but  statistically  sustainable.  
+Higher  levels  should  take  significantly  longer  to  reach.  
+Late-game  enemies  should  provide  much  larger  XP  rewards  without  trivializing  advancement.  
+
+--- PAGE 54 ---
+Co-op  must  recognize  both  direct  combat  and  meaningful  support.  
+Most  importantly,  these  systems  must  not  feel  like  unrelated  features  assembled  together.  
+Every  combat  action  should  contribute  logically  to  character  development.  Every  
+progression
+ 
+improvement
+ 
+should
+ 
+have
+ 
+a
+ 
+meaningful
+ 
+relationship
+ 
+to
+ 
+combat.
+ 
+The  final  result  should  feel  deliberately  designed.  
+The  player  should  experience  increasingly  fast,  fluid,  powerful  combat  while  continuing  to  
+develop
+ 
+their
+ 
+character
+ 
+across
+ 
+an
+ 
+exceptionally
+ 
+long
+ 
+lifespan.
+ 
+Audit  first.  Implement  comprehensively.  Preserve  existing  content.  Verify  actual  
+functionality.
+ 
+Build  these  systems  into  Runalis  rather  than  producing  another  conceptual  plan.  
+ 

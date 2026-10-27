@@ -1,0 +1,41 @@
+import assert from 'node:assert/strict';
+import {updateOutOfCombatRecovery as update,hasUnlimitedStamina} from '../src/outOfCombatRecovery.js';
+import {spendStamina,updateStaminaActions} from '../src/combatActions.js';
+import {createPlayer} from '../src/player.js';
+import {updateCombat} from '../src/combat.js';
+const actor=()=>({id:'hero',hp:40,maxHp:100,stamina:0,maxStamina:100,actionState:{},combatState:{},equipment:{},classId:'fellhunter'});
+const world={enemies:[]},p=actor();
+update(p,world,{},1,1);assert.equal(p.hp,60);assert.equal(p.stamina,100);
+assert.equal(spendStamina(p,500),true);assert.equal(p.stamina,100);
+updateStaminaActions(p,{sprintHeld:true},1,1);assert.equal(p.stamina,100);assert.equal(p.actionState.sprinting,true);
+update(p,world,{attackPressed:true},.1,2);assert.equal(hasUnlimitedStamina(p),false);
+assert.equal(spendStamina(p,20),true);assert.equal(p.stamina,80);
+update(p,world,{},5.9,7.9);assert.equal(p.hp,60);
+update(p,world,{},.2,8.1);assert.ok(Math.abs(p.hp-62)<.00001);assert.equal(p.stamina,100);
+p.hp-=10;update(p,world,{},.1,8.2);assert.equal(hasUnlimitedStamina(p),false);assert.ok(Math.abs(p.hp-52)<.00001);
+world.enemies=[{hp:10,combatTargetKind:'player',combatTargetId:'hero'}];
+update(p,world,{},20,30);assert.ok(Math.abs(p.hp-52)<.00001);assert.equal(hasUnlimitedStamina(p),false);
+world.enemies[0].hp=0;update(p,world,{},6,36);assert.ok(Math.abs(p.hp-52)<.00001);update(p,world,{},5,41);assert.equal(p.hp,100);
+const ally=actor();ally.id='ally';world.enemies[0].hp=10;
+update(ally,world,{},1,42);assert.equal(ally.hp,60);assert.equal(hasUnlimitedStamina(ally),true);
+for(const lifeState of ['downed','beingRevived','dead','respawning']){const a=actor();a.lifeState=lifeState;update(a,world,{},20,50);assert.equal(a.hp,40);assert.equal(hasUnlimitedStamina(a),false);}
+const dead=actor();dead.hp=0;update(dead,world,{},20,50);assert.equal(dead.hp,0);
+const pvp=actor();update(pvp,{mode:'pvpArena',enemies:[]},{},20,50);assert.equal(pvp.hp,40);assert.equal(hasUnlimitedStamina(pvp),false);
+const coarse=actor(),fine=actor();update(coarse,{}, {},2,2);for(let i=0;i<20;i++)update(fine,{}, {},.1,i*.1);assert.ok(Math.abs(coarse.hp-fine.hp)<.00001);
+console.log('Passed: fast healing, full stamina, sprint/spending, six-second cooldown, incoming damage, enemy combat, co-op isolation, death/downed exclusions, PvP, and frame-rate independence.');
+// Exercise the real gameplay coordinator, not only the recovery helper.
+const live=createPlayer('Recovery integration');live.id='integration';live.hp=40;live.stamina=10;
+const liveWorld={mode:'overworld',enemies:[],objects:[],effects:[]};
+for(let i=0;i<300;i++)updateCombat(live,liveWorld,{sprintHeld:true},1/60,i/60,()=>{});
+assert.equal(live.hp,live.maxHp,'Live update did not restore health');
+assert.equal(live.stamina,live.maxStamina,'Live sprint drained exploration stamina');
+assert.equal(live.actionState.sprinting,true);
+liveWorld.enemies.push({hp:10,combatTargetKind:'player',combatTargetId:live.id});live.hp=50;
+for(let i=300;i<420;i++)updateCombat(live,liveWorld,{sprintHeld:true},1/60,i/60,()=>{});
+assert.ok(live.hp<60,'Combat incorrectly enabled fast recovery');
+assert.ok(live.stamina<live.maxStamina,'Combat incorrectly retained unlimited stamina');
+liveWorld.enemies[0].hp=0;
+for(let i=420;i<1140;i++)updateCombat(live,liveWorld,{sprintHeld:true},1/60,i/60,()=>{});
+assert.equal(live.hp,live.maxHp);assert.equal(live.stamina,live.maxStamina);
+console.log('Passed real updateCombat integration: health and sprint stamina recover, aggression disables recovery, and recovery resumes after combat.');
+

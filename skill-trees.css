@@ -1,0 +1,107 @@
+/* One complete prerequisite graph, with a separate readable inspector. */
+html body:not(.couch-coop-active) .panel.open #skills.active[data-skills-subtab="trees"] {
+  left:12px !important; right:12px !important; top:12px !important; bottom:70px !important;
+  width:auto !important; max-width:none !important; max-height:none !important;
+  padding:10px 12px 38px !important; overflow:hidden !important;
+  grid-template-rows:auto minmax(0,1fr) !important; gap:6px !important;
+}
+html body #skills[data-skills-subtab="trees"] > .progression-card-grid { display:none !important; }
+html body #skills[data-skills-subtab="trees"] .subtab-bar { padding-bottom:6px !important; gap:5px !important; }
+html body #skills[data-skills-subtab="trees"] .skill-tree-workspace { min-height:0 !important; gap:6px !important; }
+html body #skills[data-skills-subtab="trees"] .skill-tree-compact-head { min-height:40px !important; padding:4px 10px !important; }
+html body #skills[data-skills-subtab="trees"] .skill-tree-compact-head small { font-size:9px !important; letter-spacing:.14em !important; }
+html body #skills[data-skills-subtab="trees"] .skill-tree-compact-head h2 { font-size:21px !important; }
+html body #skills[data-skills-subtab="trees"] .skill-tree-compact-head p { font-size:12px !important; }
+html body #skills[data-skills-subtab="trees"] .skill-tree-status-chips span { font-size:12px !important; }
+html body #skills[data-skills-subtab="trees"] .skill-tree-path-list { display:flex !important; padding:3px 8px !important; flex-wrap:wrap !important; gap:8px !important; overflow:hidden !important; }
+html body #skills[data-skills-subtab="trees"] .compact-path-group { gap:4px !important; }
+html body #skills[data-skills-subtab="trees"] .compact-path-button { min-height:32px !important; padding:3px 8px !important; }
+html body #skills[data-skills-subtab="trees"] .compact-path-button b { font-size:12px !important; }
+html body #skills[data-skills-subtab="trees"] .compact-path-button span { font-size:9px !important; }
+html body #skills[data-skills-subtab="trees"] .skill-tree-stage { grid-template-columns:minmax(0,1fr) 258px !important; overflow:hidden !important; gap:12px !important; min-height:0 !important; background:none !important; }
+html body #skills[data-skills-subtab="trees"] .skill-tree-node-index { display:grid !important; grid-template-rows:26px minmax(0,1fr) 24px !important; place-items:stretch !important; min-height:0 !important; min-width:0 !important; overflow:hidden !important; padding:8px !important; }
+html body #skills[data-skills-subtab="trees"] .prerequisite-tree { position:relative !important; display:block !important; width:100% !important; height:100% !important; max-height:none !important; min-height:0 !important; min-width:0 !important; padding:0 !important; overflow:hidden !important; container-type:inline-size; background:radial-gradient(ellipse at 50% 0%,#a98a5614,transparent 70%),#121310 !important; }
+html body .tree-connections { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; }
+html body .tree-edge,html body .tree-arrow { fill:none; stroke:#82745a; stroke-width:1.3; vector-effect:non-scaling-stroke; }
+html body .tree-edge.either { stroke-dasharray:4 3; }
+html body .tree-edge.learned { stroke:#95b789; stroke-width:2; }
+html body .tree-edge.ready { stroke:#ccb17b; }
+html body .tree-edge.selected { stroke:#f1d7a0; stroke-width:2.6; }
+html body .tree-arrow { stroke:#c6ae7b; }
+html body .tree-tier { position:absolute; left:4px; transform:translateY(-50%); font:11px Georgia,serif; color:#a29479; border-bottom:1px solid #635842; padding:0 2px 4px; }
+html body .tree-foundation-heading { position:absolute; transform:translate(-50%,-50%); text-align:center; color:#c6ae80; font:10px/1.4 system-ui,sans-serif; letter-spacing:.06em; }
+html body .tree-foundation-heading small { display:block; color:#aba795; font-size:9px; letter-spacing:0; }
+html body .tree-reading-key,html body .tree-footnote { display:flex; align-items:center; justify-content:space-between; gap:8px; color:#b9ae98; font:10px system-ui,sans-serif; }
+html body .tree-reading-key > span:first-child { letter-spacing:.1em; color:#d6be91; }
+html body .tree-reading-key i { display:inline-block; width:7px; height:7px; border:1px solid #bba16b; margin-left:10px; }
+html body .tree-reading-key .key-learned { background:#95b789; border-color:#95b789; }
+html body .tree-reading-key .key-ready { background:#c5a46a; }
+html body .tree-reading-key .key-either { width:14px; height:0; border:0; border-top:1px dashed #c5a46a; vertical-align:middle; }
+html body #skills .prerequisite-tree .compact-node-button {
+  position:absolute !important; transform:translate(-50%,-50%) !important;
+  max-width:220px !important; min-width:0 !important; min-height:0 !important;
+  display:grid !important; grid-template-columns:28px minmax(0,1fr) !important;
+  grid-template-rows:minmax(0,1fr) 12px !important; gap:0 5px !important;
+  padding:4px 6px !important; border:1px solid #75654b !important; border-radius:4px !important;
+  background:linear-gradient(145deg,#282720,#171b18) !important;
+  box-shadow:0 2px 5px #0007 !important; opacity:1 !important; filter:none !important; text-align:left !important;
+}
+html body #skills .prerequisite-tree .compact-node-button i { grid-row:1 / 3 !important; width:28px !important; height:28px !important; }
+html body #skills .prerequisite-tree .technique-icon { width:100% !important; height:100% !important; object-fit:contain; }
+html body #skills .prerequisite-tree .tree-node-name { font:600 clamp(10px,1.15cqw,14px)/1.13 var(--lex-body) !important; white-space:normal !important; overflow:hidden !important; text-overflow:clip !important; color:#ebdfc8 !important; }
+html body #skills .prerequisite-tree .compact-node-button b { grid-column:2 !important; color:#b5ab98 !important; font:9px/1 system-ui,sans-serif !important; white-space:nowrap !important; }
+html body #skills .prerequisite-tree .compact-node-button.locked { border-color:#555346 !important; background:#1b1e1a !important; }
+html body #skills .prerequisite-tree .compact-node-button.locked i { opacity:.65; }
+html body #skills .prerequisite-tree .compact-node-button.blocked { border-style:dashed !important; }
+html body #skills .prerequisite-tree .compact-node-button.available { border-color:#d3b47e !important; box-shadow:inset 0 0 12px #b9945522 !important; }
+html body #skills .prerequisite-tree .compact-node-button.learned { border-color:#96b487 !important; background:linear-gradient(135deg,#293628,#19251c) !important; }
+html body #skills .prerequisite-tree .compact-node-button.learned b { color:#bad2ac !important; }
+html body #skills .prerequisite-tree .compact-node-button.node-type-capstone { border-width:2px !important; }
+html body #skills .prerequisite-tree .compact-node-button:is(.active,:focus-visible,.game-ui-controller-focus) { border-color:#ffe1a0 !important; outline:1px solid #efcc88 !important; outline-offset:2px !important; box-shadow:0 0 16px #d4b07333 !important; z-index:2 !important; }
+html body #skills .prerequisite-tree .compact-node-button.is-prerequisite { border-color:#d8c394 !important; }
+html body #skills[data-skills-subtab="trees"] .skill-tree-detail-pane { display:grid !important; grid-template-rows:minmax(0,1fr) auto !important; gap:8px !important; min-height:0 !important; overflow:hidden !important; padding:14px !important; }
+html body .skill-node-detail-scroll { min-height:0; overflow:auto; padding-right:4px; }
+html body .tree-choice-mark { position:absolute; right:3px; top:0; color:#d4b486; font:11px Georgia,serif; }
+html body #skills[data-skills-subtab="trees"] .skill-node-detail-title { grid-template-columns:minmax(0,1fr) auto !important; }
+html body #skills[data-skills-subtab="trees"] .skill-node-detail-title > i { display:none !important; }
+html body #skills[data-skills-subtab="trees"] .skill-node-detail-title h3 { font-size:16px !important; }
+html body #skills[data-skills-subtab="trees"] .skill-node-detail-copy { display:block !important; overflow:visible !important; font-size:14px !important; line-height:1.3 !important; -webkit-line-clamp:unset !important; }
+html body #skills[data-skills-subtab="trees"] .detail-bonus-list { max-height:none !important; overflow:visible !important; gap:5px !important; }
+html body #skills[data-skills-subtab="trees"] .detail-bonus-list span { font-size:12px !important; }
+html body #skills[data-skills-subtab="trees"] .skill-node-requirements span { font-size:12px !important; }
+html body #skills[data-skills-subtab="trees"] .skill-node-requirements b { float:none !important; display:block !important; max-width:none !important; white-space:normal !important; overflow:visible !important; }
+html body #skills[data-skills-subtab="trees"] .tree-learn-button { min-height:38px !important; font-size:14px !important; }
+html body #skills[data-skills-subtab="trees"] .menu-context-bar { position:absolute !important; left:12px !important; right:12px !important; bottom:5px !important; padding:5px !important; }
+@media(max-width:1450px) {
+  html body #skills[data-skills-subtab="trees"] .skill-tree-stage { grid-template-columns:minmax(0,1fr) 220px !important; gap:8px !important; }
+  html body #skills .prerequisite-tree .compact-node-button { grid-template-columns:22px minmax(0,1fr) !important; gap:0 3px !important; padding:3px 4px !important; }
+  html body #skills .prerequisite-tree .compact-node-button i { width:22px !important; height:22px !important; }
+  html body #skills .prerequisite-tree .compact-node-button b { font-size:8px !important; }
+  html body #skills .prerequisite-tree .tree-node-name { font-size:clamp(10px,1cqw,12px) !important; }
+  html body .tree-reading-key { font-size:8px; }
+  html body .tree-footnote span { display:none; }
+}
+@media(max-height:780px) {
+  html body #skills[data-skills-subtab="trees"] .skill-tree-compact-head small,
+  html body #skills[data-skills-subtab="trees"] .skill-tree-compact-head p { display:none !important; }
+  html body #skills[data-skills-subtab="trees"] .skill-tree-compact-head { min-height:28px !important; }
+  html body #skills[data-skills-subtab="trees"] .skill-tree-compact-head h2 { font-size:18px !important; }
+}
+@media(max-width:1100px) {
+  html body #skills[data-skills-subtab="trees"] .skill-tree-stage { grid-template-columns:minmax(0,1fr) !important; grid-template-rows:minmax(0,1fr) 110px !important; }
+  html body #skills[data-skills-subtab="trees"] .compact-path-button span { display:none !important; }
+  html body #skills[data-skills-subtab="trees"] .compact-path-button { min-height:24px !important; min-width:0 !important; padding:2px 5px !important; }
+  html body #skills[data-skills-subtab="trees"] .compact-path-button b { font-size:10px !important; }
+  html body #skills .prerequisite-tree .compact-node-button { grid-template-columns:16px minmax(0,1fr) !important; grid-template-rows:1fr !important; padding:2px 3px !important; }
+  html body #skills .prerequisite-tree .compact-node-button i { width:16px !important; height:16px !important; grid-row:1 !important; }
+  html body #skills .prerequisite-tree .compact-node-button b { display:none !important; }
+  html body #skills .prerequisite-tree .tree-node-name { font-size:10px !important; }
+  html body #skills[data-skills-subtab="trees"] .skill-tree-detail-pane { display:grid !important; grid-template-columns:minmax(0,1fr) 130px !important; grid-template-rows:minmax(0,1fr) !important; gap:4px 12px !important; padding:8px !important; }
+  html body #skills[data-skills-subtab="trees"] .skill-node-detail-scroll { display:block !important; }
+  html body #skills[data-skills-subtab="trees"] .skill-node-detail-title { grid-column:1 !important; }
+  html body #skills[data-skills-subtab="trees"] .skill-node-detail-copy { grid-column:1 !important; font-size:12px !important; margin:0 !important; }
+  html body #skills[data-skills-subtab="trees"] .detail-bonus-list { grid-column:1 / -1 !important; }
+  html body #skills[data-skills-subtab="trees"] .skill-node-requirements { grid-column:2 !important; grid-row:1 / 3 !important; margin:0 !important; }
+  html body #skills[data-skills-subtab="trees"] .tree-learn-button { grid-column:2 !important; margin:0 !important; align-self:end !important; }
+  html body .tree-reading-key > span:last-child { display:none; }
+}

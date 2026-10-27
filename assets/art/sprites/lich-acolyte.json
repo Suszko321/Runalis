@@ -1,0 +1,64 @@
+{
+  "name": "lich-acolyte",
+  "source": "C:\\Users\\austi\\Documents\\Runalis\\assets\\art\\source\\lich-acolyte.png",
+  "rows": 1,
+  "columns": 4,
+  "cellWidth": 96,
+  "cellHeight": 112,
+  "pivot": [
+    48,
+    106
+  ],
+  "sourceBounds": [
+    [
+      28,
+      147,
+      406,
+      717
+    ],
+    [
+      452,
+      149,
+      887,
+      716
+    ],
+    [
+      931,
+      147,
+      1353,
+      716
+    ],
+    [
+      1418,
+      135,
+      1965,
+      716
+    ]
+  ],
+  "spriteRects": [
+    [
+      17,
+      14,
+      61,
+      92
+    ],
+    [
+      109,
+      15,
+      70,
+      91
+    ],
+    [
+      206,
+      14,
+      68,
+      92
+    ],
+    [
+      292,
+      13,
+      88,
+      93
+    ]
+  ]
+}

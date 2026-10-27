@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {TILE} from '../src/data.js';
+import {revealSurvey,getSurvey,surveyKey,renderSurveyArt} from '../src/mapSurvey.js';
+const w={mode:'overworld',regionId:'test',width:64,height:48,tiles:Array.from({length:48},()=>Array.from({length:64},()=>({biome:'grass'})))};
+const memory={},actor={x:12*TILE,y:12*TILE};
+const s=revealSurvey(memory,w,[actor]);assert(Object.keys(s.cells).length>0);assert(!s.cells['7,5'],'faraway cells must stay hidden');
+const before=Object.keys(s.cells).length;revealSurvey(memory,w,[{x:50*TILE,y:35*TILE}]);assert(Object.keys(s.cells).length>before,'travel expands exploration');
+const loaded=JSON.parse(JSON.stringify(memory));assert.deepEqual(getSurvey(loaded,w).cells,s.cells,'exploration survives serialization');
+assert.notEqual(surveyKey(w),surveyKey({...w,regionId:'other'}),'regions have independent fog');
+assert.equal(Object.keys(getSurvey(loaded,{...w,regionId:'other'}).cells).length,0);
+const old={};getSurvey(old,w,[{x:12,y:12}]);assert(Object.keys(old.surveys[surveyKey(w)].cells).length>0,'known locations migrate');
+const a=renderSurveyArt(w,s),b=renderSurveyArt(w,s);assert(a.includes('mask='));assert.notEqual(a.match(/id="([^"]*-fog)"/)[1],b.match(/id="([^"]*-fog)"/)[1],'co-op masks must be unique');
+console.log('PASS: persistent exploration, hidden terrain, region isolation, old-save migration, unique co-op masks.');

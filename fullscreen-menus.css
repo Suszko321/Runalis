@@ -1,0 +1,400 @@
+/* One opaque workspace, with contextual navigation and independent scroll panes.
+   This stylesheet intentionally supersedes the old floating/owner-size layouts. */
+html:root body.fullscreen-menu-design #app .panel.open:not(.menu-chooser) {
+  position:fixed!important; inset:0!important; width:100vw!important; height:100dvh!important;
+  max-width:none!important; max-height:none!important; margin:0!important; padding:0!important;
+  border:0!important; border-radius:0!important; background:#151411!important;
+  transform:none!important; pointer-events:none!important; overflow:hidden!important;
+}
+html:root body.fullscreen-menu-design #app .panel.open :is(#inventory,#skills,#character,#quests,#map,#log).active {
+  position:fixed!important; inset:0!important; width:100vw!important; height:100dvh!important;
+  max-width:none!important; max-height:none!important; min-height:0!important;
+  box-sizing:border-box!important; margin:0!important; padding:12px 18px 46px!important;
+  border:0!important; border-image:none!important; border-radius:0!important;
+  background:#151411 url('assets/ui/leather.webp') repeat!important;
+  box-shadow:none!important; backdrop-filter:none!important; transform:none!important;
+  display:flex!important; flex-direction:column!important; gap:10px!important;
+  overflow:hidden!important; scrollbar-gutter:auto!important; pointer-events:auto!important;
+}
+html:root body.fullscreen-menu-design #app .panel.open .runalis-menu-workspace.active::before,
+html:root body.fullscreen-menu-design #app .panel.open .runalis-menu-workspace.active::after {display:none!important;}
+html:root body.fullscreen-menu-design #app .panel.open:not(.menu-chooser) .tabs {
+  display:none!important; visibility:hidden!important; pointer-events:none!important;
+}
+html:root body.fullscreen-menu-design #app .panel.open .menu-context-bar {
+  position:absolute!important; inset:auto 0 0!important; box-sizing:border-box!important;
+  min-height:36px!important; padding:5px 18px!important; margin:0!important;
+  background:#151411!important; border-top:1px solid #75613c!important;
+  display:flex!important; flex-wrap:wrap!important; gap:6px 16px!important; font-size:11px!important;
+}
+html:root body.fullscreen-menu-design #app .panel.open .subtab-bar {
+  flex:0 0 auto!important; min-height:34px!important; padding:0 0 6px!important; margin:0!important;
+}
+html:root body.fullscreen-menu-design #app .panel.open .subtab {min-height:30px!important; padding:5px 12px!important; font-size:13px!important;}
+/* Continuous scrolling, with visible scrollbars for mouse users. */
+html:root body.fullscreen-menu-design :is(.panel.open,.market-shop-panel,.character-creator-panel,.coop-join-panel) * {
+  scrollbar-width:thin!important; scrollbar-color:#94794f #211d18!important; scroll-behavior:auto!important;
+}
+html:root body.fullscreen-menu-design :is(.panel.open,.market-shop-panel,.character-creator-panel,.coop-join-panel) *::-webkit-scrollbar {display:block!important; width:7px!important; height:7px!important;}
+html:root body.fullscreen-menu-design :is(.panel.open,.market-shop-panel,.character-creator-panel,.coop-join-panel) *::-webkit-scrollbar-thumb {background:#94794f!important; border-radius:4px;}
+html:root body.fullscreen-menu-design #app #inventory :is(.equipment-workstation,.inventory-browser-layout,.coterie-workstation),
+html:root body.fullscreen-menu-design #app #skills :is(.ability-management-onepage,.skill-tree-workspace,.world-skill-browser),
+html:root body.fullscreen-menu-design #app #character .character-sheet-grid,
+html:root body.fullscreen-menu-design #app #quests .quest-onepage-card,
+html:root body.fullscreen-menu-design #app #map .world-map-shell,
+html:root body.fullscreen-menu-design #app #log > .card {
+  flex:1!important; width:100%!important; min-width:0!important; min-height:0!important;
+  max-height:none!important; height:auto!important; margin:0!important; overflow:hidden!important;
+}
+html:root body.fullscreen-menu-design #app #inventory .equipment-workstation {
+  display:grid!important; grid-template-columns:minmax(0,1fr) minmax(220px,.8fr) minmax(0,1.25fr)!important;
+  grid-template-rows:minmax(0,1fr)!important;
+}
+html:root body.fullscreen-menu-design #app #inventory .equipment-character-pane {
+  display:grid!important; grid-template-rows:minmax(0,1fr) auto!important;
+  min-width:0!important; padding:8px 12px!important; gap:6px!important;
+}
+html:root body.fullscreen-menu-design #app #inventory .equipment-preview-card {min-height:0!important;}
+html:root body.fullscreen-menu-design #app #inventory .equipment-preview-canvas {max-width:100%!important; max-height:100%!important; object-fit:contain!important; image-rendering:pixelated!important;}
+html:root body.fullscreen-menu-design #app #inventory .equipment-slot-grid {
+  display:grid!important; grid-template-columns:1fr!important; grid-auto-rows:auto!important;
+  overflow:visible!important; height:auto!important; max-height:none!important; gap:0!important;
+}
+html:root body.fullscreen-menu-design #app #inventory .equipment-slot-button {min-height:54px!important; padding:6px!important;}
+html:root body.fullscreen-menu-design #app #inventory .equipment-slot-button-copy small {display:none!important;}
+html:root body.fullscreen-menu-design #app #inventory .equipment-slot-button-copy b {white-space:normal!important; overflow-wrap:anywhere!important; font-size:12px!important;}
+html:root body.fullscreen-menu-design #app #inventory .inventory-browser-layout {display:grid!important; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)!important; grid-template-rows:minmax(0,1fr)!important;}
+html:root body.fullscreen-menu-design #app #inventory :is(.equipment-inventory-pane,.inventory-list-pane) {
+  display:flex!important; flex-direction:column!important; min-height:0!important; overflow:hidden!important; padding:8px 12px 8px 0!important;
+}
+html:root body.fullscreen-menu-design #app #inventory .inventory-list-heading {flex:0 0 auto!important; display:block!important; padding-bottom:8px!important;}
+html:root body.fullscreen-menu-design #app #inventory .inventory-name-list {flex:1!important; min-height:0!important; max-height:none!important; overflow-y:auto!important; display:grid!important; grid-template-columns:1fr!important; grid-auto-rows:max-content!important; align-content:start!important;}
+html:root body.fullscreen-menu-design #app #inventory .inventory-detail-pane {min-height:0!important; overflow-y:auto!important; padding:12px 16px!important;}
+html:root body.fullscreen-menu-design #app #inventory .bag-filters {display:flex; flex-wrap:wrap; gap:5px; margin-top:8px;}
+html:root body.fullscreen-menu-design #app #inventory .bag-filters button {padding:5px 9px!important; min-height:28px!important; font-size:12px!important;}
+html:root body.fullscreen-menu-design #app #inventory .bag-filters button[aria-pressed="true"] {background:#655232!important; color:#fff0ca!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-management-onepage {
+  display:grid!important; grid-template-columns:minmax(0,.9fr) minmax(0,1.2fr)!important;
+  grid-template-rows:auto minmax(0,1fr) auto!important; gap:8px!important;
+}
+html:root body.fullscreen-menu-design #app #skills .ability-category-pane {
+  grid-column:1/-1!important; grid-row:1!important; display:flex!important; align-items:center!important;
+  gap:12px!important; padding:0 0 6px!important; border-right:0!important;
+}
+html:root body.fullscreen-menu-design #app #skills .ability-category-pane h3 {margin:0!important; font-size:13px!important; flex:0 0 auto;}
+html:root body.fullscreen-menu-design #app #skills .ability-category-list {
+  display:flex!important; flex-wrap:nowrap!important; overflow-x:auto!important; max-height:none!important; min-width:0!important; gap:4px!important;
+}
+html:root body.fullscreen-menu-design #app #skills .ability-category-list button {display:flex!important; flex:0 0 auto!important; gap:8px!important; min-height:30px!important; padding:5px 8px!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-pool-pane {grid-column:1!important; grid-row:2!important; display:flex!important; flex-direction:column!important; padding:8px!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-pool-pane h3 {flex:0 0 auto; margin:0 0 7px!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-pool-list {flex:1!important; min-height:0!important; max-height:none!important; overflow-y:auto!important; gap:3px!important; grid-auto-rows:max-content!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-pool-button {min-height:40px!important; padding:6px 8px!important; grid-template-columns:30px minmax(0,1fr) auto!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-detail-pane {grid-column:2!important; grid-row:2!important; display:block!important; overflow-y:auto!important; padding:12px 16px!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-morph-options {grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-morph-option {padding:7px!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-hotbar-pane {grid-column:1/-1!important; grid-row:3!important; padding:6px 8px!important; grid-template-columns:180px minmax(0,1fr)!important; margin:0!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-hotbar-assign {min-height:60px!important;}
+html:root body.fullscreen-menu-design #app #skills .world-skill-browser {display:grid!important; grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important; grid-template-rows:minmax(0,1fr)!important;}
+html:root body.fullscreen-menu-design #app #skills :is(.world-skill-index,.world-skill-detail) {max-height:none!important; min-height:0!important; overflow-y:auto!important; padding:12px!important;}
+html:root body.fullscreen-menu-design #app #skills .world-skill-list {grid-template-columns:repeat(2,minmax(0,1fr))!important; max-height:none!important; overflow:visible!important;}
+html:root body.fullscreen-menu-design #app #character .character-sheet-grid {
+  display:grid!important; grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,.9fr)!important;
+  grid-template-rows:repeat(2,minmax(0,1fr))!important; gap:12px!important;
+}
+html:root body.fullscreen-menu-design #app #character .character-paper {padding:12px!important; overflow-y:auto!important;}
+html:root body.fullscreen-menu-design #app #character .character-paper:nth-child(1) {grid-column:1!important; grid-row:1/3!important;}
+html:root body.fullscreen-menu-design #app #character .character-paper:nth-child(2) {grid-column:2!important; grid-row:1!important;}
+html:root body.fullscreen-menu-design #app #character .character-paper:nth-child(3) {grid-column:2!important; grid-row:2!important;}
+html:root body.fullscreen-menu-design #app #character .character-stat-detail {grid-column:3!important; grid-row:1/3!important; min-height:0!important; overflow-y:auto!important; padding:16px!important;}
+html:root body.fullscreen-menu-design #app #character .sheet-stat-grid {grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+html:root body.fullscreen-menu-design #app #quests .quest-onepage-card {display:flex!important; flex-direction:column!important;}
+html:root body.fullscreen-menu-design #app #quests .quest-onepage-layout {flex:1!important; min-height:0!important; grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr)!important;}
+html:root body.fullscreen-menu-design #app #quests .quest-title-index {display:flex!important; flex-direction:column!important; min-height:0!important; overflow:hidden!important;}
+html:root body.fullscreen-menu-design #app #quests .quest-title-list {flex:1!important; min-height:0!important; overflow-y:auto!important; max-height:none!important;}
+html:root body.fullscreen-menu-design #app #quests .quest-detail-pane {min-height:0!important; overflow-y:auto!important;}
+html:root body.fullscreen-menu-design #app #log > .card {display:flex!important; flex-direction:column!important;}
+html:root body.fullscreen-menu-design #app #log .log-list {flex:1!important; min-height:0!important; overflow-y:auto!important;}
+html:root body.fullscreen-menu-design #app #map .world-map-layout.static {min-height:0!important; grid-template-columns:minmax(0,1fr) minmax(200px,24%)!important; gap:12px!important;}
+html:root body.fullscreen-menu-design #app #map .world-map-stage.static {min-height:0!important;}
+/* Restore the original compact, vertical chooser over the game. */
+html:root body.fullscreen-menu-design #app .panel.open.menu-chooser {
+  position:fixed!important; inset:0!important; width:100vw!important; height:100dvh!important;
+  max-width:none!important; max-height:none!important; padding:0!important; margin:0!important;
+  border:0!important; border-radius:0!important; background:transparent!important;
+  box-shadow:none!important; backdrop-filter:none!important; transform:none!important;
+  pointer-events:none!important;
+}
+html:root body.fullscreen-menu-design #app .panel.open.menu-chooser .tabs {
+  position:fixed!important; inset:50% auto auto 34px!important; transform:translateY(-50%)!important;
+  width:auto!important; height:auto!important; max-width:calc(100vw - 68px)!important;
+  margin:0!important; padding:0!important; box-sizing:border-box!important;
+  display:grid!important; grid-template-columns:1fr!important; align-content:center!important;
+  gap:7px!important; border:0!important; border-radius:0!important; background:transparent!important;
+  box-shadow:none!important; backdrop-filter:none!important; visibility:visible!important;
+  opacity:1!important; pointer-events:auto!important; overflow:visible!important;
+}
+html:root body.fullscreen-menu-design #app .panel.open.menu-chooser .tab {
+  min-width:0!important; min-height:0!important; padding:2px 0!important;
+  font-size:18px!important; line-height:1.2!important; justify-content:flex-start!important;
+  border:0!important; border-radius:0!important; background:transparent!important; box-shadow:none!important;
+  color:#fff!important; text-align:left!important;
+  text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 2px 7px #000!important;
+}
+html:root body.fullscreen-menu-design #app .panel.open.menu-chooser .tab:is(:hover,:focus,.game-ui-controller-focus) {
+  color:#efc65d!important; font-size:22px!important; transform:translateX(7px)!important; outline:0!important;
+}
+html:root body.fullscreen-menu-design.couch-coop-active #app .panel.open.menu-chooser .tabs {
+  left:calc(var(--owner-viewport-left,0vw) + 20px)!important;
+  top:calc(var(--owner-viewport-top,0vh) + var(--owner-viewport-height,100vh)/2)!important;
+  max-width:calc(var(--owner-viewport-width,100vw) - 40px)!important;
+}
+html:root body.fullscreen-menu-design.couch-coop-active #app .panel.open .menu-owner-badge {
+  position:fixed!important; inset:10px 12px auto auto!important; max-width:155px!important;
+  min-height:0!important; margin:0!important; padding:5px!important; font-size:10px!important;
+  white-space:normal!important; pointer-events:none!important;
+}
+html:root body.fullscreen-menu-design.couch-coop-active #app .panel.open:not(.menu-chooser) .subtab-bar {
+  padding-right:170px!important;
+}
+/* In-game dialogs cover their entire screen. The title screen already fills
+   the viewport and retains its own illustrated background and menu card;
+   loading gameplay styles must not change it on Save & Quit. */
+html:root body.fullscreen-menu-design :is(#pauseOverlay,#characterCreatorOverlay,#marketShopOverlay,.couch-coop-join-overlay,#pvpArenaOverlay,.developer-setup-overlay) {
+  inset:0!important; width:100vw!important; height:100dvh!important; max-width:none!important; max-height:none!important;
+  box-sizing:border-box!important; padding:0!important; background:#151411!important;
+}
+html:root body.fullscreen-menu-design :is(#pauseOverlay .pause-panel,#pauseOverlay .pause-card,#characterCreatorOverlay .character-creator-panel,#marketShopOverlay .market-shop-panel,.couch-coop-join-overlay .coop-join-panel,.pvp-arena-panel,.developer-setup-overlay .developer-setup-card) {
+  position:relative!important; inset:auto!important; width:100vw!important; height:100dvh!important;
+  max-width:none!important; max-height:none!important; min-width:0!important; min-height:0!important;
+  box-sizing:border-box!important; margin:0!important; border:0!important; border-image:none!important;
+  border-radius:0!important; padding:24px!important; transform:none!important;
+  background:#151411 url('assets/ui/leather.webp') repeat!important; box-shadow:none!important; overflow-y:auto!important;
+}
+html:root body.fullscreen-menu-design #pauseOverlay :is(.pause-panel,.pause-card) {display:flex!important; flex-direction:column!important; justify-content:center!important; align-items:center!important;}
+html:root body.fullscreen-menu-design #pauseOverlay .pause-button-row {width:min(100%,720px)!important;}
+html:root body.fullscreen-menu-design #marketShopOverlay .market-shop-panel {display:flex!important; flex-direction:column!important; gap:14px!important; overflow:hidden!important;}
+html:root body.fullscreen-menu-design #marketShopOverlay .market-shop-body {flex:1!important; min-height:0!important; max-height:none!important; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)!important;}
+html:root body.fullscreen-menu-design #marketShopOverlay :is(.market-shop-list,.market-shop-detail) {min-height:0!important; max-height:none!important; overflow-y:auto!important;}
+@media(min-width:1500px) {
+  html:root body.fullscreen-menu-design #app #inventory .inventory-name-list {grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+}
+@media(min-width:1200px) {
+  html:root body.fullscreen-menu-design #app #skills .ability-pool-list {grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  html:root body.fullscreen-menu-design #app #skills .ability-management-onepage {grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)!important;}
+  html:root body.fullscreen-menu-design #app #skills .ability-pool-button strong {display:none!important;}
+}
+@media(max-width:1000px) {
+  html:root body.fullscreen-menu-design #app .panel.open :is(#inventory,#skills,#character,#quests,#map,#log).active {padding:10px 10px 43px!important; gap:6px!important;}
+  html:root body.fullscreen-menu-design #app #inventory .equipment-workstation {grid-template-columns:minmax(0,.85fr) minmax(170px,.85fr) minmax(0,1.25fr)!important;}
+  html:root body.fullscreen-menu-design #app #inventory .equipment-character-pane {padding:4px 6px!important;}
+  html:root body.fullscreen-menu-design #app #skills :is(.ability-detail-pane,.world-skill-detail) {padding:8px!important;}
+  html:root body.fullscreen-menu-design #app #skills .ability-category-pane h3 {display:none!important;}
+  html:root body.fullscreen-menu-design #app #skills .ability-hotbar-pane {grid-template-columns:120px minmax(0,1fr)!important;}
+  html:root body.fullscreen-menu-design #app #skills .world-skill-list {grid-template-columns:1fr!important;}
+  html:root body.fullscreen-menu-design #app #character .character-sheet-grid {gap:6px!important; grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,.85fr)!important;}
+  html:root body.fullscreen-menu-design #app #character .character-paper {padding:8px!important;}
+}
+@media(max-height:600px) {
+  html:root body.fullscreen-menu-design.couch-coop-active #app .panel.open.menu-chooser .tabs {gap:3px!important;}
+  html:root body.fullscreen-menu-design.couch-coop-active #app .panel.open.menu-chooser .tab {font-size:14px!important; padding:1px 0!important;}
+  html:root body.fullscreen-menu-design.couch-coop-active #app .panel.open.menu-chooser .tab:is(:hover,:focus,.game-ui-controller-focus) {font-size:16px!important;}
+  html:root body.fullscreen-menu-design #app #map .world-map-static-footer {display:none!important;}
+  html:root body.fullscreen-menu-design #app #inventory .equipment-preview-card {display:none!important;}
+  html:root body.fullscreen-menu-design #app #inventory .equipment-character-pane {grid-template-rows:auto!important; align-content:start!important;}
+  html:root body.fullscreen-menu-design #app #inventory .equipment-slot-button {min-height:44px!important; padding:4px!important;}
+  html:root body.fullscreen-menu-design #app #skills .ability-hotbar-pane > div:first-child > p {display:none!important;}
+  html:root body.fullscreen-menu-design #app #skills .ability-hotbar-assign {min-height:42px!important;}
+}
+@media(max-width:640px) {
+ html:root body.fullscreen-menu-design #app #inventory .equipment-slot-button-copy b {line-height:12px!important; max-height:24px!important; overflow:hidden!important;}
+ html:root body.fullscreen-menu-design #characterCreatorOverlay .character-creator-panel {padding:8px!important;}
+  html:root body.fullscreen-menu-design #app .panel.open .menu-context-bar {font-size:9px!important; gap:4px 8px!important; padding:4px 8px!important;}
+  html:root body.fullscreen-menu-design #app #inventory .equipment-workstation {grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important; grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important;}
+  html:root body.fullscreen-menu-design #app #inventory .equipment-slot-grid {grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+  html:root body.fullscreen-menu-design #app #inventory .equipment-slot-button {grid-template-columns:20px minmax(0,1fr)!important; gap:3px!important;}
+  html:root body.fullscreen-menu-design #app #inventory .equipment-slot-button-icon {width:20px!important; height:20px!important; min-width:20px!important;}
+  html:root body.fullscreen-menu-design #app #inventory .equipment-slot-button-copy b {font-size:10px!important;}
+  html:root body.fullscreen-menu-design #app #skills .ability-morph-options {grid-template-columns:1fr!important;}
+  html:root body.fullscreen-menu-design #app #skills .ability-hotbar-pane {grid-template-columns:1fr!important;}
+  html:root body.fullscreen-menu-design #app #skills .ability-hotbar-pane h3 {display:none!important;}
+  html:root body.fullscreen-menu-design #app #character .character-sheet-grid {grid-template-columns:repeat(2,minmax(0,1fr))!important; grid-template-rows:minmax(0,1fr) minmax(0,.7fr)!important;}
+  html:root body.fullscreen-menu-design #app #character .character-paper:nth-child(1) {grid-column:1!important; grid-row:1!important;}
+  html:root body.fullscreen-menu-design #app #character .character-paper:nth-child(2) {grid-column:2!important; grid-row:1!important;}
+  html:root body.fullscreen-menu-design #app #character .character-paper:nth-child(3) {grid-column:1!important; grid-row:2!important;}
+  html:root body.fullscreen-menu-design #app #character .character-stat-detail {grid-column:2!important; grid-row:2!important;}
+}
+
+html:root body.fullscreen-menu-design #app #inventory .equipment-inventory-pane {grid-column:1!important; grid-row:1!important;}
+html:root body.fullscreen-menu-design #app #inventory .equipment-character-pane {grid-column:2!important; grid-row:1!important;}
+html:root body.fullscreen-menu-design #app #inventory .equipment-detail-pane {grid-column:3!important; grid-row:1!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-hotbar-row {display:grid!important; grid-template-columns:repeat(5,minmax(0,1fr))!important; gap:6px!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-hotbar-assign {grid-template-columns:minmax(0,1fr)!important; gap:3px!important; align-content:start!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-hotbar-assign span {word-break:normal!important; overflow-wrap:normal!important;}
+html:root body.fullscreen-menu-design #app #character .sheet-bars .bar-wrap {margin:6px 0!important;}
+html:root body.fullscreen-menu-design #app #character .sheet-section-title {margin:10px 0 6px!important; padding:6px 0!important;}
+html:root body.fullscreen-menu-design #app #character .sheet-title-row {padding-bottom:6px!important;}
+html:root body.fullscreen-menu-design #app #character .sheet-stat {min-height:44px!important; padding:5px!important;}
+html:root body.fullscreen-menu-design #app #character .character-stat-detail {display:block!important;}
+html:root body.fullscreen-menu-design #app #inventory .inventory-detail-content {padding:0!important; min-width:0!important;}
+html:root body.fullscreen-menu-design #app #inventory .equipment-comparison-block {display:block!important; grid-template-columns:1fr!important;}
+html:root body.fullscreen-menu-design #app #inventory .inventory-detail-header {grid-template-columns:48px minmax(0,1fr)!important; gap:10px!important;}
+html:root body.fullscreen-menu-design #app #inventory .inventory-detail-icon {width:40px!important; height:40px!important;}
+html:root body.fullscreen-menu-design #app #inventory .item-stats {display:grid!important; grid-template-columns:1fr!important; gap:0!important;}
+html:root body.fullscreen-menu-design #app #inventory .stat-row {display:grid!important; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)!important; gap:6px 10px!important;}
+html:root body.fullscreen-menu-design #app #inventory .stat-row > :is(span,b) {min-width:0!important; white-space:normal!important; overflow-wrap:break-word!important;}
+html:root body.fullscreen-menu-design #app #inventory .equipment-action-row {grid-template-columns:repeat(auto-fit,minmax(120px,1fr))!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-pool-button strong {max-width:80px!important; font-size:10px!important;}
+/* All five rows are explicit: only the graph grows, never the path selector. */
+html:root body.fullscreen-menu-design #app #skills .skill-tree-workspace {grid-template-rows:auto auto auto auto minmax(0,1fr)!important;}
+html:root body.fullscreen-menu-design #app #skills .skill-tree-path-list {
+  align-content:start!important; align-items:center!important; min-height:0!important;
+  max-height:90px!important; overflow-y:auto!important; padding:4px 8px!important;
+}
+html:root body.fullscreen-menu-design #app #skills .skill-tree-compact-head small {display:none!important;}
+html:root body.fullscreen-menu-design #app #skills .skill-tree-workspace > .tag {margin:0!important;}
+html:root body.fullscreen-menu-design #app #skills .skill-tree-stage {grid-template-columns:minmax(0,1fr) clamp(260px,28vw,380px)!important; grid-template-rows:minmax(0,1fr)!important;}
+html:root body.fullscreen-menu-design #app #skills .skill-tree-detail-pane {min-height:0!important; padding:12px!important; overflow-y:auto!important;}
+@media(max-width:1100px) {
+ html:root body.fullscreen-menu-design #app #skills .skill-tree-stage {grid-template-columns:minmax(0,1fr)!important; grid-template-rows:minmax(0,1fr) minmax(90px,28%)!important;}
+ html:root body.fullscreen-menu-design #app #skills .skill-tree-detail-pane {grid-column:1!important; grid-row:2!important;}
+}
+/* Short displays keep a readable graph beside its inspector. Only the graph
+   scrolls; controller focus reveals its selected node automatically. */
+@media(max-height:600px) {
+ html:root body.fullscreen-menu-design #app #skills .skill-tree-compact-head {min-height:24px!important; padding:3px 6px!important;}
+ html:root body.fullscreen-menu-design #app #skills .skill-tree-compact-head p,
+ html:root body.fullscreen-menu-design #app #skills .skill-tree-workspace > .tag {display:none!important;}
+ html:root body.fullscreen-menu-design #app #skills .skill-tree-path-list {flex-wrap:nowrap!important; max-height:36px!important; overflow-x:auto!important; overflow-y:hidden!important;}
+ html:root body.fullscreen-menu-design #app #skills .compact-path-group {flex:0 0 auto!important;}
+ html:root body.fullscreen-menu-design #app #skills .subclass-tree-choice {padding:4px 6px!important;}
+ html:root body.fullscreen-menu-design #app #skills .skill-tree-workspace {grid-template-rows:auto auto auto minmax(0,1fr)!important;}
+ html:root body.fullscreen-menu-design #app #skills .skill-tree-stage {grid-template-columns:minmax(0,1fr) 185px!important; grid-template-rows:minmax(0,1fr)!important; gap:8px!important;}
+ html:root body.fullscreen-menu-design #app #skills .skill-tree-node-index {grid-template-rows:20px auto 18px!important; align-content:start!important; overflow:auto!important; padding:5px!important;}
+ html:root body.fullscreen-menu-design #app #skills .prerequisite-tree {min-width:620px!important; height:calc(var(--tree-rows) * 60px)!important;}
+ html:root body.fullscreen-menu-design #app #skills .skill-tree-detail-pane {grid-column:2!important; grid-row:1!important; grid-template-columns:minmax(0,1fr)!important; grid-template-rows:minmax(0,1fr) auto!important; padding:7px!important; overflow:hidden!important;}
+ html:root body.fullscreen-menu-design #app #skills .skill-node-detail-scroll {min-height:0!important; overflow:auto!important;}
+ html:root body.fullscreen-menu-design #app #skills .tree-learn-button {grid-column:1!important; grid-row:2!important; min-height:30px!important;}
+}
+@media(min-width:800px) and (min-height:600px) {
+ html:root body.fullscreen-menu-design #characterCreatorOverlay .creator-appearance-layout {grid-template-columns:minmax(200px,.7fr) minmax(0,1.3fr)!important;}
+ html:root body.fullscreen-menu-design #characterCreatorOverlay .creator-step-appearance .creator-preview-panel {display:grid!important;}
+}
+
+/* Keep class demonstrations visible alongside the list and readable details. */
+html:root body.fullscreen-menu-design #characterCreatorOverlay .creator-step-class .creator-preview-panel {display:grid!important;}
+html:root body.fullscreen-menu-design #characterCreatorOverlay .creator-canvas-shell canvas {width:100%!important;height:100%!important;max-height:100%!important;object-fit:contain;}
+@media(max-width:950px), (max-height:580px) {
+ html:root body.fullscreen-menu-design #characterCreatorOverlay .creator-class-layout {grid-template-columns:minmax(150px,.8fr) minmax(140px,.75fr) minmax(180px,1.15fr)!important;gap:6px!important;}
+ html:root body.fullscreen-menu-design #characterCreatorOverlay .creator-step-class .creator-preview-panel {padding:4px!important;}
+ html:root body.fullscreen-menu-design #characterCreatorOverlay .creator-preview-heading {display:block!important;}
+ html:root body.fullscreen-menu-design #characterCreatorOverlay .creator-preview-heading h2 {font-size:15px!important;}
+ html:root body.fullscreen-menu-design #characterCreatorOverlay .creator-preview-heading span {font-size:10px!important;}
+ html:root body.fullscreen-menu-design #characterCreatorOverlay .creator-preview-footer {font-size:10px!important;}
+}
+@media(max-width:750px), (max-height:420px) {
+ html:root body.fullscreen-menu-design #characterCreatorOverlay .creator-step-class .creator-preview-heading span,
+ html:root body.fullscreen-menu-design #characterCreatorOverlay .creator-step-class .creator-preview-footer b {display:none!important;}
+ html:root body.fullscreen-menu-design #characterCreatorOverlay .creator-class-list {grid-template-columns:1fr!important;}
+ html:root body.fullscreen-menu-design #characterCreatorOverlay .creator-class-card {min-height:22px!important;}
+ html:root body.fullscreen-menu-design #characterCreatorOverlay .creator-class-card small {display:none!important;}
+}
+@media(max-width:640px) {
+ html:root body.fullscreen-menu-design #app #skills .ability-pool-pane h3 {display:none!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-category-pane {padding:0!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-management-onepage {gap:4px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-hotbar-pane {padding:4px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-pool-button {min-height:40px!important; padding:4px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-pool-button strong {display:none!important;}
+ html:root body.fullscreen-menu-design #app #inventory .equipment-inventory-pane {grid-column:1!important; grid-row:1/3!important;}
+ html:root body.fullscreen-menu-design #app #inventory .equipment-character-pane {grid-column:2!important; grid-row:1!important;}
+ html:root body.fullscreen-menu-design #app #inventory .equipment-detail-pane {grid-column:2!important; grid-row:2!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-hotbar-assign {font-size:9px!important; padding:4px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-hotbar-assign b {font-size:9px!important;}
+}
+
+/* Keep every form visible; only the explanatory text beneath it scrolls. */
+html:root body.fullscreen-menu-design #app #skills .ability-detail-pane {
+ display:grid!important; grid-template-rows:auto auto minmax(0,1fr)!important;
+ gap:10px!important; overflow:hidden!important; background:#201b18!important;
+ border:1px solid #796345!important; color:#f1e8d6!important;
+ --menu-ink:#f1e8d6; --menu-muted:#d1c2ac; font-family:system-ui,sans-serif!important;
+}
+html:root body.fullscreen-menu-design #app #skills .ability-detail-pane:not(:has(.ability-morph-picker)) {grid-template-rows:auto minmax(0,1fr)!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-detail-title {margin:0!important; padding:0 0 8px!important; min-width:0!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-detail-title > i {padding:0!important; width:38px!important; height:38px!important; display:flex!important; align-items:center!important; justify-content:center!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-detail-title > i :is(.subclass-skill-icon,.technique-icon,.runalis-art-icon) {width:100%!important; height:100%!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-detail-title h3 {color:#ffe0a0!important; font-size:20px!important; margin:0!important; line-height:1.2!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-detail-title p {color:#e5d2b0!important; font-size:12px!important; margin:3px 0 0!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-detail-info {min-height:0!important; overflow-y:auto!important; overflow-x:hidden!important; padding-right:8px!important; font-size:14px!important; line-height:1.45!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-detail-info :is(p,.tag,.stat-row,summary) {font-size:13px!important; line-height:1.45!important; color:#e9dfcd!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-detail-info .information-purpose {font-size:14px!important; margin:0 0 10px!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-detail-info .stat-row {padding:4px 0!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-detail-info .stat-row b {color:#fff1d7!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-detail-info .bad-text {color:#ffb7a9!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-detail-info:focus-visible {outline:2px solid #d7b778!important; outline-offset:-2px!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-morph-picker {margin:0!important; padding:0!important; border:0!important; min-width:0!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-morph-heading {display:flex!important; flex-wrap:wrap!important; gap:3px 12px!important; align-items:center!important; margin-bottom:6px!important; color:#ddceb5!important; font-size:12px!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-morph-heading h4 {font-size:14px!important; color:#ffe0a0!important; margin:0!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-morph-options {grid-template-columns:repeat(2,minmax(0,1fr))!important; gap:7px!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-morph-option {
+ display:grid!important; grid-template-columns:36px minmax(0,1fr)!important; gap:9px!important;
+ padding:9px!important; min-height:74px!important; align-items:center!important;
+ background:#29221d!important; color:#f6ead5!important; border:1px solid #94754e!important;
+ font-family:system-ui,sans-serif!important; opacity:1!important; text-shadow:none!important;
+}
+html:root body.fullscreen-menu-design #app #skills .ability-morph-option.active {background:#463525!important; border-color:#f2ce81!important; box-shadow:inset 3px 0 #e9c577!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-morph-option:disabled {background:#211c19!important; border-color:#6e5d48!important; opacity:1!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-morph-option:is(:focus-visible,.game-ui-controller-focus):not(:disabled) {outline:2px solid #ffe0a0!important; outline-offset:-3px!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-morph-symbol {width:36px!important; height:36px!important; display:flex!important; align-items:center!important; justify-content:center!important; background:#151311!important; border:1px solid #6e5940!important; color:#efca83!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-morph-symbol .subclass-emblem {width:30px!important; height:30px!important; flex-basis:30px!important; filter:brightness(1.35)!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-morph-copy b {display:flex!important; align-items:center!important; gap:6px!important; color:#fff0d3!important; font-size:14px!important; line-height:1.25!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-morph-copy small {color:#e1ceb1!important; font-size:12px!important; line-height:1.25!important; margin-top:3px!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-morph-copy em {display:block!important; color:#dccdb7!important; font-size:12px!important; line-height:1.3!important; margin-top:4px!important; font-style:normal!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-morph-copy :is(b,small,em),html:root body.fullscreen-menu-design #app #skills .ability-hotbar-assign :is(b,span,em) {font-family:system-ui,sans-serif!important; text-shadow:none!important;}
+html:root body.fullscreen-menu-design #app #skills .morph-selected-mark {color:#ffe0a0!important; font-size:16px!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-hotbar-pane {grid-template-columns:130px minmax(0,1fr)!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-hotbar-slot {grid-template-columns:minmax(0,1fr)!important; grid-template-rows:minmax(0,1fr) auto!important; gap:2px!important; opacity:1!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-hotbar-assign {grid-template-columns:36px minmax(0,1fr)!important; gap:2px 7px!important; align-content:center!important; min-height:72px!important; padding:6px 8px!important; font-family:system-ui,sans-serif!important; background:#211b17!important; color:#fff0d3!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-hotbar-icon {grid-column:1!important; grid-row:1/4!important; width:36px!important; height:36px!important; display:flex!important; align-items:center!important; justify-content:center!important; font-style:normal!important; color:#e2ca9d!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-hotbar-icon > :is(svg,span,img),
+html:root body.fullscreen-menu-design #app #skills .ability-hotbar-icon .runalis-art-icon {width:32px!important; height:32px!important; display:inline-flex!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-hotbar-icon .subclass-skill-badge {width:16px!important; height:16px!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-hotbar-binding {grid-column:2!important; color:#efca83!important; font-size:12px!important; line-height:1.2!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-hotbar-name {grid-column:2!important; color:#fff0d3!important; font-size:12px!important; line-height:1.25!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-hotbar-assign em {grid-column:2!important; color:#dac5a4!important; font-size:11px!important; line-height:1.2!important;}
+html:root body.fullscreen-menu-design #app #skills .ability-hotbar-clear {font-size:12px!important; padding:2px 6px!important; min-height:22px!important; color:#ffb9a6!important;}
+html:root body.fullscreen-menu-design #app #skills .hotbar-empty-symbol {font-size:28px!important; align-items:center!important; justify-content:center!important;}
+@media(max-width:1100px),(max-height:760px) {
+ html:root body.fullscreen-menu-design #app #skills .ability-detail-pane {gap:7px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-detail-title h3 {font-size:17px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-morph-option {min-height:68px!important; padding:6px!important; gap:7px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-hotbar-pane {grid-template-columns:90px minmax(0,1fr)!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-hotbar-pane > div:first-child > p {display:none!important;}
+}
+@media(max-width:850px),(max-height:620px) {
+ html:root body.fullscreen-menu-design #app #skills .ability-hotbar-pane {grid-template-columns:minmax(0,1fr)!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-hotbar-pane > div:first-child {display:none!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-morph-copy :is(em,.morph-expertise) {display:none!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-morph-option {min-height:54px!important; padding:5px!important; grid-template-columns:28px minmax(0,1fr)!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-morph-symbol {width:28px!important; height:28px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-morph-symbol .subclass-emblem {width:25px!important; height:25px!important; flex-basis:25px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-morph-heading > span {display:none!important;}
+}
+@media(max-height:560px) {
+ html:root body.fullscreen-menu-design #app #skills .ability-detail-pane {padding:6px!important; gap:4px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-detail-title {padding-bottom:4px!important; gap:6px!important; grid-template-columns:32px minmax(0,1fr) auto!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-detail-title > i {padding:0!important; width:32px!important; height:32px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-detail-title h3 {font-size:15px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-morph-heading {margin-bottom:3px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-morph-options {gap:4px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-morph-option {min-height:46px!important; padding:4px!important; gap:5px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-morph-copy b {font-size:13px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-morph-copy small {font-size:11px!important; margin-top:2px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-hotbar-assign {min-height:50px!important; padding:4px!important; grid-template-columns:26px minmax(0,1fr)!important; gap:2px 4px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-hotbar-icon {width:26px!important; height:26px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-hotbar-icon > :is(svg,span,img),html:root body.fullscreen-menu-design #app #skills .ability-hotbar-icon .runalis-art-icon {width:24px!important; height:24px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-hotbar-binding,html:root body.fullscreen-menu-design #app #skills .ability-hotbar-name {font-size:11px!important;}
+ html:root body.fullscreen-menu-design #app #skills .ability-hotbar-clear {min-height:18px!important; padding:1px!important; font-size:11px!important;}
+}
+

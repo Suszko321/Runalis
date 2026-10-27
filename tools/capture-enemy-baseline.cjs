@@ -1,0 +1,3 @@
+const {chromium}=require(process.env.RUNALIS_NODE_MODULES+'/playwright');
+const fs=require('fs');
+(async()=>{const browser=await chromium.launch({channel:'msedge',headless:true});const p=await browser.newPage({viewport:{width:1440,height:1050}});let errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto('http://127.0.0.1:8768/enemy-visual-lab.html');await p.waitForTimeout(1500);console.log(errors);if(!errors.length){await p.locator('#review').screenshot({path:'docs/enemy-visual-overhaul/before.png'});fs.writeFileSync('docs/enemy-visual-overhaul/before-metrics.json',JSON.stringify(await p.evaluate(()=>enemyArtReview.benchmark()),null,2));}await browser.close();})().catch(e=>{console.error(e);process.exitCode=1});

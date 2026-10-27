@@ -1,0 +1,304 @@
+@font-face { font-family:RunalisDisplay; src:url("assets/ui/fonts/Cinzel.ttf") format("truetype"); font-weight:400 900; font-display:swap; }
+@font-face { font-family:RunalisBook; src:url("assets/ui/fonts/EBGaramond.ttf") format("truetype"); font-weight:400 800; font-display:swap; }
+/* Runalis lexicon: presentation only. Layout and interaction remain owned by the
+   original modules. html body specificity deliberately wins late injected CSS. */
+html body {
+  --lex-ink:#171410; --lex-bone:#eee2c9; --lex-muted:#b8aa94;
+  --lex-brass:#a98a56; --lex-rule:#655139; --lex-paper:#d4bd93;
+  --text:var(--lex-bone); --muted:var(--lex-muted); --gold:#d0b078;
+  --red:#c56558; --green:#91a77e; --blue:#97bac6; --purple:#be92dc;
+  --menu-text:var(--lex-bone); --menu-muted:var(--lex-muted);
+  --menu-rule:#66543c; --menu-rule-strong:#a58a5b;
+  --menu-glass:#151411; --menu-glass-soft:#171612; --menu-glass-faint:#211e18;
+  --lex-display:RunalisDisplay,Georgia,'Palatino Linotype','Book Antiqua',serif;
+  --lex-body:RunalisBook,'Palatino Linotype','Book Antiqua',Georgia,serif;
+  font-family:var(--lex-body); color:var(--lex-bone);
+  font-variant-numeric:lining-nums tabular-nums;
+  scrollbar-color:#8b724c #171510; scrollbar-width:thin;
+}
+html body * { scrollbar-color:#8b724c #171510; }
+html body :is(h1,h2,h3,.detail-title-row,.inventory-list-name,.quest-title-button,.creator-class-identity) {
+  font-family:var(--lex-display) !important; font-weight:600 !important;
+}
+html body :is(h2,h3) { letter-spacing:.035em !important; color:var(--lex-bone) !important; }
+html body :is(button,input,select,textarea) { font-family:var(--lex-body) !important; }
+html body :is(button,.tab,.subtab,.small-btn) {
+  color:var(--lex-bone); border-radius:2px !important;
+  background:#191712 url('assets/ui/leather.webp') center/256px !important;
+  border:1px solid #806742 !important;
+  box-shadow:inset 0 0 0 2px #0c0b09,inset 0 0 0 3px #443b2b,0 2px 3px #0008 !important;
+  text-shadow:0 1px 2px #000; transition:color .12s,border-color .12s,box-shadow .12s !important;
+}
+html body button:hover { color:#f7e5b9 !important; border-color:#dbb878 !important; }
+html body button:active { box-shadow:inset 0 2px 8px #000 !important; }
+html body :is(button.active,button.selected,[aria-selected="true"],.game-ui-controller-focus,.controller-focus,.shop-controller-focus) {
+  border-color:var(--hud-accent,#ba85d7) !important;
+  box-shadow:inset 0 0 0 2px #18111e,inset 0 0 18px #9364af38,0 0 0 1px #a77bc35c !important;
+  color:#f4e6ff !important;
+}
+html body :is(button,input,select,textarea,[tabindex]):focus-visible,
+html body .game-ui-controller-focus { outline:2px solid #e6c48b !important; outline-offset:2px !important; }
+html body button:disabled,html body button[aria-disabled="true"] {
+  color:#a49c8c !important; border-color:#554a39 !important; box-shadow:inset 0 0 0 2px #171510 !important;
+  text-shadow:none; opacity:.7;
+}
+html body :is(input:not([type="checkbox"]):not([type="range"]),select,textarea) {
+  background:#15130f !important; color:#eadfc9 !important; border:1px solid #8b714a !important;
+  border-radius:2px !important; padding:8px 10px; color-scheme:dark;
+}
+html body :is(input[type="checkbox"],input[type="range"]) { accent-color:#b99461; }
+html body :is(kbd,.combat-hud-key,.inventory-list-quantity,.stat-row,.item-stats,.sheet-stat b) {
+  font-family:Georgia,serif !important; font-variant-numeric:tabular-nums lining-nums;
+}
+html body kbd { border:1px solid #a48965 !important; border-radius:2px !important; background:#19151c !important; color:#f0e0ff !important; }
+
+/* Scalable book binding; painted corners retain their aspect ratio. */
+html body :is(.menu-card,.pause-card,.pause-panel,.character-creator-panel,.market-shop-panel,.coop-join-panel,.pvp-arena-panel,.fishing-card,.profile-delete-confirmation,.lexicon-message),
+html body .panel.open .runalis-menu-workspace.active {
+  border:14px solid transparent !important;
+  border-image:url('assets/ui/grimoire-frame.webp') 145 / 36px / 0 stretch !important;
+  border-radius:0 !important;
+  background:#151411 url('assets/ui/leather.webp') repeat !important;
+  box-shadow:0 12px 45px #000b !important;
+  backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
+  color:var(--lex-bone) !important;
+}
+html body .panel.open .runalis-menu-workspace.active { padding:14px 14px 54px !important; }
+html body .panel.open .runalis-menu-workspace.active::before,
+html body .panel.open .runalis-menu-workspace.active::after { content:none !important; }
+html body :is(.subtab-bar,.sheet-section-title,.inventory-list-heading,.quest-index-head,.market-shop-header,.creator-topbar,.pause-header) {
+  border-bottom:1px solid #7e6540 !important;
+  background-image:url('assets/ui/divider.svg') !important;
+  background-repeat:no-repeat !important; background-position:center bottom !important;
+  background-size:220px 9px !important; padding-bottom:12px !important;
+}
+html body .panel :is(.tab,.subtab) { font-size:13px !important; padding:9px 12px !important; letter-spacing:.04em; }
+html body .panel :is(.tab.active,.subtab.active) {
+  background:#322039 url('assets/ui/banner.svg') center/100% 100% !important;
+  color:#f3e4ff !important; border-bottom:2px solid #c29cde !important;
+}
+html body .panel .tabs { background:#12110e url('assets/ui/leather.webp') !important; border:1px solid #8c7047 !important; border-radius:0 !important; backdrop-filter:none !important; }
+html body .panel .menu-context-bar { background:#14120f !important; border-top:1px solid #8b7048 !important; color:#c9bca5 !important; font-size:11px !important; }
+
+/* Dark ledgers and sockets, shared by every existing RPG section. */
+html body .runalis-menu-workspace :is(.card,.inventory-list-pane,.equipment-inventory-pane,.equipment-character-pane,.skill-tree-path-list,.skill-tree-node-index,.ability-category-pane,.ability-pool-pane,.ability-hotbar-pane,.quest-title-index,.world-skill-index,.coterie-squad-pane,.coterie-inventory-pane,.character-paper),
+html body :is(.creator-class-list-panel,.creator-appearance-group,.creator-preview-panel,.market-shop-list,.coop-join-card) {
+  background:#171510 url('assets/ui/leather.webp') !important;
+  border:1px solid #665237 !important; border-radius:0 !important;
+  box-shadow:inset 0 0 0 3px #100f0c,inset 0 0 0 4px #423727 !important;
+}
+html body .runalis-menu-workspace :is(.inventory-list-row,.equipment-slot-button,.world-skill-row,.skill-row-card,.quest-title-button,.compact-node-button,.compact-path-button) {
+  border:0 !important; border-bottom:1px solid #524531 !important; border-radius:0 !important;
+  background:#161510 !important; box-shadow:none !important;
+  color:var(--lex-bone) !important;
+}
+html body .runalis-menu-workspace :is(.inventory-list-row,.equipment-slot-button,.world-skill-row,.quest-title-button,.compact-node-button,.compact-path-button):is(.active,.selected,:hover,:focus-visible,.game-ui-controller-focus) {
+  background:#302234 url('assets/ui/selected.svg') center/100% 100% !important;
+  box-shadow:inset 3px 0 var(--hud-accent,#b68acf) !important; color:#f4e2ff !important;
+}
+html body :is(.inventory-list-icon,.inventory-detail-icon,.equipment-slot-button-icon,.item-icon,.ability-hotbar-slot,.combat-hud-slot,.unit-portrait) {
+  border:2px solid #8c734c !important; border-radius:2px !important;
+  box-shadow:inset 0 0 0 2px #0a0908,0 1px 4px #0009 !important;
+  background-color:#10100e !important;
+}
+html body .inventory-list-name { font-size:16px !important; }
+html body .equipment-preview-card,html body .creator-canvas-shell {
+  background:#11110f url('assets/ui/shrine.webp') center/cover no-repeat !important;
+  border:1px solid #6f593a !important; border-radius:2px !important;
+  box-shadow:inset 0 0 30px #0009 !important;
+}
+html body .equipment-preview-caption h2 { color:#e4c28c !important; letter-spacing:.08em !important; }
+
+/* Written knowledge: opaque vellum and dark ink, with local inherited tokens. */
+html body .runalis-menu-workspace :is(.inventory-detail-pane,.quest-detail-pane,.skill-tree-detail-pane,.ability-detail-pane,.world-skill-detail),
+html body :is(.creator-info-panel,.market-shop-detail) {
+  --menu-text:#241b13; --menu-muted:#57452f; --text:#241b13; --muted:#57452f;
+  --menu-rule:#927957; --menu-rule-strong:#6f5331; --gold:#65431d;
+  --green:#365129; --red:#9c292b; --purple:#67357e; --blue:#28556b;
+  background:#d4bd93 url('assets/ui/vellum.webp') center/100% 100% !important;
+  color:#241b13 !important; border:8px solid #ac8c5c !important;
+  border-image:url('assets/ui/vellum.webp') 55 / 12px / 0 stretch !important;
+  border-radius:1px !important; box-shadow:0 3px 9px #0007,inset 0 0 20px #70533233 !important;
+  padding:18px !important;
+}
+html body .runalis-menu-workspace :is(.inventory-detail-pane,.quest-detail-pane,.skill-tree-detail-pane,.ability-detail-pane,.world-skill-detail) :is(h2,h3,h4,p,span,b,strong,small,li,.tag,.inventory-detail-description,.detail-copy),
+html body :is(.creator-info-panel,.market-shop-detail) :is(h2,h3,h4,p,span,b,strong,small,li) {
+  color:inherit !important; text-shadow:none !important;
+}
+html body .runalis-menu-workspace :is(.inventory-detail-pane,.quest-detail-pane,.skill-tree-detail-pane,.ability-detail-pane,.world-skill-detail) :is(.tag,small,.detail-copy) { color:#594630 !important; }
+html body .runalis-menu-workspace :is(.inventory-detail-pane,.quest-detail-pane,.skill-tree-detail-pane,.ability-detail-pane,.world-skill-detail) button,
+html body :is(.creator-info-panel,.market-shop-detail) button { color:#eee2c9 !important; }
+html body .runalis-menu-workspace :is(.inventory-detail-pane,.quest-detail-pane,.skill-tree-detail-pane,.ability-detail-pane,.world-skill-detail) button * { color:inherit !important; }
+html body .runalis-menu-workspace :is(.inventory-detail-header,.quest-detail-head) { border-bottom:1px solid #92754d !important; }
+html body .runalis-menu-workspace .inventory-detail-description { font-style:italic; line-height:1.6 !important; }
+html body .runalis-menu-workspace :is(.equipment-comparison-block,.inventory-detail-materials,.inventory-legendary-effect,.quest-objective,.skill-node-requirements) {
+  background:transparent !important; border-color:#927957 !important; border-radius:0 !important;
+}
+html body .runalis-menu-workspace .stat-row { border-bottom-color:#8e765540 !important; }
+
+/* Constellation paths, forbidden bloodlines, guild field notes. */
+html body :is(.skill-tree-stage,.branching-skill-tree,.bloodline-tree-grid) { background:#141310 url('assets/ui/ritual.svg') center/contain no-repeat !important; }
+html body .skill-tree-node { border-color:#a68b60 !important; border-radius:3px !important; }
+html body .skill-tree-node.unlocked { box-shadow:0 0 8px #af87c84d !important; }
+html body :is(.tree-vampire,.tree-cambion,.tree-eldritch) { --hud-accent:#c17573; --hud-accent-soft:#773c3c44; }
+html body :is(.tree-vampire,.tree-cambion,.tree-eldritch) .skill-tree-summary { border-left:4px solid #984b48 !important; }
+html body .world-skill-detail { background-image:url('assets/ui/field-notes.svg'),url('assets/ui/vellum.webp') !important; background-size:150px,100% 100% !important; background-position:right bottom,center !important; background-repeat:no-repeat !important; }
+html body .quest-title-button.completed { border-right:6px double #a77958 !important; }
+html body .world-map-stage { border:7px solid #927650 !important; border-radius:0 !important; box-shadow:0 0 0 2px #302619 !important; }
+html body .world-map-header { background:transparent !important; }
+html body .world-map-static-footer { color:#cabb9e !important; }
+html body [data-nav-stone] { padding-left:34px !important; background-image:url('assets/ui/nav-stone.svg'),url('assets/ui/leather.webp') !important; background-size:22px,256px !important; background-position:7px center,center !important; background-repeat:no-repeat,repeat !important; }
+
+/* Lightweight gameplay layer: no large ornamental frame around the world. */
+html body :is(.unit-frame,.runalis-minimap-frame,#trackedQuestHud,.interaction-hint,.menu-chooser,.progression-mini-card) {
+  background:#171510ed !important; border:1px solid #92754d !important; border-radius:2px !important;
+  box-shadow:inset 0 0 0 2px #0b0a08,0 3px 12px #0007 !important; backdrop-filter:none !important;
+}
+/* Secondary HUD information floats over the world without a panel. */
+html body #unitFramesHud .party-frame-list {
+  display:grid !important; gap:4px !important; margin:0 0 0 10px !important;
+  padding:0 !important; border:0 !important;
+}
+html body #unitFramesHud .summon-unit-frame {
+  width:min(236px,calc(100vw - 48px)) !important; box-sizing:border-box !important;
+  grid-template-columns:28px minmax(0,1fr) !important; align-items:center !important;
+  gap:7px !important; margin:0 !important; padding:2px 0 !important;
+  background:transparent !important; border:0 !important; box-shadow:none !important;
+  backdrop-filter:none !important; clip-path:none !important; opacity:1 !important;
+}
+html body #unitFramesHud .summon-unit-frame .unit-portrait {
+  width:28px !important; height:28px !important; background:transparent !important;
+  border:0 !important; box-shadow:none !important;
+}
+html body #unitFramesHud .summon-unit-frame .hud-actor-portrait { width:28px !important; height:28px !important; object-fit:contain !important; }
+html body #unitFramesHud .summon-unit-frame .unit-frame-body { gap:2px !important; }
+html body #unitFramesHud .summon-unit-frame .unit-title-row { font-size:11px !important; line-height:14px !important; }
+html body #unitFramesHud .summon-unit-frame .unit-title-row span,
+html body #unitFramesHud .summon-unit-frame .unit-bar-row > span { display:none !important; }
+html body #unitFramesHud .summon-unit-frame .unit-bar-row {
+  grid-template-columns:minmax(0,1fr) auto !important; gap:7px !important; line-height:11px !important;
+}
+html body #unitFramesHud .summon-unit-frame .unit-bar-row b { font-size:9px !important; color:#d4cbbd !important; }
+html body #unitFramesHud .summon-unit-frame .unit-bar {
+  height:3px !important; border:0 !important; background:#0b0a0866 !important; box-shadow:none !important;
+}
+html body #unitFramesHud .empty-party-frame { display:none !important; }
+html body #trackedQuestHud {
+  width:min(270px,calc(100vw - 32px)) !important; padding:0 !important;
+  background:transparent !important; border:0 !important; box-shadow:none !important;
+  backdrop-filter:none !important; clip-path:none !important;
+  text-shadow:0 1px 2px #000,0 0 4px #000,1px 1px 1px #000 !important;
+}
+html body #trackedQuestHud::after { display:none !important; }
+html body #trackedQuestHud > b { font-size:14px !important; line-height:1.25 !important; margin-bottom:3px !important; }
+html body #trackedQuestHud .tracked-quest-objectives { font-size:12px !important; line-height:1.35 !important; gap:2px !important; overflow-wrap:anywhere !important; }
+html body :is(.unit-bar,.bar,.creator-hold-meter) { background:#0b0a08 !important; border:1px solid #756043 !important; border-radius:1px !important; }
+html body .combat-hud-key { color:#f2e7d3 !important; background:#15120e !important; border-color:#94764b !important; }
+html body .combat-hud-cooldown { border-radius:0 !important; }
+html body .combat-hud-title { color:#d9c4a0 !important; font-family:var(--lex-display) !important; }
+html body .loading-copy { padding:28px 44px; background:#151411e8 url('assets/ui/ritual.svg') center/contain no-repeat; border-block:3px double #ae8d55; }
+html body .loading-copy h2 { letter-spacing:.18em !important; }
+html body .loading-progress { background:#201b14; border:1px solid #a58956; border-radius:0; }
+html body .loading-progress span { background:#b59964; }
+html body .menu-card h1 { font-family:var(--lex-display) !important; color:#ebd1a1 !important; letter-spacing:.18em !important; }
+html body .menu-card :is(.subtitle,.fineprint) { color:#cfc0a5 !important; }
+html body .profile-row { background:#171510 !important; border-bottom:1px solid #6d593c !important; border-radius:0 !important; }
+html body .danger { color:#e0a494 !important; border-color:#905349 !important; }
+html body .lexicon-message { width:min(520px,calc(100vw - 32px)); padding:32px; }
+html body .lexicon-message::backdrop { background:#070604aa; }
+html body .lexicon-message p { line-height:1.65; }
+html body .lexicon-message button { min-width:110px; padding:10px; }
+html body .menu-card { padding:30px !important; max-height:calc(100vh - 48px) !important; overflow:auto !important; }
+/* The title card fits inside the screen's actual padding. Start the content
+   at its top so a long profile list cannot overflow above the scroll origin. */
+html body #mainMenu .menu-card {
+  max-height:calc(100dvh - var(--title-screen-inset,24px) - var(--title-screen-inset,24px)) !important;
+  align-content:start;
+}
+html body .menu-card h1 { font-size:clamp(34px,3.1vw,58px) !important; }
+html body .main-menu-actions button { padding:10px 12px !important; width:100% !important; font-size:15px !important; text-shadow:none !important; }
+html body .menu-card :is(input,button) { text-shadow:none !important; }
+html body .equipment-preview-canvas { background:transparent !important; }
+html body .equipment-preview-caption { flex-direction:column !important; align-items:center !important; gap:2px !important; }
+html body .runalis-menu-workspace :is(.quest-detail-copy,.detail-copy,.inventory-detail-description,.skill-node-detail-copy,.world-skill-detail > p) { font-size:16px !important; line-height:1.55 !important; }
+html body .runalis-menu-workspace :is(.inventory-detail-pane,.quest-detail-pane,.skill-tree-detail-pane,.ability-detail-pane,.world-skill-detail) .good-text { color:#365829 !important; }
+html body .runalis-menu-workspace :is(.inventory-detail-pane,.quest-detail-pane,.skill-tree-detail-pane,.ability-detail-pane,.world-skill-detail) .bad-text { color:#94272a !important; }
+html body .runalis-menu-workspace .quest-title-button { white-space:normal !important; }
+html body .runalis-menu-workspace .quest-title-button b { white-space:normal !important; overflow:visible !important; }
+html body .equipment-workstation { min-height:0 !important; height:calc(100% - 62px) !important; }
+html body .panel .menu-context-bar { justify-content:center !important; gap:12px !important; flex-wrap:wrap !important; }
+html body .runalis-menu-workspace :is(.compact-node-button,.compact-path-button) { font-size:12px !important; min-height:40px !important; }
+html body .runalis-menu-workspace :is(.compact-node-button,.compact-path-button) span { font-size:12px !important; line-height:1.2 !important; }
+html body .runalis-menu-workspace :is(.compact-node-button,.compact-path-button) :is(b,i) { font-size:10px !important; }
+html body .runalis-menu-workspace .compact-node-button:is(.locked,.blocked) { opacity:.8 !important; color:#c9baa2 !important; }
+html body .skill-tree-path-list { overflow-x:auto !important; flex-wrap:wrap !important; }
+html body .skill-tree-stage { grid-template-columns:minmax(0,1fr) minmax(290px,.4fr) !important; }
+html body .tree-branch-row { flex-shrink:0 !important; }
+html body .character-creator-overlay .creator-primary { color:#f2dfb2 !important; }
+html body .fishing-track { background:#15130f !important; border:2px solid #9e8150 !important; }
+html body .fishing-zone { background:#608564 !important; }
+html body .fishing-kicker { color:#b8c8b1 !important; }
+html body .creator-canvas-shell canvas { background:transparent !important; }
+html body .lexicon-permanent-choice { min-height:46px; padding:8px 8px 8px 46px !important; background:url('assets/ui/wax-seal.svg') left center/34px 42px no-repeat !important; border-block:1px solid #987453 !important; font-size:13px !important; }
+html body .main-menu-actions button { transform:none !important; min-width:0 !important; }
+/* Title-screen choices sit directly on the frame's artwork. */
+html body #mainMenu .menu-card button {
+  background:transparent !important;
+  border:0 !important;
+  border-image:none !important;
+  box-shadow:none !important;
+  outline:none !important;
+  transform:none !important;
+}
+html body #mainMenu .menu-card button:is(:hover,:focus-visible,.controller-focus) {
+  color:#ffe39a !important;
+  text-decoration:underline;
+  text-decoration-color:#c9a56a;
+  text-underline-offset:5px;
+  text-decoration-thickness:1px;
+}
+html body .world-map-art { background:#cbb68e url('assets/ui/vellum.webp') center/100% 100% !important; }
+html body .world-map-base { fill:transparent !important; }
+html body .world-map-region { stroke:#74613e !important; stroke-width:.6px !important; opacity:.3 !important; }
+html body .world-map-region.forest,html body .world-map-region.riverland { fill:#768268 !important; }
+html body .world-map-region.grave,html body .world-map-region.ruin { fill:#968775 !important; }
+html body .world-map-region.mire { fill:#64897f !important; }
+html body .world-map-region.hollow { fill:#a08e7e !important; }
+html body .world-map-region.corruption { fill:#9e534e !important; opacity:.45 !important; }
+html body .world-map-region-label { fill:#40311f !important; stroke:#d9c6a1 !important; stroke-width:.7px !important; font-family:RunalisDisplay,Georgia,serif !important; paint-order:stroke fill !important; }
+html body .world-map-region-label.danger { fill:#732d2b !important; }
+html body .world-map-road { stroke:#98743e !important; }
+html body .world-map-road.under { stroke:#604a30 !important; }
+html body .world-map-lake { fill:#769294 !important; stroke:#516e72 !important; }
+html body .world-map-river { stroke:#61868c !important; }
+html body .world-map-river.shadow { stroke:#445c61 !important; }
+html body .world-map-river-highlight { stroke:#91afb0 !important; }
+html body .world-map-cliff { stroke:#776344 !important; }
+html body .branching-skill-tree { overflow:auto !important; }
+html body .equipment-preview-caption { top:20px !important; bottom:auto !important; }
+@media(max-width:1100px) {
+  html body .panel .runalis-menu-workspace .equipment-workstation { grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important; height:auto !important; max-height:none !important; overflow:visible !important; }
+  html body .equipment-detail-pane { grid-column:1 / -1 !important; min-height:360px !important; overflow:visible !important; }
+  html body .equipment-inventory-pane { min-height:450px !important; padding:10px !important; }
+  html body .equipment-character-pane { min-height:620px !important; grid-template-rows:280px auto !important; }
+  html body .equipment-slot-grid { overflow:visible !important; }
+  html body .panel .runalis-menu-workspace :is(.skill-tree-detail-pane,.ability-detail-pane) { display:block !important; }
+  html body .skill-tree-stage { grid-template-columns:minmax(0,1fr) !important; overflow:auto !important; }
+  html body .skill-tree-node-index { min-height:500px !important; }
+  html body .skill-tree-detail-pane { min-height:320px !important; }
+  html body .subtab-bar { flex-wrap:wrap !important; }
+}
+@media(max-width:620px) {
+  html body .panel .runalis-menu-workspace :is(.equipment-workstation,.inventory-browser-layout,.world-skill-browser,.quest-onepage-layout,.coterie-workstation,.ability-management-onepage) { display:flex !important; flex-direction:column !important; height:auto !important; max-height:none !important; overflow:visible !important; }
+  html body .panel .runalis-menu-workspace :is(.inventory-list-pane,.quest-title-index,.world-skill-index,.coterie-inventory-pane,.coterie-squad-pane) { min-height:240px !important; max-height:400px !important; overflow:auto !important; }
+  html body .panel .runalis-menu-workspace :is(.inventory-detail-pane,.quest-detail-pane,.world-skill-detail,.ability-detail-pane) { min-height:320px !important; overflow:visible !important; }
+}
+
+/* Preserve original column breakpoints; keep prompts in the scrolling flow on
+   short/compact screens so decoration never steals access to the last action. */
+@media(max-width:900px),(max-height:760px) {
+  html body .panel .menu-context-bar { position:sticky !important; left:auto !important; right:auto !important; bottom:-40px !important; flex-wrap:wrap !important; gap:8px !important; padding:8px !important; }
+  html body .panel.open .runalis-menu-workspace.active { border-width:8px !important; padding:10px 10px 44px !important; border-image-width:24px !important; }
+  html body .panel :is(.tab,.subtab) { font-size:12px !important; padding:7px 9px !important; }
+}
+@media(prefers-reduced-motion:reduce) { html body *,html body *::before,html body *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }

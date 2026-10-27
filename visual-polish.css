@@ -1,0 +1,54 @@
+/* Earth, ash and brass. Higher specificity keeps runtime style injections coherent. */
+:root { --runalis-ink:#131612; --runalis-paper:#eadfca; --runalis-brass:#bc9556; }
+.runalis-art-icon { display:inline-block;width:40px;height:40px;flex:0 0 40px;background-image:url('assets/art/sprites/icons-core.png');background-size:400% 400%;background-repeat:no-repeat;image-rendering:pixelated;vertical-align:middle; }
+.item-icon .runalis-art-icon { width:100%;height:100%;min-width:28px;min-height:28px; }
+.combat-hud-icon .runalis-art-icon { width:42px;height:42px; }
+body { color:var(--runalis-paper); }
+body button { transition:background .12s ease,border-color .12s ease; }
+body button:focus-visible, body input:focus-visible, body select:focus-visible { outline:2px solid #e2bd72;outline-offset:3px; }
+body .menu-card, body .pause-card { border-color:#8c7045;box-shadow:0 0 0 4px #101510,0 0 0 5px #4d422e,0 16px 70px #0009; }
+body .menu-card h1 { color:#eadab2;letter-spacing:.18em; }
+body .menu-card .subtitle { color:#c5b691;letter-spacing:.1em; }
+body .menu-card .fineprint { color:#acaa95; }
+body .pause-card h2 { font-family:Georgia,serif;color:#e6c689; }
+body .character-creator-overlay .character-creator-panel { background:#131512; border:1px solid #847047; color:#e9ddc3; }
+body .character-creator-overlay .creator-class-layout { overflow:auto; align-content:start; grid-template-rows:auto auto; }
+body .character-creator-overlay .creator-class-list-panel { overflow:auto;max-height:440px; }
+body .character-creator-overlay .creator-class-list { display:flex;flex-direction:column; }
+body .character-creator-overlay .creator-class-card { flex-shrink:0; }
+body .character-creator-overlay .creator-info-panel { display:flex;flex-direction:column;overflow:visible;gap:16px; }
+body .character-creator-overlay .creator-info-panel > * { flex-shrink:0; }
+body .character-creator-overlay .creator-detail-grid,
+body .character-creator-overlay .creator-strength-grid { min-height:auto; }
+body .character-creator-overlay .creator-preview-panel { min-height:510px;grid-template-rows:auto minmax(360px,1fr) auto;align-self:start; }
+body .character-creator-overlay .creator-canvas-shell { overflow:hidden;height:390px;min-height:360px; }
+body .character-creator-overlay .creator-canvas-shell canvas { display:block;height:100%;width:100%;min-width:0;min-height:0;max-height:100%;max-width:100%;object-fit:contain; }
+body .character-creator-overlay .creator-appearance-layout { overflow:auto; }
+body .character-creator-overlay .creator-appearance-panel { min-height:580px;overflow:visible; }
+body .character-creator-overlay .creator-appearance-groups { overflow:auto; }
+body .character-creator-overlay .creator-action-row { padding:12px 0 2px;position:sticky;bottom:0;background:#131512;z-index:2; }
+body .character-creator-overlay .creator-eyebrow,
+body .character-creator-overlay .creator-section-kicker,
+body .character-creator-overlay .creator-detail-block span,
+body .character-creator-overlay .creator-list-block span { color:#c5ab79;letter-spacing:.06em; }
+body .character-creator-overlay .creator-detail-block p,
+body .character-creator-overlay .creator-list-block ul { font-size:14px;line-height:1.55; }
+body .character-creator-overlay .creator-helpbar { background:#131512; }
+body .character-creator-overlay * { scrollbar-color:#756643 #1c2018;scrollbar-width:thin; }
+body .character-creator-overlay .creator-info-panel .creator-class-identity { overflow:visible; }
+@media(min-width:1181px) {
+  body .character-creator-overlay .creator-class-layout { grid-template-rows:minmax(400px,1fr); }
+  body .character-creator-overlay .creator-info-panel { overflow:auto; }
+}
+@media(max-width:860px) {
+  body .character-creator-overlay .creator-class-layout,
+  body .character-creator-overlay .creator-appearance-layout { display:flex;flex-direction:column;overflow:auto; }
+  body .character-creator-overlay .creator-class-layout > *,
+  body .character-creator-overlay .creator-appearance-layout > * { flex-shrink:0; }
+  body .character-creator-overlay .creator-class-list-panel { max-height:260px; }
+  body .character-creator-overlay .creator-preview-panel { min-height:510px;height:auto;width:100%;box-sizing:border-box; }
+  body .character-creator-overlay .creator-info-panel { display:flex; }
+  body .character-creator-overlay .creator-detail-grid,
+  body .character-creator-overlay .creator-strength-grid { display:grid;grid-template-columns:1fr; }
+}
+@media(prefers-reduced-motion:reduce) { body button { transition:none; } }

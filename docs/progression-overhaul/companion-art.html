@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Runalis · Allied companion pixel art</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#131a20;color:#e2e6e6;font:16px/1.5 system-ui,sans-serif}main{max-width:1260px;margin:auto;padding:30px}h1{margin:0;font:34px Georgia,serif}p{color:#b5c6cc;max-width:850px}a{color:#7de1d4}header{border-bottom:1px solid #354650;padding-bottom:18px}button{background:#253846;border:1px solid #739dab;border-radius:5px;padding:8px 14px;color:#e4f5f3;font:inherit;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:12px;margin:22px 0}.cell{background:#202b33;border:1px solid #3d5663;border-radius:6px;text-align:center;overflow:hidden}.enemy{border-color:#8b5149}.cell h2{font-size:15px;margin:12px 4px 0}.cell small{color:#a9bec7}canvas{display:block;width:100%;height:auto;image-rendering:pixelated}.status{font-size:13px;color:#98c7bf}.legend{display:flex;gap:24px;flex-wrap:wrap}.legend b{color:#6df4df}footer{margin-top:25px;border-top:1px solid #354650;padding-top:16px;color:#a9bec7}@media(max-width:850px){main{padding:18px}.grid{grid-template-columns:repeat(2,minmax(140px,1fr))}}
+</style>
+<main>
+<header><h1>Allied companion pixel art</h1><p>Existing authored sprites now carry distinct allied palettes. Each summon uses idle, two movement frames, and an attack frame. A turquoise pact mark adds another recognition cue.</p><div class="legend"><span><b>Wolf:</b> icy blue and silver</span><span><b>Demon:</b> violet with turquoise eyes and fire</span><button id="facing">Face left</button><a href="../../combat-overhaul-lab.html">Play the proving ground</a></div></header>
+<div id="grid" class="grid"></div><div class="status" id="status">Loading authored pixel atlases…</div>
+<footer>The first column shows the original hostile/source palette. Other columns use the same renderer as the game. Enemy assets remain unchanged. Atlas sources: enemies-core (wolf) and summons-evolved (demon).</footer>
+</main>
+<script type="module">
+import {drawSummonAsset} from '../../src/codeAssets.js';
+import {asset} from '../../src/spriteArt.js';
+import {COMPANION_SPRITES} from '../../src/companionSpriteArt.js';
+let facing=1;
+const cells=[];
+for(const [kind,title]of [['wolf','Wolf'],['miniDemon','Demon']])for(const state of ['source','idle','walk1','walk2','attack']) {
+  const cell=document.createElement('section');cell.className='cell'+(state==='source'?' enemy':'');
+  const label=state==='source'?(kind==='wolf'?'Hostile wolf':'Original red demon'):`${title} · ${state==='walk1'?'move 1':state==='walk2'?'move 2':state}`;
+  cell.innerHTML=`<h2>${label}</h2><small>${state==='source'?'Original palette':'Allied palette'}</small><canvas width="220" height="210" aria-label="${label}"></canvas>`;
+  document.querySelector('#grid').append(cell);cells.push({kind,state,canvas:cell.querySelector('canvas')});
+}
+document.querySelector('#facing').onclick=()=>{facing*=-1;document.querySelector('#facing').textContent=facing===1?'Face left':'Face right';};
+function draw() {
+  const now=performance.now()/1000;
+  for(const {kind,state,canvas}of cells) {
+    const ctx=canvas.getContext('2d');ctx.clearRect(0,0,220,210);ctx.save();ctx.translate(110,165);ctx.scale(2,2);ctx.imageSmoothingEnabled=false;
+    if(state==='source') {
+      const config=COMPANION_SPRITES[kind],a=asset(config.sheet),scale=kind==='miniDemon'?.75:1;
+      if(a?.ready){ctx.scale(facing,1);ctx.drawImage(a.image,0,config.row*config.height,config.width,config.height,-Math.round(config.width*scale/2),16-Math.round(config.pivot*scale),Math.round(config.width*scale),Math.round(config.height*scale));}
+    }else drawSummonAsset(ctx,{kind,x:0,y:0,dirX:facing,dirY:0,moving:state.startsWith('walk'),walkTime:state==='walk2'?1:0,attackAnimationUntil:state==='attack'?now+1:0},{},0,0);
+    ctx.restore();
+  }
+  if(Object.values(COMPANION_SPRITES).every(c=>asset(c.sheet)?.ready))document.querySelector('#status').textContent='Both pixel atlases loaded · all four animation frames shown · game renderer active';
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</html>

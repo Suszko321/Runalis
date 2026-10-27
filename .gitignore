@@ -1,0 +1,36 @@
+# Local history, captures, caches, and authoring state
+backups/
+tmp/
+.agents/
+.vscode/
+.idea/
+node_modules/
+__pycache__/
+*.pyc
+*.log
+.DS_Store
+Thumbs.db
+*.cpuprofile
+
+# Art working copies and generated review captures (runtime exports stay in assets)
+assets/art/source/
+assets/art/reference/
+docs/**/*.png
+docs/**/*.gif
+docs/**/*.wav
+docs/**/*.webm
+docs/**/*.json
+
+# Deployment output is recreated by GitHub Actions
+_site/
+
+# Credentials and machine-specific configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+credentials.json
+

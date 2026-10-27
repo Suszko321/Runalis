@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Runalis - Original Land Expanded</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2310151f'/%3E%3Cpath d='M32 8l18 12v18c0 10-7 16-18 20-11-4-18-10-18-20V20L32 8z' fill='%23d9ad4f'/%3E%3Cpath d='M32 16l10 7v13c0 5-3 9-10 12-7-3-10-7-10-12V23l10-7z' fill='%23202b3b'/%3E%3C/svg%3E" />
+  <link rel="preload" as="image" href="assets/art/runalis-main-menu.png" />
+  <link rel="stylesheet" href="style.css?v=20260722-art-v1" />
+  <link rel="stylesheet" href="visual-polish.css?v=20260924" />
+  <link rel="stylesheet" href="lexicon.css?v=20261004" />
+  <link rel="stylesheet" href="combat-overhaul.css?v=20261003" />
+  <link rel="stylesheet" href="skill-trees.css?v=20261004" />
+  <link rel="stylesheet" href="twilight-hud.css?v=20261025" />
+</head>
+<body>
+  <div id="mainMenu" class="screen active">
+    <div class="menu-card">
+      <h1>Runalis</h1>
+      <p class="subtitle">A chronicle of earth, ash &amp; forgotten oaths</p>
+      <div class="menu-section main-menu-actions" aria-label="Main menu">
+        <button id="continueGameBtn">Continue</button>
+        <button id="newGameBtn">New Game</button>
+        <button id="developerModeBtn" class="developer-mode-entry">Developer Mode</button>
+        <button id="settingsBtn">Settings</button>
+        <button id="creditsBtn">Credits</button>
+        <button id="quitGameBtn">Quit</button>
+      </div>
+      <div class="menu-section">
+        <label for="profileName">New Profile</label>
+        <div class="inline-row">
+          <input id="profileName" maxlength="22" placeholder="Wayfarer name" />
+          <button id="createProfileBtn">Create</button>
+        </div>
+      </div>
+      <div class="menu-section">
+        <h2>Load Profile</h2>
+        <div id="profileList" class="profile-list"></div>
+      </div>
+      <p class="fineprint">The roads remember. Choose the story you leave behind.</p>
+    </div>
+    <div id="profileDeleteConfirmation" class="profile-delete-confirmation" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="profileDeleteWarning">
+      <p id="profileDeleteWarning">Warning, this profile will be deleted permanently. Are you sure you want to delete?</p>
+      <p id="profileDeleteName" class="profile-delete-name"></p>
+      <div class="profile-delete-actions">
+        <button class="danger" data-confirm-profile-delete>Yes, delete</button>
+        <button data-cancel-profile-delete>No</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="developerModeSetup" class="developer-setup-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="developerModeTitle">
+    <form class="developer-setup-card">
+      <header><div><span>RUNALIS AUTHORING TOOLS</span><h2 id="developerModeTitle">Developer Mode</h2></div><button type="button" data-close-developer-setup>×</button></header>
+      <p>Load the actual game world into a non-destructive editing session. Drafts, backups, recovery files, and runtime exports are stored separately from player profiles.</p>
+      <div class="developer-setup-grid">
+        <label>Map or region<select name="mapId" data-developer-map></select></label>
+        <label>Starting location<select name="startingLocation"><option value="mapSpawn">Map spawn</option><option value="center">Map center</option><option value="poi">Selected POI anchor</option></select></label>
+        <label>World state<select name="worldState"><option value="development">Current Development Save</option><option value="default">Default Canon State</option><option value="fresh">Fresh State</option><option value="snapshot">Custom Snapshot</option></select></label>
+        <label>Camera mode<select name="cameraMode"><option>Free Fly</option><option>Orbit Selection</option><option>Top-Down</option><option>Orthographic</option><option>Player Camera</option><option>Cinematic Preview</option></select></label>
+        <label>Simulation<select name="simulation"><option value="paused">Paused</option><option value="player">Player Only</option><option value="active">Active</option><option value="full">Full World</option></select></label>
+        <label>Initial mode<select name="startMode"><option value="edit">Edit Mode</option><option value="playtest">Playtest Mode</option></select></label>
+      </div>
+      <div class="developer-setup-toggles">
+        <label><input type="checkbox" name="aiPaused" checked> NPC and enemy AI paused</label>
+        <label><input type="checkbox" name="questsEnabled"> Quests and scripted events active</label>
+        <label><input type="checkbox" name="lightingEnabled" checked> Lighting and weather active</label>
+        <label><input type="checkbox" name="collisionEnabled" checked> Collision enabled in playtest</label>
+      </div>
+      <label>Development notes<textarea name="notes" placeholder="Purpose of this editing session…"></textarea></label>
+      <footer><button type="button" data-close-developer-setup>Cancel</button><button type="submit" class="developer-launch">Launch Developer Mode</button></footer>
+    </form>
+  </div>
+
+  <div id="app" class="screen">
+    <header class="topbar">
+      <div>
+        <h1>Runalis</h1>
+        <p>Original land expanded • <span id="activeProfileLabel">No profile</span></p>
+      </div>
+      <div class="top-actions">
+        <button id="saveBtn">Save</button>
+        <button id="loadBtn">Load</button>
+        <button id="menuBtn">Menu</button>
+      </div>
+    </header>
+
+    <main class="game-shell">
+      <section class="viewport-card">
+        <canvas id="game" width="960" height="600"></canvas>
+        <div id="interactionHint" class="interaction-hint">Keyboard + mouse: P1 • First controller: P1 • E or A interact • Space / RB attack • Q/R/X/4/F or RT/Y/X/LB/LT abilities • LT starts with Block • Start pauses • P2-P4: press A/Start on an additional controller to join</div>
+      </section>
+
+      <aside class="panel">
+        <div class="tabs">
+          <button class="tab active" data-tab="character">Character</button>
+          <button class="tab" data-tab="skills">Skills</button>
+          <button class="tab" data-tab="inventory">Inventory</button>
+          <button class="tab" data-tab="quests">Quests</button>
+          <button class="tab" data-tab="map">Map</button>
+          <button class="tab" data-tab="log">Log</button>
+        </div>
+
+        <div id="character" class="tab-panel active"></div>
+        <div id="skills" class="tab-panel"></div>
+        <div id="inventory" class="tab-panel"></div>
+        <div id="quests" class="tab-panel"></div>
+        <div id="map" class="tab-panel"></div>
+        <div id="log" class="tab-panel"></div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="loadingScreen" class="loading-screen" aria-live="polite" aria-hidden="true">
+    <div class="loading-copy">
+      <h2>Runalis</h2>
+      <p id="loadingMessage">Entering the Sol Land...</p>
+      <div class="loading-progress" aria-hidden="true"><span></span></div>
+    </div>
+  </div>
+
+  <div id="pauseOverlay" class="pause-overlay">
+    <div class="pause-card">
+      <h2>Paused</h2>
+      <p>Runalis waits. Your profile can be saved before leaving.</p>
+      <button id="resumeBtn">Resume</button>
+      <button id="pauseSaveBtn">Save Game</button>
+      <button id="saveQuitBtn">Save & Quit to Menu</button>
+    </div>
+  </div>
+
+  <script type="module" src="src/main.js?v=20260722-art-v1"></script>
+</body>
+</html>

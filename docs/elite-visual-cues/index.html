@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Runalis · Elite field guide</title>
+<style> *{box-sizing:border-box}body{margin:0;background:#141210;color:#e7dcc4;font:16px Georgia,serif}main{max-width:1420px;margin:auto;padding:26px}header{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}h1{font-variant:small-caps;color:#e9c682;margin:0;font-size:34px}p{line-height:1.5}a{color:#e9c682}button{font:inherit;background:#27201b;border:1px solid #9c8159;color:#ead7b0;padding:9px 18px;cursor:pointer}button[aria-pressed=true]{background:#4b352b;border-color:#dfbb7c}nav{display:flex;gap:10px;margin:20px 0}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}article{background:#201b18;border:1px solid #796246;padding:14px;box-shadow:inset 0 0 0 3px #141210}.title{display:flex;gap:12px;align-items:center}h2{margin:0;color:#edcf95;font-variant:small-caps;font-size:25px}canvas{width:44px;height:44px;image-rendering:pixelated}article p{font-size:15px;min-height:48px;margin:10px 0;color:#d5c5a8}.shot{display:block;border:1px solid #66563e;background:#12110f}.shot img{display:block;width:100%;image-rendering:pixelated}audio{display:block;width:100%;height:34px;margin-top:12px}small{display:block;color:#b5a181;margin-top:9px}footer{color:#b5a181;margin-top:22px} @media(max-width:1050px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:650px){.cards{grid-template-columns:1fr}main{padding:15px}}</style></head>
+<body><main><header><h1>Runalis · Elite field guide</h1><a href="/enemy-combat-lab.html">Practice these encounters</a></header>
+<p>Learn the shape, motion and sound of each threat. Solid markers show committed targets. Keep an eye on the escape opening and save your defenses for the final impact.</p>
+<nav aria-label="Effect phase"><button data-phase="warning" aria-pressed="true">Before impact</button><button data-phase="impact" aria-pressed="false">At impact</button></nav>
+<section class="cards" aria-label="Elite effect families"></section><footer>Tap a picture for the full view. Play a warning sound to learn its motif. The guide includes harmless observer captures of combinations; use the practice encounter for movement and defensive timing.</footer></main>
+<script type="module">
+import {drawEliteSigil} from '/src/eliteHazardArt.js';
+const entries=[
+ ['freezer','Freezer','Branching frost and advancing ice crystals. Three icy chimes signal growing control pressure.'],
+ ['shatter','Shatter','An ice crown and sharp converging crystals announce the final frost strike. A brittle, high snap signals release.'],
+ ['waller','Waller','Linked ground teeth become solid basalt and fire. Chain and stone tones mark commitment; the gap stays visible.'],
+ ['chamber','Infernal Chamber','Magma veins and rising fire surround the trapped space. A low infernal sequence warns of the chamber strike.'],
+ ['artillery','Artillery','A broken reticle clamps shut. The shell launches from its caster, arcs overhead and strikes the fixed marker with a descending whistle.'],
+ ['shocker','Shocker','A charged electrical lane, bolt sigils and crackling forks show where lightning will travel. Watch the crossing follow-up.'],
+ ['vortex','Vortex','Purple spirals and inward arrows announce suction. Falling tones warn of the pull.'],
+ ['collapse','Vortex Collapse','The black-star sigil marks the tighter implosion. Watch inward energy compress and prepare for the low release.'],
+ ['molten','Molten','Dark magma fractures brighten before burning ground forms. Ember hiss and rough fire tones identify the pool.'],
+ ['moltenDeath','Magma Eruption','A volcanic crown, corpse cracks and fire jets warn of a delayed eruption. Its heavy rumble differs from ordinary magma.'],
+ ['bulwark','Bulwark','A shield sigil and three guard-charge marks identify frontal protection. Forward chevrons announce the counterstrike with metallic tones.'],
+ ['regenerator','Regenerator','Green branches, rising leaves and growing rune buds show a healing chant. Foliage links point to wounded allies it can support.']
+];
+const cards=document.querySelector('.cards');
+for(const [kind,name,description] of entries){
+ const article=document.createElement('article');article.innerHTML=`<div class="title"><canvas width="48" height="48" aria-label="${name} symbol"></canvas><h2>${name}</h2></div><p>${description}</p><a class="shot" href="${kind}-warning.png"><img src="${kind}-warning.png" alt="${name} warning" loading="lazy"></a><audio controls preload="none" src="${kind}-warning.wav" aria-label="${name} warning sound"></audio><small>Warning sound</small>`;
+ article.dataset.kind=kind;cards.append(article);drawEliteSigil(article.querySelector('canvas').getContext('2d'),kind,24,24,4);
+}
+for(const button of document.querySelectorAll('button[data-phase]'))button.onclick=()=>{
+ for(const b of document.querySelectorAll('button[data-phase]'))b.setAttribute('aria-pressed',String(b===button));
+ for(const article of cards.children){const phase=button.dataset.phase,kind=article.dataset.kind;article.querySelector('img').src=`${kind}-${phase}.png`;article.querySelector('img').alt=`${kind} ${phase}`;article.querySelector('.shot').href=`${kind}-${phase}.png`;}
+};
+</script></body></html>

@@ -1,0 +1,19 @@
+{
+  "columns": 4,
+  "rows": 2,
+  "cellWidth": 256,
+  "cellHeight": 304,
+  "pivot": [
+    128,
+    295
+  ],
+  "indices": [
+    0,
+    1,
+    2,
+    4,
+    5,
+    6
+  ],
+  "source": "assets/art/source/echoryn-forest-cohesion.png"
+}

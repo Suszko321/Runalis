@@ -1,0 +1,64 @@
+{
+  "name": "lich-deathknight",
+  "source": "C:\\Users\\austi\\Documents\\Runalis\\assets\\art\\source\\lich-deathknight.png",
+  "rows": 1,
+  "columns": 4,
+  "cellWidth": 128,
+  "cellHeight": 144,
+  "pivot": [
+    64,
+    138
+  ],
+  "sourceBounds": [
+    [
+      16,
+      145,
+      473,
+      707
+    ],
+    [
+      473,
+      159,
+      986,
+      706
+    ],
+    [
+      987,
+      155,
+      1447,
+      707
+    ],
+    [
+      1458,
+      36,
+      2033,
+      707
+    ]
+  ],
+  "spriteRects": [
+    [
+      26,
+      44,
+      76,
+      94
+    ],
+    [
+      149,
+      47,
+      86,
+      91
+    ],
+    [
+      281,
+      46,
+      77,
+      92
+    ],
+    [
+      400,
+      26,
+      96,
+      112
+    ]
+  ]
+}

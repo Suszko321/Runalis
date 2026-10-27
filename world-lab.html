@@ -1,0 +1,54 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Runalis · World field review</title>
+<style>body{margin:0;background:#171c18;color:#e0d7b8;font:14px system-ui}header{padding:14px 20px;display:flex;gap:14px;align-items:center}h1{font:22px Georgia;margin:0}button,select{padding:9px;background:#29332a;color:#efe1bb;border:1px solid #807456}canvas{display:block;image-rendering:pixelated}#status{padding:12px 20px}#map{max-width:1100px}#map button{margin:4px}</style>
+<header><h1>Runalis · World field review</h1><select id="scene"></select><button id="walkRoute">Walk Hollow Road</button><button id="night">Day / night</button><button id="discover">Discover nearby</button><button id="mapButton">Travel map</button><button id="geometry">Collision / rooms</button></header>
+<canvas width="1100" height="700"></canvas><div id="status"></div><div id="map"></div>
+<style>
+#map:empty{display:none}#map{padding:20px}.world-map-header,.world-map-static-footer{display:flex;justify-content:space-between;gap:18px}.world-map-header h2{margin:5px 0;font:26px Georgia}.world-map-header p,.world-map-static-footer{font-size:12px;color:#b6c4b1}.world-map-layout{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:16px;height:500px}.world-map-stage{position:relative;background:#172422;border:1px solid #797252;overflow:hidden}.survey-viewport{position:absolute;inset:42px 0 32px;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;cursor:grab}.survey-surface{position:relative;flex:none;transform-origin:center}.survey-art{display:block;width:100%;height:100%}.world-map-marker-layer{position:absolute;inset:0;pointer-events:none}.world-map-static-marker,.survey-stone,.survey-player{position:absolute;transform:translate(-50%,-50%)}.world-map-static-marker,.survey-stone{pointer-events:auto}.world-map-static-marker em,.survey-stone span{display:none}.world-map-static-marker:hover em,.survey-stone:hover span{display:block;background:#172821;color:#e0d7b8;white-space:nowrap}.survey-tools{position:absolute;top:8px;left:12px;z-index:10;display:flex;gap:6px;align-items:center}.survey-tools span{font-size:11px}.survey-tools button{padding:4px 10px}.survey-legend{position:absolute;bottom:8px;left:12px;right:12px;display:flex;gap:18px;font-size:11px}.survey-sidebar{overflow:auto;padding:12px;background:#17201b;border:1px solid #665f48}.survey-sidebar p{font-size:12px;line-height:1.5}.survey-sidebar h3{font:20px Georgia;margin:0}.survey-stone-list{display:grid;gap:6px}.survey-stone-list button{display:flex;align-items:center;gap:8px;text-align:left}.survey-stone-list img,.survey-stone img{width:16px;height:22px}.survey-stone{padding:4px;border-radius:50%;background:#203c39}.survey-stone.selected{outline:2px solid #b9ead6}.survey-player{font-size:18px;color:#fff3b8;z-index:14;pointer-events:none}.survey-index{margin-top:14px}.survey-index button{display:block;margin-top:4px;width:100%;text-align:left}.survey-travel-detail button{width:100%}.survey-travel-detail h4{font:18px Georgia;margin:16px 0 5px}.world-map-static-footer{margin-top:12px}.world-map-return-control{font-size:12px;max-width:190px}
+@media(max-width:750px){.world-map-layout{grid-template-columns:minmax(0,1fr) 190px}.survey-tools span{display:none}}
+</style>
+<script type="module">
+import {createWorld} from './src/world.js';
+import {moveActorWithCollision} from './src/world.js';
+import {createRegionWorld} from './src/regionWorlds.js';
+import {createDungeonWorld} from './src/dungeonSystem.js';
+import {createCapitalHubWorld} from './src/hubSystem.js';
+import {createPlayer,addItem} from './src/player.js';
+import {draw} from './src/render.js';
+import {updateWorldExploration,worldMemory} from './src/worldExploration.js';
+import {renderWorldMap} from './src/panelWorldMap.js';
+import {spriteArtStatus} from './src/spriteArt.js';
+import {ACT1_LANDMARKS} from './src/overworldUtils.js';
+import {ECHORYN_ROADS} from './src/echorynGeography.js';
+const canvas=document.querySelector('canvas'),ctx=canvas.getContext('2d'),select=document.querySelector('#scene'),status=document.querySelector('#status');
+const frontier=createWorld(),player=createPlayer('Field review');addItem(player,'fieldRations',10);
+const game={player,world:frontier,canvas,camera:{x:0,y:0},log:line=>{status.textContent=line;},uiState:{}};
+window.review=game;
+const choices=frontier.authoredLocations.map(s=>({label:s.name,world:()=>frontier,x:s.x,y:s.y}));
+for(const [id,name] of [['outpost','Orrakai Frontier'],['ashenOrchard','Ashen Orchard'],['thornrootHollow','Thornroot Hollow'],['mirrorGrove','Mirror Grove'],['pilgrimBridge','Pilgrim Bridge'],['brokenChapel','Broken Chapel'],['castleVeyr','Castle Veyr'],['hunterCamp','Hunter Reach'],['watcherRidge','Watcher Ridge'],['saltwellCamp','Riverlands'],['lanternMarsh','Lantern Marsh'],['ironMire','Iron Mire'],['oldHollow','Old Hollow'],['demonCultLair','Red Seal Keep']]){const p=ACT1_LANDMARKS[id];choices.push({label:'Echoryn · '+name,world:()=>frontier,x:(p[0]+.5)*32,y:(p[1]+.5)*32});}
+const hollow=ECHORYN_ROADS.find(r=>r.id==='hollow-road');choices.push({label:'Echoryn · Hollow Road',world:()=>frontier,x:(hollow.points[4][0]+.5)*32,y:(hollow.points[4][1]+.5)*32});
+for(const theme of ['mine','grave','demon','ruin','thorn','holy','cosmic'])choices.push({label:`Dungeon · ${theme}`,world:()=>createDungeonWorld({theme,seed:'world-review-'+theme})});
+choices.push({label:'Orrakai',world:createCapitalHubWorld},{label:'Aureate Marches',world:()=>createRegionWorld('aureateMarches')},{label:'Ascension Wastes',world:()=>createRegionWorld('ascensionWastes')});
+for(const [label,x,y] of [['Market',36,25],['Smithy',53,25],['Guild',36,12],['Sanctuary',18,13],['Bank',22,27],['Infirmary',23,40],['Apothecary',51,40],['House',9,28]])choices.push({label:'Orrakai · '+label,world:createCapitalHubWorld,x:(x+.5)*32,y:(y+.5)*32});
+select.innerHTML=choices.map((s,i)=>`<option value="${i}">${s.label}</option>`).join('');
+function load(index){journey=null;const s=choices[index];game.world=s.world();player.floatingTexts=[];player.x=s.x||game.world.spawn.x;player.y=s.y||game.world.spawn.y;if(game.world.rooms){const r=game.world.rooms[1];player.x=(r.x+r.w/2)*32;player.y=(r.y+4)*32;}game.camera.x=player.x-550;game.camera.y=player.y-350;updateWorldExploration(game,.5);}
+select.onchange=()=>load(Number(select.value));document.querySelector('#night').onclick=()=>{worldMemory(player).elapsed=worldMemory(player).elapsed%1200>780?0:900;updateWorldExploration(game,.5);};
+document.querySelector('#discover').onclick=()=>updateWorldExploration(game,.5);
+document.querySelector('#mapButton').onclick=()=>{game.uiState.activeMainTab='map';renderWorldMap(player,game);};
+document.querySelector('#geometry').onclick=()=>{game.world.orrakaiDebug=!game.world.orrakaiDebug;game.world.echorynDebug=!game.world.echorynDebug;};
+let journey=null;
+document.querySelector('#walkRoute').onclick=()=>{const index=choices.findIndex(s=>s.label==='Echoryn · Hollow Road');select.value=index;load(index);const p=hollow.points[0];player.x=(p[0]+.5)*32;player.y=(p[1]+.5)*32;journey={point:1,blocked:0};};
+const requested=new URLSearchParams(location.search).get('scene'),initial=Math.max(0,choices.findIndex(s=>s.label===requested));select.value=initial;load(initial);let failure=null;window.addEventListener('error',e=>failure=e.message);
+const keys=new Set();window.addEventListener('keydown',e=>keys.add(e.key.toLowerCase()));window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+let before=performance.now();function frame(now){const dt=Math.min(.04,(now-before)/1000);before=now;
+ const dx=Number(keys.has('d'))-Number(keys.has('a')),dy=Number(keys.has('s'))-Number(keys.has('w'));
+ if(dx||dy)journey=null;
+ if(journey){const p=hollow.points[journey.point],x=(p[0]+.5)*32,y=(p[1]+.5)*32,d=Math.hypot(x-player.x,y-player.y),step=Math.min(d,dt*170),sx=player.x,sy=player.y;
+  if(d<2){journey.point++;if(journey.point===hollow.points.length){journey=null;select.value=choices.findIndex(s=>s.label==='Echoryn · Ashen Orchard');}}else{moveActorWithCollision(player,game.world,(x-player.x)/d*step,(y-player.y)/d*step,12);journey.blocked=Math.hypot(player.x-sx,player.y-sy)<.1?journey.blocked+dt:0;if(journey.blocked>1){failure='Route blocked; use WASD to inspect.';journey=null;}}
+ }
+ if(dx||dy)moveActorWithCollision(player,game.world,dx*dt*170/Math.hypot(dx,dy),dy*dt*170/Math.hypot(dx,dy));
+ game.camera.x=player.x-550;game.camera.y=player.y-350;game.world.worldAtmosphere.time+=dt;
+ const t=performance.now();try{draw(ctx,game.world,player,game.camera);}catch(e){failure=e.stack;}
+ status.textContent=failure||`${choices[select.value].label} · ${(performance.now()-t).toFixed(1)} ms · ${spriteArtStatus().filter(s=>s.ready).length} atlases · WASD to inspect · No profile saves`;
+ requestAnimationFrame(frame);
+}requestAnimationFrame(frame);
+</script></html>

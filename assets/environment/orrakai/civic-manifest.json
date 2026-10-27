@@ -1,0 +1,16 @@
+{
+  "image": "civic.png",
+  "size": [1774,887],
+  "source": "OpenAI built-in imagegen; visually inspected 2026-10-02",
+  "smoothing": false,
+  "sprites": {
+    "burgundyMarket": [16,20,465,399],
+    "ochreMarket": [505,26,450,399],
+    "cliff": [982,12,362,452],
+    "cliffVariant": [1393,12,369,452],
+    "openDoor": [23,428,478,429],
+    "window": [570,443,197,395],
+    "walkway": [797,549,665,309],
+    "well": [1496,489,245,368]
+  }
+}

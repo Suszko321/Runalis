@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Runalis — Scene Review</title>
+<style>body{margin:0;background:#10140f;color:#eadbb8;font:14px system-ui}header{padding:16px 24px;display:flex;gap:18px;align-items:center}h1{font:22px Georgia;margin:0}select,button{padding:8px;background:#292b22;color:#eaddbd;border:1px solid #8a7046}canvas{display:block;max-width:100%;image-rendering:pixelated}#status{padding:12px 24px;color:#c3b78d}</style>
+<header><h1>Act One · Scene Review</h1><label>Scene <select id="scene"><option value="house">Mara's house</option><option value="opening">Caravan road</option><option value="fire">Caravan ambush</option><option value="capital">Orrakai</option><option value="wilds">Frontier</option><option value="dungeon">Dungeon</option></select></label><button id="check">Check all scenes</button></header>
+<canvas width="960" height="600"></canvas><div id="status">Loading scene…</div>
+<script type="module">
+import {draw} from './src/render.js';
+import {createMaraHouseWorld,createCaravanOpeningWorld} from './src/act1OpeningSystem.js';
+import {createCapitalHubWorld} from './src/hubSystem.js';
+import {createWorld} from './src/world.js';
+import {createDungeonWorld} from './src/dungeonSystem.js';
+import {createPlayer} from './src/player.js';
+import {spriteArtStatus} from './src/spriteArt.js';
+const canvas=document.querySelector('canvas'),ctx=canvas.getContext('2d'),status=document.querySelector('#status');
+const player=createPlayer('Art Review');
+Object.assign(player,{skin:'#e6b581',hair:'#694022',shirt:'#79603b',pants:'#454046',boots:'#6c4328',hairStyle:'short',dirX:0,dirY:1,isMoving:false});
+let world,camera,scene='house',failure=null,drawMs=0;
+function load(id){
+  scene=id;world=id==='house'?createMaraHouseWorld():id==='capital'?createCapitalHubWorld():id==='wilds'?createWorld():id==='dungeon'?createDungeonWorld({dungeonId:'demonCultLair',floor:1}):createCaravanOpeningWorld();
+  if(id==='fire')world.opening.elapsed=46;
+  const spawn=world.spawn||{x:7*32,y:7*32};player.x=spawn.x;player.y=spawn.y;
+  if(id==='capital'){player.x=35*32;player.y=23*32;}
+  camera={x:player.x-480,y:player.y-300};
+}
+function check(){
+  const selected=scene,results=[];
+  for(const id of ['house','opening','fire','capital','wilds','dungeon']){
+    try{load(id);const before=JSON.stringify({tiles:world.tiles,player:[player.x,player.y,player.hp,player.equipment],objects:(world.objects||[]).map(o=>[o.id,o.x,o.y,o.r,o.locked,o.claimed]),enemies:(world.enemies||[]).map(e=>[e.id,e.x,e.y,e.hp,e.r])});draw(ctx,world,player,camera);const after=JSON.stringify({tiles:world.tiles,player:[player.x,player.y,player.hp,player.equipment],objects:(world.objects||[]).map(o=>[o.id,o.x,o.y,o.r,o.locked,o.claimed]),enemies:(world.enemies||[]).map(e=>[e.id,e.x,e.y,e.hp,e.r])});results.push(id+': '+(before===after?'PASS (rendered; gameplay fields unchanged)':'FAIL (state changed)'));}catch(e){results.push(id+': FAIL '+e.message);}
+  }
+  load(selected);document.querySelector('#results')?.remove();const pre=document.createElement('pre');pre.id='results';pre.style.padding='12px 24px';pre.textContent=results.join('\n');document.body.append(pre);
+}
+document.querySelector('#check').onclick=check;
+document.querySelector('#scene').onchange=e=>{try{load(e.target.value);failure=null;}catch(error){failure=error.message;}};
+window.addEventListener('error',e=>failure=e.message);
+load('house');
+function frame(){if(!failure){try{const start=performance.now();draw(ctx,world,player,camera);drawMs=performance.now()-start;}catch(e){failure=e.message;}}
+status.textContent=failure?'FAIL: '+failure:`${world.name||scene} · render ${drawMs.toFixed(1)} ms · ${spriteArtStatus().filter(a=>a.ready).length}/${spriteArtStatus().length} atlases loaded · visual-only review, no profile saves`;
+requestAnimationFrame(frame);}frame();
+</script></html>

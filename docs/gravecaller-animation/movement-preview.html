@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gravecaller movement preview</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#171714;color:#ecd9b7;font:16px Georgia;height:100vh;display:flex;flex-direction:column}header{padding:14px 22px;background:#211e1b;border-bottom:1px solid #68543a;display:flex;align-items:center;gap:20px;flex-wrap:wrap}h1{font-size:22px;margin:0;margin-right:auto}button,select{background:#30291f;border:1px solid #8d7249;color:#ecd9b7;padding:8px;font:inherit}label{display:flex;gap:8px;align-items:center}canvas{display:block;flex:1;min-height:0;width:100%;image-rendering:pixelated}footer{padding:10px 22px;background:#211e1b;color:#c7b18e;font-size:14px}
+</style>
+<header><h1>Gravecaller movement</h1><select id="pose" aria-label="Animation"><option value="walk">Walk</option><option value="idle">Idle</option><option value="attack">Attack</option></select><button id="turn">Turn left</button><label>Speed <input id="speed" aria-label="Movement speed" type="range" min="100" max="600" value="200"></label></header>
+<canvas id="preview"></canvas><footer>Original pixel art • planted foot contacts • steady body alignment • greater Specter glides</footer>
+<script type="module">
+import {asset} from '../../src/spriteArt.js';
+import {drawSummonAsset} from '../../src/codeAssets.js';
+import {configureLichSummon,configureBoundDeadSummon} from '../../src/lichSummonSystem.js';
+import {beginGravecallerMotion,finishGravecallerMotion} from '../../src/gravecallerSummonMotion.js';
+const canvas=document.querySelector('canvas'),ctx=canvas.getContext('2d'),pose=document.querySelector('#pose'),speed=document.querySelector('#speed');
+let facing=1,previous=performance.now();
+document.querySelector('#turn').onclick=e=>{facing*=-1;e.target.textContent=facing===1?'Turn left':'Turn right';};
+const profiles=[['greaterLich','base','Lich'],['greaterLich','acolyte','Ghostly Specter'],['greaterLich','deathknight','Goliath Deathknight'],['lich','base','Skeleton Henchman'],['lich','acolyte','Melee Specter'],['lich','deathknight','Lesser Goliath'],['lich','base','Equipped Henchman']];
+const pets=profiles.map(([kind,morph,label],i)=>{
+ const s={id:'preview-'+i,kind,x:500,y:400,dirX:1,dirY:0,hp:1000,maxHp:1000,damage:5,armour:0,alive:true};
+ (kind==='lich'?configureBoundDeadSummon:configureLichSummon)(s,{subclassId:morph});
+ if(i===8)s.coterieEquipment={weapon:'blackIronSword',armour:'leatherVest'};
+ beginGravecallerMotion(s);return {s,label};
+});
+function draw(now){
+ const dt=Math.min(.05,(now-previous)/1000);previous=now;
+ const width=canvas.clientWidth,height=canvas.clientHeight;
+ if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}
+ ctx.imageSmoothingEnabled=false;ctx.fillStyle='#25362a';ctx.fillRect(0,0,width,height);
+ const cellW=width/3,cellH=height/3,zoom=Math.min(2,Math.max(1,Math.floor(Math.min(cellW/180,(cellH-36)/140))));
+ pets.forEach(({s,label},i)=>{
+  const before=beginGravecallerMotion(s);s.dirX=facing;
+  if(pose.value==='walk')s.x+=facing*Number(speed.value)*dt;
+  if(pose.value==='attack'){s.attackAnimationUntil=now/1000+.22;s.attackCooldown=1;}
+  else{s.attackCooldown=0;}
+  finishGravecallerMotion(s,before,dt);
+  const x=(i%3+.5)*cellW,y=(Math.floor(i/3)+.83)*cellH;
+  ctx.fillStyle='#dec69c';ctx.font='16px Georgia';ctx.textAlign='center';ctx.fillText(label,x,Math.floor(i/3)*cellH+26);
+  ctx.save();ctx.translate(Math.round(x),Math.round(y));ctx.scale(zoom,zoom);
+  ctx.fillStyle='#1b281f';ctx.fillRect(-50,15,100,2);drawSummonAsset(ctx,s,{},0,0);ctx.restore();
+ });
+ requestAnimationFrame(draw);
+}
+for(const name of ['summons-core','skeleton-forge','lich-acolyte','lich-deathknight','bound-dead-specter','bound-dead-knight'])asset(name);
+requestAnimationFrame(draw);
+</script></html>
