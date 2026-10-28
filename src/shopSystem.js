@@ -3,7 +3,7 @@ import {calculateDisplayWeaponDamage} from './panelInventory.js';
 import {MYTHICAL_SETS} from './mythicalEquipmentData.js';
 import { SKILL_SCROLL_OFFERS, purchaseSkillScroll } from './skillScrollSystem.js';
 import {menuDirection,directionalMenuItem} from './menuNavigation.js';
-import { handleMenuSheetInput, menuSheetItemVisible, prepareMenuSheets } from './menuSheets.js';
+import { handleMenuSheetInput, menuSheetItemVisible, prepareMenuSheets,captureTouchMenuScroll,isTouchMenuInteraction } from './menuSheets.js';
 // shopSystem.js
 // Controller-friendly survival market overlay.
 
@@ -524,6 +524,7 @@ function refreshMarketShop(game, overlay) {
   // The event handler has already updated state. Reading the previous DOM here
   // would undo the selected category/row before the new ledger is rendered.
   const state = getMarketShopState(game);
+  const restoreScroll=overlay.dataset.marketCategoryId===state.categoryId?captureTouchMenuScroll(overlay):()=>{};
   const offers = getFilteredMarketOffers(state.categoryId);
   state.selectedIndex = clampIndex(state.selectedIndex || 0, offers.length);
   overlay.dataset.marketSelectedIndex = String(state.selectedIndex);
@@ -531,6 +532,7 @@ function refreshMarketShop(game, overlay) {
   overlay.innerHTML = createMarketShopHtml(game.player, state);
   bindMarketShopEvents(game, overlay);
   applyMarketShopFocus(overlay);
+  restoreScroll();
 }
 
 function closeMarketShop(game) {
@@ -575,7 +577,7 @@ function applyMarketShopFocus(overlay) {
   selected.classList.add('shop-controller-focus');
   prepareMenuSheets();
   selected.focus?.({ preventScroll: true });
-  if (!selected.closest('.menu-sheet-view')) selected.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  if (!isTouchMenuInteraction()&&!selected.closest('.menu-sheet-view')) selected.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
 }
 
 function injectShopStyles() {

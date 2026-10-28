@@ -12,7 +12,7 @@ import {menuDirection,directionalMenuItem} from './menuNavigation.js';
 //   public hooks used by the rest of the game.
 
 import { renderUI } from './ui.js';
-import {installMenuSheets} from './menuSheets.js';
+import {installMenuSheets,captureTouchMenuScroll} from './menuSheets.js';
 import { drawLexiconShrine } from './lexiconPresentation.js';
 import {
   chooseClass as chooseGameClass,
@@ -578,6 +578,7 @@ function renderCharacterCreator(overlay, options = {}) {
   const appearance = getCreatorAppearance(overlay);
   const game = overlay.__runalisGame;
   const selectedClass = getClassOption(state.classId);
+  const restoreScroll=overlay.dataset.creatorStep===state.currentStep?captureTouchMenuScroll(overlay):()=>{};
 
   stopCreatorPreview(overlay);
   overlay.dataset.creatorStep = state.currentStep;
@@ -594,6 +595,7 @@ function renderCharacterCreator(overlay, options = {}) {
   bindCharacterCreatorEvents(overlay);
   startCreatorPreview(overlay);
   updateCreatorHoldVisual(overlay);
+  restoreScroll();
 
   requestAnimationFrame(() => {
     if (!overlay.classList.contains('active')) return;

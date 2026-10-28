@@ -6,6 +6,7 @@ import {beginWorkshopSession,endWorkshopSession,workshopAccessStatus} from './wo
 import {itemStatBlock} from './panelInventory.js';
 import {menuDirection,directionalMenuItem} from './menuNavigation.js';
 import {playSfx} from './audioSystem.js';
+import {captureTouchMenuScroll} from './menuSheets.js';
 
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const label=s=>String(s||'').replace(/^./,c=>c.toUpperCase());
@@ -32,16 +33,18 @@ function detail(s,row){
 }
 function refresh(game){
  const host=game.hostGame||game,s=host.workshopService,overlay=document.getElementById('workshopServiceOverlay');if(!s||!overlay)return;
+ const restoreScroll=captureTouchMenuScroll(overlay);
  if(!workshopAccessStatus(s.actor,s.kind).ok){closeWorkshopService(host);return;}
  const list=rows(s);if(!list.some(r=>r.id===s.selected)){s.selected=list[0]?.id||null;s.pending=null;}
  const chosen=list.find(r=>r.id===s.selected),scroll=overlay.querySelector('.workshop-list')?.scrollTop||0;
  overlay.innerHTML=`<div class="workshop-panel" role="dialog" aria-modal="true" aria-labelledby="workshop-heading"><header><div><small>${escape(s.world.name||'Settlement')} · ${s.kind==='blacksmith'?'Forge':'Workshop'}</small><h2 id="workshop-heading">${escape(s.npc.name)}</h2></div><div>Ash Coins <b>${s.actor.gold||0}</b></div><button data-workshop-close aria-label="Leave workshop">Leave</button></header><nav aria-label="Service categories">${categories(s).map(([id,name])=>`<button data-workshop-category="${id}" aria-pressed="${s.category===id}">${escape(name)}</button>`).join('')}</nav><div class="workshop-body"><div class="workshop-list" role="listbox" aria-label="${s.kind==='blacksmith'?'Owned equipment':'Crafting recipes'}">${list.map((r,i)=>`<button data-workshop-row="${i}" role="option" aria-selected="${r.id===s.selected}" class="${r.id===s.selected?'selected':''}"><b>${escape(r.name)}</b><small>${escape(r.meta)}</small></button>`).join('')||'<p>No items in this category.</p>'}</div><div class="workshop-detail">${detail(s,chosen)}</div></div><footer><div role="status" aria-live="polite">${escape(s.message||'Choose an item. Upgrades require confirmation; you can work on several pieces without leaving.')}</div>${s.kind==='blacksmith'?'<button data-workshop-supply>Refine Ore / Buy Scrap</button>':''}<small>Arrows / D-pad: select · Enter / A: action · LB/RB: category · Esc / B: leave</small></footer></div>`;
  overlay.querySelector('.workshop-list').scrollTop=scroll;
  overlay.querySelectorAll('[data-workshop-row]').forEach(button=>{button.onclick=()=>{s.selected=list[Number(button.dataset.workshopRow)].id;s.pending=null;refresh(game);overlay.querySelector(`[data-workshop-row="${button.dataset.workshopRow}"]`)?.focus({preventScroll:true});};});
- overlay.querySelectorAll('[data-workshop-category]').forEach(button=>button.onclick=()=>{s.category=button.dataset.workshopCategory;s.selected=null;s.pending=null;refresh(game);overlay.querySelector('[data-workshop-row]')?.focus();});
+ overlay.querySelectorAll('[data-workshop-category]').forEach(button=>button.onclick=()=>{s.category=button.dataset.workshopCategory;s.selected=null;s.pending=null;refresh(game);overlay.querySelector('[data-workshop-row]')?.focus({preventScroll:true});});
  overlay.querySelector('[data-workshop-close]').onclick=()=>closeWorkshopService(host);
  overlay.querySelector('[data-workshop-perform]')?.addEventListener('click',()=>performSelected(game));
  overlay.querySelector('[data-workshop-supply]')?.addEventListener('click',async()=>{const {supplyBlacksmithMaterials}=await import('./hubSystem.js');s.message=supplyBlacksmithMaterials(game)?'Smithing supplies updated.':'Bring Iron Ore ×2 or 18 Ash Coins for more scrap.';refresh(game);});
+ restoreScroll();
 }
 export function openWorkshopService(game,npc,category='all'){
  if(!game?.player||typeof document==='undefined')return false;
@@ -54,7 +57,7 @@ export function openWorkshopService(game,npc,category='all'){
  overlay.classList.add('active');overlay.dataset.ownerSlot=String(game.player.slot||game.player.playerNumber||1);overlay.tabIndex=-1;overlay.__game=game;
  if(game.player.controllerSlotIndex!=null)overlay.dataset.controllerSlotIndex=String(game.player.controllerSlotIndex);else delete overlay.dataset.controllerSlotIndex;
  Object.assign(game.input||host.input||{},{moveX:0,moveY:0,attackHeld:false,attackPressed:false,attackReleased:false,dashPressed:false});
- refresh(game);overlay.querySelector('[data-workshop-row]')?.focus();return true;
+ refresh(game);overlay.querySelector('[data-workshop-row]')?.focus({preventScroll:true});return true;
 }
 export function closeWorkshopService(game){
  const host=game?.hostGame||game,s=host?.workshopService;endWorkshopSession(s?.actor);
@@ -68,7 +71,7 @@ function performSelected(game){
  if(s.kind==='craftsman')success=craftRecipe(s.actor,row.recipe.id,game);
  else{
   const quote=makeOwnedGearUpgradeQuote(s.actor,row.id);if(!quote)return false;
-  if(!s.pending||s.pending.instanceId!==quote.instanceId||s.pending.currentTier!==quote.currentTier){s.pending=quote;s.message=`Confirm ${row.name}: Tier ${quote.currentTier} → ${quote.targetTier}, ${quote.cost.gold} Ash Coins. The listed materials will be consumed.`;refresh(game);document.querySelector('[data-workshop-perform]')?.focus();return false;}
+  if(!s.pending||s.pending.instanceId!==quote.instanceId||s.pending.currentTier!==quote.currentTier){s.pending=quote;s.message=`Confirm ${row.name}: Tier ${quote.currentTier} → ${quote.targetTier}, ${quote.cost.gold} Ash Coins. The listed materials will be consumed.`;refresh(game);document.querySelector('[data-workshop-perform]')?.focus({preventScroll:true});return false;}
   success=upgradeOwnedGear(s.actor,s.pending,game);s.pending=null;
  }
  s.message=success?(s.kind==='blacksmith'?'Upgrade complete. The same item now carries its new tier.':'Crafting complete. The result is in your inventory.'):'Requirements changed. Review the current costs and materials.';
@@ -79,9 +82,9 @@ export function handleWorkshopControllerInput(input){
  const overlay=document.getElementById('workshopServiceOverlay');if(!overlay?.classList.contains('active'))return false;
  const game=overlay.__game,s=(game.hostGame||game).workshopService;if(!s)return false;
  if(input.cancelPressed||input.backPressed){closeWorkshopService(game);return true;}
- if(input.lbPressed||input.rbPressed||input.leftShoulderPressed||input.rightShoulderPressed){const tabs=categories(s),i=tabs.findIndex(([id])=>id===s.category),delta=input.lbPressed||input.leftShoulderPressed?-1:1;s.category=tabs[(i+delta+tabs.length)%tabs.length][0];s.selected=null;s.pending=null;refresh(game);overlay.querySelector('[data-workshop-row]')?.focus();return true;}
+ if(input.lbPressed||input.rbPressed||input.leftShoulderPressed||input.rightShoulderPressed){const tabs=categories(s),i=tabs.findIndex(([id])=>id===s.category),delta=input.lbPressed||input.leftShoulderPressed?-1:1;s.category=tabs[(i+delta+tabs.length)%tabs.length][0];s.selected=null;s.pending=null;refresh(game);overlay.querySelector('[data-workshop-row]')?.focus({preventScroll:true});return true;}
  const direction=menuDirection(input);
- if(direction){const buttons=[...overlay.querySelectorAll('button:not(:disabled)')],next=directionalMenuItem(buttons,document.activeElement,direction);if(next?.dataset.workshopRow!=null){s.selected=rows(s)[Number(next.dataset.workshopRow)].id;s.pending=null;const index=next.dataset.workshopRow;refresh(game);overlay.querySelector(`[data-workshop-row="${index}"]`)?.focus();}else next?.focus();return true;}
+ if(direction){const buttons=[...overlay.querySelectorAll('button:not(:disabled)')],next=directionalMenuItem(buttons,document.activeElement,direction);if(next?.dataset.workshopRow!=null){s.selected=rows(s)[Number(next.dataset.workshopRow)].id;s.pending=null;const index=next.dataset.workshopRow;refresh(game);overlay.querySelector(`[data-workshop-row="${index}"]`)?.focus({preventScroll:true});}else next?.focus({preventScroll:true});return true;}
  if(input.confirmPressed){const focused=document.activeElement;if(focused?.matches('[data-workshop-row]')||!overlay.contains(focused))performSelected(game);else focused?.click();return true;}
  return true;
 }
@@ -97,7 +100,7 @@ function injectStyles(){
   const overlay=document.getElementById('workshopServiceOverlay');if(!overlay?.classList.contains('active'))return;
   e.stopPropagation();if(e.repeat&&e.key==='Enter'){e.preventDefault();return;}
   if(e.key==='Escape'){e.preventDefault();closeWorkshopService(overlay.__game);return;}
-  if(e.key==='Tab'){const buttons=[...overlay.querySelectorAll('button:not(:disabled)')];const i=buttons.indexOf(document.activeElement),next=buttons[(i+(e.shiftKey?-1:1)+buttons.length)%buttons.length];e.preventDefault();next?.focus();return;}
+  if(e.key==='Tab'){const buttons=[...overlay.querySelectorAll('button:not(:disabled)')];const i=buttons.indexOf(document.activeElement),next=buttons[(i+(e.shiftKey?-1:1)+buttons.length)%buttons.length];e.preventDefault();next?.focus({preventScroll:true});return;}
   const directions={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};
   if(directions[e.key]){e.preventDefault();handleWorkshopControllerInput({[`${directions[e.key]}Pressed`]:true});}
   if(e.key==='Enter'){e.preventDefault();handleWorkshopControllerInput({confirmPressed:true});}

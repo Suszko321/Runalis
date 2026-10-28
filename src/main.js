@@ -10,7 +10,7 @@ import {updateSimulatedSubclassPlayers} from './simulatedSubclassPlayers.js';
 import {menuDirection,directionalMenuItem} from './menuNavigation.js';
 import {migrateOrrakaiPosition} from './orrakaiLayout.js';
 import {migrateEchorynPosition} from './echorynLayout.js';
-import { handleMenuSheetInput, menuSheetItemVisible } from './menuSheets.js';
+import { handleMenuSheetInput, menuSheetItemVisible,noteControllerMenuInput } from './menuSheets.js';
 import { cameraAxisPosition } from './cameraBounds.js';
 import { showLexiconMessage } from './lexiconPresentation.js';
 import {updateWorldExploration,discoverStone} from './worldExploration.js';
@@ -1026,9 +1026,11 @@ class RunalisGame {
   getAllControllerInputsForUi() {
     const connected = this.getConnectedControllerInputs();
 
-    return connected.length
-      ? connected
-      : [this.getPrimaryControllerInput()];
+    // Touch buttons/joysticks drive gameplay, not gamepad menu focus. Feeding
+    // their always-connected idle state into menus continually reveals the
+    // selected tab and pulls native touch scrolling back to the top.
+    const fallback=this.getPrimaryControllerInput();
+    return connected.length ? connected : fallback.mobile ? [] : [fallback];
   }
 
   getActorForControllerInput(input) {
@@ -1140,6 +1142,7 @@ class RunalisGame {
     for (const input of controllerInputs) {
       if(this.onlineSession?.handleMenuInput(input))return true;
       if (controllerInputShouldWakeAudio(input)) {
+        if(!input.mobile)noteControllerMenuInput();
         unlockAudio();
       }
 

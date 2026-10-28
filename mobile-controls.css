@@ -155,3 +155,33 @@ html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .abi
 html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-assign{display:flex!important;min-width:0!important;min-height:48px!important}
 html:root body.mobile-input.fullscreen-menu-design #app .game-shell .panel:has(#skills .mobile-detail-open) > .tabs{display:none!important}
 html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills:has(.mobile-detail-open) > .skills-sheet-tabs{display:none!important}
+/* Full-screen touch workspaces: one native document flow, no desktop clipping. */
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell .panel.open{
+ inset:0!important;width:100vw!important;height:100dvh!important;max-height:100dvh!important;margin:0!important;
+ padding:max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left))!important;
+ overflow:auto!important;touch-action:pan-x pan-y!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;background:#111b22!important;
+}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell .panel.open .tabs{
+ position:sticky!important;top:max(0px,env(safe-area-inset-top))!important;z-index:20!important;flex-wrap:nowrap!important;justify-content:flex-start!important;
+ overflow-x:auto!important;overflow-y:hidden!important;padding:0 78px 4px 0!important;max-width:100%!important;box-sizing:border-box;background:#111b22!important;touch-action:pan-x pan-y!important;
+}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell .panel.open .tabs .tab{flex:0 0 auto!important;min-width:72px!important;padding:6px!important}
+body.mobile-input:has(.panel.open) .mobile-tools > button:not([data-action="menu"]){display:none!important}
+body.mobile-input:has(.panel.open) .mobile-tools{top:max(4px,env(safe-area-inset-top));right:max(4px,env(safe-area-inset-right))}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .mobile-detail-open .ability-detail-pane{top:max(4px,env(safe-area-inset-top))!important}
+html:root body.mobile-input .panel.open :is(.inventory-detail-pane,.inventory-name-list,.skill-node-detail-scroll,.world-skill-detail,.quest-detail-pane,.quest-title-list,.character-stat-detail){touch-action:pan-y;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
+html:root body.mobile-input :is(#marketShopOverlay,#workshopServiceOverlay,#characterCreatorOverlay,#onlineMultiplayerOverlay,#pauseOverlay).active{inset:0!important;padding:0!important;width:100vw!important;height:100dvh!important;box-sizing:border-box;overflow:auto!important;overscroll-behavior:contain}
+html:root body.mobile-input :is(.market-shop-panel,.workshop-panel,.character-creator-panel,.online-multiplayer-card,.pause-panel){width:100%!important;max-width:none!important;height:100dvh!important;max-height:100dvh!important;margin:0!important;box-sizing:border-box;overflow-y:auto!important;touch-action:pan-y;-webkit-overflow-scrolling:touch;padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))!important}
+html:root body.mobile-input .market-shop-panel{display:block!important}
+html:root body.mobile-input .market-shop-panel :is(.market-shop-body,.market-shop-list,.market-shop-detail){height:auto!important;max-height:none!important;overflow:visible!important}
+html:root body.mobile-input .workshop-panel .workshop-body{min-height:0!important;flex:1;overflow:auto!important}
+html:root body.mobile-input .workshop-panel :is(.workshop-list,.workshop-detail){touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+html:root body.mobile-input :is(.market-shop-header,.online-multiplayer-card > header){position:sticky!important;top:0;z-index:4;background:#141b22}
+html:root body.mobile-input.fullscreen-menu-design #marketShopOverlay .market-shop-panel{display:block!important;overflow-y:auto!important}
+html:root body.mobile-input.fullscreen-menu-design #marketShopOverlay :is(.market-shop-body,.market-shop-list,.market-shop-detail){height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;flex:none!important;grid-template-columns:minmax(0,1fr)!important}
+html:root body.mobile-input #mainMenu{padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))!important}
+html:root body.mobile-input #mainMenu .menu-card{width:100%!important;max-width:none!important;min-height:calc(100dvh - 16px);max-height:none!important;box-sizing:border-box}
+html:root body.mobile-input :is(.couch-coop-join-overlay,.pvp-arena-overlay).active{padding:0!important;inset:0!important;overflow:auto!important}
+html:root body.mobile-input.fullscreen-menu-design :is(.coop-join-panel,.pvp-arena-panel){width:100vw!important;max-width:none!important;height:100dvh!important;max-height:100dvh!important;overflow-y:auto!important;touch-action:pan-y;padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))!important}
+html:root body.mobile-input #marketShopOverlay .market-shop-actions{position:sticky!important;bottom:0;z-index:4;background:#141b22;padding:8px}
+body.mobile-input .market-shop-hint,body.mobile-input .workshop-panel footer small{display:none!important}

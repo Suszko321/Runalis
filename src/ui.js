@@ -62,7 +62,7 @@ import {
 } from './skills.js';
 
 import { injectRunalisUiStyles } from './uiStyles.js';
-import {handleMenuSheetInput,menuSheetItemVisible,revealMenuFocus} from './menuSheets.js';
+import {handleMenuSheetInput,menuSheetItemVisible,revealMenuFocus,captureTouchMenuScroll} from './menuSheets.js';
 import { renderMinimapHud } from './minimapHud.js';
 import {fitGameplayCanvas} from './hudViewport.js';
 
@@ -260,6 +260,14 @@ export function initUI(game) {
 }
 
 export function renderUI(player, logLines, game, options = {}) {
+  const panel=document.querySelector('.panel.open'),active=panel?.querySelector('.tab-panel.active');
+  const sameTab=active?.id===game?.uiState?.activeMainTab;
+  const sameSubtab=active?.id==='skills'?active.dataset.skillsSubtab===game.uiState.skillsSubtab:active?.id==='inventory'?active.dataset.inventorySubtab===game.uiState.inventorySubtab:true;
+  const restore=sameTab&&sameSubtab?captureTouchMenuScroll(panel):()=>{};
+  try{return renderUIContent(player,logLines,game,options);}finally{restore();}
+}
+
+function renderUIContent(player, logLines, game, options = {}) {
   fitGameplayCanvas(game);
   migratePlayer(player);
   ensureEquipmentShape(player);
@@ -463,6 +471,8 @@ function hasMeaningfulControllerMenuInput(input) {
 
 export function handleGameUiControllerInput(game, input) {
   if (!game || !input?.connected) return false;
+  if(input.mobile)return false;
+  if(document.body.classList.contains('mobile-input')&&!hasMeaningfulControllerMenuInput(input)&&!input.ltPressed&&!input.rtPressed&&!input.mapCursorX&&!input.mapCursorY&&!input.mapZoomInHeld&&!input.mapZoomOutHeld)return false;
   if (game.dialogue?.active && (game.dialogue.actor || game.player) === game.player) return false;
   if (game.paused) return false;
 
