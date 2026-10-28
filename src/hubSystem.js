@@ -1,7 +1,7 @@
 import {rememberRepeatableInstance} from './instanceEncounterMemory.js';
 import {resetFailedDungeonArena} from './dungeonArenaSystem.js';
 import {dressWorld} from './worldAuthorship.js';
-import {reconstructOrrakai, migrateOrrakaiPosition,ensureRootRetortAccess,ensureArenSmithIdentity} from './orrakaiLayout.js';
+import {reconstructOrrakai, migrateOrrakaiPosition,ensureRootRetortAccess,ensureArenSmithIdentity,ensureOrrakaiStoryNpcPositions} from './orrakaiLayout.js';
 import {migrateEchorynPosition} from './echorynLayout.js';
 import {isClassAvailable} from './classData.js';
 // hubSystem.js
@@ -256,6 +256,7 @@ export function createCapitalHubWorld(options = {}) {
   if (!options.skipPublishedOverride) applyPublishedWorldOverride(world);
   ensureArenSmithIdentity(world);
   ensureRootRetortAccess(world);
+  ensureOrrakaiStoryNpcPositions(world);
   return world;
 }
 

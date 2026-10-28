@@ -1,4 +1,5 @@
 import {TILE} from './data.js';
+import {ensureOrrakaiStoryNpcPositions} from './orrakaiLayout.js';
 import {makeEnemy,makeObject} from './overworldUtils.js';
 import {getStoryFlag,setStoryFlag} from './storyProgress.js';
 import {getQuest} from './worldContent.js';
@@ -85,7 +86,9 @@ export function updateAct1Campaign(game,dt=0){
   if(w.mode==='capital'){
     const mael=w.objects.find(o=>o.npcId==='wardenMael'),callworth=w.objects.find(o=>o.npcId==='lightwardenCaelen');
     const atRite=getStoryFlag(p,'mercy.riteStarted')&&!getStoryFlag(p,'mercy.riteWitnessed');
-    move(mael,atRite?22:30,atRite?17:39);move(callworth,atRite?17:29,atRite?15:38);if(callworth)callworth.name='Cardinal Callworth';
+    if(atRite){move(mael,22,17);move(callworth,17,15);}
+    else ensureOrrakaiStoryNpcPositions(w);
+    if(callworth)callworth.name='Cardinal Callworth';
     if(!w.objects.some(o=>o.id==='act1RiteChild'))w.objects.push(npc('act1RiteChild','Sick Child',18,15,{scale:.65}),npc('act1RiteElder','Elderly Patient',20,15),npc('act1MarkedVillager','Marked Villager',21,16));
     if(!w.objects.some(o=>o.id==='act1RiteMother'))w.objects.push(npc('act1RiteMother','Child’s Mother',18,16),npc('act1RiteWife','Patient’s Wife',20,16));
     const neria=w.objects.find(o=>o.npcId==='covenantHealingRite');if(atRite)move(neria,19,15);

@@ -17,7 +17,7 @@ export const ORRAKAI_TERRACES = [
   {id:'middle',y:32,h:3,level:1,stairs:[[36,42],[10,14]],name:'Market Steps'}
 ];
 const placements = {
- orrakaiSouthGate:[36,44],orrakaiEastGate:[66,28],orrakaiFrontierRoadGate:[36,6],orrakaiGuildClerk:[33,12],warden:[36,12],
+ orrakaiSouthGate:[36,44],orrakaiEastGate:[66,28],orrakaiFrontierRoadGate:[36,6],orrakaiGuildClerk:[33,12],warden:[45,43],
  orrakaiNoticeBoard:[40,26],orrakaiFrontierRoadBoard:[46,7],frontierRoadQuartermaster:[43,6],frontierRoadWatch:[7,6],
  orrakaiMarket:[33,25],orrakaiFoodStall:[40,23],orrakaiMarketVendor:[32,26],orrakaiBank:[20,26],orrakaiBanker:[21,25],
  orrakaiBlacksmith:[50,26],smith:[52,27],orrakaiAlchemist:[49,39],orrakaiAlchemistApprentice:[50,38],
@@ -25,7 +25,7 @@ const placements = {
  thornbinderTrainer:[49,39],waveriderTrainer:[50,13],lightbringerTrainer:[57,15],templarTrainer:[18,13],
  orrakaiWeatheredShrine:[14,11],orrakaiTownHearth:[40,38],orrakaiTrialTower:[63,39],
  orrakaiSickVillagerObject:[27,38],orrakaiWellStoresAttendantObject:[31,28],orrakaiWaterDistributionObject:[31,37],
- orrakaiLowerGateGuardObject:[33,42],orrakaiRefugeeParentObject:[20,39],lightwardenCaelenObject:[17,11],
+ orrakaiLowerGateGuardObject:[33,42],orrakaiRefugeeParentObject:[20,39],lightwardenCaelenObject:[13,17],
  covenantHealingRiteObject:[17,15],plagueTentAttendant:[24,40],refugeeReliefWorker:[20,41],
  covenantPhysician:[24,38],covenantReliefSister:[44,39],covenantPeacekeeper:[15,40],maskedOrrakaiChild:[18,40],
  orrakaiGraveTender:[9,13],covenantTeacher:[23,12],covenantHistorian:[41,12],covenantEnvoy:[38,14],
@@ -124,6 +124,18 @@ export function reconstructOrrakai(world){
 
 // Reapply only these story anchors after older published object placements.
 // Keep their legacy IDs, services and quests; never rebuild edited terrain here.
+export function ensureOrrakaiStoryNpcPositions(world){
+ if(world?.mode!=='capital')return world;
+ // The square's eastern approach is in direct view from the apothecary door.
+ // The Cardinal receives visitors on the sanctuary's quiet front terrace.
+ for(const [id,x,y,dirX] of [['warden',45,43,1],['lightwardenCaelenObject',13,17,1]]){
+  const npc=world.objects.find(o=>o.id===id);if(!npc)continue;
+  Object.assign(npc,{...point(x,y),stationary:true,ambientWander:false,forceLabel:true,hideLabel:false,labelPriority:20,dirX,dirY:0});
+  delete npc.wanderTargetX;delete npc.wanderTargetY;
+ }
+ return world;
+}
+
 export function ensureArenSmithIdentity(world){
  if(world?.mode!=='capital')return world;
  const smith=world.objects.find(o=>o.id==='smith');
