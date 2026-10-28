@@ -4,7 +4,7 @@ import {createOverworldMap} from './overworldMap.js';
 import {normalizeWorld} from './world.js';
 import {createLegacyRegionWorld,createLegacyTravelRouteWorld} from './regionWorlds.js';
 import {createContinentalScenes} from './continentScenes.js';
-import {createOrrakaiExterior} from './orrakaiExterior.js';
+import {createOrrakaiExterior,configureOrrakaiApproach} from './orrakaiExterior.js';
 import {packAuthoredTiles,createContinentalTiles} from './continentTiles.js';
 import {createContinentalRuntime} from './continentStreaming.js';
 import {enemyXPForLevel} from './enemyProgression.js';
@@ -46,12 +46,13 @@ function buildBlueprint(){
  if(!objects.some(o=>o.poiId==='lanternMarsh'))objects.push({id:'lanternMarsh-discovery',kind:'poiMarker',poiId:'lanternMarsh',name:'Lantern Marsh',x:245*TILE,y:325*TILE,sourceRegionId:'hearthmereFrontier',decorative:true,interactable:false,hideLabel:true});
  // Required witnesses remain available after a player resolves the Chapel early.
  for(const o of objects)if(['chapelHermit','sisterElyra'].includes(o.id)||['chapelHermit','sisterElyra'].includes(o.npcId)){delete o.requiresPoiUnresolved;if(o.poiStateCondition)delete o.poiStateCondition.requiresPoiUnresolved;}
+ configureOrrakaiApproach(objects,locations);
  spaceNavStoneNetwork(objects);
  const navStones=objects.filter(o=>o.kind==='navStone');
  const clearings=[...scene.clearings,...orrakai.clearings,...objects.filter(critical).map(o=>({x:o.x/TILE,y:o.y/TILE,r:o.kind?.endsWith('Entrance')?3:2}))];
  const structures=[...scene.structures,...orrakai.structures];
  const packed=packAuthoredTiles(echoryn.tiles);
- const newRoads=CONTINENT_ROADS.filter(r=>['continental-pilgrim-road','black-pine-ridge','blackfen-crossing'].includes(r.id));
+ const newRoads=CONTINENT_ROADS.filter(r=>['orrakai-south-approach','continental-pilgrim-road','black-pine-ridge','blackfen-crossing'].includes(r.id));
  const trees=echoryn.echorynTrees.filter(t=>!newRoads.some(r=>routeDistance(t.x/TILE,t.y/TILE,r)<r.width/2+2)&&!navStones.some(s=>Math.hypot(t.x-s.x,t.y-s.y)<3*TILE));
  const treeBuckets=new Map();for(const t of trees)for(let by=Math.floor((t.y-20)/512);by<=Math.floor((t.y+20)/512);by++)for(let bx=Math.floor((t.x-20)/512);bx<=Math.floor((t.x+20)/512);bx++){const key=`${bx},${by}`,bucket=treeBuckets.get(key)||[];bucket.push(t);treeBuckets.set(key,bucket);}
  return {objects,enemies,locations,navStones,clearings,structures,packed,encounterAreas:scene.encounterAreas,echoryn:{terrainFeatures:echoryn.terrainFeatures,trees,treeBuckets,revision:echoryn.echorynRevision},landscapes:echoryn.landscapes||[]};
@@ -88,7 +89,7 @@ export function createContinentalWorld(options={}){
   mapMeta:{version:10,title:'Runalis',description:'A continuous authored continent. Narrative Acts do not divide the geography.',regions:CONTINENT_REGIONS},editorSkipPublishedOverride:!!options.skipPublishedOverride};
  composeGameplayDiscoveries({...world,objects,enemies});
  for(const e of enemies)configureEncounterEnemy(e,geographicEncounterProfile(e.x/TILE,e.y/TILE),e.id);
- world.echorynPresentation={...world,terrainFeatures:blueprint.echoryn.terrainFeatures};
+ world.echorynPresentation={...world,terrainFeatures:{...blueprint.echoryn.terrainFeatures,roads:[...(blueprint.echoryn.terrainFeatures.roads||[]),...world.terrainFeatures.roads.filter(r=>r.id==='orrakai-south-approach')]}};
  world.continentRuntime=createContinentalRuntime(world,{objects,enemies,terrain});
  world.continentRuntime.activate([{x:world.spawn.x,y:world.spawn.y}],options.player);
  return world;

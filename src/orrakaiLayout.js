@@ -144,6 +144,14 @@ export function ensureArenSmithIdentity(world){
  return world;
 }
 
+// Retire the old postern even when published town data still contains it.
+export function ensureOrrakaiSouthGate(world){
+ if(world?.mode!=='capital')return world;
+ world.objects=world.objects.filter(o=>o.id!=='orrakaiEastGate'&&!(o.kind==='capitalExit'&&o.gateId==='east'));
+ for(let y=27;y<=29;y++)if(world.tiles[y]?.[66])Object.assign(world.tiles[y][66],{passable:false,biome:'wall'});
+ return world;
+}
+
 export function ensureRootRetortAccess(world){
  if(world?.mode!=='capital')return world;
  const fixture=world.objects.find(o=>o.id==='orrakaiAlchemist');

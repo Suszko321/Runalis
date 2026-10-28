@@ -23,14 +23,15 @@ check('every authored road supports a real walking footprint through its entire 
   }results.push({id:r.id,samples});
  }report.roads=results;assert.deepEqual(blocked,[]);
 });
-check('Orrakai south and east gates preserve the actual surface state and orientation',()=>{
- for(const gateId of ['south','east']){
+check('Orrakai South Gate preserves surface state and orientation after retiring the East Gate',()=>{
+ assert(!w.continentRuntime.findObject('orrakai-east-surface-gate'));
+ for(const gateId of ['south']){
   const gate=w.continentRuntime.findObject(gateId==='south'?'capital-gate-prototype':'orrakai-east-surface-gate');Object.assign(p,gate);w.continentRuntime.refresh(game);
   const enemy=w.continentRuntime.allEnemies[0];enemy.hp-=7;captureContinentalState(game);const hp=enemy.hp;
   assert(enterCapitalHub(game,gate));assert.equal(game.world.mode,'capital');const exit=game.world.objects.find(o=>o.kind==='capitalExit'&&o.gateId===gateId);assert(exit);assert(isActorPositionPassable(game.world,p.x,p.y,12));
   assert(exitCapitalHub(game,exit));assert.equal(game.world,w);assert.equal(w.continentRuntime.allEnemies[0].hp,hp);assert(isActorPositionPassable(w,p.x,p.y,12));assert.equal(gateId==='east'?p.dirX:p.dirY,1);
  }
- Object.assign(p,{x:2730*32,y:430*32});w.continentRuntime.refresh(game);assert(enterCapitalHub(game));assert(exitCapitalHub(game));assert(Math.hypot(p.x-17.5*32,p.y-36.85*32)<100,'Map return exits at Orrakai, not the remote calling position');
+ Object.assign(p,{x:2730*32,y:430*32});w.continentRuntime.refresh(game);assert(enterCapitalHub(game));assert(exitCapitalHub(game));assert(Math.hypot(p.x-10.5*32,p.y-4.85*32)<100,'Map return exits at Orrakai, not the remote calling position');
 });
 check('loaded continental runtime continues streaming at distant positions',()=>{
  Object.assign(p,{x:2730*32,y:430*32});w.continentRuntime.refresh(game);const save=JSON.parse(JSON.stringify(createSaveState(game)));assert(applySaveToGame(game,save));assert.equal(game.world.continentId,'runalis');game.world.continentRuntime.update(game,1);assert(game.world.objects.some(o=>o.npcId==='zarynthTradeWardSteward'));

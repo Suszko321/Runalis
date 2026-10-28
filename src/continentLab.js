@@ -17,9 +17,8 @@ const world=createContinentalWorld({skipPublishedOverride:true,player});
 const game={player,world,canvas,camera:{x:0,y:0},uiState:{},keys:{},logLines:[],log(line){this.logLines.push(String(line));if(this.logLines.length>10)this.logLines.shift();},save(){},input:{}};
 const scenes=createContinentalScenes();
 const choices=[
- {id:'orrakai-south',name:'Orrakai · South exterior',x:18,y:37,lore:'The south relief apron connects the fortified plateau to farmland and the first forest road.'},
- {id:'orrakai-east',name:'Orrakai · East postern',x:44,y:26,lore:'The postern leaves the city wall beside the old road. Both exterior gates enter the existing town instance.'},
- {id:'orrakai-farms',name:'Orrakai · Farms and relief road',x:30,y:46,lore:'Kitchen plots, a granary and supply wagons surround the maintained beginner road.'},
+ {id:'orrakai-south',name:'Orrakai · South exterior',x:10.5,y:6,lore:'Orrakai continues beyond the northwest boundary; the south road leads directly to its Nav Stone.'},
+ {id:'orrakai-farms',name:'Orrakai · Farms and relief road',x:20,y:18,lore:'A compact relief apron and small kitchen plot sit beside the south road.'},
  ...scenes.locations.map(s=>({id:s.id,name:s.name,x:s.tileX,y:s.tileY,lore:s.lore})),
  {id:'pilgrim-road-crossing',name:'Pass · Pinewater bridge',x:750,y:208,lore:'A real road crossing carries the pilgrim route over the Pinewater watershed.'},
  {id:'aureate-arrival',name:'Aureate · Arrival services',x:970,y:201,lore:'Retained Pilgrim Rest services and companions are beside the Saint Orvane south court.'},

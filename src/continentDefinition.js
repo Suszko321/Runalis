@@ -1,6 +1,7 @@
 // Hand-authored continental geography. Coordinates are hidden 32px gameplay cells.
 // Acts belong to the story; region difficulty and physical routes exist independently.
 import {TILE} from './data.js';
+import {ORRAKAI_SOUTH_ROAD} from './orrakaiExterior.js';
 import {ECHORYN_ROADS,ECHORYN_RIVERS,ECHORYN_LAKES,routeDistance,echorynRegionAt,echorynGroundColor} from './echorynGeography.js';
 export const CONTINENT_VERSION=1;
 export const CONTINENT_WIDTH=2880,CONTINENT_HEIGHT=960;
@@ -15,6 +16,7 @@ export const CONTINENT_REGIONS=[
  {id:'zarynth',name:'Zarynth Arrival Ward',x:2715,y:430,rx:160,ry:175,ecology:'aureate',levels:[35,60],color:'#73705b',climate:'coastal rain',faction:'imperial',description:'The west trade ward is a playable destination with a market, refuge and ancient Nav Stone. The greater capital lies beyond.'}
 ];
 export const CONTINENT_ROADS=[
+ ORRAKAI_SOUTH_ROAD,
  ...ECHORYN_ROADS.map(r=>({...r,roadClass:r.width>=4?'rural':'trail',sourceRegionId:'hearthmereFrontier'})),
  {id:'continental-pilgrim-road',name:'Pilgrim Road',roadClass:'provincial',width:5,points:[[565,115],[603,131],[641,154],[673,175],[715,209],[757,204],[793,179],[825,195],[848,225],[880,260],[920,240],[956,208],[992,196],[1016,215],[1056,235],[1100,260],[1140,249],[1190,275],[1244,276],[1280,304]]},
  {id:'black-pine-ridge',name:'Old Ridge Road',roadClass:'ancient',width:2.5,points:[[603,131],[638,99],[680,86],[721,98],[762,77],[805,89],[848,104],[899,95],[940,112],[931,140],[932,177],[956,208],[992,196]]},
@@ -78,4 +80,4 @@ export function migrateContinentalPosition(regionId,x,y){
  if(regionId==='severedCausewayRoute'||regionId==='severedCauseway')return {x:(1300+tx*2.5)*TILE,y:(205+(ty-28)*2)*TILE};
  return {x:Number(x||0),y:Number(y||0)};
 }
-export const CONTINENT_SPAWNS={hearthmereFrontier:[11,27],aureateMarches:[940,200],ascensionWastes:[1656,220],pilgrimRoad:[645,165],severedCauseway:[1330,205],blackfenBasin:[727,507],blackPinePass:[715,209],imperialHeartlands:[1640,570],zarynth:[2730,430]};
+export const CONTINENT_SPAWNS={hearthmereFrontier:[10,5],aureateMarches:[940,200],ascensionWastes:[1656,220],pilgrimRoad:[645,165],severedCauseway:[1330,205],blackfenBasin:[727,507],blackPinePass:[715,209],imperialHeartlands:[1640,570],zarynth:[2730,430]};

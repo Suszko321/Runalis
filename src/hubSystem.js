@@ -1,7 +1,7 @@
 import {rememberRepeatableInstance} from './instanceEncounterMemory.js';
 import {resetFailedDungeonArena} from './dungeonArenaSystem.js';
 import {dressWorld} from './worldAuthorship.js';
-import {reconstructOrrakai, migrateOrrakaiPosition,ensureRootRetortAccess,ensureArenSmithIdentity,ensureOrrakaiStoryNpcPositions} from './orrakaiLayout.js';
+import {reconstructOrrakai, migrateOrrakaiPosition,ensureRootRetortAccess,ensureArenSmithIdentity,ensureOrrakaiStoryNpcPositions,ensureOrrakaiSouthGate} from './orrakaiLayout.js';
 import {migrateEchorynPosition} from './echorynLayout.js';
 import {isClassAvailable} from './classData.js';
 // hubSystem.js
@@ -43,10 +43,10 @@ export function enterCapitalHub(game, entrance = null) {
   const surface = ['overworld','travelRoute'].includes(hostGame.world.mode);
   captureContinentalState(hostGame);
   // A map return always leads to Orrakai's south approach, even from a remote
-  // expedition. Physical entrances retain their own corresponding town gate.
+  // expedition. Legacy postern returns also use the South Gate now.
   const surfaceWorld = surface ? hostGame.world : createWorld({spawnRegionId:'hearthmereFrontier'});
-  const gate = entrance || surfaceCapitalGate(surfaceWorld, 'south');
-  const gateId = gate?.gateId === 'east' ? 'east' : 'south';
+  const gate = entrance?.gateId!=='east'&&entrance || surfaceCapitalGate(surfaceWorld, 'south');
+  const gateId = 'south';
   hostGame.capitalReturnWorld = surfaceWorld.continentId === 'runalis' ? surfaceWorld : null;
   hostGame.overworldState = createOverworldReturnState({...hostGame,world:surfaceWorld}, gate || {x:surfaceWorld.spawn.x,y:surfaceWorld.spawn.y});
   Object.assign(hostGame.overworldState, {
@@ -85,11 +85,11 @@ export function enterCapitalHub(game, entrance = null) {
   hostGame.player.y = hub.spawn.y;
   migrateOrrakaiPosition(hub, hostGame.player);
   const interior = hub.objects.find(o=>o.kind==='capitalExit' && o.gateId===gateId);
-  const interiorArrival = gateId==='east' ? {x:interior.x-TILE*1.5,y:interior.y} : {x:interior.x,y:interior.y-TILE*1.5};
+  const interiorArrival = {x:interior.x,y:interior.y-TILE*1.5};
   Object.assign(hostGame.player,findNearestActorPassablePoint(hub,interiorArrival.x,interiorArrival.y,12));
   hostGame.player.currentPosition={x:hostGame.player.x,y:hostGame.player.y};
-  hostGame.player.dirX = gateId==='east' ? -1 : 0;
-  hostGame.player.dirY = gateId==='east' ? 0 : -1;
+  hostGame.player.dirX = 0;
+  hostGame.player.dirY = -1;
 
   clearPartyTravelCombatState(hostGame);
   placePartyNearHost(hostGame);
@@ -117,7 +117,7 @@ export function exitCapitalHub(game, exit = null) {
 
   hostGame.world = hostGame.capitalReturnWorld?.continentId==='runalis'
     ? hostGame.capitalReturnWorld : restoreOverworldFromState(state);
-  const gateId = (exit?.gateId || state.gateId)==='east' ? 'east' : 'south';
+  const gateId = 'south';
   const gate = surfaceCapitalGate(hostGame.world,gateId);
   const arrival = surfaceGateArrival(hostGame.world,gate,gateId);
   hostGame.world.continentRuntime?.activate?.([arrival],hostGame.player,true);
@@ -128,8 +128,8 @@ export function exitCapitalHub(game, exit = null) {
   hostGame.player.y = returnPoint.y;
   migrateEchorynPosition(hostGame.world,hostGame.player);
   hostGame.player.currentPosition={x:hostGame.player.x,y:hostGame.player.y};
-  hostGame.player.dirX=gateId==='east'?1:0;
-  hostGame.player.dirY=gateId==='east'?0:1;
+  hostGame.player.dirX=0;
+  hostGame.player.dirY=1;
   hostGame.player.currentZone = hostGame.world.name;
   clearPartyTravelCombatState(hostGame);
   placePartyNearHost(hostGame);
@@ -142,8 +142,8 @@ export function exitCapitalHub(game, exit = null) {
   hostGame.overworldState = null;
   hostGame.capitalReturnWorld = null;
 
-  hostGame.log?.(`You pass through Orrakai's ${gateId==='east'?'East':'South'} Town Gate.`);
-  addStatusText(actor || hostGame.player, gateId==='east'?'East Road':'South Road', {
+  hostGame.log?.('You pass beneath Orrakai’s South Gate onto the Nav Stone road.');
+  addStatusText(actor || hostGame.player, 'South Road', {
     color: '#73d18a'
   });
 
@@ -151,12 +151,11 @@ export function exitCapitalHub(game, exit = null) {
 }
 
 function surfaceCapitalGate(world, gateId) {
-  const id=gateId==='east'?'orrakai-east-surface-gate':'capital-gate-prototype';
-  return world.continentRuntime?.findObject?.(id) || world.objects?.find(o=>o.kind==='capitalGate'&&(o.gateId||'south')===gateId);
+  return world.continentRuntime?.findObject?.('capital-gate-prototype') || world.objects?.find(o=>o.kind==='capitalGate'&&o.gateId!=='east');
 }
 
 function surfaceGateArrival(world, gate, gateId) {
-  return gate ? {x:gate.x+(gateId==='east'?TILE*1.35:0),y:gate.y+(gateId==='south'?TILE*1.35:0)} : {...world.spawn};
+  return gate ? {x:gate.x,y:gate.y+TILE*1.35} : {...world.spawn};
 }
 
 function getWorldTransitionGame(game) {
@@ -257,6 +256,7 @@ export function createCapitalHubWorld(options = {}) {
   ensureArenSmithIdentity(world);
   ensureRootRetortAccess(world);
   ensureOrrakaiStoryNpcPositions(world);
+  ensureOrrakaiSouthGate(world);
   return world;
 }
 
@@ -580,10 +580,7 @@ function createCapitalObjects() {
       structureArchetype: 'fort',
       structureVariant: 'rural',
       structureImportance: 'major',
-      talk: 'South Town Gate: return to the Act I overworld.'
-    }),
-    hubObject('capitalExit', 'orrakaiEastGate', 'East Town Gate', 66, 28, {
-      gateId:'east',r:30,forceLabel:true,labelPriority:10,talk:'East Town Gate: the tower lane and the open forest roads.'
+      talk: 'Pass beneath Orrakai’s south arch onto the relief road. Follow the paving to the Nav Stone, then onward into Echoryn Forest.'
     }),
     hubObject('travelRouteGate', 'orrakaiFrontierRoadGate', 'Frontier Road North Gate', 36, 7, {
       r: 34,
