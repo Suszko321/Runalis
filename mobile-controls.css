@@ -109,3 +109,49 @@ html:root body.mobile-input #characterCreatorOverlay .creator-helpbar {display:n
 html:root body.mobile-input #characterCreatorOverlay .creator-step-appearance .creator-preview-panel {display:grid!important;grid-template-rows:auto 320px auto!important;width:100%!important;min-height:0!important;height:auto!important;box-sizing:border-box!important;margin:16px 0!important;overflow:visible!important}
 html:root body.mobile-input #characterCreatorOverlay .creator-step-appearance .creator-canvas-shell {height:320px!important;min-height:320px!important;overflow:hidden!important;display:flex!important;justify-content:center!important}
 html:root body.mobile-input #characterCreatorOverlay .creator-step-appearance [data-creator-preview] {width:276px!important;height:320px!important;max-width:100%!important;max-height:320px!important;object-fit:contain!important;image-rendering:pixelated}
+/* Touch skill library: the 3×3 dock follows the gameplay control order exactly. */
+.mobile-skills-tip,.mobile-skills-feedback,.mobile-skill-close,.mobile-hotbar-fixed-action{display:none}
+body.mobile-input .mobile-skills-tip{display:block;padding:10px;border:1px solid #8c7047;background:#18242e;color:#ecd6a3;font-size:13px;line-height:1.45}
+body.mobile-input .mobile-skills-feedback{display:block;font-size:12px;color:#ecd6a3;margin:4px 0}
+body.mobile-input .ability-desktop-help{display:none!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-management-onepage{padding-bottom:230px!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-pool-button > i{display:flex;align-items:center;justify-content:center;min-width:48px;min-height:48px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grab}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-pool-button{touch-action:pan-y}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-pane{position:fixed!important;inset:auto max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) auto!important;width:236px!important;max-height:none!important;z-index:510!important;padding:8px!important;background:#111b22fa!important;border:1px solid #8c7047!important;box-sizing:border-box!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-pane h3{font-size:14px!important;margin:0!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-row{display:grid!important;grid-template-columns:repeat(3,68px)!important;gap:5px!important;justify-content:center!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-slot{position:relative;min-width:0!important;padding:0!important;border:0!important;background:none!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-assign,html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .mobile-hotbar-fixed-action{display:flex;flex-direction:column;justify-content:center;align-items:center;box-sizing:border-box;width:68px!important;height:48px!important;min-height:48px!important;padding:3px!important;font-size:10px!important;border:1px solid #ac9568!important;border-radius:12px!important;background:#101e2be6!important;color:#f2e6cc;overflow:hidden;line-height:1.1!important}
+body.mobile-input .mobile-hotbar-fixed-action{opacity:.65}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-icon{display:none!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-binding{font-size:10px!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-name{font-size:10px!important;overflow-wrap:anywhere}
+body.mobile-input #skills .ability-hotbar-assign em{display:none!important}
+body.mobile-input #skills .ability-hotbar-clear{position:absolute;right:0;top:0;min-height:18px!important;width:22px;padding:0!important;font-size:9px!important;opacity:.8}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-detail-pane{display:none!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .mobile-detail-open .ability-detail-pane{display:block!important;position:fixed!important;inset:65px 256px 12px 12px!important;z-index:511!important;width:auto!important;height:auto!important;max-height:none!important;overflow-y:auto!important;background:#111b22!important;padding:12px!important;border:1px solid #8c7047}
+body.mobile-input .mobile-skill-close{display:block;position:sticky;top:0;z-index:2;min-height:44px;background:#202c37!important}
+body.mobile-input #skills .ability-morph-options{display:grid!important;grid-template-columns:1fr!important}
+body.mobile-input #skills .ability-morph-option{min-height:60px!important;touch-action:manipulation}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .mobile-drop-target{outline:3px solid #f4d47b!important;background:#67522b!important}
+.mobile-skill-ghost{position:fixed;z-index:15000;width:56px;height:56px;transform:translate(-50%,-50%);background:#202c37e8;border:2px solid #f4d47b;border-radius:10px;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.mobile-skill-ghost :is(img,svg){max-width:48px;max-height:48px}
+body.mobile-skill-dragging{user-select:none;-webkit-user-select:none}
+@media(orientation:portrait){html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .mobile-detail-open .ability-detail-pane{inset:65px 8px 230px!important}html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-pane{right:50%!important;transform:translateX(50%)!important}}
+@media(orientation:landscape){html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-pool-pane,body.mobile-input .mobile-skills-tip,body.mobile-input .ability-category-pane{margin-right:244px!important}html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-management-onepage{padding-bottom:12px!important}}
+.mobile-skill-clear-options{display:none}
+body.mobile-input .mobile-skill-clear-options{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-assign .ability-hotbar-icon{display:none!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-pane > div:first-child{display:block!important}
+body.mobile-input .progression-bumper-hint{display:none!important}
+/* Override the desktop detail grid; the touch sheet has one scrolling flow. */
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-detail-pane{display:none!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .mobile-detail-open .ability-detail-pane{display:block!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-detail-info{position:static!important;height:auto!important;max-height:none!important;overflow:visible!important;display:block!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-morph-picker{position:static!important;display:block!important;height:auto!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-morph-options{display:grid!important;grid-template-columns:1fr!important;height:auto!important}
+body.mobile-input .panel:has(.mobile-detail-open) > .tabs,body.mobile-input #skills:has(.mobile-detail-open) > .skills-sheet-tabs{visibility:hidden!important;pointer-events:none!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-pane{display:block!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-assign{display:flex!important;min-width:0!important;min-height:48px!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell .panel:has(#skills .mobile-detail-open) > .tabs{display:none!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills:has(.mobile-detail-open) > .skills-sheet-tabs{display:none!important}

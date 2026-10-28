@@ -1,6 +1,7 @@
 ﻿import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
 import {abilitySummary,abilityRequirements,abilityScaling,equipmentPurpose,equipmentScaling,informationNumber} from './uiInformation.js';
 import {getAbilityChargeTime} from './chargeSystem.js';
+import {bindMobileSkills} from './mobileSkills.js';
 import {getSunkenPressureState,SUNKEN_PRESSURE} from './sunkenPressureSystem.js';
 import {isGravecallerSustain,gravecallerSkillLifesteal} from './gravecallerSustain.js';
 import {progressionPower} from './combatPower.js';
@@ -1187,6 +1188,10 @@ function cancelAbilityAssignment(game) {
 function completeAbilityAssignment(game, slot) {
   const abilityId = game.uiState.pendingAbilityId || game.uiState.selectedAbilityId;
   const result = assignAbilityToSlot(game.player, slot, abilityId);
+  if(document.body.classList.contains('mobile-input')){
+    game.uiState.mobileAbilityFeedback=result.ok?`${result.ability.name} equipped in tile ${slot+1}.`:result.reason;
+    if(result.ok){game.uiState.selectedAbilityId=abilityId;game.uiState.mobileAbilityDetailOpen=false;}
+  }
   game?.log?.(result.ok
     ? `Assigned ${result.ability.name} to ${abilitySlotLabel(slot)}.`
     : result.reason);
@@ -1200,7 +1205,8 @@ function completeAbilityAssignment(game, slot) {
 
   renderUI(game.player, game.logLines || [], game);
   syncAbilityControllerState(game);
-  applyAbilityControllerFocus(game);
+  if(!document.body.classList.contains('mobile-input')||game.primaryControllerActive)applyAbilityControllerFocus(game);
+  if(result.ok&&document.body.classList.contains('mobile-input'))game.save?.(false);
 }
 
 function clearAbilityHotbarSlot(game, slot) {
@@ -2258,12 +2264,13 @@ function bindSubtabs(player, game) {
       game.uiState.selectedAbilityId = btn.dataset.selectAbilityId;
       updateAbilityManagementPreview(player, game);
     };
-    btn.onfocus = selectAbility;
+    btn.onfocus = () => {if(!document.body.classList.contains('mobile-input'))selectAbility();};
     btn.onmouseenter = () => {
-      if (canMouseDriveMenuSelection(game)) selectAbility();
+      if (!document.body.classList.contains('mobile-input')&&canMouseDriveMenuSelection(game)) selectAbility();
     };
     btn.onclick = () => {
       selectAbility();
+      if(document.body.classList.contains('mobile-input'))game.uiState.mobileAbilityDetailOpen=true;
       resetAbilityControllerSelection(game);
       renderUI(player,game.logLines||[],game);
     };
@@ -2284,10 +2291,13 @@ function bindSubtabs(player, game) {
       const slot = Number(btn.dataset.clearAbilitySlot);
       const oldAbility = getAbilityById(player.loadout?.abilitySlots?.[slot]);
       clearAbilitySlot(player, slot);
+      if(document.body.classList.contains('mobile-input'))game.uiState.mobileAbilityFeedback=`Tile ${slot+1} cleared. The skill remains learned.`;
       game?.log?.(`${oldAbility?.name || 'Ability'} removed from ${abilitySlotLabel(slot)}. It remains learned.`);
       renderUI(player, game.logLines || [], game);
+      if(document.body.classList.contains('mobile-input'))game.save?.(false);
     };
   });
+  bindMobileSkills(game,(id,slot)=>{game.uiState.pendingAbilityId=id;completeAbilityAssignment(game,slot);});
 }
 
 function restoreActiveMainPanel(game) {
@@ -3842,7 +3852,8 @@ function abilitySheet(player, game) {
   const placementAbility = assignmentMode ? pending : selected;
 
   return `
-    <div class="ability-management-onepage ${assignmentMode ? 'assignment-mode' : ''}" data-ability-assignment-mode="${assignmentMode ? 'true' : 'false'}">
+    <div class="ability-management-onepage ${game.uiState.mobileAbilityDetailOpen?'mobile-detail-open':''} ${assignmentMode ? 'assignment-mode' : ''}" data-ability-assignment-mode="${assignmentMode ? 'true' : 'false'}">
+      <p class="mobile-skills-tip">Tap a skill to view its morphs. Drag its icon onto a hotbar tile to equip or replace a skill. You can also tap a skill, then tap a tile.</p>
       <div class="card ability-category-pane">
         <h3>Technique Library</h3>
         
@@ -3863,13 +3874,16 @@ function abilitySheet(player, game) {
       </div>
 
       <div class="card ability-detail-pane" data-ability-detail-pane>
+        <button type="button" class="mobile-skill-close" data-mobile-skill-close>Back to skills</button>
         ${renderAbilityDetail(player, selected)}
+        <div class="mobile-skill-clear-options">${(player.loadout?.abilitySlots||[]).map((id,slot)=>id===selected?.id?`<button type="button" data-clear-ability-slot="${slot}">Clear tile ${slot+1}</button>`:'').join('')}</div>
       </div>
 
       <div class="card ability-hotbar-pane">
         <div>
           <h3>${assignmentMode ? `Place ${escapeHtml(pending.name)}` : 'Hotbar'}</h3>
-          <p class="tag">${assignmentMode
+          <p class="mobile-skills-feedback" role="status">${escapeHtml(game.uiState.mobileAbilityFeedback||'Your gameplay hotbar · drop an icon on a skill tile')}</p>
+          <p class="tag ability-desktop-help">${assignmentMode
             ? 'Choose a slot, then press A. Press B to return or X to clear a slot.'
             : selected
               ? 'Press A to assign the selected skill. Press X to choose an available morph.'
@@ -3877,6 +3891,7 @@ function abilitySheet(player, game) {
         </div>
         <div class="ability-hotbar-row">
           ${Array.from({length:HOTBAR_SLOT_COUNT},(_,slot)=>slot).map(slot => abilityHotbarSlot(player, slot, placementAbility, assignmentMode)).join('')}
+          ${['Attack','Sprint','Dodge','Interact'].map(name=>`<div class="mobile-hotbar-fixed-action" aria-disabled="true">${name}</div>`).join('')}
         </div>
       </div>
     </div>
@@ -4000,11 +4015,11 @@ function abilityHotbarSlot(player, slot, selected, assignmentMode = false) {
     <div class="ability-hotbar-slot ${assigned && !availability?.usable ? 'unavailable' : ''} ${assignmentMode ? 'assignment-target' : ''}">
       <button type="button" class="ability-hotbar-assign" data-ability-hotbar-slot="${slot}" data-assign-selected-slot="${slot}" aria-label="${escapeHtml(`${abilitySlotLabel(slot,player)}: ${assigned?.name||'Empty'}${assigned?.subclassName?` · ${assigned.subclassName}`:''}`)}" title="${escapeHtml(assigned?.name||'Assign selected ability')}" ${selected ? '' : 'disabled'}>
         <i class="ability-hotbar-icon" aria-hidden="true">${assigned?hudArtIcon(assigned.id,escapeHtml(HUD_ABILITY_ICONS[assigned.id]||createAbilityFallbackIcon(assigned)),player):'<span class="hotbar-empty-symbol">◇</span>'}</i>
-        <b class="ability-hotbar-binding">${escapeHtml(abilitySlotLabel(slot,player))}</b>
-        <span class="ability-hotbar-name">${escapeHtml(assigned?getAbilityById(assigned.id)?.name||assigned.name:'Empty')}</span>
+        <b class="ability-hotbar-binding">${escapeHtml(document.body.classList.contains('mobile-input')?`Skill ${slot+1}`:abilitySlotLabel(slot,player))}</b>
+        <span class="ability-hotbar-name">${escapeHtml(assigned?assigned.name:'Empty')}</span>
         <em>${assigned ? escapeHtml(availability?.usable?(assigned.subclassName||''):availability?.reason||'Unavailable') : 'Choose a skill'}</em>
       </button>
-      ${assigned ? `<button type="button" class="ability-hotbar-clear" data-clear-ability-slot="${slot}">Clear</button>` : ''}
+      ${assigned&&!document.body.classList.contains('mobile-input') ? `<button type="button" class="ability-hotbar-clear" data-clear-ability-slot="${slot}">Clear</button>` : ''}
     </div>
   `;
 }

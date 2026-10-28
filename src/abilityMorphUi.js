@@ -59,6 +59,8 @@ export function bindAbilityMorphControls(player,game,render,root=document){
   root.querySelectorAll('[data-ability-morph]').forEach(btn=>btn.onclick=()=>{
     const result=selectAbilityMorph(player,btn.dataset.morphAbility,btn.dataset.abilityMorph);
     if(result.ok&&result.changed){clearAbilityMorphCombatState(player,btn.dataset.morphAbility);game.uiState.abilityAssignmentMode=false;game.uiState.pendingAbilityId=null;}
+    if(document.body.classList.contains('mobile-input'))game.uiState.mobileAbilityFeedback=result.reason;
     game.log?.(result.reason);render(player,game.logLines||[],game);
+    if(result.ok&&result.changed&&document.body.classList.contains('mobile-input'))game.save?.(false);
   });
 }
