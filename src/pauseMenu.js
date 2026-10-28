@@ -27,7 +27,7 @@ export function ensurePauseOverlay(currentGame = null) {
           <button id="resumeBtn" type="button">Resume</button>
           <button id="pauseSaveBtn" type="button">Save</button>
           <button id="pauseMultiplayerBtn" type="button">Multiplayer</button>
-          <button id="pauseFullscreenBtn" type="button" data-desktop-fullscreen hidden>Enter fullscreen</button>
+          <button id="pauseFullscreenBtn" type="button" data-desktop-fullscreen data-mobile-fullscreen hidden>Enter fullscreen</button>
           <button id="arenaReturnBtn" type="button" hidden>Forfeit to Orrakai</button>
           <button id="leaveSessionBtn" type="button" hidden>Leave Session</button>
           <button id="saveQuitBtn" type="button">Save & Quit</button>

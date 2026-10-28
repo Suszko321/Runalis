@@ -4,7 +4,7 @@ let busy=false;
 const bound=new WeakSet();
 function refresh(){
   for(const button of document.querySelectorAll('[data-desktop-fullscreen]')){
-    button.hidden=isMobileInputDevice();
+    button.hidden=isMobileInputDevice()&&!button.hasAttribute('data-mobile-fullscreen');
     button.textContent=document.fullscreenElement?'Exit fullscreen':'Enter fullscreen';
     button.setAttribute('aria-pressed',String(!!document.fullscreenElement));
     button.disabled=busy||!document.fullscreenEnabled||!document.documentElement.requestFullscreen;
