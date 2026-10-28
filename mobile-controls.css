@@ -185,3 +185,18 @@ html:root body.mobile-input :is(.couch-coop-join-overlay,.pvp-arena-overlay).act
 html:root body.mobile-input.fullscreen-menu-design :is(.coop-join-panel,.pvp-arena-panel){width:100vw!important;max-width:none!important;height:100dvh!important;max-height:100dvh!important;overflow-y:auto!important;touch-action:pan-y;padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))!important}
 html:root body.mobile-input #marketShopOverlay .market-shop-actions{position:sticky!important;bottom:0;z-index:4;background:#141b22;padding:8px}
 body.mobile-input .market-shop-hint,body.mobile-input .workshop-panel footer small{display:none!important}
+/* Touch tree details are dismissible popups, never a permanent reading pane. */
+.mobile-tree-tip,.mobile-tree-close{display:none}
+body.mobile-input .mobile-tree-tip{display:block;color:#ecd6a3;font-size:13px;line-height:1.45;padding:8px;background:#18242e}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills [data-skill-tree-detail]{display:none!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills [data-skill-tree-detail].mobile-tree-detail-open{display:block!important;position:fixed!important;inset:auto max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))!important;z-index:520!important;width:auto!important;height:auto!important;max-height:48dvh!important;overflow-y:auto!important;touch-action:pan-y!important;overscroll-behavior:contain;background:#111b22!important;border:1px solid #ac9568!important;border-radius:12px;padding:8px!important;box-sizing:border-box;box-shadow:0 -8px 30px #0008}
+body.mobile-input .mobile-tree-close{display:block;position:sticky;top:0;z-index:3;min-height:44px;width:100%;background:#202c37!important;margin-bottom:8px}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills [data-skill-tree-detail] .skill-node-detail-scroll{display:block!important;height:auto!important;max-height:none!important;overflow:visible!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills [data-skill-tree-detail] .tree-learn-button{display:none!important}
+body.mobile-input [data-select-skill-tree-node]{touch-action:manipulation!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .skill-tree-node-index{display:block!important;overflow:auto!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .skill-tree-stage{display:block!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .prerequisite-tree{width:100%!important;min-width:680px!important;height:calc(var(--tree-rows) * 80px + 80px)!important;min-height:0!important}
+
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills [data-skill-tree-detail] :is(h3,p,span,b,small){color:#ecdfc4!important}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills [data-skill-tree-detail] .skill-node-detail-title h3{color:#f4d49a!important}

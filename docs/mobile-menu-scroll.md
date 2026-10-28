@@ -30,3 +30,15 @@ creator edits, and landscape/portrait geometry. The same 200px scenario now stay
 at 200. Existing mobile controls, skill drag/morph/save-reload, desktop controller
 and workshop action suites also pass. Measurements are scroll positions, not FPS
 or physical-device performance claims.
+
+## Skill tree touch interaction
+
+On mobile, a single tap opens a dismissible description popup after the 360ms
+double-tap window. Two taps on the same node purchase through the existing
+point, prerequisite and exclusive-choice checks, then save successful purchases.
+The description never hides menu navigation. The tree has explicit readable
+height and horizontal scrolling in portrait so its nodes cannot collapse under
+the reading key/footer. `verify-mobile-tree-taps.cjs` verifies native touch taps,
+no accidental single-tap purchases, duplicate/locked purchase rejection, saved
+purchases, popup dismissal and access to another menu in portrait. Desktop
+purchase and mobile morph/hotbar regression suites also pass.

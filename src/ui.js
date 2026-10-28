@@ -2157,6 +2157,7 @@ function bindSubtabs(player, game) {
       if (game.uiState.skillsSubtab === 'trees') {
         game.uiSkillTreeControllerState = null;
       }
+      closeMobileTreeDetail(game);
       renderUI(player, game.logLines || [], game);
     };
   });
@@ -2244,7 +2245,30 @@ function bindSubtabs(player, game) {
     // its way to Learn Node. Keyboard/controller focus still selects normally.
     btn.onmouseenter = null;
     btn.onfocus = selectNode;
-    btn.onclick = selectNode;
+    btn.onclick = event => {
+      selectNode();
+      if(!document.body.classList.contains('mobile-input'))return;
+      const nodeId=btn.dataset.selectSkillTreeNode,now=performance.now(),previous=game.mobileTreeTap;
+      clearTimeout(previous?.timer);
+      if(previous?.id===nodeId&&now-previous.time<360){
+        game.mobileTreeTap=null;
+        closeMobileTreeDetail(game);
+        const result=spendSkillTreeNodeFromUi(game,player,nodeId);
+        game.uiState.mobileTreeFeedback=result.ok?`${result.node?.name||'Skill'} learned.`:result.pending?'This is an exclusive path choice. Double-tap the skill again to confirm.':result.reason||'Skill unavailable.';
+        if(!result.pending)logSkillTreeSpendResult(game,result);
+        renderUI(player,game.logLines||[],game);
+        if(result.ok)game.save?.(false);
+        return;
+      }
+      // Leave the node under the second finger tap; opening a sheet immediately
+      // can cover it before the double tap finishes.
+      game.mobileTreeTap={id:nodeId,time:now,timer:setTimeout(()=>{
+        game.mobileTreeTap=null;
+        if(btn.isConnected&&game.uiState.skillsSubtab==='trees'){
+          document.querySelector('[data-skill-tree-detail]')?.classList.add('mobile-tree-detail-open');
+        }
+      },360)};
+    };
     btn.ondblclick = event => {
       if(event.button!==0||document.body.classList.contains('mobile-input'))return;
       event.preventDefault();selectNode();
@@ -2256,6 +2280,7 @@ function bindSubtabs(player, game) {
   });
 
   bindSubclassTreeControls(player,game,renderUI);
+  bindMobileTreeDetail(game);
   bindAbilityMorphControls(player,game,renderUI);
   document.querySelectorAll('[data-skill-tree-node]').forEach(btn => {
     btn.onclick = () => {
@@ -3355,7 +3380,7 @@ function skillTreeSheet(player, game) {
 
       <div class="skill-tree-stage">
         <section class="skill-tree-node-index tree-${selectedTree}" aria-label="${escapeHtml(selectedTreeInfo.title)} tree">
-          ${renderSkillTreeGraph(player, treeLayout, selectedNode?.id)}
+          ${renderSkillTreeGraph(player, treeLayout, selectedNode?.id,game.uiState.mobileTreeFeedback)}
         </section>
         <aside class="skill-tree-detail-pane" data-skill-tree-detail>
           ${renderSkillTreeNodeDetail(player, selectedNode, selectedTree)}
@@ -3588,7 +3613,7 @@ function skillTreeNodeTypeGlyph(node) {
   return 'PAS';
 }
 
-function renderSkillTreeGraph(player, layout, selectedNodeId) {
+function renderSkillTreeGraph(player, layout, selectedNodeId, feedback='') {
   const nodes=new Map(layout.nodes.map(node=>[node.id,node]));
   const connections=layout.connections.map(edge=>{
     const from=nodes.get(edge.from).position,to=nodes.get(edge.to).position;
@@ -3602,6 +3627,8 @@ function renderSkillTreeGraph(player, layout, selectedNodeId) {
     return `<path class="tree-edge ${learned?'learned':ready?'ready':''} ${edge.merge?'either':''} ${edge.to===selectedNodeId?'selected':''}" data-tree-from="${escapeHtml(edge.from)}" data-tree-to="${escapeHtml(edge.to)}" d="${path}"/><path class="tree-arrow" d="M${to.x-3} ${y2-5} L${to.x} ${y2} L${to.x+3} ${y2-5}"/>`;
   }).join('');
   return `
+    <p class="mobile-tree-tip">Tap a skill for its description. Double-tap the same skill to learn it using skill points. Close the description to return to the tree.</p>
+    ${feedback?`<p class="mobile-tree-tip" role="status">${escapeHtml(feedback)}</p>`:''}
     <div class="tree-reading-key"><span>START AT THE TOP · FOLLOW THE ARROWS</span><span><i class="key-learned"></i> Learned <i class="key-ready"></i> Available <i class="key-either"></i> Either prerequisite · ◇ Exclusive choice</span></div>
     <div class="branching-skill-tree prerequisite-tree" data-branching-skill-tree="${escapeHtml(layout.tree)}" style="--tree-rows:${layout.rowCount};--tree-columns:${layout.columnCount}">
       <svg class="tree-connections" viewBox="0 0 ${layout.width} ${layout.height}" preserveAspectRatio="none" aria-hidden="true">${connections}</svg>
@@ -3635,6 +3662,7 @@ function renderSkillTreeNodeDetail(player, node, tree) {
   });
 
   return `
+    <button type="button" class="mobile-tree-close" data-mobile-tree-close>Close description ×</button>
     <div class="skill-node-detail-scroll">
     <div class="detail-title-row skill-node-detail-title">
       <i>${escapeHtml(skillTreeNodeTypeGlyph(node))}</i>
@@ -3684,6 +3712,16 @@ function SKILL_TREE_NODE_NAME(nodeId) {
   return escapeHtml(nodeId);
 }
 
+function closeMobileTreeDetail(game){
+  clearTimeout(game.mobileTreeTap?.timer);
+  game.mobileTreeTap=null;
+  document.querySelector('[data-skill-tree-detail]')?.classList.remove('mobile-tree-detail-open');
+}
+
+function bindMobileTreeDetail(game){
+  document.querySelector('[data-mobile-tree-close]')?.addEventListener('click',()=>closeMobileTreeDetail(game));
+}
+
 function updateSkillTreePreview(player, game) {
   const pane = document.querySelector('[data-skill-tree-detail]');
   if (!pane) return;
@@ -3703,6 +3741,7 @@ function updateSkillTreePreview(player, game) {
   document.querySelectorAll('[data-tree-to]').forEach(edge=>edge.classList.toggle('selected',edge.dataset.treeTo===node?.id));
 
   pane.innerHTML = renderSkillTreeNodeDetail(player, node, tree);
+  bindMobileTreeDetail(game);
 
   pane.querySelectorAll('[data-skill-tree-node]').forEach(btn => {
     btn.onclick = () => {
