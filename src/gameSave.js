@@ -1026,6 +1026,7 @@ function updateProfileMenuControllerInput() {
   if (!profileMenuController) return;
 
   updateControllerManager(profileMenuController);
+  if (mainMenu.inert) return;
 
   const inputs = getAllControllerInputs(profileMenuController).filter(input => input?.connected);
   if (!inputs.length) return;

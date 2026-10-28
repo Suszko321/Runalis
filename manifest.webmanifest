@@ -1,0 +1,16 @@
+{
+  "id": "./",
+  "name": "Runalis",
+  "short_name": "Runalis",
+  "description": "Explore the world of Runalis, solo or with friends.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#10151f",
+  "theme_color": "#10151f",
+  "icons": [
+    { "src": "assets/ui/runalis-app-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/ui/runalis-app-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

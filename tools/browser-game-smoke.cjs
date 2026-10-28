@@ -5,6 +5,8 @@ module.exports=async function launchBrowserGame(page,base='http://127.0.0.1:8768
  // The release loader starts main.js asynchronously. Seed only after the
  // profile menu has completed boot, rather than racing its first render.
  await page.waitForFunction(()=>document.querySelector('#profileList')?.childElementCount>0);
+ const homeScreenContinue=page.locator('#homeScreenPrompt [data-home-screen-continue]');
+ if(await homeScreenContinue.isVisible())await homeScreenContinue.click();
  await page.evaluate(async worldMode=>{
   const {createPlayer,chooseClass}=await import('/src/player.js'),{writeProfiles,createSaveState}=await import('/src/gameSave.js'),{createCapitalHubWorld}=await import('/src/hubSystem.js'),{createCaravanOpeningWorld}=await import('/src/act1OpeningSystem.js');
   const p=createPlayer('Player smoke review');chooseClass(p,'oathkeeper');p.act1OpeningPending=worldMode==='act1Opening';p.capitalUnlocked=true;

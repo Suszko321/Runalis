@@ -1,0 +1,13 @@
+#homeScreenPrompt {position:fixed;inset:0;z-index:12000;display:flex;align-items:safe center;justify-content:center;box-sizing:border-box;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));overflow:auto;background:#060b12ed;color:#eee1c6;font:15px/1.45 Georgia,serif;overscroll-behavior:contain}
+#homeScreenPrompt .home-screen-card {box-sizing:border-box;width:min(560px,100%);padding:20px;background:#141b22;border:1px solid #a58b56;box-shadow:0 12px 60px #0008}
+#homeScreenPrompt h2 {margin:6px 0 12px;color:#ead3a0;font:24px/1.2 Georgia,serif}
+#homeScreenPrompt small {color:#bf9c62;letter-spacing:.12em}
+#homeScreenPrompt p {margin:10px 0}
+#homeScreenPrompt ol {padding-left:24px;margin:12px 0}
+#homeScreenPrompt li {margin:8px 0}
+#homeScreenPrompt .home-screen-help {font-size:13px;color:#c4b9a6}
+#homeScreenPrompt .home-screen-actions {display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+html body #homeScreenPrompt button {min-height:44px;flex:1 1 160px;touch-action:manipulation;padding:8px 12px}
+#homeScreenPrompt [hidden] {display:none!important}
+body.home-screen-prompt-open #mobileRotate {display:none!important}
+@media (max-height:440px) and (orientation:landscape){#homeScreenPrompt .home-screen-card{padding:12px 16px;width:min(680px,100%)}#homeScreenPrompt h2{font-size:22px;margin:4px 0 8px}#homeScreenPrompt p,#homeScreenPrompt ol{margin:6px 0}#homeScreenPrompt li{margin:4px 0}#homeScreenPrompt .home-screen-actions{margin-top:8px}html body #homeScreenPrompt button{flex-basis:140px}}

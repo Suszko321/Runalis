@@ -38,6 +38,7 @@ function addDirectory(relative) {
 
 add('index.html');
 add('src/boot.js');
+add('manifest.webmanifest');
 add('src/main.js');
 add('src/vendor/peerjs-LICENSE.txt');
 // Some shared menu styles are loaded on demand from JavaScript.
@@ -45,6 +46,9 @@ for (const name of fs.readdirSync(root)) if (name.endsWith('.css')) add(name);
 add('assets/art/runalis-main-menu.png');
 for (const directory of ['assets/art/sprites', 'assets/combat-icons', 'assets/environment', 'assets/skill-tree-icons', 'assets/ui']) addDirectory(directory);
 for (const name of fs.readdirSync(path.join(root, 'assets/ui/fonts'))) if (name.endsWith('-OFL.txt')) add(`assets/ui/fonts/${name}`);
+for (const icon of JSON.parse(fs.readFileSync(path.join(root,'manifest.webmanifest'),'utf8')).icons) {
+  if (!files.has(icon.src)) throw new Error(`App icon absent from deployment: ${icon.src}`);
+}
 
 // Validate literal resource references. Template-generated sprite/icon URLs are
 // covered by including their complete runtime directories and browser testing.
@@ -63,7 +67,7 @@ for (const relative of files) {
     // module-relative ../ paths. CSS URLs are relative to the stylesheet.
     const base = relative.endsWith('.js') && !ref.startsWith('../') ? '' : path.posix.dirname(relative);
     const resolved = path.posix.normalize(path.posix.join(base, ref.split(/[?#]/)[0]));
-    if (/\.(png|webp|jpg|svg|css|js|woff2?|ttf|otf|ogg|mp3|wav|json)$/.test(resolved) && !files.has(resolved)) {
+    if (/\.(png|webp|jpg|svg|css|js|woff2?|ttf|otf|ogg|mp3|wav|json|webmanifest)$/.test(resolved) && !files.has(resolved)) {
       throw new Error(`Resource absent from deployment: ${relative} -> ${resolved}`);
     }
   }
@@ -74,7 +78,7 @@ for (const relative of files) {
 // cached imports (including mobile menus) from the previous release in use.
 const releaseHash = createHash('sha256');
 for (const relative of [...files].sort()) {
-  if (/\.(html|css|js)$/.test(relative)) releaseHash.update(relative).update(fs.readFileSync(path.join(root, relative)));
+  if (/\.(html|css|js|webmanifest)$/.test(relative)) releaseHash.update(relative).update(fs.readFileSync(path.join(root, relative)));
 }
 const release = releaseHash.digest('hex').slice(0, 16);
 const versioned = ref => `${ref.split(/[?#]/)[0]}?v=${release}`;
