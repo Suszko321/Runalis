@@ -3,6 +3,7 @@ import {rememberRepeatableInstance} from './instanceEncounterMemory.js';
 import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
 import {initMobileShell, createMobileControls} from './mobileControls.js';
 import {createOnlineSession} from './onlineSession.js';
+import {createDeathScreen} from './deathScreen.js';
 import {installReleaseUpdates} from './releaseUpdates.js';
 import {bindFullscreenButtons} from './fullscreenMenu.js';
 import { getKeyboardAbilitySlot } from './abilityBindings.js';
@@ -316,6 +317,7 @@ function isBlockingDomOverlayActive() {
     'characterCreatorOverlay',
     'workshopServiceOverlay',
     'pvpArenaOverlay',
+    'deathScreenOverlay',
     'onlineMultiplayerOverlay'
   ].some(id => document.getElementById(id)?.classList.contains('active'));
 }
@@ -923,6 +925,7 @@ class RunalisGame {
     this.destroyed = true;
     this.started = false;
     this.onlineSession?.destroy();
+    this.deathScreen?.destroy();
     this.mobileControls?.destroy();
     this.developerEditor?.destroy();
     this.developerEditor = null;
@@ -1131,6 +1134,7 @@ class RunalisGame {
   }
 
   handleControllerGlobalInput(now) {
+    if(this.deathScreen?.active&&this.deathScreen.handleController(this.getAllControllerInputsForUi()))return true;
     if(handleMalakarInput(this))return true;
     const controllerInputs = this.getAllControllerInputsForUi();
 
@@ -1466,6 +1470,7 @@ class RunalisGame {
     this.last = time;
 
     const now = time / 1000;
+    this.deathScreen?.update(now);
 
     this.updateControllerInputs();
     this.mobileControls?.update(now);
@@ -1477,7 +1482,7 @@ class RunalisGame {
 
     if (this.onlineSession?.role === 'guest') {
       this.onlineSession.updateGuest(dt);
-    } else if (!this.paused) {
+    } else if (!this.paused&&!this.deathScreen?.active) {
       this.update(dt, now);
     }
     this.onlineSession?.updateHost(dt);
@@ -1518,6 +1523,7 @@ class RunalisGame {
   }
 
   update(dt, now) {
+    if(this.deathScreen?.active)return;
     updateWorkshopService(this);
     if(updateMalakarEncounter(this,dt)){this.input.moveX=0;this.input.moveY=0;this.input.attackHeld=false;this.input.attackPressed=false;this.input.dashPressed=false;return;}
     updateContinentalWorld(this, dt);
@@ -1634,6 +1640,7 @@ class RunalisGame {
 
     this.updateLastSafeLocation();
     updateCoopReviveTimers(this, dt, now);
+    if(this.deathScreen?.active)return;
 
     this.updateInputMovement();
     this.handleGameplayControllerInput(now, dt);
@@ -1651,6 +1658,8 @@ class RunalisGame {
         this.handlePlayerDefeated();
       }
     }
+
+    if(this.deathScreen?.active)return;
 
     const hostControlLocked = isActorControlLockedByRevive(this.player) || hostPvpActionLocked;
 
@@ -1680,6 +1689,7 @@ class RunalisGame {
     }
     updateCouchCoop(this, dt, now, this.getCoopControllerInputs());
     updateCoopReviveTimers(this, dt, now);
+    if(this.deathScreen?.active)return;
     updateMinimapExploration(this);
     updateWorldExploration(this, dt);
 
@@ -2115,11 +2125,28 @@ class RunalisGame {
   }
 
   handlePlayerDefeated() {
+    if(this.deathScreen?.active)return;
+    cancelActiveAbilityCharge(this.player);
+    cancelActiveHeavyAttackCharge(this.player,this.world);
+    this.clearDefeatCombatState(this.player);
+    this.clearAbilityInputEdges(true);
+    this.keys?.clear();
+    this.input.moveX=this.input.moveY=0;
+    this.player.hp=0;
+    this.player.vx=this.player.vy=0;
+    this.player.lifeState='dead';
+    this.deathScreen??=createDeathScreen(this);
+    this.deathScreen.start();
+  }
+
+  completePlayerRespawn() {
     const lostGold = this.applyDeathGoldPenalty();
 
     this.restorePlayerVitalsAfterDefeat(this.player);
     this.clearDefeatCombatState(this.player);
     this.respawnAtLastSafeLocation();
+    this.keys?.clear();
+    this.clearAbilityInputEdges(true);
 
     if (lostGold > 0) this.log(`Death penalty: lost ${lostGold} gold.`);
     this.log('You were returned to the nearest Nav Stone.');
@@ -2129,6 +2156,7 @@ class RunalisGame {
       ttl: 1.2,
       size: 14
     });
+    this.renderOwnedUI();
   }
 
   applyDeathGoldPenalty() {
@@ -2735,6 +2763,10 @@ class RunalisGame {
   // ---------------------------------------------------------------------------
 
   save(showLog = true) {
+    if(this.deathScreen?.active){
+      if(showLog)this.log('Respawn at a Nav Stone before saving.');
+      return false;
+    }
     if (this.onlineSession?.role === 'guest') return this.onlineSession.saveGuest(showLog);
     if (this.developerEditor) {
       return this.developerEditor.save(false);
