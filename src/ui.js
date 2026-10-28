@@ -2230,11 +2230,19 @@ function bindSubtabs(player, game) {
       updateSkillTreePreview(player, game);
     };
 
-    btn.onmouseenter = () => {
-      if (canMouseDriveMenuSelection(game)) selectNode();
-    };
+    // Keep the clicked node selected while the mouse crosses other nodes on
+    // its way to Learn Node. Keyboard/controller focus still selects normally.
+    btn.onmouseenter = null;
     btn.onfocus = selectNode;
     btn.onclick = selectNode;
+    btn.ondblclick = event => {
+      if(event.button!==0||document.body.classList.contains('mobile-input'))return;
+      event.preventDefault();selectNode();
+      const result=spendSkillTreeNodeFromUi(game,player,btn.dataset.selectSkillTreeNode);
+      if(!result.pending)logSkillTreeSpendResult(game,result);
+      renderUI(player,game.logLines||[],game);
+      if(result.ok)game.save?.(false);
+    };
   });
 
   bindSubclassTreeControls(player,game,renderUI);
@@ -3550,7 +3558,7 @@ function skillTreeNodeListButton(player, node, selectedNodeId, layout) {
       data-prerequisites="${escapeHtml((node.requires||[]).join(' '))}"
       aria-pressed="${selectedNodeId === node.id}"
       aria-label="${escapeHtml(`${node.name}. ${node.expertise?'Final Expertise':node.unlocksAbility?'Active skill':'Passive'}. ${learned?'Learned':check.reason}. ${node.cost} points.`)}"
-      title="${escapeHtml(node.name+(node.choiceGroup?' · Exclusive branch choice':''))}"
+      title="${escapeHtml(node.name+(node.choiceGroup?' · Exclusive branch choice':'')+(!document.body.classList.contains('mobile-input')?' · Double-click to learn':''))}"
       style="left:${node.position.x/layout.width*100}%;top:${node.position.y/layout.height*100}%;width:${140/layout.width*100}%;height:${54/layout.height*100}%"
     >
       <i title="${escapeHtml(skillTreeNodeTypeGlyph(node))}">${getPlayerSubclass(player)&&node.tree===player.skillTree?.lockedTree?subclassSkillIcon(player,skillTreeIconMarkup(node)):skillTreeIconMarkup(node)}</i>
