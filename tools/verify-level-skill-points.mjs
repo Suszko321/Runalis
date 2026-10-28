@@ -8,7 +8,10 @@ import {recordEnemyCombatContribution,grantSharedCombatKillXp} from '../src/comb
 
 const classes=['classless','oathkeeper','fellhunter','gravecaller','thornbinder','waverider','lightbringer','eldritch'];
 for(const id of classes){
- const p=createPlayer('Level test');assert(chooseClass(p,id));normalizeSkillTreeState(p);
+ const p=createPlayer('Level test');
+ // Classless is unavailable for new characters, but existing saves remain valid.
+ if(id==='classless'){p.classId='classless';p.className='Classless';}else assert(chooseClass(p,id));
+ normalizeSkillTreeState(p);
  const initial=getEarnedSkillTreePoints(p);
  for(let level=1;level<12;level++){
   const before=getAvailableSkillTreePoints(p);

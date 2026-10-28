@@ -3989,7 +3989,7 @@ function renderAbilityDetail(player, ability) {
     <p class="detail-copy information-purpose">${escapeHtml(abilitySummary(effective,player))}</p>
     ${renderAbilityFacts(player,effective)}
     ${availability.usable?'':`<p class="tag bad-text">${escapeHtml(availability.reason)}</p>`}
-    <div class="stat-row"><span>Mastery ${mastery.level}</span><b>${Math.floor(mastery.xp)} / ${mastery.next} XP</b></div>
+    <div class="stat-row"><span>Mastery ${mastery.level}</span><b>${Math.floor(mastery.xp)} / ${Math.ceil(mastery.next)} XP</b></div>
     <div class="mastery-progress"><i style="width:${Math.round(mastery.progress*100)}%"></i></div>
     <p class="tag">Earn XP with this skill on your hotbar to gain mastery. Using the skill is optional.</p>
     ${mastery.level>1&&!ability.heldBlock?`<details class="information-extra"><summary>Mastery benefits</summary><p class="tag">+${((bonus.damage-1)*100).toFixed(1)}% potency · +${((bonus.range-1)*100).toFixed(1)}% reach · ${((1-(effective.channelProfile ? bonus.channelEfficiency : bonus.efficiency))*100).toFixed(1)}% lower ${effective.channelProfile?'channel upkeep':'cost'}.</p></details>`:''}

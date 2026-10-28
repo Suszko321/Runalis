@@ -164,9 +164,9 @@ test('legacy progression/mastery/equipment migrate once; fractional XP and huge 
  const p=actor('gravecaller');delete p.skillState.combat;delete p.skillState.progressionVersion;p.combatLevel=33;p.skillState.skills.spirit={level:60,xp:83.5,used:true};p.skills={};
  migratePlayer(p);assert.equal(p.combatLevel,33);assert.equal(p.skillState.skills.spirit.level,60);assert.equal(p.skillState.skills.spirit.xp,83.5);assert.equal(p.skillState.skills.scythe.level,60);assert.equal(p.skillState.skills.summoning.level,60);
  migratePlayer(p);assert.equal(p.combatLevel,33);const snapshot=JSON.stringify(p.skillState);assert.equal(JSON.stringify(normalizeProfileSave(sanitizeForSave(p)).skillState),snapshot);
- const entry={level:1,xp:.25};advanceProgression(entry,1e15);assert.ok(entry.level>1000&&Number.isFinite(entry.xp)&&entry.xp<xpRequired(entry.level));
+ const entry={level:1,xp:.25};advanceProgression(entry,1e15);assert.ok(entry.level>100&&entry.level<500&&Number.isFinite(entry.xp)&&entry.xp<xpRequired(entry.level));
  const extreme={level:1e12,xp:0};advanceProgression(extreme,Number.MAX_VALUE);assert.ok(Number.isFinite(extreme.level)&&Number.isFinite(extreme.xp));
- const m=actor();grantAbilityMasteryXp(m,'guard',1e15);assert.ok(getAbilityMastery(m,'guard').level>1000);
+ const m=actor();grantAbilityMasteryXp(m,'guard',1e15);assert.ok(getAbilityMastery(m,'guard').level>100&&getAbilityMastery(m,'guard').level<500);
 });
 test('all ability definitions have valid explicit progression destinations',()=>{
  const skills=createNewSkillState().skills;for(const a of ABILITIES){assert.ok(a.progressionCategories.length,a.id);for(const id of a.progressionCategories)assert.ok(skills[id],a.id+':'+id);}

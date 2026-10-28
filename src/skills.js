@@ -8,7 +8,7 @@ import { awardHotbarMasteryXp } from './abilityMasterySystem.js';
 // - Skills have no authored level cap, within finite numeric storage limits.
 // - Leveling is intentionally slow long-term.
 // - Early levels move fast enough to feel rewarding.
-// - Later levels require quadratically increasing XP.
+// - Later levels ease into exponentially increasing XP.
 // - The player has an overall Combat Level.
 // - Combat Level owns a separate XP pool fed by qualifying encounters.
 // - Class choice does NOT block other skills.
@@ -401,9 +401,10 @@ export function getSkillsByType(type) {
 // - Later content can add XP sources, quests, multipliers, dungeons, rested XP, etc.
 //
 // Formula:
-//   base + linear * level + quadratic * level²
+//   Original polynomial through level 10, then a smooth exponential tail.
+//   See progressionMath.js for the shared player / skill / mastery curves.
 //
-// Exact polynomial totals keep large awards efficient and retain remainders.
+// Closed-form totals keep large awards efficient and retain remainders.
 
 export function getXPRequiredForNextLevel(level) { return xpRequired(level); }
 export function getTotalXPRequiredToReachLevel(targetLevel) { return xpForLevels(1, safeLevel(targetLevel) - 1); }
