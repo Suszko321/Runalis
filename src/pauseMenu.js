@@ -2,6 +2,7 @@
 // Runalis pause overlay.
 
 import { returnFromPvpArena } from './pvpArenaSystem.js';
+import {bindFullscreenButtons} from './fullscreenMenu.js';
 
 export function ensurePauseOverlay(currentGame = null) {
   let overlay = document.getElementById('pauseOverlay');
@@ -26,6 +27,7 @@ export function ensurePauseOverlay(currentGame = null) {
           <button id="resumeBtn" type="button">Resume</button>
           <button id="pauseSaveBtn" type="button">Save</button>
           <button id="pauseMultiplayerBtn" type="button">Multiplayer</button>
+          <button id="pauseFullscreenBtn" type="button" data-desktop-fullscreen hidden>Enter fullscreen</button>
           <button id="arenaReturnBtn" type="button" hidden>Forfeit to Orrakai</button>
           <button id="leaveSessionBtn" type="button" hidden>Leave Session</button>
           <button id="saveQuitBtn" type="button">Save & Quit</button>
@@ -40,6 +42,7 @@ export function ensurePauseOverlay(currentGame = null) {
 export function bindPauseButtons(currentGame = null) {
   const overlay = document.getElementById('pauseOverlay');
   if (overlay) overlay.__runalisGame = currentGame;
+  if (overlay) bindFullscreenButtons(overlay);
   const multiplayer=overlay?.querySelector('#pauseMultiplayerBtn');
   if(multiplayer)multiplayer.onclick=()=>overlay.__runalisGame?.onlineSession?.openMenu();
 

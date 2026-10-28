@@ -1101,6 +1101,7 @@ function getProfileMenuFocusableElements() {
         '#continueGameBtn',
         '#newGameBtn',
         '#settingsBtn',
+        '#mainFullscreenBtn',
         '#creditsBtn',
         '#quitGameBtn',
         '#profileName',

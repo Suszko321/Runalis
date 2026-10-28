@@ -4,6 +4,7 @@ import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
 import {initMobileShell, createMobileControls} from './mobileControls.js';
 import {createOnlineSession} from './onlineSession.js';
 import {installReleaseUpdates} from './releaseUpdates.js';
+import {bindFullscreenButtons} from './fullscreenMenu.js';
 import { getKeyboardAbilitySlot } from './abilityBindings.js';
 import {updateSimulatedSubclassPlayers} from './simulatedSubclassPlayers.js';
 import {menuDirection,directionalMenuItem} from './menuNavigation.js';
@@ -3229,6 +3230,7 @@ function boot() {
 }
 
 function bindMainMenuActions() {
+  bindFullscreenButtons();
   const setup = document.getElementById('developerModeSetup');
   const setupForm = setup?.querySelector('form');
   const mapSelect = setup?.querySelector('[data-developer-map]');
