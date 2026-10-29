@@ -3,6 +3,8 @@ import {TILE} from './data.js';
 import {findNearestActorPassablePoint,isActorPositionPassable,isTilePassable} from './world.js';
 import {clearEliteEncounters} from './eliteEncounterSystem.js';
 import {tuneDungeonBoss} from './dungeonBossDifficulty.js';
+import {requestPartyEntry,partyEntryPending} from './partyEntrySystem.js';
+const entryLatches = new WeakSet();
 
 const living=e=>e&&!e.dead&&!e.remove&&e.hp>0;
 const contains=(a,p,inset=0)=>p.x>=a.x+inset&&p.y>=a.y+inset&&p.x<=a.x+a.w-inset&&p.y<=a.y+a.h-inset;
@@ -43,7 +45,13 @@ function placeInside(world,a,actor){
  const x=Math.max(a.x+40,Math.min(a.x+a.w-40,actor.x)),y=Math.max(a.y+40,Math.min(a.y+a.h-40,actor.y));
  const p=findNearestActorPassablePoint(world,x,y,actor.r||12);actor.x=p.x;actor.y=p.y;
 }
-export function updateDungeonArena(world,player){
+function activateArena(world,a,party,bosses){
+ a.phase='active';sealArena(world,a);
+ for(const p of party.filter(living)){placeInside(world,a,p);for(const s of p.summons||[])if(living(s))placeInside(world,a,s);}
+ for(const e of bosses){e.arenaDormant=false;e.awakened=true;e.aggro=true;e.hasDetectedPlayer=true;e.isInCombat=true;}
+ for(const e of bosses)if(e.groveMother||e.orchardCustodian){tuneDungeonBoss(e,party.length);e.dungeonBossPartyLocked=true;}
+}
+export function updateDungeonArena(world,player,game=null){
  if(!['dungeon','tower'].includes(world?.mode)&&!(world?.mode==='sideZone'&&world.dungeonState?.grove))return;
  const a=world.bossArena||initializeDungeonArena(world);if(!a)return;
  const state=world.dungeonState,bosses=(world.enemies||[]).filter(e=>a.bossIds.includes(e.id));
@@ -53,11 +61,16 @@ export function updateDungeonArena(world,player){
  }
  if(a.phase==='defeated')a.phase='dormant';
  const party=[player,...(player?.coop?.players||[]).filter(p=>p.active!==false&&p.joined!==false)];
- if(!isMalakarSanctum(world)&&a.phase==='dormant'&&party.some(p=>living(p)&&contains(a,p,48))){
-  a.phase='active';sealArena(world,a);
-  for(const p of party.filter(living))placeInside(world,a,p);
-  for(const e of bosses){e.arenaDormant=false;e.awakened=true;e.aggro=true;e.hasDetectedPlayer=true;e.isInCombat=true;}
-  for(const e of bosses)if(e.groveMother||e.orchardCustodian){tuneDungeonBoss(e,party.filter(p=>p.active!==false&&p.joined!==false).length);e.dungeonBossPartyLocked=true;}
+ const initiator=party.find(p=>living(p)&&contains(a,p,48));
+ if(!initiator)entryLatches.delete(world);
+ if(!isMalakarSanctum(world)&&a.phase==='dormant'&&initiator&&!entryLatches.has(world)){
+  if(game){
+   if(partyEntryPending(game))return;
+   entryLatches.add(world);
+   if(!requestPartyEntry(game,{key:`arena:${a.id}`,kind:'boss',title:bosses[0]?.bossName||bosses[0]?.name||'the boss arena',initiator,
+    commit:()=>activateArena(world,a,party,bosses),onCancel:()=>game.log?.('Leave the boss threshold and approach again when the party is ready.')}))return;
+  }
+  activateArena(world,a,party,bosses);
  }
  if(a.phase==='active'){
   for(const e of bosses)if(e.groveMother||e.orchardCustodian)tuneDungeonBoss(e,party.filter(p=>p.active!==false&&p.joined!==false).length);
@@ -67,6 +80,7 @@ export function updateDungeonArena(world,player){
  }
 }
 export function resetFailedDungeonArena(world){
+ entryLatches.delete(world);
  resetMalakar(world);
  const a=world?.bossArena;if(!a||a.phase==='defeated'||world.dungeonState?.cleared)return;
  a.phase='resetting';clearEliteEncounters(world);world.arenaBarriers=[];

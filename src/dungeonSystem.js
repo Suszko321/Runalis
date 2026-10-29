@@ -1,4 +1,5 @@
 import {installMalakarSanctum,dressMalakarApproach,isMalakarDungeon,requestMalakarEntry} from './malakarEncounter.js';
+import {requestPartyEntry} from './partyEntrySystem.js';
 import {installOrchardDungeon,beginOrchardDungeon,updateOrchardDungeon} from './ashenOrchardDungeon.js';
 import {configureEncounterEnemy,dungeonEncounterProfile,ENCOUNTER_VERSION} from './encounterData.js';
 import {initializeDungeonArena,resetFailedDungeonArena} from './dungeonArenaSystem.js';
@@ -182,6 +183,11 @@ export function enterDungeon(game, entrance, options = {}) {
     x: actor?.x || hostGame.player.x,
     y: actor?.y || hostGame.player.y
   };
+
+  if (!options.partyEntryCommitted && !requestPartyEntry(hostGame, {
+    key: `dungeon:${safeEntrance.id}`, title: safeEntrance.dungeonName || safeEntrance.name || 'the dungeon',
+    initiator: actor, commit: () => enterDungeon(game, safeEntrance, {...options, partyEntryCommitted: true})
+  })) return false;
 
   hostGame.overworldState = createOverworldReturnState(hostGame, safeEntrance);
 
@@ -721,7 +727,7 @@ function placePartyNearHost(game) {
   if (!host) return;
 
   const allies = Array.isArray(host.coop?.players)
-    ? host.coop.players.filter(ally => ally && ally.active !== false)
+    ? host.coop.players.filter(ally => ally && ally.active !== false && ally.joined !== false)
     : [];
   const offsets = [
     { x: -TILE, y: 0 },
@@ -733,8 +739,9 @@ function placePartyNearHost(game) {
     const ally = allies[i];
     const offset = offsets[i] || { x: (i - 1) * TILE, y: TILE };
 
-    ally.x = host.x + offset.x;
-    ally.y = host.y + offset.y;
+    const arrival = findNearestActorPassablePoint(game.world, host.x + offset.x, host.y + offset.y, ally.r || 12);
+    ally.x = arrival.x;
+    ally.y = arrival.y;
     ally.dirX = host.dirX;
     ally.dirY = host.dirY;
     ally.currentZone = host.currentZone;

@@ -1,4 +1,5 @@
 import {rememberRepeatableInstance,restoreRepeatableInstance} from './instanceEncounterMemory.js';
+import {requestPartyEntry} from './partyEntrySystem.js';
 import {configureEncounterEnemy} from './encounterData.js';
 import {CONTINENT_REGIONS} from './continentDefinition.js';
 import {initializeDungeonArena,resetFailedDungeonArena} from './dungeonArenaSystem.js';
@@ -25,10 +26,17 @@ import {
   getScaledEnemyCount
 } from './coopEnemyScaling.js';
 
-export function enterTower(game, floor = 1, entrance = null) {
+export function enterTower(game, floor = 1, entrance = null, options = {}) {
   const hostGame = game?.hostGame || game;
   const actor = game?.player || hostGame?.player;
   if (!hostGame?.player || !hostGame?.world) return false;
+  if (hostGame.world.mode === 'tower' && hostGame.world.bossArena?.phase === 'active') {
+    hostGame.log?.('The boss arena is sealed.'); return false;
+  }
+  if (hostGame.world.mode !== 'tower' && !options.partyEntryCommitted && !requestPartyEntry(hostGame, {
+    key: `tower:${entrance?.id || floor}`, title: entrance?.name || 'the Infinite Dungeon', initiator: actor,
+    commit: () => enterTower(game, floor, entrance, {partyEntryCommitted: true})
+  })) return false;
 
   if (hostGame.world.mode !== 'tower') {
     hostGame.overworldState = createOverworldReturnState(hostGame, entrance || {
@@ -469,7 +477,7 @@ function getRegionDungeonColor(regionId) {
 function placePartyNearHost(game) {
   const host = game?.player;
   if (!host) return;
-  const allies = (host.coop?.players || []).filter(ally => ally && ally.active !== false);
+  const allies = (host.coop?.players || []).filter(ally => ally && ally.active !== false && ally.joined !== false);
   const offsets = [{ x: -TILE, y: 0 }, { x: TILE, y: 0 }, { x: 0, y: TILE }];
 
   allies.forEach((ally, index) => {

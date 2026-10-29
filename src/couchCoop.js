@@ -1,4 +1,5 @@
 import {menuDirection,directionalMenuItem} from './menuNavigation.js';
+import {partyEntryPending} from './partyEntrySystem.js';
 import {moveActorWithCollision as moveWorldActor} from './world.js';
 import { handleMenuSheetInput, menuSheetItemVisible } from './menuSheets.js';
 // couchCoop.js
@@ -170,6 +171,7 @@ export function saveAllCouchCoopProfiles(game) {
 }
 
 export function updateCouchCoop(game, dt, now, controllerInputs = null) {
+  if (partyEntryPending(game)) return;
   const coop = ensureCouchCoop(game);
   if (!coop) return;
   if (game.couchCoopJoinMenu?.active) return;
@@ -261,6 +263,7 @@ export function updateCouchCoop(game, dt, now, controllerInputs = null) {
       interactAsAlly(game, ally);
       ally.interactLock = true;
       saveCouchCoopProfile(game, ally);
+      if (partyEntryPending(game)) return;
     }
 
     if (!input.interactHeld) {

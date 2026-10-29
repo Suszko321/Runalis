@@ -3,6 +3,7 @@
 // persistent state is limited to small visit/clear records on the host player.
 
 import {rememberRepeatableInstance,restoreRepeatableInstance} from './instanceEncounterMemory.js';
+import {requestPartyEntry} from './partyEntrySystem.js';
 import {createBlightedGrove,beginBlightedGrove,updateBlightedGrove,isBlightedGrove} from './blightedGrove.js';
 import {initializeDungeonArena,resetFailedDungeonArena} from './dungeonArenaSystem.js';
 import { TILE } from './data.js';
@@ -77,13 +78,17 @@ const SIDE_ZONE_DEFINITIONS = {
   }
 };
 
-export function enterSideZone(game, entrance = {}) {
+export function enterSideZone(game, entrance = {}, options = {}) {
   const hostGame = game?.hostGame || game;
   const actor = game?.player || hostGame?.player;
   if (!hostGame?.player || !hostGame?.world || hostGame.world.mode === 'sideZone') return false;
 
   const type = entrance.sideZoneType || entrance.zoneType || 'hollowGrove';
   const definition = SIDE_ZONE_DEFINITIONS[type] || SIDE_ZONE_DEFINITIONS.hollowGrove;
+  if (!options.partyEntryCommitted && !requestPartyEntry(hostGame, {
+    key: `sideZone:${entrance.id || type}`, title: entrance.name || definition.name,
+    initiator: actor, commit: () => enterSideZone(game, entrance, {partyEntryCommitted: true})
+  })) return false;
   const regionId = entrance.sourceRegionId || entrance.regionId || hostGame.world.regionId || hostGame.player.regions?.currentRegionId || 'hearthmereFrontier';
   const seed = entrance.seed || `${regionId}-${type}-${entrance.id || 'entrance'}`;
 
@@ -231,7 +236,7 @@ function placeHostAndParty(game, point) {
   host.dirX = 0;
   host.dirY = 1;
   host.currentZone = game.world.name;
-  const allies = (host.coop?.players || []).filter(ally => ally && ally.active !== false);
+  const allies = (host.coop?.players || []).filter(ally => ally && ally.active !== false && ally.joined !== false);
   const offsets = [{ x: -TILE, y: 0 }, { x: TILE, y: 0 }, { x: 0, y: TILE }];
 
   allies.forEach((ally, index) => {

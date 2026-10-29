@@ -12,6 +12,7 @@ import {prepareEnemyTactics,updateEnemyTacticalMovement} from './enemyTactics.js
 import {updateClassMovement,presentClassMobility} from './classMovement.js';
 import {updateEliteEncounters,mitigateEliteHit,clearEliteEncounters,getEliteControlMultiplier} from './eliteEncounterSystem.js';
 import {updateDungeonArena} from './dungeonArenaSystem.js';
+import {partyEntryPending} from './partyEntrySystem.js';
 import {applyTargetDamage} from './enemyBehaviors.js';
 import {getTierStatBonus} from './equipmentProgressionSystem.js';
 import {applyMythicalAbilityModifiers,applyMythicalWolf,getMythicalSetCounts} from './mythicalEquipmentSystem.js';
@@ -1013,7 +1014,8 @@ export function updateEnemies(dt, player, world, log, now = performance.now() / 
   ensureCombatPlayer(player);
   setEnemyCombatViews(world,game);
   updateDungeonEvents(world,player,dt,log);
-  updateDungeonArena(world,player);
+  updateDungeonArena(world,player,game);
+  if(partyEntryPending(game))return;
   if(world?.mode==='dungeon'&&world.dungeonState){player.worldMemory ||= {};player.worldMemory.dungeonRuns ||= {};player.worldMemory.dungeonRuns[world.dungeonId]=world.dungeonState;}
   if(world.dungeonState?.malakar)world.enemies=(world.enemies||[]).filter(e=>e.malakarSolo);
   else updateEliteEncounters(world,player,dt,now,applyTargetDamage,log);

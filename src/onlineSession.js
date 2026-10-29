@@ -12,6 +12,7 @@ import {createOnlineMenu} from './onlineMenu.js';
 import {hostPresentationRefs,actorPresentation,hydratePresentation} from './onlinePresentation.js';
 import {observeSfx,playSfx} from './audioSystem.js';
 import {cancelActiveAbilityCharge,cancelActiveHeavyAttackCharge} from './combat.js';
+import {answerPartyEntry,partyEntrySnapshot,receivePartyEntry,partyEntryPending,cancelPartyEntry} from './partyEntrySystem.js';
 
 const CHARACTER_FIELDS=['name','appearance','bodyType','skin','hair','shirt','pants','boots','inventory','equipment','equippedGear','equipmentProgressionVersion','gearInstanceSequence','equipmentInstances','ownedGear','gearInstances','loadout','gold','attributes','attributePoints','skillState','skillTree','skills','knownAbilities','unlockedAbilities','unlockedPassives','abilityMorphs','abilityMastery','abilityExpertise','skillExpertise','expertise','crafting','craftingState','recipeUnlocks','inputBindings'];
 const VISUAL_FIELDS=['name','x','y','dirX','dirY','hp','maxHp','stamina','maxStamina','spirit','maxSpirit','isMoving','walkTime','lifeState','downedState','reviveAction','combatState','actionState','visualAction','visualHitUntil','abilityCharge','activeChannel','summons','traps','combatEffects','floatingTexts','flags','classId','className','appearance','bodyType','skin','hair','shirt','pants','boots','equipment','loadout','level','combatLevel','bloodline','gravecaller','lightbringer','currentZone','lastCombatAimX','lastCombatAimY'];
@@ -97,6 +98,10 @@ class OnlineSession {
   }
   if(packet.type==='ready'){record.ready=true;return;}
   if(packet.type==='leave'){this.removeClient(record.connection.peer);return;}
+  if(packet.type==='party-entry'){
+   if(record.ready&&Number.isSafeInteger(packet.id)&&typeof packet.accept==='boolean')answerPartyEntry(this.game,record.actor,packet.accept,packet.id);
+   return;
+  }
   if(packet.type==='input'){
    if(!Number.isSafeInteger(packet.seq)||packet.seq<=record.lastSeq)return;
    record.lastSeq=packet.seq;record.lastInput=Date.now();
@@ -202,7 +207,7 @@ class OnlineSession {
   for(const entry of party)for(const key of ['abilityCharge','activeChannel','visualAction','downedState','reviveAction'])entry.visual[key] ??=null;
   const full=Date.now()>(record.profileAt||0);if(full)record.profileAt=Date.now()+500;
   const sounds=this.audioQueue.filter(e=>e.id>(record.audioCursor||0));record.audioCursor=this.audioSequence;
-  return {type:'state',clock:performance.now(),groups,party,sounds,self:p.networkId,profile:full?wireClone(p,refs):null,paused:!!g.paused,meta:wireClone(pick(g.world,['mode','name','theme','floor','depth','tier','regionId','actId','safeZone','cleared','dungeonState','bossRoomCenter','floorType'])),dialogue:g.dialogue?.active&&g.dialogue.actor===p?wireClone({...g.dialogue,actor:undefined,world:undefined}):null,fishing:g.fishingMiniGame?.active&&g.fishingMiniGame.player===p?wireClone({...g.fishingMiniGame,object:undefined,player:undefined,objectId:g.fishingMiniGame.object?.id}):null};
+  return {type:'state',clock:performance.now(),groups,party,sounds,self:p.networkId,profile:full?wireClone(p,refs):null,entryReady:partyEntrySnapshot(g,p),paused:!!g.paused||partyEntryPending(g),meta:wireClone(pick(g.world,['mode','name','theme','floor','depth','tier','regionId','actId','safeZone','cleared','dungeonState','bossRoomCenter','floorType','bossArena','arenaBarriers'])),dialogue:g.dialogue?.active&&g.dialogue.actor===p?wireClone({...g.dialogue,actor:undefined,world:undefined}):null,fishing:g.fishingMiniGame?.active&&g.fishingMiniGame.player===p?wireClone({...g.fishingMiniGame,object:undefined,player:undefined,objectId:g.fishingMiniGame.object?.id}):null};
  }
  receiveState(packet){
   const g=this.game,busy=this.isMenuBusy();
@@ -226,6 +231,7 @@ class OnlineSession {
   else if(old)closeDialogue(g.dialogue,{immediate:true});
   if(this.hostPaused!==packet.paused||this.memberCount!==packet.party.length){this.hostPaused=packet.paused;this.memberCount=packet.party.length;this.menu.render();}
   renderOnlineFishing(g,packet.fishing);
+  receivePartyEntry(g,packet.entryReady||null);
   for(const sound of packet.sounds||[])if(sound.id>(this.lastAudioId||0)){this.lastAudioId=sound.id;if(performance.now()-sound.at<1000){this.lastAudioName=sound.name;playSfx(sound.name,sound.options);}}
  }
  applyVisual(target,source,replace=false){
@@ -245,9 +251,9 @@ class OnlineSession {
   if(busy&&!this.wasMenuBusy)this.wire.send({type:'input',seq:++this.sequence,busy:true,input:sanitizeOnlineInput()});
   this.wasMenuBusy=busy;
   if(g.dialogue.active&&controller.connected&&(controller.confirmPressed||controller.cancelPressed||controller.upPressed||controller.downPressed))this.sendDialogue({confirmPressed:controller.confirmPressed,cancelPressed:controller.cancelPressed,upPressed:controller.upPressed,downPressed:controller.downPressed,inputDevice:'controller'});
-  this.pendingInput=mergeOnlineInput(this.pendingInput,input);
+  this.pendingInput=partyEntryPending(g)?sanitizeOnlineInput():mergeOnlineInput(this.pendingInput,input);
   if(now>=this.sendAt){
-   this.sendAt=now+40;this.wire.send({type:'input',seq:++this.sequence,busy,viewport:{width:g.canvas.width,height:g.canvas.height},input:busy||g.dialogue.active||g.fishingMiniGame?.active?sanitizeOnlineInput():this.pendingInput});this.pendingInput=null;
+   this.sendAt=now+40;this.wire.send({type:'input',seq:++this.sequence,busy,viewport:{width:g.canvas.width,height:g.canvas.height},input:busy||partyEntryPending(g)||g.dialogue.active||g.fishingMiniGame?.active?sanitizeOnlineInput():this.pendingInput});this.pendingInput=null;
   }
   if(now-this.lastSnapshot>20000){this.fail('The host stopped responding. Your character has been saved.');return;}
   if(now>=this.saveAt){this.saveAt=now+2500;this.saveGuest(false);}
@@ -270,6 +276,7 @@ class OnlineSession {
  closeDialogue(){if(this.role!=='guest')return false;this.wire?.send({type:'dialogue',close:true});return true;}
  sendFishing(cancel=false){if(this.role!=='guest')return false;this.wire?.send({type:'fishing',cancel});return true;}
  cancelCharges(){if(this.role==='guest')this.wire?.send({type:'cancelCharge'});}
+ sendPartyEntryAnswer(id,accept){if(this.role==='guest'&&this.ready)this.wire?.send({type:'party-entry',id,accept});}
  delegateService(actor,action,npc){
   if(!['shop','workshopWeapons','workshopArmour','workshopCraft'].includes(action.type))return false;
   const record=[...this.clients.values()].find(c=>c.actor===actor);if(!record)return false;
@@ -289,6 +296,7 @@ class OnlineSession {
   this.menu.render();
  }
  disconnect({restore=true}={}){
+  cancelPartyEntry(this.game,'',false);
   this.attempt=(this.attempt||0)+1;
   clearTimeout(this.connectTimer);const wasGuest=this.role==='guest',state=wasGuest&&this.backup?this.guestSaveState():null;
   if(wasGuest){this.commitCharacter();this.saveGuest(false);this.wire?.send({type:'leave'});}

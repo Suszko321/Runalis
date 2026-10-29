@@ -1,4 +1,5 @@
 import {updateMalakarEncounter,handleMalakarInput,handleMalakarKeyboard} from './malakarEncounter.js';
+import {updatePartyEntry,handlePartyEntryInput,handlePartyEntryKeyboard,partyEntryPending,cancelPartyEntry} from './partyEntrySystem.js';
 import {rememberRepeatableInstance} from './instanceEncounterMemory.js';
 import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
 import {initMobileShell, createMobileControls} from './mobileControls.js';
@@ -612,6 +613,7 @@ class RunalisGame {
     this.openingSkipKeys=new Set();
     this.keydown = event => {
       unlockAudio();
+      if(handlePartyEntryKeyboard(this,event))return;
       if(handleMalakarKeyboard(this,event))return;
       if (this.developerEditor?.handleKeyDown(event)) return;
       const key = event.key.toLowerCase();
@@ -790,6 +792,7 @@ class RunalisGame {
     };
 
     this.mousedown = event => {
+      if(partyEntryPending(this))return;
       if (event.target.closest?.('#mobileControls,#mobileRotate') || (this.mobileControls && event.target !== this.canvas)) return;
       unlockAudio();
       if (this.developerEditor?.handlePointerDown(event)) return;
@@ -919,6 +922,7 @@ class RunalisGame {
     closeWorkshopService(this);
     if (this.destroyed) return;
     this.destroyed = true;
+    cancelPartyEntry(this,'',false);
     this.started = false;
     this.onlineSession?.destroy();
     this.deathScreen?.destroy();
@@ -1130,6 +1134,7 @@ class RunalisGame {
   }
 
   handleControllerGlobalInput(now) {
+    if(handlePartyEntryInput(this))return true;
     if(this.deathScreen?.active&&this.deathScreen.handleController(this.getAllControllerInputsForUi()))return true;
     if(handleMalakarInput(this))return true;
     const controllerInputs = this.getAllControllerInputsForUi();
@@ -1470,7 +1475,10 @@ class RunalisGame {
 
     this.updateControllerInputs();
     this.mobileControls?.update(now);
-    if (this.developerEditor && !this.developerEditor.shouldRunGameplay()) {
+    const entryBlocked=updatePartyEntry(this);
+    if (entryBlocked) {
+      handlePartyEntryInput(this);
+    } else if (this.developerEditor && !this.developerEditor.shouldRunGameplay()) {
       this.developerEditor.handleControllerInput(this.controllerInput);
     } else {
       this.handleControllerGlobalInput(now);
@@ -1478,7 +1486,7 @@ class RunalisGame {
 
     if (this.onlineSession?.role === 'guest') {
       this.onlineSession.updateGuest(dt);
-    } else if (!this.paused&&!this.deathScreen?.active) {
+    } else if (!entryBlocked&&!this.paused&&!this.deathScreen?.active) {
       this.update(dt, now);
     }
     this.onlineSession?.updateHost(dt);
@@ -1519,6 +1527,7 @@ class RunalisGame {
   }
 
   update(dt, now) {
+    if(partyEntryPending(this))return;
     if(this.deathScreen?.active)return;
     updateWorkshopService(this);
     if(updateMalakarEncounter(this,dt)){this.input.moveX=0;this.input.moveY=0;this.input.attackHeld=false;this.input.attackPressed=false;this.input.dashPressed=false;return;}
@@ -1684,6 +1693,7 @@ class RunalisGame {
       this.move(dt);
     }
     updateCouchCoop(this, dt, now, this.getCoopControllerInputs());
+    if(partyEntryPending(this))return;
     updateCoopReviveTimers(this, dt, now);
     if(this.deathScreen?.active)return;
     updateMinimapExploration(this);
@@ -1691,6 +1701,7 @@ class RunalisGame {
 
     if (!this.developerEditor || !this.developerEditor.aiPaused) {
       updateEnemies(dt, this.player, this.world, this.log, now, this);
+      if(partyEntryPending(this))return;
       updateOverworldEncounters(this, dt, now);
       this.updateRespawns(dt);
       this.updateAmbientNpcs(dt);
@@ -1727,6 +1738,7 @@ class RunalisGame {
   }
 
   updateCoopWorldWhileHostBusy(dt, now) {
+    if(partyEntryPending(this))return;
     this.input.moveX = 0;
     this.input.moveY = 0;
     this.input.attackHeld = false;
@@ -1743,10 +1755,12 @@ class RunalisGame {
     }
 
     updateCouchCoop(this, dt, now, this.getCoopControllerInputs());
+    if(partyEntryPending(this))return;
     updateMinimapExploration(this);
     updateWorldExploration(this, dt);
     if (!this.developerEditor || !this.developerEditor.aiPaused) {
       updateEnemies(dt, this.player, this.world, this.log, now, this);
+      if(partyEntryPending(this))return;
       updateOverworldEncounters(this, dt, now);
       this.updateRespawns(dt);
       this.updateAmbientNpcs(dt);

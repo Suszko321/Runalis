@@ -1,4 +1,5 @@
 import {installMalakarSanctum} from './malakarEncounter.js';
+import {cancelPartyEntry} from './partyEntrySystem.js';
 import {rememberRepeatableInstance} from './instanceEncounterMemory.js';
 import {endWorkshopSession} from './workshopAccess.js';
 import {initializeDungeonArena} from './dungeonArenaSystem.js';
@@ -1362,6 +1363,7 @@ export function saveGameProfile(game, showLog = true) {
 
 export function applySaveToGame(game, saveState) {
   if (!game || !saveState) return false;
+  cancelPartyEntry(game,'',false);
 
   endWorkshopSession((game.hostGame||game).workshopService?.actor);
   if(typeof document!=='undefined')document.getElementById('workshopServiceOverlay')?.remove();

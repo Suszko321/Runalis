@@ -60,7 +60,8 @@ check('stationary targets take real damage; moving melee and ranged targets can 
 check('party consent belongs to actual actors and a secondary player can initiate',()=>{
  const g=game(3,3),stairs=g.world.objects.find(o=>o.malakarEntrance);g.world.enemies=[];
  transitionDungeonFloor({hostGame:g,player:g.player.coop.players[0]},stairs);assert.equal(g.malakarReady.initiator,2);answerMalakarReady(g,1,true);
- g.player.coop.players[0].active=false;answerMalakarReady(g,0,true);assert.equal(g.world.floor,3);answerMalakarReady(g,1,true);assert.equal(g.world.floor,4);
+ g.player.coop.players[0].active=false;answerMalakarReady(g,0,true);assert.equal(g.world.floor,3);assert.equal(g.malakarReady,null);
+ transitionDungeonFloor(g,stairs);answerMalakarReady(g,0,true);answerMalakarReady(g,1,true);assert.equal(g.world.floor,4);
 });
 check('introduction and active saves preserve sacrifices and sealing',()=>{
  const g=game();beginMalakarArrival(g);skipMalakarRitual(g);

@@ -2,6 +2,7 @@
 import {TILE} from './data.js';
 import {playSfx} from './audioSystem.js';
 import {cancelEnemyAttackPresentation} from './enemyAttackPresentation.js';
+import {requestPartyEntry,answerPartyEntry,partyEntryPending} from './partyEntrySystem.js';
 export const MALAKAR_HEALTH_MULTIPLIER=3;
 export const isMalakarDungeon=w=>/^(demonCultLair|dawnspireRoot|emberveil)$/i.test(w?.dungeonId||'');
 export const isMalakarSanctum=w=>isMalakarDungeon(w)&&w.floor===w.totalFloors;
@@ -41,18 +42,16 @@ export function dressMalakarApproach(w){
  for(const [i,dx]of [-2,2].entries())if(!w.objects.some(o=>o.id==='malakarApproach'+i))w.objects.push(obj('malakarApproach'+i,'townProp',stair.x/TILE+dx,stair.y/TILE,{propType:'purificationBrazier',decorative:true,interactable:false,hideLabel:true}));
 }
 export function requestMalakarEntry(game,stairs,commit,initiator=game.player){
- if(game.malakarReady)return false;
+ if(game.malakarReady||partyEntryPending(game))return false;
  if(partyMembers(game.player).some(p=>p.hp<=0)){game.log?.('Revive the fallen party members before committing to the sanctum.');return false;}
  if((game.world.enemies||[]).some(e=>e.hp>0&&!e.dead&&Math.hypot(e.x-stairs.x,e.y-stairs.y)<420)){game.log?.('Clear the immediate approach before gathering the party.');return false;}
  game.malakarReady={stairs,commit,initiator:partyMembers(game.player).indexOf(initiator)+1,answers:new Set()};
- showEncounterPanel(game);return false;
+ requestPartyEntry(game,{key:'malakar-sanctum',title:'the Ritual Sanctum',kind:'boss',initiator,force:true,
+  commit:()=>{game.malakarReady=null;removePanel();commit();beginMalakarArrival(game);},
+  onCancel:()=>{game.malakarReady=null;removePanel();}});return false;
 }
 export function answerMalakarReady(game,index,yes){
- const r=game.malakarReady;if(!r)return;
- if(!yes){game.malakarReady=null;removePanel();game.log?.('The descent is postponed. Prepare and try again when everyone is ready.');return;}
- const actor=partyMembers(game.player)[index];if(!actor)return;r.answers.add(actor);
- const members=partyMembers(game.player);
- if(members.every(actor=>r.answers.has(actor))){const commit=r.commit;game.malakarReady=null;removePanel();commit();beginMalakarArrival(game);}else showEncounterPanel(game);
+ return answerPartyEntry(game,partyMembers(game.player)[index],yes);
 }
 export function beginMalakarArrival(game){
  const w=game.world;if(!isMalakarSanctum(w))return;installMalakarSanctum(w);
@@ -123,6 +122,7 @@ export function resetMalakar(w){const s=encounterState(w);if(!s||s.mode==='victo
 function removePanel(){if(typeof document!=='undefined')document.getElementById('malakarEncounterPanel')?.remove();}
 function showEncounterPanel(game){
  if(typeof document==='undefined')return;
+ if(game.partyEntryReady){removePanel();return;}
  const s=encounterState(game.world),r=game.malakarReady;
  let text='',buttons=[];
  if(r){text=`Player ${r.initiator} proposes descending into the Ritual Sanctum. Prepare first: the whole party enters together.`;buttons=partyMembers(game.player).flatMap((p,i)=>r.answers.has(p)?[['Player '+(i+1)+' ready',()=>{}]]:[['Player '+(i+1)+': Yes',()=>answerMalakarReady(game,i,true)],['Player '+(i+1)+': Not yet',()=>answerMalakarReady(game,i,false)]]);}
