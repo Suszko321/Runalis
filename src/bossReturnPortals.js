@@ -1,5 +1,6 @@
 import {TILE} from './data.js';
 import {findNearestActorPassablePoint} from './world.js';
+import {isMalakarDungeon,malakarReturnAllowed} from './malakarEncounter.js';
 
 const modes = new Set(['dungeon', 'tower', 'sideZone']);
 const alive = e => e && !e.dead && !e.remove && e.alive !== false && e.hp > 0;
@@ -12,11 +13,13 @@ const kind = w => w.mode === 'tower' ? 'towerExit' : w.mode === 'sideZone' ? 'si
 const portalId = (w,key,r) => r.final && w.mode === 'dungeon' ? 'dungeonBossReturnPortal' : `bossReturnPortal:${key}`;
 function valid(w,r) {
   return r && r.floor === floor(w) && r.ids?.length &&
+    (!isMalakarDungeon(w)||malakarReturnAllowed(w)&&r.ids.includes(w.dungeonState.mainBossEnemyId))&&
     !(w.enemies || []).some(e => r.ids.includes(e.id) && alive(e)) &&
     (!w.dungeonState?.malakar || w.dungeonState.malakar.mode === 'victory');
 }
 export function recordBossReturnVictory(world,enemy) {
   if (!modes.has(world?.mode) || !boss(world,enemy) || alive(enemy)) return false;
+  if(isMalakarDungeon(world)&&(!malakarReturnAllowed(world)||enemy.id!==world.dungeonState.mainBossEnemyId))return false;
   if (world.bossArena && !world.bossArena.bossIds?.includes(enemy.id) && !enemy.miniBoss) return false;
   if (world.dungeonState?.malakar && world.dungeonState.malakar.mode !== 'victory') return false;
   const ids = world.bossArena?.bossIds?.includes(enemy.id) ? [...world.bossArena.bossIds] : [enemy.id];
@@ -34,29 +37,32 @@ export function recordBossReturnVictory(world,enemy) {
 export function syncBossReturnPortals(world) {
   if (!modes.has(world?.mode)) return;
   const ledger = records(world);
+  for (const [key,r] of Object.entries(ledger)) {
+    if ((isMalakarDungeon(world)&&!((r.ids||[]).includes(world.dungeonState.mainBossEnemyId)&&r.floor===Number(world.totalFloors)))||r.floor === floor(world) && !valid(world,r)) delete ledger[key];
+  }
   // Recover older cleared side-zone/tower saves after their boss corpse vanished.
   // Ordinary combat/treasure floors do not acquire a boss portal.
-  const legacyBoss = world.mode === 'tower' ? world.floorType === 'boss' || floor(world)%10 === 0 :
-    world.mode === 'sideZone' && (world.dungeonState.grove || (world.rooms || []).some(r=>r.role === 'boss'));
-  const legacyVictory = world.cleared || world.bossArena?.phase === 'defeated' || world.dungeonState.grove?.defeated;
+  const malakarVictory=isMalakarDungeon(world)&&malakarReturnAllowed(world)&&world.dungeonState.mainBossEnemyId;
+  const legacyBoss = malakarVictory || (world.mode === 'tower' ? world.floorType === 'boss' || floor(world)%10 === 0 :
+    world.mode === 'sideZone' && (world.dungeonState.grove || (world.rooms || []).some(r=>r.role === 'boss')));
+  const legacyVictory = malakarVictory || world.cleared || world.bossArena?.phase === 'defeated' || world.dungeonState.grove?.defeated;
   if (legacyBoss && legacyVictory && !(world.enemies || []).some(e=>boss(world,e) && alive(e)) &&
       !Object.values(ledger).some(r=>r.floor === floor(world))) {
-    const ids = world.bossArena?.bossIds?.length ? [...world.bossArena.bossIds] : [`cleared-warden:${floor(world)}`];
+    const ids = malakarVictory ? [world.dungeonState.mainBossEnemyId] : world.bossArena?.bossIds?.length ? [...world.bossArena.bossIds] : [`cleared-warden:${floor(world)}`];
     const center = world.bossRoomCenter || world.spawn;
     if (center) ledger[`${floor(world)}:legacy`] = {floor:floor(world),ids,
       point:findNearestActorPassablePoint(world,center.x,center.y+TILE*2,12)};
   }
-  for (const [key,r] of Object.entries(ledger)) {
-    if (r.floor === floor(world) && !valid(world,r)) delete ledger[key];
-  }
   world.objects ||= [];
   world.objects = world.objects.filter(o => {
+    if(isMalakarDungeon(world)&&o.kind==='dungeonExit'&&(!malakarReturnAllowed(world)||o.id!=='dungeonBossReturnPortal'))return false;
     if (o.id === 'towerBossReturnPortal') return false; // Replace the old clear-only portal.
     if (o.returnPortal && !o.bossVictoryPortal && world.mode !== 'dungeon') return false;
     return !o.bossVictoryPortal || valid(world,ledger[o.returnRecordKey]);
   });
   for (const [key,r] of Object.entries(ledger)) {
     if (!valid(world,r)) continue;
+    if(malakarVictory){r.final=true;r.point=findNearestActorPassablePoint(world,world.bossRoomCenter.x,world.bossRoomCenter.y+TILE*2,12);}
     const id = portalId(world,key,r);
     let portal = world.objects.find(o => o.id === id);
     if (!portal) {portal = {id}; world.objects.push(portal);}

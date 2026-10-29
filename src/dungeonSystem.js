@@ -267,7 +267,7 @@ export function exitDungeon(game, exit = {}) {
   if (!hostGame || !hostGame.player) return false;
 
   syncDungeonCompletion(hostGame.world);
-  if (!exit.force && (exit.locked || hostGame.world?.mode === 'dungeon' && !hostGame.world.dungeonState?.cleared && !canUseBossReturnPortal(hostGame.world,exit))) {
+  if (!exit.force && (exit.locked || isMalakarDungeon(hostGame.world)&&!canUseBossReturnPortal(hostGame.world,exit) || hostGame.world?.mode === 'dungeon' && !hostGame.world.dungeonState?.cleared && !canUseBossReturnPortal(hostGame.world,exit))) {
     hostGame.log?.('The exit is sealed.');
 
     addStatusText(actor || hostGame.player, 'Sealed', {

@@ -1,6 +1,7 @@
 import {TILE} from './data.js';
 import {findNearestActorPassablePoint} from './world.js';
 import {syncBossReturnPortals} from './bossReturnPortals.js';
+import {isMalakarDungeon,malakarReturnAllowed} from './malakarEncounter.js';
 
 const PORTAL_ID='dungeonBossReturnPortal';
 const alive=enemy=>enemy&&!enemy.dead&&!enemy.remove&&enemy.alive!==false&&Number(enemy.hp)>0;
@@ -22,6 +23,13 @@ export function syncDungeonCompletion(world){
       state.requiredBossIds=[...new Set([...(state.requiredBossIds||[]),...(required.length?required:[boss]).map(e=>e.id)])];
       if(encounterEnemies.some(e=>state.requiredBossIds.includes(e.id)&&alive(e))){state.cleared=false;state.finalBossDefeated=false;}
     }
+  }
+  if(isMalakarDungeon(world)){
+    // Keep exits belong only to the completed sanctum. This also removes old
+    // miniboss portals and authored surface sigils from earlier floors.
+    world.objects=(world.objects||[]).filter(o=>o.kind!=='dungeonExit'||malakarReturnAllowed(world)&&o.id===PORTAL_ID);
+    syncBossReturnPortals(world);
+    if(!malakarReturnAllowed(world))return;
   }
   for(const object of world.objects||[]){
     if(object.kind==='dungeonExit'){
@@ -53,6 +61,7 @@ export function syncDungeonCompletion(world){
 
 export function completeDungeonAfterBoss(world,enemy){
   if(world?.mode!=='dungeon'||!finalFloor(world)||!enemy?.isBoss||enemy.miniBoss||alive(enemy))return false;
+  if(isMalakarDungeon(world)&&world.dungeonState?.malakar?.mode!=='victory')return false;
   syncDungeonCompletion(world);
   const state=world.dungeonState;
   if(!(state.requiredBossIds||[state.mainBossEnemyId]).includes(enemy.id)||state.cleared||(world.enemies||[]).some(e=>(state.requiredBossIds||[]).includes(e.id)&&alive(e)))return false;

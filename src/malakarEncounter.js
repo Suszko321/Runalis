@@ -6,6 +6,8 @@ import {requestPartyEntry,answerPartyEntry,partyEntryPending} from './partyEntry
 export const MALAKAR_HEALTH_MULTIPLIER=3;
 export const isMalakarDungeon=w=>/^(demonCultLair|dawnspireRoot|emberveil)$/i.test(w?.dungeonId||'');
 export const isMalakarSanctum=w=>isMalakarDungeon(w)&&w.floor===w.totalFloors;
+export const malakarReturnAllowed=w=>isMalakarSanctum(w)&&w.dungeonState?.cleared&&w.dungeonState?.malakar?.mode==='victory'&&
+ !(w.enemies||[]).some(e=>(e.malakarSolo||e.isDungeonMainBoss)&&!e.dead&&!e.remove&&e.alive!==false&&e.hp>0);
 export const encounterState=w=>w?.dungeonState?.malakar;
 export const partyMembers=p=>[p,...(p?.coop?.players||[]).filter(a=>a.active!==false&&a.joined!==false)];
 export function strengthenMalakar(b){
@@ -19,7 +21,9 @@ export function installMalakarSanctum(w){
  const boss=w.enemies.find(e=>e.isDungeonMainBoss);if(!boss)return;
  w.malakarInstalled=true;strengthenMalakar(boss);
  const s=w.dungeonState.malakar ||= {mode:'arrival',elapsed:0,phase:1,seenIntro:false};
- if(w.dungeonState.cleared||boss.dead||boss.hp<=0&&s.mode!=='dying')s.mode='victory';
+ if(!boss.dead&&!boss.remove&&boss.alive!==false&&boss.hp>0){
+  if(w.dungeonState.cleared||s.mode==='victory'){w.dungeonState.cleared=false;w.dungeonState.finalBossDefeated=false;s.mode='arrival';s.sealed=false;}
+ }else if(s.mode!=='dying')s.mode='victory';
  if(s.mode==='active'){s.grace=2;s.attack=null;s.queue=[];cancelEnemyAttackPresentation(boss);}
  w.width=40;w.height=36;
  w.tiles=Array.from({length:36},(_,y)=>Array.from({length:40},(_,x)=>({biome:x>=4&&x<36&&y>=5&&y<32?'stone':'wall',passable:x>=4&&x<36&&y>=5&&y<32})));
