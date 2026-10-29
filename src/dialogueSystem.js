@@ -120,7 +120,8 @@ export function openDialogue(dialogueState, npcObject, player, world) {
     getNpcByObjectId(npcObject.npcId) ||
     null;
 
-  const contextual = getCampaignConversation(npcObject,player,world) || getOrderDialogue(npcObject,player,world);
+  const campaign = getCampaignConversation(npcObject,player,world);
+  const contextual = campaign && !campaign.ambientCampaign ? campaign : getOrderDialogue(npcObject,player,world) || campaign;
   const dialogueId = contextual?.id ||
     npcObject.dialogueId ||
     npcDefinition?.dialogueId ||
@@ -154,7 +155,7 @@ export function openDialogue(dialogueState, npcObject, player, world) {
 
   if(contextual) dialogueState.transientNodes[dialogueId]=contextual;
 
-  if (!npcObject.deferTalkObjective && !contextual) markPartyNpcTalkObjective(player, dialogueState.npcId);
+  if (!npcObject.deferTalkObjective && (!contextual || contextual.ambientCampaign)) markPartyNpcTalkObjective(player, dialogueState.npcId);
 
   applyDialogueNode(dialogueState, dialogue, player, dialogueId, { opening: true });
 
@@ -279,6 +280,16 @@ export function restoreDialogueState(dialogueState, snapshot, player, world) {
   dialogueState.transientNodes = snapshot.transientNodes && typeof snapshot.transientNodes === 'object'
     ? snapshot.transientNodes
     : {};
+
+  // Old contextual snapshots embedded the placeholder record/directions menus.
+  // Refresh those conversations; quest effects already saved on the actor stay
+  // committed, while an unaccepted assignment still requires a fresh response.
+  const savedRoot=dialogueState.transientNodes[dialogueState.dialogueId];
+  const savedOptions=savedRoot?.options||savedRoot?.choices||[];
+  const legacyCampaign=String(dialogueState.dialogueId).startsWith('campaign:')&&
+    (String(dialogueState.dialogueId).startsWith('campaign:guide:')||savedOptions.some(o=>o.id==='record')&&!savedOptions.some(o=>String(o.id).startsWith('topic-')));
+  const savedNpc=(world?.continentRuntime?.allObjects||world?.objects||[]).find(o=>o.id===dialogueState.npcObjectId);
+  if(legacyCampaign&&savedNpc)return openDialogue(dialogueState,savedNpc,player,world);
 
   const nodeId = snapshot.currentNodeId || snapshot.dialogueId;
   const node = resolveDialogueNode(dialogueState, nodeId);
@@ -425,7 +436,7 @@ function executeDialogueChoice(dialogueState, option, player, world, options = {
   const eventId = getDialogueChoiceEventId(dialogueState, originNodeId, option);
   const committed = dialogueState.committedEvents.includes(eventId);
   if (!committed) {
-    applyDialogueOptionEffects(dialogueState, option, player, world);
+    applyDialogueOptionEffects(dialogueState, option, player, world, originNodeId);
     if (choiceHasCommittedEffects(option)) dialogueState.committedEvents.push(eventId);
   }
 
@@ -463,8 +474,8 @@ function executeDialogueChoice(dialogueState, option, player, world, options = {
           });
     const responseNodeId = registerTransientNode(dialogueState, {
       id: transientNodeId(dialogueState, 'reply', option.id),
-      speakerId: option.responseSpeakerId || dialogueState.npcId || 'npc',
-      speakerName: option.responseSpeakerName || dialogueState.rootSpeakerName || dialogueState.npcName || 'Unknown',
+      speakerId: option.responseSpeakerId || originNode?.speakerId || dialogueState.npcId || 'npc',
+      speakerName: option.responseSpeakerName || originNode?.speakerName || originNode?.speaker || dialogueState.rootSpeakerName || dialogueState.npcName || 'Unknown',
       text: replyText,
       nextNodeId: explicitNext,
       runtimeChoices: refreshedChoices,
@@ -1133,7 +1144,7 @@ function flagConditionsMatch(option, player) {
   const owner = getQuestOwner(player);
   const hasFlag = flag => !!(
     getStoryFlag(player, flag) ||
-    (owner && owner !== player && getStoryFlag(owner, flag))
+    (!option.actorOnlyFlags && owner && owner !== player && getStoryFlag(owner, flag))
   );
 
   if (!conditionValues(option.requiresFlags).every(hasFlag)) return false;
@@ -1216,18 +1227,20 @@ function conditionValues(value) {
   return Array.isArray(value) ? value : [value];
 }
 
-function applyDialogueOptionEffects(dialogueState, option, player, world) {
+function applyDialogueOptionEffects(dialogueState, option, player, world, originNodeId = null) {
   if (!option) return;
   if(option.orderAction) applyOrderChoice(player,option.orderAction);
-  if(Number.isInteger(option.regulatorStep)&&!getStoryFlag(player,'act1.machineAligned')) {
-    player.act1RegulatorStep=option.regulatorStep===(player.act1RegulatorStep||0)?option.regulatorStep+1:0;
-    if(player.act1RegulatorStep===3){setStoryFlag(player,'act1.machineAligned');player.locationKnowledge ||= {};player.locationKnowledge.demonCultLair={...ACT1_ROUTES.demonCultLair,state:'routeKnown'};}
+  const campaignOwner=getQuestOwner(player);
+  if(Number.isInteger(option.regulatorStep)&&!getStoryFlag(campaignOwner,'act1.machineAligned')) {
+    campaignOwner.act1RegulatorStep=option.regulatorStep===(campaignOwner.act1RegulatorStep||0)?option.regulatorStep+1:0;
+    player.act1RegulatorStep=campaignOwner.act1RegulatorStep;
+    if(campaignOwner.act1RegulatorStep===3)for(const recipient of new Set([player,campaignOwner])){setStoryFlag(recipient,'act1.machineAligned');recipient.locationKnowledge ||= {};recipient.locationKnowledge.demonCultLair={...ACT1_ROUTES.demonCultLair,state:'routeKnown'};}
   }
 
   // Non-resolution conversations also use inventory costs and rewards. Commit
   // effects once per authored choice for persistent reputation, not per reopening.
   const campaignChoice = option.karma || option.relationships || option.learnRoute || option.campaignOnce;
-  const choiceKey = `${dialogueState.currentNodeId}:${option.id}`;
+  const choiceKey = `${originNodeId || dialogueState.currentNode?.choiceContextNodeId || dialogueState.currentNodeId}:${option.id}`;
   player.campaignChoices ||= {};
   if (!campaignChoice || !player.campaignChoices[choiceKey]) {
     if (!option.poiResolution) { consumeDialogueCosts(player, {...option,requiresItems:[]}); grantDialogueRewards(player,option); }
@@ -1239,12 +1252,14 @@ function applyDialogueOptionEffects(dialogueState, option, player, world) {
         player.companions ||= {}; player.companions[id] ||= {relationship:0};
         player.companions[id].relationship = (player.companions[id].relationship || 0) + delta;
       }
-      if (option.learnRoute && ACT1_ROUTES[option.learnRoute]) {
-        player.locationKnowledge ||= {};
-        const previous=player.locationKnowledge[option.learnRoute];
-        player.locationKnowledge[option.learnRoute] = {...ACT1_ROUTES[option.learnRoute],...previous,state:previous?.state || 'routeKnown'};
-      }
     }
+  }
+  // Knowledge is idempotent and may need sharing with a different host; it is
+  // not a repeatable reputation or inventory reward.
+  if(option.learnRoute&&ACT1_ROUTES[option.learnRoute])for(const recipient of new Set([player,campaignOwner])){
+    recipient.locationKnowledge ||= {};
+    const previous=recipient.locationKnowledge[option.learnRoute];
+    recipient.locationKnowledge[option.learnRoute]={...ACT1_ROUTES[option.learnRoute],...previous,state:previous?.state||'routeKnown'};
   }
 
   if (option.confirmsBloodlineQuest) {

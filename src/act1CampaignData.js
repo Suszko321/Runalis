@@ -111,3 +111,9 @@ export const CAMPAIGN_DIALOGUES = {
     choice('warning','What are you trying to tell me?','When you meet Seraphel, do not mistake kindness for innocence. The brightest lights cast the darkest shadows.',finish('story.malakarTruthHeard'))])
 };
 for(const [id,n] of Object.entries(CAMPAIGN_DIALOGUES)) n.id=id;
+// These opening questions are remembered across visits; the canonical campaign
+// catalogue must retain the same gating as the original recovery conversation.
+for(const option of CAMPAIGN_DIALOGUES.maraMercyOpening.options){
+ if(option.id==='next')option.requiresFlags=['opening.maraAskedWhere','opening.maraAskedCaravan','opening.maraAskedSurvival'];
+ else option.excludesFlags=[...option.flagsSet];
+}
