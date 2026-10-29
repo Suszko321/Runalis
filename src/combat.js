@@ -920,7 +920,16 @@ export function updateAbilityInput(player, world, input, dt, now, log) {
   if (!player || !input) return false;
 
   if (player.hp <= 0 || isActorControlLockedByRevive(player)) return false;
-  if (player.activeChannel && (input.dashPressed || Array.from({length:HOTBAR_SLOT_COUNT},(_,i)=>i).some(i=>input[`ability${i}Pressed`] && i !== player.activeChannel.slot))) stopAbilityChannel(player, 'cancelled');
+  const slots=Array.from({length:HOTBAR_SLOT_COUNT},(_,i)=>i);
+  const current=player.abilityCharge?.active?player.abilityCharge:player.activeChannel;
+  const currentSlot=Number(current?.slotIndex??current?.slot);
+  const nextSlot=current?slots.find(i=>input[`ability${i}Pressed`]&&
+    (i!==currentSlot||resolveAbilityId(i,player)!==current.abilityId)):undefined;
+  const stale=current&&resolveAbilityId(currentSlot,player)!==current.abilityId;
+  if (player.activeChannel && (input.dashPressed || nextSlot!==undefined || stale)) stopAbilityChannel(player, 'cancelled');
+  // A fresh skill press takes over from a held charge just as it does from a
+  // channel. Otherwise a multi-touch Urn tap is swallowed by the old charge.
+  if (player.abilityCharge?.active && !input.dashPressed && (nextSlot!==undefined || stale)) cancelAbilityCharge(player);
   const activeCharge = player.abilityCharge;
   if (activeCharge?.active) {
     if (input.dashPressed) {
@@ -956,7 +965,7 @@ export function updateAbilityInput(player, world, input, dt, now, log) {
     return true;
   }
 
-  for (let slot = 0; slot < HOTBAR_SLOT_COUNT; slot++) {
+  for (const slot of nextSlot!==undefined?[nextSlot]:slots) {
     if (!input[`ability${slot}Pressed`]) continue;
 
     const abilityId = resolveAbilityId(slot, player);
