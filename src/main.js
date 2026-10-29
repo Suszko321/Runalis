@@ -1,4 +1,5 @@
 import {updateMalakarEncounter,handleMalakarInput,handleMalakarKeyboard} from './malakarEncounter.js';
+import {renderMobileDialogue} from './mobileText.js';
 import {updatePartyEntry,handlePartyEntryInput,handlePartyEntryKeyboard,partyEntryPending,cancelPartyEntry} from './partyEntrySystem.js';
 import {rememberRepeatableInstance} from './instanceEncounterMemory.js';
 import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
@@ -922,6 +923,7 @@ class RunalisGame {
     closeWorkshopService(this);
     if (this.destroyed) return;
     this.destroyed = true;
+    document.getElementById('mobileDialogue')?.remove();
     cancelPartyEntry(this,'',false);
     this.started = false;
     this.onlineSession?.destroy();
@@ -1506,7 +1508,8 @@ class RunalisGame {
     this.developerEditor?.draw(this.ctx, this.renderCamera);
     renderMinimapHud(this);
 
-    if (this.dialogue?.active && !this.dialogue.actor?.networkRemote) {
+    const mobileDialogue=renderMobileDialogue(this);
+    if (this.dialogue?.active && !this.dialogue.actor?.networkRemote && !mobileDialogue) {
       drawDialogueUI(this.ctx, this.dialogue, {
         touchControls: !!this.mobileControls && !this.primaryControllerActive,
         viewport: this.getDialogueViewport(this.dialogue.actor || this.player)
