@@ -76,6 +76,11 @@ export function composeEchorynRegions(world){
  prop('demonCultLair','staging-rack','weaponRack',-19,-7,1.6);prop('demonCultLair','ritual-engine','sealEngine',-9,-9,1.5);
  // Physical descent positions are centralized and protected after all scene composition.
  for(const o of world.objects){const e=ECHORYN_ENTRANCES[o.id];if(!e)continue;const a=ACT1_LANDMARKS[e.anchor];o.x=(a[0]+e.offset[0]+.5)*TILE;o.y=(a[1]+e.offset[1]+.5)*TILE;o.echorynEntrance=e.type;}
+ // Keep the Orchard destination west of the crowded relief camp, away from
+ // the farmhouse, tents, witnesses and investigation props. Preserve its ID
+ // so existing attunements still work when the authored world is rebuilt.
+ const orchardStone=world.objects.find(o=>o.id==='nav-hearthmereFrontier-ashenOrchard');
+ if(orchardStone)Object.assign(orchardStone,{x:(ACT1_LANDMARKS.ashenOrchard[0]-21+.5)*TILE,y:(ACT1_LANDMARKS.ashenOrchard[1]+3+.5)*TILE,name:'Ashen Orchard Nav Stone',forceLabel:true,labelPriority:12});
  const bridgeFire=world.objects.find(o=>o.id==='pilgrimBridgeCampfire');if(bridgeFire){bridgeFire.x=(ACT1_LANDMARKS.pilgrimBridge[0]-10+.5)*TILE;bridgeFire.y=(ACT1_LANDMARKS.pilgrimBridge[1]-5+.5)*TILE;}
  const carve=(x,y)=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const t=world.tiles[y+dy]?.[x+dx];if(t)Object.assign(t,{biome:'path',passable:true});}};
  // Bank stair from the west bridge landing to the crypt embedded below its foundation.

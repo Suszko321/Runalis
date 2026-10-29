@@ -24,6 +24,11 @@ export function spaceNavStoneNetwork(objects) {
   for(const stone of candidates)if(retained.every(other=>Math.hypot(other.x-stone.x,other.y-stone.y)>=MIN_NAV_STONE_SPACING))retained.push(stone);
   const saintOrvane=retained.find(stone=>stone.id==='nav-aureateMarches-west');
   if(saintOrvane)saintOrvane.name='Saint Orvane Waystone';
+  // The main quest's Orchard camp needs its own destination even though it
+  // is closer to Orrakai than the general regional spacing floor permits.
+  // Add it after spacing so it cannot displace another established stone.
+  const orchard=objects.find(o=>o.kind==='navStone'&&o.id==='nav-hearthmereFrontier-ashenOrchard');
+  if(orchard)retained.push(orchard);
   const keep=new Set(retained);
   // Remove retired stones from the authored object list before streaming,
   // collision clearings, map destinations and respawn lists are constructed.
