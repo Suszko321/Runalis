@@ -16,6 +16,21 @@ for(const name of ['plague-props','story-props'])asset(name);
 
 // Object state selects authored artwork; rendering never advances puzzle state.
 export function drawDungeonInteractable(ctx,object,x,y){
+  if(object.returnPortal){
+    // A crisp pixel aperture, distinct from ordinary stairs and exit doors.
+    const now=performance.now()/1000,step=Math.floor(now*7);
+    ctx.save();ctx.translate(Math.round(x),Math.round(y));
+    ctx.fillStyle='#182c25';ctx.fillRect(-24,9,48,7);
+    for(let row=0;row<22;row++){
+      const dy=row*3-52,half=Math.round(Math.sqrt(Math.max(0,1-((dy+20)/34)**2))*17/3)*3;
+      if(half<=0)continue;
+      ctx.fillStyle=row%3===step%3?'#305b49':'#1b3d32';ctx.fillRect(-half,dy,half*2,3);
+      ctx.fillStyle='#83b893';ctx.fillRect(-half-3,dy,3,3);ctx.fillRect(half,dy,3,3);
+      if((row+step)%5===0){ctx.fillStyle='#b4d7a1';ctx.fillRect(-half+3,dy,Math.max(3,half),2);}
+    }
+    for(let i=0;i<9;i++){const angle=i*Math.PI*2/9+now*.35,px=Math.round(Math.cos(angle)*26/3)*3,py=Math.round((-20+Math.sin(angle)*38)/3)*3;ctx.fillStyle=i%2?'#d4c58e':'#a5ce91';ctx.fillRect(px-1,py-1,3,3);}
+    ctx.restore();return true;
+  }
   const kind=object.kind;
   let index,w,h;
   if(kind==='dungeonStairs'){index=object.direction==='up'?0:1;w=52;h=48;}

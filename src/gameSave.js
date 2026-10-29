@@ -1,5 +1,6 @@
 import {installMalakarSanctum} from './malakarEncounter.js';
 import {cancelPartyEntry} from './partyEntrySystem.js';
+import {syncBossReturnPortals} from './bossReturnPortals.js';
 import {rememberRepeatableInstance} from './instanceEncounterMemory.js';
 import {endWorkshopSession} from './workshopAccess.js';
 import {initializeDungeonArena} from './dungeonArenaSystem.js';
@@ -1427,6 +1428,7 @@ export function applySaveToGame(game, saveState) {
   restoreContinentalState(game);
   installMalakarSanctum(game.world);
   syncDungeonCompletion(game.world);
+  syncBossReturnPortals(game.world);
   game.logLines = migrated.logLines;
   game.camera = migrated.camera;
 

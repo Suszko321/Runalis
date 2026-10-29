@@ -49,4 +49,4 @@ for(const theme of ['grave','mine','demon','ruin','thorn','holy','cosmic']){
  assert(Math.hypot(player.x-returnPoint.x,player.y-returnPoint.y)<64,'Return must be at the entrance used, not a default spawn');
  assert.equal(game.overworldState,null);runs++;
 }
-console.log(`PASS: ${runs} dungeon themes; only the final boss opens one reachable portal; miniboss/floor/extra bosses cannot unlock it; surviving mobs allowed; portal and entrance survive saves; return is at the used entrance.`);
+console.log(`PASS: ${runs} dungeon themes; final victory opens one reachable portal; miniboss/floor/extra bosses cannot complete the run; surviving mobs allowed; portal and entrance survive saves; return is at the used entrance.`);

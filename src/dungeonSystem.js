@@ -1,5 +1,6 @@
 import {installMalakarSanctum,dressMalakarApproach,isMalakarDungeon,requestMalakarEntry} from './malakarEncounter.js';
 import {requestPartyEntry} from './partyEntrySystem.js';
+import {canUseBossReturnPortal} from './bossReturnPortals.js';
 import {installOrchardDungeon,beginOrchardDungeon,updateOrchardDungeon} from './ashenOrchardDungeon.js';
 import {configureEncounterEnemy,dungeonEncounterProfile,ENCOUNTER_VERSION} from './encounterData.js';
 import {initializeDungeonArena,resetFailedDungeonArena} from './dungeonArenaSystem.js';
@@ -266,7 +267,7 @@ export function exitDungeon(game, exit = {}) {
   if (!hostGame || !hostGame.player) return false;
 
   syncDungeonCompletion(hostGame.world);
-  if (!exit.force && (exit.locked || hostGame.world?.mode === 'dungeon' && !hostGame.world.dungeonState?.cleared)) {
+  if (!exit.force && (exit.locked || hostGame.world?.mode === 'dungeon' && !hostGame.world.dungeonState?.cleared && !canUseBossReturnPortal(hostGame.world,exit))) {
     hostGame.log?.('The exit is sealed.');
 
     addStatusText(actor || hostGame.player, 'Sealed', {

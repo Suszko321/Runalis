@@ -63,6 +63,7 @@ import {assignCompanionFormation,companionFollowPoint,companionCombatPoint,findC
 import {updateOutOfCombatRecovery,refillExplorationStamina} from './outOfCombatRecovery.js';
 import {beginBasicEnemyAttack,updateBasicEnemyAttack,cancelEnemyAttackPresentation,getBasicEnemyAttack,getEnemyCharge} from './enemyAttackPresentation.js';
 import {completeDungeonAfterBoss} from './dungeonCompletion.js';
+import {recordBossReturnVictory} from './bossReturnPortals.js';
 
 import {
   gainXp,
@@ -5749,6 +5750,7 @@ function handleEnemyDeath(enemy, player, world, log) {
     }
   }
 
+  recordBossReturnVictory(world,enemy);
   const xp = enemy.rewardSuppressed||enemy.summonedBy||enemy.summonedByBoss ? 0 : enemy.xp ?? defaultEnemyXp(enemy);
   gainXp(player, 'renown', xp, log);
   grantSharedCombatKillXp(player, enemy, xp, log);

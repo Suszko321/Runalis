@@ -1,6 +1,7 @@
 // Compact mutations for repeatable side zones and regional tower floors.
 // Geography and seeded enemies are regenerated; re-entry never rerolls a run.
 import {resetFailedDungeonArena} from './dungeonArenaSystem.js';
+import {syncBossReturnPortals,recordBossReturnVictory} from './bossReturnPortals.js';
 const flags=['locked','claimed','depleted','opened','triggered','eventTriggered','completed','rewardClaimed'];
 function plainClone(value){const seen=new WeakSet();return JSON.parse(JSON.stringify(value, (name,item)=>{
  if(['telegraph','bossTell','pendingSpecial','visualReaction','visualDeath'].includes(name))return undefined;
@@ -30,7 +31,7 @@ export function restoreRepeatableInstance(world,player){
  const ledger=player?.worldMemory?.instanceEncounters,state=ledger?.[key(world)];if(!state)return false;
  if(world.dungeonState?.grove&&!state.events?.grove){delete ledger[key(world)];return false;}
  if(state.resetAt&&Number(player.worldMemory.elapsed)>=state.resetAt){delete ledger[key(world)];return false;}
- const dead=new Set(state.deadIds||[]);world.enemies=(world.enemies||[]).filter(e=>!dead.has(e.id));
+ const dead=new Set(state.deadIds||[]),defeatedBosses=(world.enemies||[]).filter(e=>dead.has(e.id)&&(e.isBoss||e.miniBoss));world.enemies=(world.enemies||[]).filter(e=>!dead.has(e.id));
  for(const e of world.enemies)if(state.wounds?.[e.id]!=null)e.hp=Math.max(1,Math.min(e.maxHp,state.wounds[e.id]));
  for(const e of world.enemies)if(state.eliteBudgets?.[e.id]!=null)e.eliteHealRemaining=state.eliteBudgets[e.id];
  for(const o of world.objects||[])if(state.objects?.[o.id])Object.assign(o,state.objects[o.id]);
@@ -38,5 +39,7 @@ export function restoreRepeatableInstance(world,player){
  if(state.events)world.dungeonState=JSON.parse(JSON.stringify(state.events));
  for(const e of state.eventEnemies||[])if(!world.enemies.some(other=>other.id===e.id))world.enemies.push(JSON.parse(JSON.stringify(e)));
  if(world.bossArena){world.bossArena.phase=state.arenaPhase||'dormant';if(world.cleared)world.bossArena.phase='defeated';}
+ for(const e of defeatedBosses)recordBossReturnVictory(world,{...e,hp:0,dead:true});
+ syncBossReturnPortals(world);
  return true;
 }

@@ -4,6 +4,7 @@
 
 import {rememberRepeatableInstance,restoreRepeatableInstance} from './instanceEncounterMemory.js';
 import {requestPartyEntry} from './partyEntrySystem.js';
+import {syncBossReturnPortals} from './bossReturnPortals.js';
 import {createBlightedGrove,beginBlightedGrove,updateBlightedGrove,isBlightedGrove} from './blightedGrove.js';
 import {initializeDungeonArena,resetFailedDungeonArena} from './dungeonArenaSystem.js';
 import { TILE } from './data.js';
@@ -140,6 +141,7 @@ export function exitSideZone(game) {
 export function updateSideZoneState(game) {
   updateBlightedGrove(game);
   const world = game?.world;
+  if(world?.mode==='sideZone')syncBossReturnPortals(world);
   const player = game?.player;
   if (!world || world.mode !== 'sideZone' || !player || world.cleared) return;
 
@@ -147,6 +149,7 @@ export function updateSideZoneState(game) {
   if (living) return;
 
   world.cleared = true;
+  syncBossReturnPortals(world);
   const definition = SIDE_ZONE_DEFINITIONS[world.sideZoneType] || SIDE_ZONE_DEFINITIONS.hollowGrove;
   const state = getSideZoneState(player, world.regionId, world.sideZoneType);
   state.clears += 1;

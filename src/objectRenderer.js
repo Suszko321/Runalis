@@ -393,7 +393,7 @@ function drawObjectUnrotated(ctx, object, camera, questActor = null) {
 
   if (object.kind === 'sideZoneExit') {
     drawDungeonExit(ctx, object, p.x, p.y);
-    label(ctx, object.name || 'Return', p.x, p.y - 34, {
+    label(ctx, object.name || 'Return', p.x, p.y - (object.returnPortal ? 58 : 34), {
       priority: object.labelPriority || 6
     });
     return;
@@ -417,7 +417,7 @@ function drawObjectUnrotated(ctx, object, camera, questActor = null) {
 
   if (object.kind === 'towerExit') {
     drawDungeonExit(ctx, object, p.x, p.y);
-    label(ctx, object.name || 'Exit', p.x, p.y - 34, {
+    label(ctx, object.name || 'Exit', p.x, p.y - (object.returnPortal ? 58 : 34), {
       priority: object.labelPriority || 5
     });
     return;

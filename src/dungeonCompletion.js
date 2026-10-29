@@ -1,12 +1,13 @@
 import {TILE} from './data.js';
 import {findNearestActorPassablePoint} from './world.js';
+import {syncBossReturnPortals} from './bossReturnPortals.js';
 
 const PORTAL_ID='dungeonBossReturnPortal';
 const alive=enemy=>enemy&&!enemy.dead&&!enemy.remove&&enemy.alive!==false&&Number(enemy.hp)>0;
 const finalFloor=world=>Number(world.floor||1)>=Number(world.totalFloors||world.dungeonState?.totalFloors||1);
 
 // One identity belongs to the dungeon's final encounter. Minibosses, floor
-// guardians and summoned bosses cannot complete the run or activate its exits.
+// guardians and summoned bosses cannot complete the run or unlock final rewards.
 export function syncDungeonCompletion(world){
   if(world?.mode!=='dungeon')return;
   const state=world.dungeonState||(world.dungeonState={cleared:false});
@@ -24,18 +25,20 @@ export function syncDungeonCompletion(world){
   }
   for(const object of world.objects||[]){
     if(object.kind==='dungeonExit'){
+      if(object.bossVictoryPortal)continue;
       object.locked=!state.cleared;
-      if(state.cleared)object.name=object.returnPortal?'Return to Overworld':'Return to Surface';
+      if(state.cleared)object.name=object.returnPortal?'Return to Entrance':'Return to Surface';
     }
     if(object.unlockOnDungeonClear||object.kind==='dungeonChest'&&object.chestType==='boss')object.locked=!state.cleared;
   }
   if(!state.cleared){
-    world.objects=(world.objects||[]).filter(o=>!o.returnPortal);
+    world.objects=(world.objects||[]).filter(o=>!o.returnPortal||o.bossVictoryPortal);
+    syncBossReturnPortals(world);
     return;
   }
-  if(!finalFloor(world))return;
+  if(!finalFloor(world)){syncBossReturnPortals(world);return;}
   const portal=(world.objects||[]).find(o=>o.id===PORTAL_ID);
-  if(portal)return;
+  if(portal){syncBossReturnPortals(world);return;}
   const center=state.returnPortalPoint||world.bossRoomCenter
     ||(world.enemies||[]).find(e=>e.id===state.mainBossEnemyId)
     ||(world.objects||[]).find(o=>String(o.id).startsWith('dungeonBossMarker'))||world.exit||world.spawn;
@@ -43,8 +46,9 @@ export function syncDungeonCompletion(world){
   const point=state.returnPortalPoint||findNearestActorPassablePoint(world,center.x,center.y+TILE*2,12);
   state.returnPortalPoint={x:point.x,y:point.y};
   world.objects=world.objects||[];
-  world.objects.push({id:PORTAL_ID,kind:'dungeonExit',name:'Return to Overworld',...point,
+  world.objects.push({id:PORTAL_ID,kind:'dungeonExit',name:'Return to Entrance',...point,
     r:24,locked:false,returnPortal:true,forceLabel:true,labelPriority:8});
+  syncBossReturnPortals(world);
 }
 
 export function completeDungeonAfterBoss(world,enemy){

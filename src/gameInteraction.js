@@ -1,4 +1,5 @@
 import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
+import {returnToZoneEntrance} from './bossReturnPortals.js';
 import {handleGroveInteraction} from './blightedGrove.js';
 import {handleOrchardInteraction} from './ashenOrchardDungeon.js';
 import {isQuestObjectVisible} from './questInteractables.js';
@@ -374,6 +375,7 @@ export function interact(game) {
       return;
 
     case 'sideZoneExit':
+      if(nearest.returnToZoneEntrance){returnToZoneEntrance(game,nearest);return;}
       exitSideZone(game);
       renderInteractionUI(game);
       return;

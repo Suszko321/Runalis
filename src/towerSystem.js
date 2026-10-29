@@ -1,5 +1,6 @@
 import {rememberRepeatableInstance,restoreRepeatableInstance} from './instanceEncounterMemory.js';
 import {requestPartyEntry} from './partyEntrySystem.js';
+import {syncBossReturnPortals} from './bossReturnPortals.js';
 import {configureEncounterEnemy} from './encounterData.js';
 import {CONTINENT_REGIONS} from './continentDefinition.js';
 import {initializeDungeonArena,resetFailedDungeonArena} from './dungeonArenaSystem.js';
@@ -126,6 +127,7 @@ export function exitTower(game,options={}) {
 export function updateTowerState(game) {
   const world = game?.world;
   if (!world || world.mode !== 'tower') return;
+  syncBossReturnPortals(world);
 
   const living = (world.enemies || []).filter(enemy => {
     return enemy && !enemy.dead && enemy.alive !== false && enemy.hp > 0 && !enemy.remove && !(world.floorType==='boss'&&(enemy.summonedByBoss||enemy.summonedBy));
@@ -143,7 +145,7 @@ export function updateTowerState(game) {
   // Only the first clear should award progress or play the clear notification.
   if (world.cleared) return;
   world.cleared = true;
-  if(world.floorType==='boss'&&!world.objects.some(o=>o.id==='towerBossReturnPortal')){const center=world.bossRoomCenter||world.spawn;const point=findNearestActorPassablePoint(world,center.x,center.y+64,12);world.objects.push({id:'towerBossReturnPortal',kind:'towerExit',name:'Return to Overworld',...point,r:24,locked:false,returnPortal:true});}
+  syncBossReturnPortals(world);
 
   const floor = world.floor || 1;
   const regionId = world.infiniteDungeonRegionId || 'hearthmereFrontier';
