@@ -24,14 +24,14 @@ const {chromium}=require(process.env.RUNALIS_NODE_MODULES+'/playwright'),fs=requ
    const g=rootRetortGame(),{interact,nearestObject}=await import('/src/gameInteraction.js'),{inBuilding,migrateOrrakaiPosition}=await import('/src/orrakaiLayout.js');
    const stairs=g.world.objects.find(o=>o.id==='maraHouseDoor');Object.assign(g.player,{x:stairs.x,y:stairs.y-24,moveTarget:null});if(nearestObject(g)?.id!==stairs.id)throw Error('Down stairs not selected');interact(g);
    if(migrateOrrakaiPosition(g.world,g.player))throw Error('Town migration displaced the shop arrival');return {mode:g.world.mode,inside:inBuilding(g.world.buildings.find(b=>b.id==='alchemist'),g.player.x,g.player.y),nearest:nearestObject(g)?.id,mara:g.world.objects.filter(o=>o.npcId==='maraVell').length};
-  });assert.equal(downstairs.mode,'capital');assert(downstairs.inside);assert.equal(downstairs.nearest,'maraHomeEntrance');assert.equal(downstairs.mara,1);checks.push('Actual interaction descends into the shop');
+  });assert.equal(downstairs.mode,'capital');assert(downstairs.inside);assert.equal(downstairs.nearest,'maraHomeEntrance');assert.equal(downstairs.mara,0);checks.push('Actual interaction descends into the shop without a duplicate Mara');
   await page.waitForTimeout(600);await page.locator('#game').screenshot({path:out+'/shop.png'});
   const service=await page.evaluate(async()=>{
    const g=rootRetortGame(),{interact}=await import('/src/gameInteraction.js'),{updateDialogue,chooseDialogueOption}=await import('/src/dialogueSystem.js'),{addItem,countItem}=await import('/src/player.js');
-   const mara=g.world.objects.find(o=>o.npcId==='maraVell');Object.assign(g.player,{x:mara.x,y:mara.y+24,moveTarget:null});interact(g);updateDialogue(g.dialogue,100);
-   const index=g.dialogue.options.findIndex(o=>o.id==='mara-restorative');if(index<0)throw Error('No Mara restorative option');addItem(g.player,'gravecap',1);addItem(g.player,'paleEssence',1);const before=countItem(g.player,'shrineTonic');
+   const alchemist=g.world.objects.find(o=>o.npcId==='orenFenwick');if(!alchemist)throw Error('Oren missing');Object.assign(g.player,{x:alchemist.x,y:alchemist.y+24,moveTarget:null});interact(g);updateDialogue(g.dialogue,100);
+   const index=g.dialogue.options.findIndex(o=>o.id==='mara-restorative');if(index<0)throw Error('No Oren restorative option');addItem(g.player,'gravecap',1);addItem(g.player,'paleEssence',1);const before=countItem(g.player,'shrineTonic');
    if(!chooseDialogueOption(g.dialogue,g.player,g.world,index))throw Error('Cannot choose service');const action=g.dialogue.pendingAction?.type;if(!g.handlePendingDialogueAction())throw Error('Real dialogue action handler failed');return {action,tonics:countItem(g.player,'shrineTonic')-before};
-  });assert.equal(service.action,'maraApothecary');assert.equal(service.tonics,1);checks.push('Mara dialogue dispatches the real restorative service');
+  });assert.equal(service.action,'maraApothecary');assert.equal(service.tonics,1);checks.push('Oren dialogue dispatches the real restorative service');
   const walk=await page.evaluate(async()=>{
    const g=rootRetortGame(),{isActorPositionPassable,moveActorWithCollision}=await import('/src/world.js');
    function follow(x,y){

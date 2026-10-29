@@ -10,10 +10,17 @@ import {nearestObject,shrine} from '../src/gameInteraction.js';
 import {createDialogueState,openDialogue} from '../src/dialogueSystem.js';
 import {createOverworldReturnState,restoreOverworldFromState} from '../src/dungeonSystem.js';
 import {enterTower,exitTower} from '../src/towerSystem.js';
+import {createMaraHouseWorld} from '../src/act1OpeningSystem.js';
 const w=createCapitalHubWorld({skipPublishedOverride:true});
 const before=JSON.parse(fs.readFileSync(new URL('../docs/orrakai-reconstruction/content-before.json',import.meta.url)));
 const protectedObject=o=>!o.decorative&&!['worldDressing','treeCluster','shrub','smallBoulder','brokenWall','ruinPillar','graveMarker'].includes(o.kind)||o.npcId||o.questId||o.poiId||o.kind==='poiInvestigation';
 for(const old of before.filter(protectedObject)){
+ if(old.id==='thornbinderTrainer'){
+  const upstairs=createMaraHouseWorld(),mara=upstairs.objects.find(o=>o.npcId==='maraVell');assert(mara&&mara.instructorType==='class'&&mara.companionId==='mara','Mara retains her trainer identity upstairs');assert(!w.objects.some(o=>o.npcId==='maraVell'),'Mara is absent downstairs');continue;
+ }
+ if(old.id==='frontierRoadWatch'){
+  const guard=w.objects.find(o=>o.id===old.id);assert(guard?.orrakaiWatch&&guard.dialogueId==='orrakaiLowerGateGuardAid','North Gate Guard shares the town watch report');continue;
+ }
  const current=w.objects.find(o=>o.id===old.id);assert(current,`lost ${old.id}`);
  for(const key of ['kind','npcId','dialogueId','questId','poiId','majorPoiId'])assert.equal(current[key],old[key],`${old.id}: changed ${key}`);
 }
@@ -47,7 +54,7 @@ useHubService(g,w.objects.find(o=>o.kind==='guildClerk'));assert(p.flags.capital
 addItem(p,'gravecap',1);addItem(p,'paleEssence',1);const tonic=countItem(p,'shrineTonic');useHubService(g,w.objects.find(o=>o.kind==='alchemistService'));assert.equal(countItem(p,'shrineTonic'),tonic+1);
 p.classId='fellhunter';p.classSkill='archery';const xp=p.skills.archery.xp;useHubService(g,w.objects.find(o=>o.kind==='classTrainerService'));assert(p.skills.archery.xp>xp);
 p.spiritAwakened=true;p.maxSpirit=100;p.spirit=0;shrine(g);assert.equal(p.spirit,100);
-for(const npcId of ['wardenMael','maraSmith','maraVell','bram','kaelenDusk','sisterElian']){const npc=w.objects.find(o=>o.npcId===npcId);assert(openDialogue(createDialogueState(),npc,createPlayer('Dialogue review'),w),`${npcId} dialogue opens`);}
+for(const npcId of ['wardenMael','maraSmith','orenFenwick','bram','kaelenDusk','sisterElian']){const npc=w.objects.find(o=>o.npcId===npcId);assert(openDialogue(createDialogueState(),npc,createPlayer('Dialogue review'),w),`${npcId} dialogue opens`);}
 Object.assign(p,{x:20.5*32,y:27.5*32});assert.equal(nearestObject(g)?.id,'orrakaiBank','bank customer position routes to existing service');
 const save=createSaveState(g);assert.equal(save.worldObjects,null);const loaded=migrateSaveState(JSON.parse(JSON.stringify(save)));assert.equal(loaded.player.x,p.x);assert.equal(loaded.player.orrakaiLayoutRevision,ORRAKAI_REVISION);assert.deepEqual(loaded.player.poiStates,p.poiStates);
 delete save.player.orrakaiLayoutRevision;const legacy=migrateSaveState(save);assert.equal(legacy.player.x,w.spawn.x);assert.equal(legacy.player.y,w.spawn.y);

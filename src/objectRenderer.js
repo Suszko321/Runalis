@@ -1,5 +1,7 @@
 import {drawAuthoredObject} from './worldAtmosphereRenderer.js';
 import {drawWorkshopFixture,drawWorkshopWorker} from './workshopArt.js';
+import {isQuestObjectVisible} from './questInteractables.js';
+import {drawQuestEvidence} from './questObjectArt.js';
 import {lootDiscoveryProfile} from './gameplayDiscoveries.js';
 import {ITEMS} from './data.js';
 import {drawContinentalObject} from './continentArt.js';
@@ -78,7 +80,7 @@ export function drawObjects(ctx, world, camera, questActor = null, actorLayers =
   activeEnvironmentProfile = getEnvironmentVisualProfile(world);
 
   const objects = (world.objects || []).filter(object => {
-    if (!object || object.depleted || object.presentationRetired) return false;
+    if (!object || object.depleted || object.presentationRetired || !isQuestObjectVisible(object,questActor)) return false;
     const p = screen(object, camera);
     return isOnScreen(ctx, p.x, p.y, Math.max(280, Number(object.drawRadius || 0)));
   });
@@ -438,11 +440,8 @@ function drawObjectUnrotated(ctx, object, camera, questActor = null) {
 
   if (object.kind === 'poiInvestigation') {
     const near=!questActor||Math.hypot(questActor.x-object.x,questActor.y-object.y)<105;
-    if (object.echorynEvidence) {
-      // Evidence is a small physical scene; its interaction accent appears on approach.
-      drawNarrativeProp(ctx,{propType:/toy|horse/i.test(object.name)?'childToy':/grave|funeral/i.test(object.name)?'freshGrave':/root|heart/i.test(object.name)?'echoFragment':/water|sluice/i.test(object.name)?'rotIrrigation':/supply|satchel|ledger/i.test(object.name)?'crate':'memorialStone',scale:.65},p.x,p.y);
-      if(near){ctx.save();ctx.strokeStyle='#c9b483';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(p.x,p.y+7,18,7,0,0,Math.PI*2);ctx.stroke();ctx.restore();}
-    } else drawPoiInvestigation(ctx, object, p.x, p.y);
+    drawQuestEvidence(ctx,object,p.x,p.y);
+    if(near){ctx.save();ctx.strokeStyle=object.inspected?'#7c8876':'#c9b483';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(p.x,p.y+10,25,8,0,0,Math.PI*2);ctx.stroke();ctx.restore();}
     if (!object.hideLabel || object.echorynEvidence&&near) {
       label(ctx, object.name || 'Investigate', p.x, p.y - 28, {
         priority: object.labelPriority || 7
@@ -2289,17 +2288,6 @@ function drawPoiSupplyProp(ctx, object, x, y, p, wagon = false) {
     circle(ctx, x - 23 * scale, y + 16 * scale, 9 * scale);
     circle(ctx, x + 23 * scale, y + 16 * scale, 9 * scale);
   }
-}
-
-function drawPoiInvestigation(ctx, object, x, y) {
-  const color = object.inspected ? '#7e8795' : object.color || '#d9ad4f';
-  drawShadow(ctx, x, y + 8, 15, 4);
-  ctx.fillStyle = '#1b1b20';
-  rect(ctx, x - 14, y - 10, 28, 19);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-  circleStroke(ctx, x, y - 2, 8);
-  line(ctx, x - 5, y - 7, x + 5, y + 3);
 }
 
 function drawDungeonSetpiece(ctx, object, x, y) {

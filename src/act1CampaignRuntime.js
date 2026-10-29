@@ -6,9 +6,10 @@ import {getQuest} from './worldContent.js';
 import {startQuest,updateQuestStageCompletion,openDialogue} from './dialogueSystem.js';
 import {getPoiClueCount} from './poiStateSystem.js';
 import {enterMaraHouse} from './act1OpeningSystem.js';
-import {CAMPAIGN_ID,MERCY_ID} from './act1CampaignData.js';
+import {CAMPAIGN_ID,MERCY_ID,getCampaignStageId} from './act1CampaignData.js';
 import {ensureOrder} from './yourOrder.js';
 import {addItem} from './player.js';
+import {isQuestObjectVisible} from './questInteractables.js';
 
 const pxy=(x,y)=>({x:(x+.5)*TILE,y:(y+.5)*TILE});
 const prop=(id,type,x,y,extra={})=>makeObject(type==='campfire'?'campfire':type.startsWith('continent')?'worldDressing':'townProp',id,id,x,y,{propType:type,decorative:true,interactable:false,hideLabel:true,drawRadius:300,...extra});
@@ -47,7 +48,7 @@ export function installCampaignWorld(w){
     makeObject('signpost','act1FarmFork','Farm and Refuge Tracks',52,71,{talk:'East: Ashen Orchard. West: Greyhaven refuge. North: Orrakai.'}),
     prop('oldWellPumpingHouse','continentRuin',51,64,{artWidth:160,artHeight:130}),prop('oldWellPump','anvil',50,65),
     prop('oldWellBoundaryMarker','stoneMarker',38,53),prop('oldWellDamagedCart','supplyWagon',36,52),
-    npc('act1ReliefScout','Scout Hessa',98,87,{poiId:'ashenOrchard'}),prop('act1ScoutShelter','tent',97,85),
+    npc('act1ReliefScout','Scout Hessa',73,54,{poiId:'caravanWreck',bodyType:'female',talk:'I followed the missing wagons here from Ashen Orchard. Show me what you found in the wreck.'}),prop('act1ScoutShelter','tent',97,85),
     makeObject('signpost','act1OrchardSign','Forest Road',123,89,{talk:'Pilgrim Bridge east. Across the bridge, north-east for the Broken Chapel.'}),
     makeObject('signpost','act1BridgeSign','Chapel Road',254,98,{talk:'Broken Chapel: north-east. Hunter Camp: south-east.'}),
     makeObject('signpost','act1ChapelSign','Southern Forest Road',444,85,{talk:'Retrace the chapel road west to the fork east of Pilgrim Bridge. Take the south-east road to Hunter Camp and Watcher Ridge; follow the ridge road south for Last Dawn Keep.'}),
@@ -124,14 +125,16 @@ export function updateAct1Campaign(game,dt=0){
   if(p.quests?.completed?.[CAMPAIGN_ID]){setStoryFlag(p,'story.act1Complete');setStoryFlag(p,'travel.pilgrimRoad.unlocked');}
 }
 function migrateCampaign(p){
-  if(p.act1CampaignVersion===2)return;
+  if(p.act1CampaignVersion===3)return;
   for(const q of Object.values(p.quests?.active||{})){
     if(![CAMPAIGN_ID,MERCY_ID].includes(q.id))continue;
-    const definition=getQuest(q.id),index=definition.stages.findIndex(s=>s.id===q.currentStageId);
+    // Players already sent to the Orchard by Bram keep travelling forward.
+    const stageId=q.id===CAMPAIGN_ID?getCampaignStageId(p,q.currentStageId):q.currentStageId;
+    const definition=getQuest(q.id),index=definition.stages.findIndex(s=>s.id===stageId);
     if(index<0)continue;const s=definition.stages[index],old=q.objectives||[];
-    Object.assign(q,{stageIndex:index,currentStageTitle:s.title,currentStageText:s.text,objectives:s.objectives.map(o=>({...o,current:old.find(a=>a.type===o.type&&a.npcId===o.npcId&&a.poiId===o.poiId&&a.enemyId===o.enemyId&&a.flag===o.flag)?.current||0}))});
+    Object.assign(q,{stageIndex:index,currentStageId:s.id,currentStageTitle:s.title,currentStageText:s.text,objectives:s.objectives.map(o=>({...o,current:old.find(a=>a.type===o.type&&a.npcId===o.npcId&&a.poiId===o.poiId&&a.dungeonId===o.dungeonId&&a.enemyId===o.enemyId&&a.flag===o.flag)?.current||0}))});
   }
-  p.act1CampaignVersion=2;
+  p.act1CampaignVersion=3;
 }
 function updateRite(game,dt){
   const p=game.player,w=game.world;if(!getStoryFlag(p,'mercy.riteStarted')||getStoryFlag(p,'mercy.riteWitnessed'))return;
@@ -169,6 +172,7 @@ function updateOrderWorld(game){
   if(o.operations.trade){const merchant=objects.find(a=>a.id==='greyhavenMerchant');if(merchant)move(merchant,38,88);}
 }
 export function handleCampaignInteraction(game,object){
+  if(!isQuestObjectVisible(object,game.player))return false;
   if(object.campaignFixture){openDialogue(game.dialogue,object,game.player,game.world);return true;}
   if(!object.campaignAction)return false;
   const p=game.player,o=ensureOrder(p);

@@ -368,7 +368,7 @@ export function useAlchemist(game) {
     removeItem(player, 'paleEssence', 1);
     addItem(player, 'shrineTonic', 1);
     gainXp(player, 'cooking', 20, game.log);
-    game.log?.('Mara Vell: brewed Shrine Tonic from Gravecap and Pale Essence.');
+    game.log?.('Oren Fenwick: brewed Shrine Tonic from Gravecap and Pale Essence.');
     addLootText(player, 'Shrine Tonic', { color: '#b68cff' });
     return true;
   }
@@ -376,13 +376,13 @@ export function useAlchemist(game) {
   if ((player.gold || 0) >= 8) {
     player.gold -= 8;
     addItem(player, 'fieldRations', 1);
-    game.log?.('Mara Vell: sold a travel restorative for 8 gold.');
+    game.log?.('Oren Fenwick: sold a travel restorative for 8 gold.');
     addLootText(player, 'Field Rations', { color: '#d9ad4f' });
     return true;
   }
 
-  game.log?.('Mara Vell: bring Gravecap + Pale Essence, or 8 gold for a basic restorative.');
-  addStatusText(player, 'Mara Needs Reagents', { color: '#b68cff' });
+  game.log?.('Oren Fenwick: bring Gravecap + Pale Essence, or 8 gold for a basic restorative.');
+  addStatusText(player, 'Oren Needs Reagents', { color: '#b68cff' });
   return true;
 }
 
@@ -768,19 +768,6 @@ function createCapitalObjects() {
       dirX: 1,
       dirY: -1,
       talk: 'Kaelen Dusk: "The dead do not sleep. They wait to be asked."'
-    }),
-    hubObject('npc', 'thornbinderTrainer', 'Mara Vell', 61, 24, {
-      apothecaryService:true,
-      instructorType: 'class',
-      classId: 'thornbinder',
-      npcId: 'maraVell',
-      companionId: 'mara',
-      dialogueId: 'maraTrainerDialogue',
-      factionId: 'thornbound',
-      disposition: 'neutral',
-      dirX: -1,
-      dirY: 0,
-      talk: 'Mara Vell: "Roots remember what men try to bury."'
     }),
     hubObject('npc', 'waveriderTrainer', 'Tideglass Mentor', 56, 32, {
       classId: 'waverider',

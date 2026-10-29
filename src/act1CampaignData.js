@@ -1,6 +1,13 @@
 // Canonical Act I additions. Legacy IDs remain stable for existing profiles.
 export const CAMPAIGN_ID = 'act1HearthmereAshes';
 export const MERCY_ID = 'mercy_in_orrakai';
+export function getCampaignStageId(player,stageId){
+  if(stageId==='bramsRoadLesson')return 'theWoundSpreads';
+  // The old town consultation preceded the cellar. Do not skip that dungeon
+  // when a save resumes at the same consultation in the new sequence.
+  if(stageId==='theCovenantBlessing'&&(player.act1CampaignVersion||0)<3&&!player.completedDungeons?.ashenOrchard)return 'failedPurificationSite';
+  return stageId;
+}
 export const flagObjective = (flag, label) => ({type:'storyFlag', flag, required:1, label});
 const stage = (id,title,text,objectives) => ({id,title,text,objectives});
 const evidence = (poiId, required, label) => ({type:'investigatePoi',poiId,required,label});
@@ -13,22 +20,21 @@ export const MERCY_ENDING = [
 ];
 export const CAMPAIGN_STAGES = [
   stage('aLanternInTheMud','The Cargo Left Behind','Mael’s road report: leave the south gate, follow the lower road to the damaged cart, then take the signed east fork to the burned caravan. Examine the manifest and empty reliquary cradle.',[evidence('caravanWreck',2,'Recover the cargo record and examine the cradle')]),
-  stage('handsThatStillWork','Five Missing Wagons','The waybill names Ashen Orchard. Speak with Bram in the training yard before travelling: he knows the relief road and the scout who watched it.',[talk('bram','Compare the missing wagon routes with Bram')]),
-  stage('bramsRoadLesson','The Relief Road','Bram: follow the lower road past the Old Well, then the eastern farm track to Ashen Orchard. Scout Hessa waits at the orchard road shelter. Ask what happened to the other wagons.',[talk('act1ReliefScout','Question Scout Hessa at the orchard road shelter')]),
-  stage('theWoundSpreads','Where the Roots Turn','Hessa saw livestock flee before the scouts arrived. Search the abandoned household, contaminated irrigation, and ruined growing ground at Ashen Orchard.',[evidence('ashenOrchard',3,'Examine three distinct Orchard clues')]),
-  stage('theCovenantBlessing','White Fire, Black Roots','Return to the infirmary in Orrakai. Ask Callworth how purification works, then compare his account with Mara’s observations.',[talk('lightwardenCaelen','Ask Callworth about the failed purification'),talk('maraVell','Compare the Orchard evidence with Mara')]),
-  stage('failedPurificationSite','Ashen Orchard','Return to the Orchard. The remaining roots lead into its cellar beneath the collapsed farmhouse. Clear the cellar and examine what survived.',[{type:'clearDungeon',dungeonId:'ashenOrchard',required:1,label:'Clear the Orchard cellar'}]),
-  stage('evidenceForMara','What the Roots Remember','Bring the cellar findings to Mara. She can compare the living roots with the channel sketches recovered in the Orchard.',[talk('maraVell','Bring the cellar findings to Mara')]),
+  stage('handsThatStillWork','Five Missing Wagons','Scout Hessa is examining the burned wagons beside the empty reliquary cradle. Show her the manifest and ask how Ashen Orchard connects to the missing cargo.',[talk('act1ReliefScout','Speak with Scout Hessa at the caravan wreck')]),
+  stage('theWoundSpreads','Where the Roots Turn','Hessa needs the Ashen Orchard Cellar cleared before the relief road can reopen. Follow the lower road south past the Old Well, then the eastern farm track. First search the abandoned household, contaminated irrigation, and ruined growing ground for the source of the roots.',[evidence('ashenOrchard',3,'Examine three distinct Orchard clues')]),
+  stage('failedPurificationSite','Ashen Orchard Cellar','The surface clues lead beneath the collapsed farmhouse. Fulfil Hessa’s request: enter Ashen Orchard Cellar, defeat what feeds the growth, and recover evidence of the buried channels. Clear the cellar before returning to Orrakai.',[{type:'clearDungeon',dungeonId:'ashenOrchard',required:1,label:'Clear Ashen Orchard Cellar'}]),
+  stage('theCovenantBlessing','White Fire, Black Roots','With the Orchard cellar cleared, return to the infirmary in Orrakai. Show Callworth what survived beneath the purification burn and ask why the roots returned.',[talk('lightwardenCaelen','Discuss the cleared Orchard and failed purification with Callworth')]),
+  stage('evidenceForMara','What the Roots Remember','Bring the cellar findings to Mara upstairs above the Root & Retort. Take the stairs in the shop’s eastern herb room. She can compare the living roots with the channel sketches recovered in the Orchard.',[talk('maraVell','Bring the cellar findings to Mara upstairs at the Root & Retort')]),
   stage('theBrokenChapel','The Burned Index','Follow the signed forest road east from the Orchard to Pilgrim Bridge. Cross the river and follow the north-eastern chapel road. Question both surviving witnesses and inspect the archive.',[talk('chapelHermit','Question the Chapel Hermit'),talk('sisterElyra','Question Sister Elyra'),evidence('brokenChapel',3,'Inspect three surviving records or mechanisms'),flagObjective('act1.machineAligned','Operate the Dawnspire regulator beside the sealed stair')]),
   stage('theRedSeal','The Last Dawn Offensive','The regulator and stolen manifest point to Last Dawn Keep. Retrace the Chapel road west to the signed fork just east of Pilgrim Bridge. Take the south-east road past Hunter Camp to Watcher Ridge, then follow the fortress road south. A defector waits outside the gate. Return to Mael with the ritual orders.',[evidence('lastDawnOrders',1,'Recover the ritual orders at the keep approach'),talk('repentantCultist','Question the Last Dawn defector'),talk('wardenMael','Report the ritual preparations to Mael')]),
   stage('descentBeneathHearthmere','Beneath Last Dawn Keep','Enter the fortress descent beyond the defector. Explore the occupied chambers, prisonworks and witness vault. The ritual is already underway.',[{type:'enterDungeon',dungeonId:'demonCultLair',required:1,label:'Enter the Last Dawn descent'}]),
   stage('malakarAndTheRoot','The Witness Beneath','Stop Malakar in the deepest vault. Survive his attacks, then listen to what he says before deciding what to believe.',[flagObjective('story.malakarDefeated','Defeat Malakar'),flagObjective('story.malakarTruthHeard','Hear Malakar’s final testimony'),flagObjective('act1.relicSecured','Secure the broken caravan reliquary beside the throne')]),
-  stage('ashesOfOrrakai','Ashes of Orrakai','Return to Mael and Mara in Orrakai. The roads and refuge remain open; the Pilgrim Road is your next lead, when you are ready.',[talk('wardenMael','Report the outcome to Mael'),talk('maraVell','Return to Mara')])
+  stage('ashesOfOrrakai','Ashes of Orrakai','Return to Mael in Orrakai, then visit Mara upstairs above the Root & Retort; the shop’s eastern herb room leads to her stairs. The roads and refuge remain open; the Pilgrim Road is your next lead, when you are ready.',[talk('wardenMael','Report the outcome to Mael'),talk('maraVell','Return to Mara upstairs at the Root & Retort')])
 ];
 export const ACT1_ROUTES = {
   oldWellRitualSite:{name:'Old Well',route:'Leave the south gate; follow the lower road past the damaged cart and boundary stone. Follow the ditch to the ruined pumping house; the well is behind it.'},
   caravanWreck:{name:'Caravan Ambush Site',route:'From the damaged cart on the lower road, take the signed east fork. The burned wagons stand in a clearing at the end of the track.'},
-  ashenOrchard:{name:'Ashen Orchard',route:'Follow the lower road south past the Old Well, then the farm track east. Blackened fruit trees surround the ruined farmhouse. Hessa waits beside the approach.'},
+  ashenOrchard:{name:'Ashen Orchard',route:'Follow the lower road south past the Old Well, then the farm track east. Blackened fruit trees surround the ruined farmhouse. The root-choked cellar entrance is beneath the collapsed farmhouse.'},
   brokenChapel:{name:'Broken Chapel',route:'From Ashen Orchard follow the signed forest road east to Pilgrim Bridge. Cross the river, then take the north-eastern chapel road to the broken bell tower.'},
   demonCultLair:{name:'Last Dawn Keep',route:'From the Broken Chapel retrace the road west to the fork just east of Pilgrim Bridge. Take the south-east road to Hunter Camp and Watcher Ridge. Continue south along the fortress road. Look for the occupied walls and divided-sun banners.'},
   greyhaven:{name:'Greyhaven',route:'Take the lower road south from Orrakai. At the Old Well, follow the western refuge track to the hall with the torn banner.'}

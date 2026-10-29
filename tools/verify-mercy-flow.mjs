@@ -65,11 +65,11 @@ const mainStages=[];
 function stage(){tick();const s=g.player.quests.active.act1HearthmereAshes?.currentStageId;if(mainStages.at(-1)!==s)mainStages.push(s);return s;}
 function surface(){g.world=createWorld();tick();}
 function inspect(id){const o=(g.world.continentRuntime?.allObjects||g.world.objects).find(o=>o.id===id);assert(o,`physical evidence ${id}`);Object.assign(g.player,{x:o.x,y:o.y});g.world.continentRuntime?.activate([g.player],g.player,true);tick();interact(g);stage();checkpoint();}
-function visit(id,choices){const o=(g.world.continentRuntime?.allObjects||g.world.objects).find(o=>o.npcId===id);assert(o,id);Object.assign(g.player,{x:o.x,y:o.y});g.world.continentRuntime?.activate([g.player],g.player,true);talk(id,choices);stage();}
+function visit(id,choices){if(id==='maraVell'&&g.world.mode==='capital'){const stairs=g.world.objects.find(o=>o.id==='maraHomeEntrance');assert(stairs);Object.assign(g.player,{x:stairs.x,y:stairs.y});interact(g);assert.equal(g.world.mode,'maraHouse');tick();}const o=(g.world.continentRuntime?.allObjects||g.world.objects).find(o=>o.npcId===id);assert(o,id);Object.assign(g.player,{x:o.x,y:o.y});g.world.continentRuntime?.activate([g.player],g.player,true);talk(id,choices);stage();}
 stage();surface();inspect('act1CargoManifest');inspect('act1RelicCradle');assert.equal(stage(),'handsThatStillWork');
-g.world=createCapitalHubWorld();visit('bram',['record']);surface();visit('act1ReliefScout',['record']);
+visit('act1ReliefScout',['record']);
 for(const o of g.world.continentRuntime.allObjects.filter(o=>o.kind==='poiInvestigation'&&o.poiId==='ashenOrchard').slice(0,3))inspect(o.id);
-assert.equal(stage(),'theCovenantBlessing');g.world=createCapitalHubWorld();visit('lightwardenCaelen',['record']);visit('maraVell',['record']);surface();
+assert.equal(stage(),'failedPurificationSite');
 function clearDungeon(id){
  const entrance=g.world.continentRuntime.allObjects.find(o=>o.dungeonId===id);assert(entrance,`entrance ${id}`);Object.assign(g.player,{x:entrance.x,y:entrance.y});assert(enterDungeon(g,entrance));stage();
  while(g.world.floor<g.world.totalFloors){const stairs=g.world.objects.find(o=>o.kind==='dungeonStairs'&&o.direction==='down');if(id==='demonCultLair'&&stairs.targetFloor===g.world.totalFloors){g.world.enemies=[];transitionDungeonFloor(g,stairs);answerMalakarReady(g,0,true);skipMalakarRitual(g);chooseMalakarIntroduction(g,'relic');updateMalakarEncounter(g,3.1);}else assert(transitionDungeonFloor(g,stairs));}
@@ -78,7 +78,7 @@ function clearDungeon(id){
  if(id==='demonCultLair'){const relic=g.world.objects.find(o=>o.id==='malakarRelic');Object.assign(g.player,{x:relic.x,y:relic.y});interact(g);tick();}
  const exit=g.world.objects.find(o=>o.returnPortal);assert(exit,`return portal ${id}`);assert(exitDungeon(g,exit));stage();
 }
-clearDungeon('ashenOrchard');g.world=createCapitalHubWorld();visit('maraVell',['record']);surface();visit('chapelHermit',['record']);visit('sisterElyra',['record']);
+clearDungeon('ashenOrchard');assert.equal(stage(),'theCovenantBlessing');g.world=createCapitalHubWorld();visit('lightwardenCaelen',['record']);visit('maraVell',['record']);surface();visit('chapelHermit',['record']);visit('sisterElyra',['record']);
 for(const o of g.world.continentRuntime.allObjects.filter(o=>o.kind==='poiInvestigation'&&o.poiId==='brokenChapel').slice(0,3))inspect(o.id);
 for(const word of ['drain','align','light'])visit('act1Regulator',[word]);assert.equal(stage(),'theRedSeal');inspect('act1RitualOrders');visit('repentantCultist',['record']);
 g.world=createCapitalHubWorld();visit('wardenMael',['record']);surface();clearDungeon('demonCultLair');g.world=createCapitalHubWorld();visit('wardenMael',['record']);visit('maraVell',['record']);

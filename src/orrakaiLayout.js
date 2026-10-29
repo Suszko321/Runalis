@@ -3,6 +3,14 @@ import {TILE} from './data.js';
 
 export const ORRAKAI_REVISION = 3;
 export const ROOT_RETORT = Object.freeze({stairs:{x:55,y:39},arrival:{x:55,y:40},counter:{x:49,y:39}});
+// Open paving, clear of gate arches, roofs, stalls and terrace foregrounds.
+export const ORRAKAI_WATCH_POSTS = [
+ {id:'orrakaiLowerGateGuardObject',npcId:'orrakaiLowerGateGuard',name:'South Road Guard',x:34,y:36},
+ {id:'orrakaiMarketGuardObject',npcId:'orrakaiMarketGuard',name:'Market Watch Guard',x:31,y:30},
+ {id:'orrakaiInfirmaryGuardObject',npcId:'orrakaiInfirmaryGuard',name:'Infirmary Watch Guard',x:12,y:42},
+ {id:'orrakaiHallGuardObject',npcId:'orrakaiHallGuard',name:'Hall Watch Guard',x:45,y:16},
+ {id:'frontierRoadWatch',npcId:'orrakaiNorthGateGuard',name:'North Gate Guard',x:47,y:9}
+];
 export const ORRAKAI_BUILDINGS = [
   {id:'guild',name:'Warden’s Hall',x:29,y:8,w:15,h:9,door:6,roof:0,partition:9,rooms:['Guild chamber','Records room']},
   {id:'shrine',name:'Covenant Sanctuary',x:10,y:8,w:15,h:9,door:6,roof:2,partition:9,rooms:['Sanctuary','Vestry']},
@@ -22,10 +30,10 @@ const placements = {
  orrakaiMarket:[33,25],orrakaiFoodStall:[40,23],orrakaiMarketVendor:[32,26],orrakaiBank:[20,26],orrakaiBanker:[21,25],
  orrakaiBlacksmith:[50,26],smith:[52,27],orrakaiAlchemist:[49,39],orrakaiAlchemistApprentice:[50,38],
  orrakaiTrainingYard:[54,12],orrakaiPvpArena:[62,13],mercenaryTrainer:[53,15],necromancerTrainer:[56,10],
- thornbinderTrainer:[49,39],waveriderTrainer:[50,13],lightbringerTrainer:[57,15],templarTrainer:[18,13],
+ orenFenwickObject:[49,39],waveriderTrainer:[50,13],lightbringerTrainer:[57,15],templarTrainer:[18,13],
  orrakaiWeatheredShrine:[14,11],orrakaiTownHearth:[40,38],orrakaiTrialTower:[63,39],
  orrakaiSickVillagerObject:[27,38],orrakaiWellStoresAttendantObject:[31,28],orrakaiWaterDistributionObject:[31,37],
- orrakaiLowerGateGuardObject:[33,42],orrakaiRefugeeParentObject:[20,39],lightwardenCaelenObject:[13,17],
+ orrakaiLowerGateGuardObject:[34,36],orrakaiRefugeeParentObject:[20,39],lightwardenCaelenObject:[13,17],
  covenantHealingRiteObject:[17,15],plagueTentAttendant:[24,40],refugeeReliefWorker:[20,41],
  covenantPhysician:[24,38],covenantReliefSister:[44,39],covenantPeacekeeper:[15,40],maskedOrrakaiChild:[18,40],
  orrakaiGraveTender:[9,13],covenantTeacher:[23,12],covenantHistorian:[41,12],covenantEnvoy:[38,14],
@@ -119,6 +127,7 @@ export function reconstructOrrakai(world){
  world.authoredLocations=[['orrakai-workyard','Orrakai Workyard',54,27],['orrakai-garden','Kitchen Gardens',61,41],['orrakai-refuge','Pilgrim Shelter',22,40]].map(([id,name,x,y])=>({id,name,...point(x,y),lore:'A working refuge at the edge of the frontier.'}));
  world.enemies=[];
  ensureRootRetortAccess(world);
+ ensureOrrakaiWatchPosts(world);
  return world;
 }
 
@@ -126,12 +135,24 @@ export function reconstructOrrakai(world){
 // Keep their legacy IDs, services and quests; never rebuild edited terrain here.
 export function ensureOrrakaiStoryNpcPositions(world){
  if(world?.mode!=='capital')return world;
+ ensureOrrakaiWatchPosts(world);
  // The square's eastern approach is in direct view from the apothecary door.
  // The Cardinal receives visitors on the sanctuary's quiet front terrace.
  for(const [id,x,y,dirX] of [['warden',45,43,1],['lightwardenCaelenObject',13,17,1]]){
   const npc=world.objects.find(o=>o.id===id);if(!npc)continue;
   Object.assign(npc,{...point(x,y),stationary:true,ambientWander:false,forceLabel:true,hideLabel:false,labelPriority:20,dirX,dirY:0});
   delete npc.wanderTargetX;delete npc.wanderTargetY;
+ }
+ return world;
+}
+
+export function ensureOrrakaiWatchPosts(world){
+ if(world?.mode!=='capital')return world;
+ for(const [i,post]of ORRAKAI_WATCH_POSTS.entries()){
+  let guard=world.objects.find(o=>o.id===post.id);
+  if(!guard){guard={id:post.id,kind:'npc'};world.objects.push(guard);}
+  Object.assign(guard,{...point(post.x,post.y),npcId:post.npcId,name:post.name,kind:'npc',role:'guard',orrakaiWatch:true,orrakaiResident:true,factionId:'orrakai',disposition:'friendly',dialogueId:'orrakaiLowerGateGuardAid',deferTalkObjective:true,stationary:true,ambientWander:false,interactable:true,forceLabel:true,hideLabel:false,hideOnRadar:false,labelPriority:16,r:14,radius:14,bodyType:i===2?'female':'male',skin:i===1?'#b78361':'#d7bda2',hair:i===3?'#a6a098':'#463a30',shirt:'#526b86',pants:'#343e4b',boots:'#292722',dirX:0,dirY:1,equipment:{weapon:'blackIronSword',helm:null,chest:'leatherVest',legs:null,trinket:'ironwoodShield'}});
+  delete guard.wanderTargetX;delete guard.wanderTargetY;
  }
  return world;
 }
@@ -156,8 +177,11 @@ export function ensureRootRetortAccess(world){
  if(world?.mode!=='capital')return world;
  const fixture=world.objects.find(o=>o.id==='orrakaiAlchemist');
  if(fixture)Object.assign(fixture,{name:'Root & Retort Medicines',serviceMarkerOnly:true,hideOnRadar:true,interactable:false,hideLabel:true,presentationRetired:true});
- const mara=world.objects.find(o=>o.npcId==='maraVell');
- if(mara)Object.assign(mara,{...point(ROOT_RETORT.counter.x,ROOT_RETORT.counter.y),apothecaryService:true,stationary:true,bodyType:'female',hair:'#684c38',shirt:'#566b45',pants:'#554438',boots:'#251d18',dirX:0,dirY:1});
+ // Published town snapshots can still contain the old downstairs Mara.
+ world.objects=world.objects.filter(o=>o.npcId!=='maraVell'&&o.id!=='thornbinderTrainer');
+ let alchemist=world.objects.find(o=>o.id==='orenFenwickObject');
+ if(!alchemist){alchemist={id:'orenFenwickObject',kind:'npc'};world.objects.push(alchemist);}
+ Object.assign(alchemist,{...point(ROOT_RETORT.counter.x,ROOT_RETORT.counter.y),npcId:'orenFenwick',name:'Oren Fenwick',role:'Resident Alchemist',dialogueId:'orenFenwickShop',factionId:'orrakai',disposition:'friendly',apothecaryService:true,stationary:true,interactable:true,r:14,radius:14,labelPriority:8,bodyType:'male',hairStyle:'short',skin:'#bd9171',hair:'#b9b4a5',shirt:'#a27a3f',pants:'#493d35',boots:'#29221e',dirX:0,dirY:1,talk:'Oren Fenwick: “Fresh medicine downstairs. Mara’s advice upstairs. Mind the drying herbs by the stairs.”'});
  let stairs=world.objects.find(o=>o.id==='maraHomeEntrance');
  if(!stairs){stairs={id:'maraHomeEntrance',kind:'signpost'};world.objects.push(stairs);}
  Object.assign(stairs,{...point(ROOT_RETORT.stairs.x,ROOT_RETORT.stairs.y),name:'Upstairs — Mara’s Room',campaignAction:'maraHome',townStairs:true,direction:'up',r:18,radius:18,labelPriority:8,talk:'Mara’s recovery room is upstairs above the Root & Retort.'});

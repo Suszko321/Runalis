@@ -557,16 +557,23 @@ export const NPCS = {
 
   maraVell: {
     id: 'maraVell',
-    objectId: 'thornbinderTrainer',
+    objectId: 'maraVellOpening',
     name: 'Mara Vell',
     factionId: 'thornbound',
     disposition: 'neutral',
     role: 'Apothecary’s Daughter / Thornbinder Trainer',
-    tileX: 22,
-    tileY: 44,
+    tileX: 7,
+    tileY: 5,
     dialogueId: 'maraTrainerDialogue',
     questIds: ['maraRootsInAsh'],
-    description: 'The apothecary’s daughter at the Root & Retort, a sharp healer who teaches survival magic with roots, thorns, poison, and care.'
+    description: 'The apothecary’s daughter, upstairs in the Root & Retort recovery room. A sharp healer who teaches survival magic with roots, thorns, poison, and care.'
+  },
+
+  orenFenwick: {
+    id:'orenFenwick',objectId:'orenFenwickObject',name:'Oren Fenwick',
+    factionId:'orrakai',disposition:'friendly',role:'Resident Alchemist',
+    tileX:49,tileY:39,dialogueId:'orenFenwickShop',questIds:[],
+    description:'The Root & Retort’s resident alchemist. Grey-haired and dressed in an ochre work tunic, Oren brews medicines and serves travellers at the downstairs counter.'
   },
 
   bram: {

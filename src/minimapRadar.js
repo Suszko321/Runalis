@@ -1,5 +1,6 @@
 // Lightweight radar with authored road lines and cached local dungeon contours.
 import {getQuestsForNpc} from './worldContent.js';
+import {isQuestObjectVisible} from './questInteractables.js';
 import {drawMinimapLineArt} from './minimapLineArt.js';
 import {WORKSHOP_MARKERS,drawWorkshopIcon} from './workshopArt.js';
 export const RADAR_COLORS=Object.freeze({friendly:'#f5f1e6',enemy:'#ef5554',entrance:'#edc65c',quest:'#59adff'});
@@ -27,7 +28,7 @@ export function buildRadarQuestTargets(player,objects=[]){
  for(const object of objects)if(object?.kind==='npc'&&object.npcId){
   if(getQuestsForNpc(object.npcId).some(q=>!done(q.id)))ids.add(object.npcId);
  }
- return {ids,questIds,completed};
+ return {ids,questIds,completed,player};
 }
 function targetsFor(game,now){
  const old=questCache.get(game),world=game.world,player=game.player;
@@ -36,6 +37,7 @@ function targetsFor(game,now){
 }
 export function classifyRadarMarker(entity,group,targets={ids:new Set(),questIds:new Set()}){
  if(!active(entity))return null;
+ if(!isQuestObjectVisible(entity,targets.player))return null;
  if(entity.hideOnRadar)return null;
  const service=WORKSHOP_MARKERS[entity.workshopService];
  if(service)return {...service,service:entity.workshopService,quest:ID_FIELDS.some(key=>targets.ids.has(entity[key]))};

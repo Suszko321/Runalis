@@ -25,11 +25,11 @@ export const STORY_QUESTS = {
       },
       {
         id: 'aidPlagueTents', title: 'Aid the Plague Tents',
-        text: 'Help Orrakai\'s sick and displaced, and listen for anything Mael should know.',
+        text: 'Help Orrakai\'s sick and displaced, and listen for anything Mael should know. Any town watch guard can give the road report. Look in the open square below the Market Steps or beside the infirmary’s west side.',
         objectives: [
           { type: 'talk', npcId: 'orrakaiSickVillager', required: 1, label: 'Deliver medicine to a sick villager' },
           { type: 'talk', npcId: 'orrakaiWaterDistribution', required: 1, label: 'Bring clean water from the well stores' },
-          { type: 'talk', npcId: 'orrakaiLowerGateGuard', required: 1, label: 'Ask the town guard about Last Dawn sightings' },
+          { type: 'talk', npcId: 'orrakaiLowerGateGuard', required: 1, label: 'Ask any Orrakai town watch guard about Last Dawn sightings' },
           { type: 'talk', npcId: 'orrakaiRefugeeParent', required: 1, label: 'Check on the refugee family near the chapel square' }
         ]
       },

@@ -69,6 +69,7 @@ export function createMaraHouseWorld() {
       {
         kind: 'npc', id: 'maraVellOpening', npcId: 'maraVell', name: 'Mara Vell',
         dialogueId: 'maraMercyOpening', deferTalkObjective: true,
+        instructorType:'class',classId:'thornbinder',companionId:'mara',stationary:true,
         x: 7 * TILE + TILE / 2, y: 5 * TILE + TILE / 2, r: 14, radius: 14,
         disposition: 'friendly', factionId: 'orrakai', dirX: 0, dirY: 1,
         bodyType:'female',hair:'#684c38',shirt: '#566b45', pants: '#554438', boots: '#251d18', labelPriority: 10

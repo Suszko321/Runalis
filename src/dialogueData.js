@@ -2,6 +2,16 @@
 // Story dialogue trigger data for major companions, Covenant beats, and Unbound reveals.
 
 export const STORY_DIALOGUE_TRIGGERS = {
+  orenFenwickShop: {
+    id:'orenFenwickShop',speaker:'Oren Fenwick',speakerId:'orenFenwick',
+    text:'Oren sets a stoppered bottle on the counter and wipes his stained hands. “Welcome to the Root & Retort. Oren Fenwick, resident alchemist. If you need something for the road, I keep the fresh batches here.”',
+    options:[
+      {id:'work',label:'What do you make here?',response:'Tonics, poultices, and enough fever draught to keep this room smelling of bitterroot. Bring Gravecap and Pale Essence and I can brew a Shrine Tonic. Eight gold buys a basic travel restorative if you have no reagents.'},
+      {id:'mara',label:'Where can I find Mara?',response:'Upstairs, tending the recovery room and her root samples. Through the herb room to the east, then up the stairs. She still teaches Thornbinding, if that is what brings you here.'},
+      {id:'shop',label:'Do you run the apothecary?',response:'I work for the Vells. Someone has to keep the batches measured and the counter open while Mara tends patients. She knows the living roots; I know how long a draught keeps in a traveller’s pack.'},
+      {id:'leave',label:'Goodbye.',close:true}
+    ]
+  },
   maraMercyOpening: {
     id: 'maraMercyOpening', speaker: 'Mara Vell', speakerId: 'maraVell', appendNpcQuestOptions: false,
     text: 'Easy. You are upstairs above the Root & Retort in Orrakai, and alive despite your best effort. I am Mara Vell, the apothecary’s daughter. Before you stand, ask what you need to ask.',
@@ -82,7 +92,7 @@ export const STORY_DIALOGUE_TRIGGERS = {
   },
   maelAidOffer: {
     id: 'maelAidOffer', speaker: 'Warden Mael', speakerId: 'wardenMael', appendNpcQuestOptions: false,
-    text: 'Help with my work in Orrakai and I will cover what you owe her from my field allowance. Deliver Mara\'s medicine to one of the sick villagers. Bring clean water from the well stores. Speak with the town guard about recent Last Dawn sightings, then check on a refugee family near the chapel square. Complete those tasks and your debt to Mara will be settled.',
+    text: 'Help with my work in Orrakai and I will cover what you owe her from my field allowance. Deliver Mara\'s medicine to one of the sick villagers. Bring clean water from the well stores. Ask any town watch guard about recent Last Dawn sightings; one stands in the open square below the Market Steps, and another watches the infirmary’s west side. Then check on a refugee family near the chapel square. Complete those tasks and your debt to Mara will be settled.',
     options: [{ id: 'acceptAid', label: 'I will return with something useful.', response: 'Listen, observe, and do not make the plague tents regret letting you stand.', flagsSet: ['mercy.maelIntroductionComplete','mercy.medicineParcelHeld','orrakai_extra_supply_unassigned'], completesTalkObjective: 'wardenMael', closeAfterResponse: true }]
   },
   wardenMercyAidIncomplete: {
@@ -115,9 +125,13 @@ export const STORY_DIALOGUE_TRIGGERS = {
     ]
   },
   orrakaiLowerGateGuardAid: {
-    id: 'orrakaiLowerGateGuardAid', speaker: 'Lower Gate Guard', speakerId: 'orrakaiLowerGateGuard', appendNpcQuestOptions: false,
+    id: 'orrakaiLowerGateGuardAid', speaker: 'Orrakai Town Guard', speakerId: 'orrakaiLowerGateGuard', appendNpcQuestOptions: false,
     text: 'Last Dawn markings were found along the lower road three nights ago. We thought it was another warning until a hunter disappeared. Blood near the old well. Burned cloth. No body. Callworth sent a patrol, but I never heard what they found.',
-    options: [{ id: 'record', label: 'I will report that to Mael.', response: 'Tell him the road watch has doubled, for whatever good two exhausted guards can do.', excludesFlags: ['mercy.guardReportHeard'], flagsSet: ['mercy.guardReportHeard'], completesTalkObjective: 'orrakaiLowerGateGuard', closeAfterResponse: true }]
+    options: [
+      { id: 'record', label: 'I will report that to Mael.', response: 'Tell him we have watch posts through town now. More eyes here, but still too few people to search the lower road safely.', requiresQuestStage:{questId:'mercy_in_orrakai',stageId:'aidPlagueTents'}, excludesFlags: ['mercy.guardReportHeard'], flagsSet: ['mercy.guardReportHeard'], completesTalkObjective: 'orrakaiLowerGateGuard', closeAfterResponse: true },
+      { id:'directions',label:'Where can I find Mael and the other watch posts?',response:'Mael works beside the infirmary, west of the Root & Retort. Our South Road Guard stands in the open square below the Market Steps. Other posts watch the market, the infirmary’s west side, Warden’s Hall and the north gate. The north gate’s quartermaster explains the permit, coin and ration requirements for the Frontier Road.'},
+      { id:'recorded',label:'I have the report for Mael.',response:'Good. He needs to hear about the lower road. Keep to the marked paths if you leave town.',requiresFlags:['mercy.guardReportHeard'],closeAfterResponse:true}
+    ]
   },
   orrakaiRefugeeFamilyAid: {
     id: 'orrakaiRefugeeFamilyAid', speaker: 'Displaced Farmer', speakerId: 'orrakaiRefugeeParent', appendNpcQuestOptions: false,

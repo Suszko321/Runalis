@@ -1,4 +1,5 @@
 import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
+import {isQuestObjectVisible} from './questInteractables.js';
 import {handleCampaignInteraction} from './act1CampaignRuntime.js';
 import {CAMPFIRE_RECIPES} from './workshopAccess.js';
 import {prepareDiscoveryClaim,rememberDiscoveryClaim,announceLootDiscovery} from './gameplayDiscoveries.js';
@@ -496,6 +497,7 @@ export function nearestObject(game, range = INTERACTION_RANGE) {
 
   for (const object of game.world.objects || []) {
     if (!object || object.depleted) continue;
+    if (!isQuestObjectVisible(object,game.player)) continue;
     if (object.interactable === false) continue;
 
     const d = Math.hypot(object.x - game.player.x, object.y - game.player.y);
@@ -963,7 +965,7 @@ function pushChanceRewardEntry(rewards, chance, itemId, qty = 1) {
 }
 
 function inspectPoiEvidence(game, evidence) {
-  if (!game?.player || !evidence) return;
+  if (!game?.player || !evidence || !isQuestObjectVisible(evidence,game.player) || evidence.interactable===false) return;
 
   const player = game.player;
   const poiId = evidence.poiId || 'world';

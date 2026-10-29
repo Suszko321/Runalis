@@ -12,7 +12,7 @@ import {recordPoiClue} from '../src/poiStateSystem.js';
 import {getStoryFlag,setStoryFlag} from '../src/storyProgress.js';
 import {applyBossStoryProgress} from '../src/storyRuntime.js';
 import {applyOrderChoice,ensureOrder} from '../src/yourOrder.js';
-import {createSaveState,migrateSaveState} from '../src/gameSave.js';
+import {createSaveState,migrateSaveState,applySaveToGame} from '../src/gameSave.js';
 import {CAMPAIGN_DIALOGUES} from '../src/act1CampaignData.js';
 const report={checks:[],failures:[]};
 function check(name,fn){try{fn();report.checks.push(name);console.log('PASS',name);}catch(e){report.failures.push({name,error:e.stack});console.error('FAIL',name,e.message);}}
@@ -26,10 +26,41 @@ check('all authored dialogue destinations resolve',()=>{for(const node of Object
 check('Orrakai quest actors are reachable from Mara’s door',()=>{
  const g=game();tick(g);const w=g.world,width=w.tiles[0].length,height=w.tiles.length,seen=new Set(['8,31']),queue=[[8,31]];
  for(let n=0;n<queue.length;n++){const [x,y]=queue[n];for(const [dx,dy]of [[1,0],[-1,0],[0,1],[0,-1]]){const a=x+dx,b=y+dy,k=`${a},${b}`;if(a<0||b<0||a>=width||b>=height||seen.has(k)||!isActorPositionPassable(w,(a+.5)*32,(b+.5)*32,10))continue;seen.add(k);queue.push([a,b]);}}
- for(const id of ['wardenMael','lightwardenCaelen','bram','maraVell','orrakaiSickVillager','orrakaiWellStoresAttendant','orrakaiWaterDistribution','orrakaiLowerGateGuard','orrakaiRefugeeParent','covenantHealingRite']){const o=w.objects.find(o=>o.npcId===id);assert(o,id);let reached=false;for(let y=-1;y<=1;y++)for(let x=-1;x<=1;x++)if(seen.has(`${Math.floor(o.x/32)+x},${Math.floor(o.y/32)+y}`))reached=true;assert(reached,`${id} unreachable`);}
+ for(const id of ['wardenMael','lightwardenCaelen','bram','orenFenwick','orrakaiSickVillager','orrakaiWellStoresAttendant','orrakaiWaterDistribution','orrakaiLowerGateGuard','orrakaiRefugeeParent','covenantHealingRite']){const o=w.objects.find(o=>o.npcId===id);assert(o,id);let reached=false;for(let y=-1;y<=1;y++)for(let x=-1;x<=1;x++)if(seen.has(`${Math.floor(o.x/32)+x},${Math.floor(o.y/32)+y}`))reached=true;assert(reached,`${id} unreachable`);}
 });
 check('new physical content registers once and survives chunk activation',()=>{const g=game();g.world=world;tick(g);const before=world.continentRuntime.allObjects.length;tick(g,10);assert.equal(world.continentRuntime.allObjects.length,before);world.continentRuntime.activate([{x:35*32,y:88*32}],g.player,true);assert(world.objects.some(o=>o.id==='tavinHolt'));world.continentRuntime.activate([{x:450*32,y:70*32}],g.player,true);world.continentRuntime.activate([{x:35*32,y:88*32}],g.player,true);assert(world.objects.some(o=>o.id==='tavinHolt'));});
 check('new quest actors and clues have walkable interaction positions',()=>{const ids=['tavinHolt','ionaVey','pellRusk','greyhavenLedger','greyhavenCistern','act1CargoManifest','act1RelicCradle','act1ReliefScout','act1Regulator','act1RitualOrders'];for(const id of ids){const o=world.continentRuntime.allObjects.find(o=>o.id===id);assert(o,id);let reachable=false;for(let y=-1;y<=1;y++)for(let x=-1;x<=1;x++)if(isActorPositionPassable(world,o.x+x*24,o.y+y*24,12))reachable=true;assert(reachable,id);}});
+check('Hessa holds the wreck and her assignment requires explicit acceptance',()=>{
+  const g=game();g.world=world;setStage(g,'act1HearthmereAshes','handsThatStillWork');tick(g);
+  const hessa=world.continentRuntime.allObjects.find(o=>o.id==='act1ReliefScout'),cradle=world.continentRuntime.allObjects.find(o=>o.id==='act1RelicCradle');
+  assert(Math.hypot(hessa.x-cradle.x,hessa.y-cradle.y)<3*32);
+  world.continentRuntime.activate([hessa],g.player,true);assert(world.objects.includes(hessa));
+  openDialogue(g.dialogue,hessa,g.player,g.world);assert.match(g.dialogue.text,/clear it/);closeDialogue(g.dialogue,{immediate:true});tick(g);
+  assert.equal(g.player.quests.active.act1HearthmereAshes.currentStageId,'handsThatStillWork');
+  choose(g,'act1ReliefScout','record');assert(g.player.locationKnowledge.ashenOrchard);
+  evidence(g,'ashenOrchard',['household','irrigation','growingGround']);
+  assert.equal(g.player.quests.active.act1HearthmereAshes.currentStageId,'failedPurificationSite');
+  markNpcTalkObjective(g.player,'lightwardenCaelen');markNpcTalkObjective(g.player,'maraVell');tick(g);
+  assert.equal(g.player.quests.active.act1HearthmereAshes.currentStageId,'failedPurificationSite');
+});
+for(const [oldStage,expected,cleared]of [
+  ['handsThatStillWork','handsThatStillWork',false],['bramsRoadLesson','theWoundSpreads',false],
+  ['theWoundSpreads','theWoundSpreads',false],['theCovenantBlessing','failedPurificationSite',false],
+  ['failedPurificationSite','failedPurificationSite',false],['theCovenantBlessing','theCovenantBlessing',true],
+  ['failedPurificationSite','theCovenantBlessing',true],['evidenceForMara','evidenceForMara',true],
+  ['theBrokenChapel','theBrokenChapel',true]
+])check(`version 2 save resumes ${oldStage}, cellar cleared=${cleared}`,()=>{
+  const g=game();setStage(g,'act1HearthmereAshes',oldStage==='bramsRoadLesson'?'theWoundSpreads':oldStage);
+  const q=g.player.quests.active.act1HearthmereAshes;q.currentStageId=oldStage;g.player.act1CampaignVersion=2;
+  if(['handsThatStillWork','bramsRoadLesson'].includes(oldStage))q.objectives=[{type:'talk',npcId:oldStage==='handsThatStillWork'?'bram':'act1ReliefScout',required:1,current:0}];
+  if(oldStage==='theCovenantBlessing')q.objectives=[{type:'talk',npcId:'lightwardenCaelen',required:1,current:0},{type:'talk',npcId:'maraVell',required:1,current:1}];
+  if(cleared)g.player.completedDungeons={ashenOrchard:{clearedAt:1}};
+  const saved=JSON.parse(JSON.stringify(createSaveState(g)));assert(applySaveToGame(g,saved));tick(g);
+  assert.equal(g.player.quests.active.act1HearthmereAshes.currentStageId,expected);assert.equal(g.player.act1CampaignVersion,3);
+  if(oldStage==='handsThatStillWork')assert.equal(g.player.quests.active.act1HearthmereAshes.objectives[0].npcId,'act1ReliefScout');
+  const again=JSON.parse(JSON.stringify(createSaveState(g)));assert(applySaveToGame(g,again));tick(g);
+  assert.equal(g.player.quests.active.act1HearthmereAshes.currentStageId,expected);
+});
 for(const who of ['wardenMael','lightwardenCaelen'])check(`evidence branch ${who}, rite timing and Mercy conclusion`,()=>{
   const g=game();setStage(g,'mercy_in_orrakai','returnOldWellEvidence');setStoryFlag(g.player,'mercy.brokenLanternAcquired');setStoryFlag(g.player,'mercy.brokenLanternHeld');
   choose(g,who,who==='wardenMael'?'custody':'account');assert.equal(g.player.quests.active.mercy_in_orrakai.currentStageId,'witnessHealingRite');
@@ -45,9 +76,10 @@ for(const who of ['wardenMael','lightwardenCaelen'])check(`evidence branch ${who
 });
 for(const classId of ['oathkeeper','fellhunter','gravecaller','lightbringer','thornbinder','waverider'])check(`mandatory progression events for ${classId}`,()=>{
   const g=game();g.player.classId=classId;g.player.quests.completed.mercy_in_orrakai={id:'mercy_in_orrakai'};tick(g);
-  evidence(g,'caravanWreck',['act1CargoManifest','act1RelicCradle']);choose(g,'bram','record');choose(g,'act1ReliefScout','record');
-  evidence(g,'ashenOrchard',['familyTable','blackIrrigation','rootPulse']);choose(g,'lightwardenCaelen','record');choose(g,'maraVell','record');
-  markDungeonClearedObjective(g.player,'ashenOrchard');tick(g);choose(g,'maraVell','record');
+  evidence(g,'caravanWreck',['act1CargoManifest','act1RelicCradle']);choose(g,'act1ReliefScout','record');
+  evidence(g,'ashenOrchard',['familyTable','blackIrrigation','rootPulse']);
+  assert.equal(g.player.quests.active.act1HearthmereAshes.currentStageId,'failedPurificationSite');
+  markDungeonClearedObjective(g.player,'ashenOrchard');tick(g);choose(g,'lightwardenCaelen','record');choose(g,'maraVell','record');
   choose(g,'chapelHermit','record');choose(g,'sisterElyra','record');evidence(g,'brokenChapel',['chapelLedger','chapelCrackedAltar','act1ChapelBurnedIndex']);
   choose(g,'act1Regulator','light');assert(!getStoryFlag(g.player,'act1.machineAligned'));for(const word of ['drain','align','light'])choose(g,'act1Regulator',word);
   evidence(g,'lastDawnOrders',['act1RitualOrders']);choose(g,'repentantCultist','record');choose(g,'wardenMael','record');
@@ -73,7 +105,7 @@ check('Order founding requires resources, real kills, consent, assignments and w
   const saved=createSaveState(g),restored=migrateSaveState(JSON.parse(JSON.stringify(saved)),world,createPlayer('Fallback')).player;
   assert.equal(restored.yourOrder.name,'Test Fellowship');assert.equal(Object.keys(restored.yourOrder.members).length,3);assert(getStoryFlag(restored,'order.recognized'));assert(restored.campaignKills.greyhavenBeastA);
 });
-check('transient contextual dialogue survives save and restore',()=>{const g=game();setStage(g,'act1HearthmereAshes','handsThatStillWork');openDialogue(g.dialogue,{id:'bram',npcId:'bram',name:'Bram'},g.player,g.world);const snapshot=JSON.parse(JSON.stringify(serializeDialogueState(g.dialogue))),d=createDialogueState();assert(restoreDialogueState(d,snapshot,g.player,g.world));assert(d.options.some(o=>o.id==='record'));});
+check('transient contextual dialogue survives save and restore',()=>{const g=game();setStage(g,'act1HearthmereAshes','handsThatStillWork');openDialogue(g.dialogue,{id:'act1ReliefScout',npcId:'act1ReliefScout',name:'Scout Hessa'},g.player,g.world);const snapshot=JSON.parse(JSON.stringify(serializeDialogueState(g.dialogue))),d=createDialogueState();assert(restoreDialogueState(d,snapshot,g.player,g.world));assert(d.options.some(o=>o.id==='record'));});
 check('custody cannot be duplicated by legacy evidence recovery',()=>{
  const g=game();g.world=world;setStage(g,'mercy_in_orrakai','returnOldWellEvidence');setStoryFlag(g.player,'mercy.evidenceReported');setStoryFlag(g.player,'mercy.lanternWithMael');updateOldWellQuest(g);assert(!getStoryFlag(g.player,'mercy.brokenLanternHeld'));
 });
@@ -89,7 +121,7 @@ for(const operation of ['relief','security','recovery','trade'])check(`Order und
  choose(g,'greyhavenLedger',operation);
  if(operation==='relief'){addItem(g.player,'fieldRations',6);choose(g,'greyhavenFamily','deliver');assert.equal(countItem(g.player,'fieldRations'),0);}
  if(operation==='security'){for(const id of ['greyhavenRoadBeastA','greyhavenRoadBeastB'])markKillObjective(g.player,{id,questEncounter:'greyhaven'});tick(g);}
- if(operation==='recovery')handleCampaignInteraction(g,{campaignAction:'archive'});
+ if(operation==='recovery'){startQuest(g.player,'yourOrder6');handleCampaignInteraction(g,{campaignAction:'archive'});}
  if(operation==='trade'){addItem(g.player,'emberleaf',4);choose(g,'greyhavenMerchant','trade');}
  assert(o.operationReady);choose(g,'greyhavenLedger','report');assert(getStoryFlag(g.player,'order.operation'));
 });

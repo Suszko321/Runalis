@@ -11,6 +11,7 @@
 // - Trigger hostile NPC conversion when dialogue option requests it.
 // - Provide UI-ready dialogue state.
 
+import {getCampaignStageId} from './act1CampaignData.js';
 import {
   getDialogue,
   getNpcByObjectId,
@@ -610,6 +611,7 @@ function showDialogueMessage(dialogueState, player, text) {
 export function npcHasQuestInteraction(player, npcObject) {
   if (!player || !npcObject || npcObject.interactable === false) return false;
   const mercy=player.quests?.active?.mercy_in_orrakai?.currentStageId;
+  if(npcObject.orrakaiWatch&&npcHasActiveTalkObjective(player,'orrakaiLowerGateGuard'))return true;
   if((mercy==='returnOldWellEvidence'||mercy==='confrontEvidence')&&['wardenMael','lightwardenCaelen'].includes(npcObject.npcId))return true;
   if(mercy==='witnessHealingRite'&&npcObject.npcId==='covenantHealingRite')return true;
   if(mercy==='returnToMara'&&npcObject.npcId==='maraVell')return true;
@@ -2218,7 +2220,7 @@ function reconcileAct1QuestDefinition(player) {
     : {};
 
   const currentStageId = questState.currentStageId;
-  let targetStageId = ACT1_LEGACY_STAGE_MAP[currentStageId] || currentStageId;
+  let targetStageId = getCampaignStageId(player,ACT1_LEGACY_STAGE_MAP[currentStageId] || currentStageId);
 
   if (!targetStageId && Number.isFinite(Number(questState.stageIndex))) {
     const legacyStageId = ACT1_LEGACY_STAGE_ORDER[Number(questState.stageIndex)] || null;
@@ -2236,14 +2238,14 @@ function reconcileAct1QuestDefinition(player) {
     targetStageId = quest.stages[stageIndex]?.id || null;
   }
 
-  const definitionChanged = currentStageId !== targetStageId;
+  const definitionChanged = currentStageId !== targetStageId || !objectiveDefinitionsMatch(questState.objectives,quest.stages[stageIndex]?.objectives);
   questState.stageIndex = stageIndex;
   questState.currentStageId = targetStageId;
   questState.currentStageTitle = quest.stages[stageIndex]?.title || quest.stages[stageIndex]?.text || '';
   questState.currentStageText = quest.stages[stageIndex]?.text || '';
 
   if (definitionChanged || !Array.isArray(questState.objectives)) {
-    questState.objectives = createObjectiveProgress(quest.stages[stageIndex]?.objectives || [], player);
+    questState.objectives = rebuildObjectiveProgress(quest.stages[stageIndex]?.objectives || [], player,questState.objectives || []);
 
     for (let index = 0; index < stageIndex; index += 1) {
       const completedStageId = quest.stages[index]?.id;
