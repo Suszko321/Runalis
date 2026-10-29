@@ -1,4 +1,6 @@
 import {drawEnemyNameplate,enemyPlateLayout} from './enemyNameplateArt.js';
+import {drawGroveGround,drawGroveMother,drawGroveTells} from './blightedGroveArt.js';
+import {drawOrchardGround,drawOrchardBoss,drawOrchardTells} from './ashenOrchardArt.js';
 import {drawMalakarGround,drawMalakarTelegraphs,drawMalakarActor} from './malakarRenderer.js';
 import {drawLivingWorld} from './worldAtmosphereRenderer.js';
 import {sampleEnemyAttackPresentation} from './enemyAttackPresentation.js';
@@ -105,6 +107,8 @@ export function draw(ctx, world, player, camera, options = {}) {
   drawTiles(ctx, world, camera, bounds);
   drawAuthoredGround(ctx, world, camera);
   drawMalakarGround(ctx,world,camera);
+  drawGroveGround(ctx,world,camera);
+  drawOrchardGround(ctx,world,camera);
   drawSceneArtBack(ctx, world, camera);
   drawEnvironmentAtmosphere(ctx, world, camera, 'back');
   drawPresentationBack(ctx, world, player, camera, options);
@@ -125,7 +129,7 @@ export function draw(ctx, world, player, camera, options = {}) {
   for (const enemy of world.enemies || []) if (enemy && enemy.alive !== false && !enemy.remove) {
     const p = screen(enemy, camera);
     if (isOnScreen(ctx, p.x, p.y, 260)) actorLayers.push({y: enemy.y+WORLD_ART_STANDARD.actorFootOffset,
-      drawActor: () => drawMalakarActor(ctx,enemy,world,()=>drawEnemy(ctx, enemy, camera, {hideNameplate: !nameplates.has(enemy)}))});
+      drawActor: () => drawOrchardBoss(ctx,enemy,world,camera,()=>drawGroveMother(ctx,enemy,world,camera,()=>drawMalakarActor(ctx,enemy,world,()=>drawEnemy(ctx, enemy, camera, {hideNameplate: !nameplates.has(enemy)}))))});
   }
   for (const summon of player.summons || []) if (summon && summon.alive !== false) {
     const p = screen(summon, camera);
@@ -145,6 +149,8 @@ export function draw(ctx, world, player, camera, options = {}) {
 
   drawWorldEffects(ctx, world, camera, 'front');
   drawMalakarTelegraphs(ctx,world,camera);
+  drawGroveTells(ctx,world,camera);
+  drawOrchardTells(ctx,world,camera);
   drawEnvironmentAtmosphere(ctx, world, camera, 'front');
   drawPresentationFront(ctx, world, player, camera, options);
   drawSceneArtFront(ctx, world, player, camera);

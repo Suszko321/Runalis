@@ -1,8 +1,13 @@
 import {CAMPAIGN_ID,ACT1_ROUTES,CAMPAIGN_DIALOGUES} from './act1CampaignData.js';
 import {getStoryFlag} from './storyProgress.js';
+import {GROVE_DIALOGUES,GROVE_QUEST} from './blightedGroveData.js';
+import {ORCHARD_DIALOGUES,ORCHARD_QUEST} from './ashenOrchardData.js';
 export function getCampaignConversation(npc,p,world){
   if(!p)return null;
   const id=npc.npcId,mercy=p.quests?.active?.mercy_in_orrakai?.currentStageId;
+  if(id==='orchardReliefEngineer'&&!p.quests?.completed?.[ORCHARD_QUEST]){const s=p.quests?.active?.[ORCHARD_QUEST]?.currentStageId;return ORCHARD_DIALOGUES[s==='report'?'orchardEngineerReport':s?'orchardEngineerWaiting':'orchardEngineerAssignment'];}
+  if(id==='orchardTamsin')return ORCHARD_DIALOGUES[p.quests?.active?.[ORCHARD_QUEST]?.currentStageId==='attendant'?'orchardTamsin':'orchardTamsinWaiting'];
+  if(id==='groveRootkeeper'){const s=p.quests?.active?.[GROVE_QUEST]?.currentStageId;return GROVE_DIALOGUES[p.quests?.completed?.[GROVE_QUEST]?'groveEddaSilent':s==='listen'?'groveEdda':s==='rest'?'groveEddaRest':'groveEddaWaiting'];}
   const select=key=>CAMPAIGN_DIALOGUES[key];
   if(id==='act1Regulator')return {id:'campaign:regulator',speaker:'Dawnspire Regulator',speakerId:'narration',text:getStoryFlag(p,'act1.machineAligned')?'The three channels are aligned. The regulator points toward the prisonworks beneath Last Dawn Keep.':'The maintenance plate reads: DRAIN the pressure, ALIGN the channels, then admit LIGHT. Each wheel is labelled. A wrong sequence vents pressure and resets the mechanism.',options:getStoryFlag(p,'act1.machineAligned')?[]:['drain','align','light'].map((word,i)=>({id:word,label:word.toUpperCase(),response:i===(p.act1RegulatorStep||0)?i===2?'The channels align. The prisonworks diagram points to Last Dawn Keep.':'The wheel catches. Continue the sequence.':'Pressure vents harmlessly. Start again with DRAIN.',regulatorStep:i,closeAfterResponse:true}))};
   if(id==='malakarWitness')return select('act1Malakar');

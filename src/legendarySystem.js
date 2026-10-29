@@ -117,6 +117,11 @@ export function shouldRollLegendaryDrop(enemy) {
 }
 
 export function rollLegendaryBossDrop(enemy, rng = Math.random) {
+  if(enemy?.orchardCustodian){
+    if(!enemy.isBoss||enemy.rewardSuppressed||enemy.summonedBy||enemy.summonedByBoss||enemy.legendaryBossLootRolled)return null;
+    enemy.legendaryBossLootRolled=true;
+    return rng()<.02?{item:'orrakaiFoundersSignet',qty:1,legendary:true}:null;
+  }
   if(enemy?.encounterStatsVersion&&Number(enemy.combatLevel)<20)return null;
   if (!shouldRollLegendaryDrop(enemy)) return null;
   if(enemy.legendaryBossLootRolled)return null;enemy.legendaryBossLootRolled=true;

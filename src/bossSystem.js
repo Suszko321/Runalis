@@ -81,7 +81,7 @@ export function applyBossDefeatRewards(enemy, player, world, log) {
   player.completedBossFirstKills = firstKillMap;
   player.completedBossFirstKills[bossId] = true;
 
-  const rewards = getBossRewardBundle(enemy, firstKill);
+  const rewards = getBossRewardBundle(enemy, firstKill).filter(reward=>!enemy.orchardCustodian||reward.itemId!=='orrakaiFoundersSignet');
 
   for (const reward of rewards) {
     const item = ITEMS[reward?.itemId];
@@ -579,7 +579,7 @@ export function damageNearbyParty(enemy, player, world, radius, damage, hitTest 
 
   for (const member of members) {
     if ((member.hp || 0) <= 0) continue;
-    if(!enemyWithinTargetView(enemy,member,world))continue;
+    if(!enemyWithinTargetView(enemy,member,world)&&!((enemy.groveMother||enemy.orchardCustodian)&&world?.bossArena?.phase==='active'))continue;
 
     const distance = Math.hypot((member.x || 0) - enemy.x, (member.y || 0) - enemy.y);
     if (distance > radius || hitTest && !hitTest(member)) continue;

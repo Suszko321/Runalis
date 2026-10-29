@@ -1,4 +1,6 @@
 import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
+import {handleGroveInteraction} from './blightedGrove.js';
+import {handleOrchardInteraction} from './ashenOrchardDungeon.js';
 import {isQuestObjectVisible} from './questInteractables.js';
 import {handleCampaignInteraction} from './act1CampaignRuntime.js';
 import {CAMPFIRE_RECIPES} from './workshopAccess.js';
@@ -230,7 +232,7 @@ export function interact(game) {
     return;
   }
 
-  if (handleCampaignInteraction(game,nearest)) return;
+  if (handleOrchardInteraction(game,nearest)||handleGroveInteraction(game,nearest)||handleCampaignInteraction(game,nearest)) return;
 
   switch (nearest.kind) {
     case 'worldRelic':

@@ -27,7 +27,7 @@ export function createEnemyLootDrops(enemy, partyLeader, world) {
   const ownerSlot = owner?.slot || owner?.playerNumber || 1;
   const ownerLabel = ownerSlot === 2 ? 'P2' : 'P1';
   const rng=enemy.rewardSeed?encounterRng(enemy.rewardSeed):Math.random;
-  const drops = rollEnemyLootSafe(enemy, world,rng);
+  const drops = rollEnemyLootSafe(enemy, world,rng).filter(drop=>!enemy.orchardCustodian||drop.item!=='orrakaiFoundersSignet');
   drops.push(...rollPoiLoot(enemy,rng));
   const legendaryDrop = rollLegendaryBossDrop(enemy,rng);
   if (legendaryDrop) drops.push(legendaryDrop);

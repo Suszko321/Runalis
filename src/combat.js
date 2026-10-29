@@ -1,4 +1,6 @@
 import {updateMalakarCombat} from './malakarCombat.js';
+import {updateGroveCombat} from './blightedGroveCombat.js';
+import {updateOrchardCombat} from './ashenOrchardCombat.js';
 import {getAbilityEffectiveness} from './skillExpertiseSystem.js';
 import {mitigateRoseMantle,roseMantleThorns} from './roseMantleSystem.js';
 import {isGravecallerSustain,gravecallerSkillLifesteal,restoreGravecallerLifesteal,restoreGravecallerHealth,GRAVECALLER_SUSTAIN} from './gravecallerSustain.js';
@@ -1028,6 +1030,9 @@ export function updateEnemies(dt, player, world, log, now = performance.now() / 
     if (!enemy) continue;
 
     ensureEnemyState(enemy);
+    if((enemy.groveMother||enemy.orchardCustodian)&&enemy.hp>0){updateEnemyTimers(enemy,dt);updateFloatingTexts(enemy,dt);}
+    if(enemy.groveMother&&updateGroveCombat(enemy,world,player,dt,now,game))continue;
+    if(enemy.orchardCustodian&&updateOrchardCombat(enemy,world,player,dt,now,game))continue;
     if(enemy.malakarSolo&&updateMalakarCombat(enemy,world,player,dt,now,game))continue;
     updateFloatingTexts(enemy,dt);
     if(enemy.arenaDormant&&enemy.hp>0)continue;
@@ -5700,7 +5705,7 @@ function handleEnemyDeath(enemy, player, world, log) {
   recordRepeatableEnemyDeath(world,player,enemy);
   enemy.dead = true;
   enemy.hp = 0;
-  enemy.removeTimer = 0.35;
+  enemy.removeTimer = enemy.groveMother||enemy.orchardCustodian?1.05:0.35;
   recordEnemyDeathVisual(enemy, {
     classId: player?.classId,
     skill: enemy.pendingWeaponSkillId || player?.classSkill,

@@ -2,6 +2,8 @@
 // Implementation-ready story and companion quests for the three-act Runalis arc.
 
 import { MERCY_ENDING, CAMPAIGN_STAGES } from './act1CampaignData.js';
+import {GROVE_QUEST,GROVE_QUEST_DATA} from './blightedGroveData.js';
+import {ORCHARD_QUEST,ORCHARD_QUEST_DATA} from './ashenOrchardData.js';
 import { ORDER_QUESTS } from './yourOrder.js';
 
 export const STORY_QUESTS = {
@@ -795,6 +797,8 @@ STORY_QUESTS.act1HearthmereAshes.summary = 'Follow the stolen cargo through the 
 STORY_QUESTS.act1HearthmereAshes.stages = CAMPAIGN_STAGES;
 
 export const ALL_RUNALIS_QUESTS = {
+  [GROVE_QUEST]:GROVE_QUEST_DATA,
+  [ORCHARD_QUEST]:ORCHARD_QUEST_DATA,
   ...ORDER_QUESTS,
   ...STORY_QUESTS,
   ...COMPANION_QUESTS,

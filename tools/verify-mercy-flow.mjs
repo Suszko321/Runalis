@@ -6,6 +6,7 @@ import {createMaraHouseWorld,leaveMaraHouse,updateAct1Opening} from '../src/act1
 import {createWorld} from '../src/world.js';
 import {createDialogueState,openDialogue,chooseDialogueOption,updateDialogue,updateDialogueInput,startQuest} from '../src/dialogueSystem.js';
 import {updateAct1Campaign} from '../src/act1CampaignRuntime.js';
+import {updateOrchardDungeon} from '../src/ashenOrchardDungeon.js';
 import {updateOldWellQuest} from '../src/oldWellSystem.js';
 import {updateEnemies} from '../src/combat.js';
 import {interact} from '../src/gameInteraction.js';
@@ -72,6 +73,10 @@ for(const o of g.world.continentRuntime.allObjects.filter(o=>o.kind==='poiInvest
 assert.equal(stage(),'failedPurificationSite');
 function clearDungeon(id){
  const entrance=g.world.continentRuntime.allObjects.find(o=>o.dungeonId===id);assert(entrance,`entrance ${id}`);Object.assign(g.player,{x:entrance.x,y:entrance.y});assert(enterDungeon(g,entrance));stage();
+ if(id==='ashenOrchard'){
+  runChoices(['plan']);
+  for(let i=0;i<2;i++){for(const e of g.world.enemies.filter(e=>e.orchardValveGuard===i))e.hp=0;updateEnemies(0,g.player,g.world,g.log,2,g);const valve=g.world.objects.find(o=>o.orchardValve===i);Object.assign(g.player,{x:valve.x,y:valve.y});interact(g);updateOrchardDungeon(g);}
+ }
  while(g.world.floor<g.world.totalFloors){const stairs=g.world.objects.find(o=>o.kind==='dungeonStairs'&&o.direction==='down');if(id==='demonCultLair'&&stairs.targetFloor===g.world.totalFloors){g.world.enemies=[];transitionDungeonFloor(g,stairs);answerMalakarReady(g,0,true);skipMalakarRitual(g);chooseMalakarIntroduction(g,'relic');updateMalakarEncounter(g,3.1);}else assert(transitionDungeonFloor(g,stairs));}
  const boss=g.world.enemies.find(e=>e.isDungeonMainBoss);assert(boss);boss.hp=0;updateEnemies(0,g.player,g.world,g.log,2,g);if(id==='demonCultLair'){updateMalakarEncounter(g,4.1);updateEnemies(0,g.player,g.world,g.log,7,g);}tick();checkpoint();
  if(g.dialogue.active)runChoices(['warning']);

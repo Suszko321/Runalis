@@ -3367,7 +3367,7 @@ Object.assign(ITEMS, {
 
   orrakaiFoundersSignet: {
     id: 'orrakaiFoundersSignet',
-    name: 'Orrakai Founder Signet',
+    name: 'Orrakai Founder’s Signet',
     type: 'trinket',
     slot: 'trinket',
     rarity: 'legendary',
@@ -3383,7 +3383,7 @@ Object.assign(ITEMS, {
       spirit: 12,
       desc: 'Kills restore health and Spirit.'
     },
-    desc: 'A battered city signet passed down by people who kept building anyway.'
+    desc: 'The seal of Orrakai’s first water charter, recovered from the Grafted Custodian beneath Ashen Orchard. “No hearth shall thirst while the cistern holds.”'
   },
 
   livingAshSeed: {

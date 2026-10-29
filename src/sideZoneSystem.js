@@ -3,6 +3,8 @@
 // persistent state is limited to small visit/clear records on the host player.
 
 import {rememberRepeatableInstance,restoreRepeatableInstance} from './instanceEncounterMemory.js';
+import {createBlightedGrove,beginBlightedGrove,updateBlightedGrove,isBlightedGrove} from './blightedGrove.js';
+import {initializeDungeonArena,resetFailedDungeonArena} from './dungeonArenaSystem.js';
 import { TILE } from './data.js';
 import { addItem, gainXp } from './player.js';
 import { createDungeonWorld, createOverworldReturnState, restoreOverworldFromState } from './dungeonSystem.js';
@@ -97,9 +99,11 @@ export function enterSideZone(game, entrance = {}) {
   });
 
   restoreRepeatableInstance(zone,hostGame.player);
+  if(isBlightedGrove(zone))initializeDungeonArena(zone);
   hostGame.world = zone;
   placeHostAndParty(hostGame, zone.spawn);
   recordSideZoneVisit(hostGame.player, regionId, type);
+  if(isBlightedGrove(zone))beginBlightedGrove(hostGame);
   hostGame.log?.(`Entered ${zone.name}. Defeated rooms remain cleared until its next expedition cycle.`);
   addQuestText(actor || hostGame.player, zone.name, { color: '#73d18a', ttl: 1.4, size: 16 });
   return true;
@@ -109,6 +113,9 @@ export function exitSideZone(game) {
   const hostGame = game?.hostGame || game;
   const actor = game?.player || hostGame?.player;
   if (!hostGame?.player || hostGame.world?.mode !== 'sideZone' || !hostGame.overworldState) return false;
+  const party=[hostGame.player,...(hostGame.player.coop?.players||[]).filter(a=>a.active!==false)];
+  if(isBlightedGrove(hostGame.world)&&hostGame.world.bossArena?.phase==='active'&&party.some(p=>p.hp>0)){hostGame.log?.('The crownward roots are sealed. Defeat the Mother of Briars or fall with your party.');return false;}
+  if(isBlightedGrove(hostGame.world)&&party.every(p=>p.hp<=0))resetFailedDungeonArena(hostGame.world);
 
   rememberRepeatableInstance(hostGame);
   hostGame.world = restoreOverworldFromState(hostGame.overworldState);
@@ -126,6 +133,7 @@ export function exitSideZone(game) {
 }
 
 export function updateSideZoneState(game) {
+  updateBlightedGrove(game);
   const world = game?.world;
   const player = game?.player;
   if (!world || world.mode !== 'sideZone' || !player || world.cleared) return;
@@ -152,6 +160,7 @@ export function updateSideZoneState(game) {
 
 export function createProceduralSideZoneWorld(options = {}) {
   const type = options.type || 'hollowGrove';
+  if(type==='hollowGrove'&&(!options.regionId||options.regionId==='hearthmereFrontier'))return createBlightedGrove(options);
   const definition = SIDE_ZONE_DEFINITIONS[type] || SIDE_ZONE_DEFINITIONS.hollowGrove;
   const regionId = options.regionId || 'hearthmereFrontier';
   const world = createDungeonWorld({

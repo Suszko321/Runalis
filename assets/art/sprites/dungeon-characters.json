@@ -1,0 +1,21 @@
+{
+  "frameWidth": 60,
+  "frameHeight": 80,
+  "frames": 16,
+  "rows": [
+    "idle",
+    "anticipation",
+    "execution",
+    "recovery",
+    "hit",
+    "death"
+  ],
+  "fps": 12,
+  "filter": "nearest",
+  "characters": [
+    "dungeon-grove-mother",
+    "dungeon-orchard-custodian",
+    "dungeon-sister-tamsin",
+    "dungeon-edda-skull"
+  ]
+}

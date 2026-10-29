@@ -2,11 +2,12 @@ import {isMalakarSanctum,encounterState,resetMalakar} from './malakarEncounter.j
 import {TILE} from './data.js';
 import {findNearestActorPassablePoint,isActorPositionPassable,isTilePassable} from './world.js';
 import {clearEliteEncounters} from './eliteEncounterSystem.js';
+import {tuneDungeonBoss} from './dungeonBossDifficulty.js';
 
 const living=e=>e&&!e.dead&&!e.remove&&e.hp>0;
 const contains=(a,p,inset=0)=>p.x>=a.x+inset&&p.y>=a.y+inset&&p.x<=a.x+a.w-inset&&p.y<=a.y+a.h-inset;
 export function initializeDungeonArena(world){
- if(!['dungeon','tower'].includes(world?.mode))return null;
+ if(!['dungeon','tower'].includes(world?.mode)&&!(world?.mode==='sideZone'&&world.dungeonState?.grove))return null;
  const bosses=(world.enemies||[]).filter(e=>e.isDungeonMainBoss||e.isBoss&&!e.miniBoss&&!e.summonedBy&&!e.summonedByBoss);
  const room=(world.rooms||[]).find(r=>r.role==='boss')|| (bosses.length?(world.rooms||[]).find(r=>contains({x:r.x*TILE,y:r.y*TILE,w:r.w*TILE,h:r.h*TILE},bosses[0])):null);
  if(!room)return null;
@@ -19,6 +20,7 @@ export function initializeDungeonArena(world){
  world.arenaGates=arenaGates(world,room);
  if(a.phase==='active')sealArena(world,a);
  for(const e of bosses){e.arenaId=a.id;e.arenaDormant=a.phase==='dormant';e.homeGuard=true;e.homeX=world.bossRoomCenter.x;e.homeY=world.bossRoomCenter.y;e.leashRadius=Math.max(a.w,a.h);}
+ for(const e of bosses)if(e.groveMother||e.orchardCustodian)tuneDungeonBoss(e,e.dungeonBossPartySize||state.coopPlayerCount||e.runalisCoopBossPlayerCount||1);
  return a;
 }
 function arenaGates(world,room){
@@ -42,7 +44,7 @@ function placeInside(world,a,actor){
  const p=findNearestActorPassablePoint(world,x,y,actor.r||12);actor.x=p.x;actor.y=p.y;
 }
 export function updateDungeonArena(world,player){
- if(!['dungeon','tower'].includes(world?.mode))return;
+ if(!['dungeon','tower'].includes(world?.mode)&&!(world?.mode==='sideZone'&&world.dungeonState?.grove))return;
  const a=world.bossArena||initializeDungeonArena(world);if(!a)return;
  const state=world.dungeonState,bosses=(world.enemies||[]).filter(e=>a.bossIds.includes(e.id));
  if(state.cleared||a.bossIds.length&&bosses.every(e=>!living(e))){
@@ -55,8 +57,10 @@ export function updateDungeonArena(world,player){
   a.phase='active';sealArena(world,a);
   for(const p of party.filter(living))placeInside(world,a,p);
   for(const e of bosses){e.arenaDormant=false;e.awakened=true;e.aggro=true;e.hasDetectedPlayer=true;e.isInCombat=true;}
+  for(const e of bosses)if(e.groveMother||e.orchardCustodian){tuneDungeonBoss(e,party.filter(p=>p.active!==false&&p.joined!==false).length);e.dungeonBossPartyLocked=true;}
  }
  if(a.phase==='active'){
+  for(const e of bosses)if(e.groveMother||e.orchardCustodian)tuneDungeonBoss(e,party.filter(p=>p.active!==false&&p.joined!==false).length);
   sealArena(world,a);
   for(const p of party.filter(living)){placeInside(world,a,p);for(const s of p.summons||[])if(living(s))placeInside(world,a,s);}
   for(const e of bosses.filter(living))placeInside(world,a,e);
@@ -69,6 +73,9 @@ export function resetFailedDungeonArena(world){
  for(const e of world.enemies||[])if(a.bossIds.includes(e.id)){
   e.hp=e.maxHp;e.dead=e.remove=false;e.x=e.homeX;e.y=e.homeY;e.aggro=e.awakened=e.hasDetectedPlayer=e.isInCombat=false;
   e.attackCooldown=0;e.boss=null;e.bossTell=null;e.telegraph=null;e.visualAction=null;e.arenaDormant=true;
+  if(e.groveMother){e.groveAttack=null;e.groveRecovery=2;e.groveTurn=0;e.grovePhase=1;}
+  if(e.orchardCustodian){e.orchardAttack=null;e.orchardRecovery=2;e.orchardTurn=0;e.orchardPhase=1;}
+  e.dungeonBossPartyLocked=false;
  }
  world.enemies=(world.enemies||[]).filter(e=>!e.summonedBy&&!e.summonedByBoss&&!e.bossAdd);world.effects=[];world.combatEffects=[];
  world.objects=(world.objects||[]).filter(o=>!o.returnPortal);a.phase='dormant';

@@ -1,6 +1,7 @@
 import { drawHumanActor } from './humanRenderer.js?v=20260924b';
 import { getNpcRenderActor } from './objectRenderer.js';
 import { DIALOGUE_PHASES } from './dialogueRuntime.js';
+import {drawDungeonCharacter} from './dungeonCharacterSprites.js';
 
 // Resolve each line independently: replies can change speakers within one conversation.
 export function resolveDialoguePortrait(state) {
@@ -44,7 +45,8 @@ export function drawDialoguePortrait(ctx, rect, actor, state) {
   ctx.scale(zoom, zoom);
   ctx.translate(0, 30 + (speech === 2 ? .45 : 0));
   // A neutral, front-facing copy keeps world movement/combat out of the portrait.
-  drawHumanActor(ctx, { ...actor, x: 0, y: 0, scale: 1, dirX: 0, dirY: 1,
+  if(['groveRootkeeper','orchardTamsin'].includes(actor.npcId))drawDungeonCharacter(ctx,actor.npcId==='groveRootkeeper'?'edda':'tamsin',actor,0,actor.npcId==='groveRootkeeper'?-5:22,{scale:1,talking:!!speech,portrait:true});
+  else drawHumanActor(ctx, { ...actor, x: 0, y: 0, scale: 1, dirX: 0, dirY: 1,
     isMoving: false, walkTime: 0, animTime: 0, moveTime: 0, hp: 1, dead: false,
     actionState: {}, combatState: {}, abilityCharge: null, visualAction: null,
     equipment: { ...actor.equipment, weapon: null, offhand: null },

@@ -1,4 +1,5 @@
 import { TILE } from './data.js';
+import {tuneDungeonBoss} from './dungeonBossDifficulty.js';
 
 export const COOP_ENEMY_SCALING_VERSION = 'coop-enemy-scaling-v1';
 export const COOP_AGGRO_RANGE_MULTIPLIER = 2;
@@ -93,6 +94,7 @@ export function getCoopAggroRange(enemy, fallbackRange = 230) {
 }
 
 export function applyCoopBossHealthScaling(enemy, playerCount = 1) {
+  if(enemy?.groveMother||enemy?.orchardCustodian)return tuneDungeonBoss(enemy,playerCount);
   if (!enemy || !isBossEnemy(enemy)) return enemy;
   if (enemy.runalisCoopBossScalingVersion === COOP_ENEMY_SCALING_VERSION) return enemy;
 

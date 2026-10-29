@@ -1,7 +1,11 @@
 // dialogueData.js
 // Story dialogue trigger data for major companions, Covenant beats, and Unbound reveals.
 
+import {GROVE_DIALOGUES} from './blightedGroveData.js';
+import {ORCHARD_DIALOGUES} from './ashenOrchardData.js';
 export const STORY_DIALOGUE_TRIGGERS = {
+  ...GROVE_DIALOGUES,
+  ...ORCHARD_DIALOGUES,
   orenFenwickShop: {
     id:'orenFenwickShop',speaker:'Oren Fenwick',speakerId:'orenFenwick',
     text:'Oren sets a stoppered bottle on the counter and wipes his stained hands. “Welcome to the Root & Retort. Oren Fenwick, resident alchemist. If you need something for the road, I keep the fresh batches here.”',

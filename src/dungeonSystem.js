@@ -1,4 +1,5 @@
 import {installMalakarSanctum,dressMalakarApproach,isMalakarDungeon,requestMalakarEntry} from './malakarEncounter.js';
+import {installOrchardDungeon,beginOrchardDungeon,updateOrchardDungeon} from './ashenOrchardDungeon.js';
 import {configureEncounterEnemy,dungeonEncounterProfile,ENCOUNTER_VERSION} from './encounterData.js';
 import {initializeDungeonArena,resetFailedDungeonArena} from './dungeonArenaSystem.js';
 import {clearEliteEncounters} from './eliteEncounterSystem.js';
@@ -235,6 +236,7 @@ export function enterDungeon(game, entrance, options = {}) {
   hostGame.camera.y = hostGame.player.y - hostGame.canvas.height / 2;
 
   hostGame.log?.(`Entered ${dungeon.name}.`);
+  beginOrchardDungeon(hostGame);
   markPartyDungeonEnteredObjective(actor || hostGame.player, dungeon.dungeonId || dungeon.poiId || dungeon.entranceId);
 
   addStatusText(actor || hostGame.player, 'Dungeon Entered', {
@@ -335,6 +337,7 @@ export function transitionDungeonFloor(game, stairs = {}) {
   const world = hostGame?.world;
 
   if (!hostGame || !world || world.mode !== 'dungeon') return false;
+  if(world.bossArena?.phase==='active'){hostGame.log?.('The arena is sealed until victory or defeat.');return false;}
 
   if(isMalakarDungeon(world)&&stairs.direction==='down'&&Number(stairs.targetFloor||world.floor+1)===world.totalFloors&&!stairs.malakarCommitted){
     return requestMalakarEntry(hostGame,stairs,()=>transitionDungeonFloor(hostGame,{...stairs,malakarCommitted:true}),actor);
@@ -937,6 +940,7 @@ export function restoreDungeonFromSaveState(saveState) {
   for(const o of world.objects)if(o.pendingSpawnDelay!=null){o.pendingSpawnDelay=1.5;world.effects.push({kind:'bossTelegraph',x:o.x,y:o.y,radius:80,ttl:1.5,color:'#bd91d4'});}
   installMalakarSanctum(world);
   dressMalakarApproach(world);
+  installOrchardDungeon(world);
   initializeDungeonArena(world);
   syncDungeonCompletion(world);
   return world;
@@ -1180,14 +1184,17 @@ export function createDungeonWorld(options = {}) {
   const encounterProfile=dungeonEncounterProfile(world);
   for(const e of world.enemies)configureEncounterEnemy(e,encounterProfile,`${world.floorSeed||world.seed}:${e.id}`,{dungeon:true,confined:!!e.corridorPatrol});
   for(const e of world.enemies){if(!isActorPositionPassable(world,e.x,e.y,e.radius||12)){const p=findNearestActorPassablePoint(world,e.x,e.y,e.radius||12);e.x=p.x;e.y=p.y;e.homeX=p.x;e.homeY=p.y;}}
+  world.dungeonState.coopPlayerCount=options.playerCount||world.dungeonState.coopPlayerCount||1;
   installMalakarSanctum(world);
   dressMalakarApproach(world);
+  installOrchardDungeon(world);
   initializeDungeonArena(world);
   syncDungeonCompletion(world);
   return world;
 }
 
 export function updateDungeonEvents(world,player,dt,log){
+  updateOrchardDungeon({world,player,log});
   if(!['dungeon','sideZone'].includes(world?.mode)||world.dungeonState?.malakar)return;
   for(const object of world.objects||[])if(object.pendingSpawnDelay!=null){object.pendingSpawnDelay-=dt;if(object.pendingSpawnDelay<=0){delete object.pendingSpawnDelay;triggerDungeonEvent({world,player,log},object,true);}}
   for(const [id,event] of Object.entries(world.dungeonState?.activeEvents||{})){if(event.completed)continue;

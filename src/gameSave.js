@@ -36,6 +36,7 @@ import { handleMenuSheetInput, menuSheetItemVisible, revealMenuFocus } from './m
 import { createWorld,isActorPositionPassable } from './world.js';
 import { createRegionWorld, createTravelRouteWorld } from './regionWorlds.js';
 import { createProceduralSideZoneWorld } from './sideZoneSystem.js';
+import {installOrchardDungeon} from './ashenOrchardDungeon.js';
 import { createCapitalHubWorld } from './hubSystem.js';
 import { createCaravanOpeningWorld, createMaraHouseWorld } from './act1OpeningSystem.js';
 import { createPlayer, migratePlayer } from './player.js';
@@ -1401,6 +1402,10 @@ export function applySaveToGame(game, saveState) {
   });
 
   Object.assign(game.world,migrated.worldEncounterLayout||{});
+  if(game.world.mode==='dungeon'&&game.world.dungeonId==='ashenOrchard'&&!game.world.dungeonState?.orchard&&!game.world.dungeonState?.cleared){installOrchardDungeon(game.world);Object.assign(game.player,game.world.spawn);}
+  if(game.world.mode==='sideZone'&&game.world.sideZoneType==='hollowGrove'&&game.world.regionId==='hearthmereFrontier'&&!game.world.dungeonState?.grove){
+    game.world=createProceduralSideZoneWorld({type:'hollowGrove',regionId:'hearthmereFrontier',seed:game.world.seed});Object.assign(game.player,game.world.spawn);
+  }
   if(['dungeon','tower','sideZone'].includes(game.world.mode)){
     const w=game.world;
     if(!w.rooms?.length&&w.dungeonState?.arenas){const a=w.dungeonState.arenas[w.floor||1];if(a)w.rooms=[{role:'boss',x:a.x/32,y:a.y/32,w:a.w/32,h:a.h/32}];}
@@ -1411,6 +1416,8 @@ export function applySaveToGame(game, saveState) {
     for(const e of w.enemies){configureEncounterEnemy(e,profile,`${w.floorSeed||w.seed}:${e.id}`,{dungeon:true});e.eliteHealing=e.eliteGuardActive=false;e.eliteAttackPauseTimer=0;e.bossTell=e.telegraph=null;if(e.boss){e.boss.pendingSpecial=null;e.boss.recoveryUntil=0;e.boss.specialTimer=Math.max(2,e.boss.specialTimer||0);}}
     for(const o of w.objects||[])if(o.pendingSpawnDelay!=null){o.pendingSpawnDelay=1.5;w.effects.push({kind:'bossTelegraph',x:o.x,y:o.y,radius:80,ttl:1.5,color:'#bd91d4'});}
     initializeDungeonArena(w);
+    for(const e of w.enemies)if(e.groveMother){e.groveAttack=null;e.groveRecovery=2;}
+    for(const e of w.enemies)if(e.orchardCustodian){e.orchardAttack=null;e.orchardRecovery=2;}
   }
   game.overworldState = migrated.overworldState;
   game.capitalReturnWorld = null;

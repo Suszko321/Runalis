@@ -62,7 +62,7 @@ check('validated patrol routes remain passable and stalled routes reverse',()=>{
 });
 check('all eight regional towers and ten side-zone types use fixed local stats',()=>{
  const types=['hollowGrove','abandonedMine','ashenFarmstead','graveyardCellar','failedPurificationSite','confessionVault','choirReliquary','lightstormScar','namelessVault','worldrootRift'];
- for(const region of CONTINENT_REGIONS){report.regions.push(region.id);for(const type of types){const w=createProceduralSideZoneWorld({type,regionId:region.id,seed:`review:${region.id}:${type}`});for(const e of w.enemies){assert(e.combatLevel>=region.levels[0]);assert(!e.arenaDormant);assert(e.encounterStatsVersion);assert(e.xp>0);}report.sideZones++;}
+ for(const region of CONTINENT_REGIONS){report.regions.push(region.id);for(const type of types){const w=createProceduralSideZoneWorld({type,regionId:region.id,seed:`review:${region.id}:${type}`});for(const e of w.enemies){assert(e.combatLevel>=region.levels[0]);assert(!e.arenaDormant||e.groveMother);assert(e.encounterStatsVersion);assert(e.xp>0);}report.sideZones++;}
  for(const floor of [1,5,10,20]){const w=createTowerFloorWorld(floor,createPlayer('tower'),region.id);for(const e of w.enemies){assert(e.combatLevel>=region.levels[0]+floor-1);assert(e.encounterStatsVersion);}if(floor%10===0)assert(w.bossArena);report.towerFloors++;}}
 });
 check('repeatable floors preserve defeated enemies, wounds and claimed chests',()=>{
@@ -70,7 +70,7 @@ check('repeatable floors preserve defeated enemies, wounds and claimed chests',(
  const loaded=createTowerFloorWorld(1,p);assert(restoreRepeatableInstance(loaded,p));assert(!loaded.enemies.some(o=>o.id===e.id));assert.equal(loaded.enemies.find(o=>o.id===hurt.id).hp,hurt.hp);assert(loaded.objects.find(o=>o.kind==='towerRewardChest').claimed);
 });
 check('side-zone event ownership survives the production save and unlocks its reward',()=>{
- const p=createPlayer('side event'),w=createProceduralSideZoneWorld({type:'hollowGrove',regionId:'hearthmereFrontier',seed:'event-save'}),g=game(w,p),event=w.objects.find(o=>o.kind==='dungeonEvent');assert(event);triggerDungeonEvent(g,event);updateDungeonEvents(w,p,1.6,()=>{});const ids=w.dungeonState.activeEvents[event.id].memberIds;
+ const p=createPlayer('side event'),w=createProceduralSideZoneWorld({type:'abandonedMine',regionId:'hearthmereFrontier',seed:'event-save'}),g=game(w,p),event=w.objects.find(o=>o.kind==='dungeonEvent');assert(event);triggerDungeonEvent(g,event);updateDungeonEvents(w,p,1.6,()=>{});const ids=w.dungeonState.activeEvents[event.id].memberIds;
  recordEnemyCombatContribution(w.enemies.find(e=>e.id===ids[0]),p,'warding',5,{source:'ability'});p.questOwner=p;
  const saved=createSaveState(g),loaded=game(createWorld());applySaveToGame(loaded,saved);assert(loaded.world.dungeonState.activeEvents[event.id]);
  for(const id of ids){const e=loaded.world.enemies.find(e=>e.id===id);assert(e);e.hp=0;e.dead=true;}updateDungeonEvents(loaded.world,loaded.player,.1,()=>{});assert(loaded.world.objects.filter(o=>o.unlockOnEventId===event.id).every(o=>!o.locked));

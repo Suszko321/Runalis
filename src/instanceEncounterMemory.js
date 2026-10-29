@@ -1,5 +1,6 @@
 // Compact mutations for repeatable side zones and regional tower floors.
 // Geography and seeded enemies are regenerated; re-entry never rerolls a run.
+import {resetFailedDungeonArena} from './dungeonArenaSystem.js';
 const flags=['locked','claimed','depleted','opened','triggered','eventTriggered','completed','rewardClaimed'];
 function plainClone(value){const seen=new WeakSet();return JSON.parse(JSON.stringify(value, (name,item)=>{
  if(['telegraph','bossTell','pendingSpecial','visualReaction','visualDeath'].includes(name))return undefined;
@@ -15,6 +16,7 @@ export function recordRepeatableEnemyDeath(world,player,enemy){
 }
 export function rememberRepeatableInstance(game,{failed=false}={}){
  const host=game?.hostGame||game,w=host?.world,p=host?.player;if(!p||!['tower','sideZone'].includes(w?.mode))return;
+ if(failed&&w.dungeonState?.grove)resetFailedDungeonArena(w);
  p.worldMemory ||= {};const ledger=p.worldMemory.instanceEncounters ||= {},now=Number(p.worldMemory.elapsed)||0;
  const prior=ledger[key(w)],deadIds=[...(prior?.deadIds||[])],wounds={},objects={},eliteBudgets={};
  for(const e of w.enemies||[]){if(e.summonedBy||e.summonedByBoss)continue;if(e.dead||e.hp<=0){if(!deadIds.includes(e.id))deadIds.push(e.id);}else if(e.hp<e.maxHp)wounds[e.id]=e.hp;}
@@ -26,6 +28,7 @@ export function rememberRepeatableInstance(game,{failed=false}={}){
 }
 export function restoreRepeatableInstance(world,player){
  const ledger=player?.worldMemory?.instanceEncounters,state=ledger?.[key(world)];if(!state)return false;
+ if(world.dungeonState?.grove&&!state.events?.grove){delete ledger[key(world)];return false;}
  if(state.resetAt&&Number(player.worldMemory.elapsed)>=state.resetAt){delete ledger[key(world)];return false;}
  const dead=new Set(state.deadIds||[]);world.enemies=(world.enemies||[]).filter(e=>!dead.has(e.id));
  for(const e of world.enemies)if(state.wounds?.[e.id]!=null)e.hp=Math.max(1,Math.min(e.maxHp,state.wounds[e.id]));

@@ -13,7 +13,7 @@ const alive=e=>e&&!e.dead&&!e.remove&&e.alive!==false&&e.hp>0;
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function runtime(w){let r=runtimes.get(w);if(!r){r={clock:0,hazards:[],budgetAt:0,budget:0,motion:new WeakMap(),actors:[]};runtimes.set(w,r);}return r;}
-function state(e){let s=states.get(e);if(!s){const rng=encounterRng(e.id);s={next:2+rng()*3,index:0,death:false,phase:rng()*7,frontalHits:0,healRemaining:Math.max(0,Math.min(e.maxHp*.3,e.eliteHealRemaining??e.maxHp*.3))};states.set(e,s);e.eliteHealing=e.eliteGuardActive=false;}return s;}
+function state(e){let s=states.get(e);if(!s){const rng=encounterRng(e.id);s={next:2+rng()*3,index:0,death:false,phase:rng()*7,frontalHits:0,healRemaining:Math.max(0,Math.min(e.maxHp*.3,e.eliteHealRemaining??e.maxHp*.3))};states.set(e,s);e.eliteHealing=e.eliteGuardActive=false;e.eliteAttackPauseTimer=0;}return s;}
 export function eliteThreatTier(e){
  const level=Number(e.combatLevel||e.level||1);
  if(level<=7||e.questCritical||e.isDungeonMainBoss)return 1;

@@ -1,4 +1,5 @@
 import {drawAuthoredObject} from './worldAtmosphereRenderer.js';
+import {drawDungeonNpc,isDungeonNpc} from './dungeonCharacterSprites.js';
 import {drawWorkshopFixture,drawWorkshopWorker} from './workshopArt.js';
 import {isQuestObjectVisible} from './questInteractables.js';
 import {drawQuestEvidence} from './questObjectArt.js';
@@ -169,6 +170,9 @@ function drawObject(ctx, object, camera, questActor = null) {
 
 function drawObjectUnrotated(ctx, object, camera, questActor = null) {
   if (!object || object.depleted) return;
+  if(isDungeonNpc(object)&&drawDungeonNpc(ctx,object,camera)){
+    if(objectInInteractionRange(questActor,object))drawDialogueReadyIndicator(ctx,object.x-camera.x,object.y-camera.y-(object.groveSkull?60:87));return;
+  }
   if(drawWorkshopFixture(ctx,object,camera))return;
   if (drawContinentalObject(ctx, object, camera, questActor)) return;
   if (drawOrrakaiFixture(ctx, object, camera, questActor)) return;
