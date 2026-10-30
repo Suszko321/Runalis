@@ -35,6 +35,15 @@ export function normalizeProfileSave(profile, options = {}) {
     ...fallback,
     ...(profile || {})
   };
+  // Bubble Ward is a temporary session effect. Its performance-clock expiry
+  // has no meaning after logout/reload. Copy nested state before scrubbing so
+  // autosaving cannot remove protection from the live character or allies.
+  player.buffs = {...player.buffs};
+  delete player.buffs.bubbleWard;
+  player.visuals = {...player.visuals};
+  delete player.visuals.bubbleWardUntil;
+  delete player.visuals.bubbleWardFlatAbsorb;
+  delete player.visuals.bubbleWardMorph;
 
   if(profile&&!profile.skillState&&profile.skills)delete player.skillState;
   if(profile&&!profile.abilityLayoutVersion)delete player.abilityLayoutVersion;
