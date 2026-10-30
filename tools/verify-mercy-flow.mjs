@@ -44,7 +44,7 @@ talk('maraVell',['where','caravan','who','next']);assert.equal(g.player.quests.a
 assert(leaveMaraHouse(g));
 talk('wardenMael',['mara','attack','order','missing','continue','grateful','unknown','searching','noCoin','acceptAid']);
 assert.equal(g.player.quests.active.mercy_in_orrakai.currentStageId,'aidPlagueTents');
-talk('orrakaiSickVillager',['deliver']);talk('orrakaiWellStoresAttendant',['collect']);talk('orrakaiWaterDistribution',['refugees']);talk('orrakaiLowerGateGuard',['record']);talk('orrakaiRefugeeParent',['check']);
+talk('orrakaiSickVillager',['deliver']);talk('orrakaiWellStoresAttendant',['collect']);talk('orrakaiWaterDistribution',['refugees']);talk('orrakaiLowerGateGuard',['record']);
 assert.equal(g.player.quests.active.mercy_in_orrakai.currentStageId,'reportToWardenMael');
 talk('wardenMael',['well','finish']);talk('lightwardenCaelen',['saved','thanks','payment','paid']);
 assert.equal(g.player.quests.active.mercy_in_orrakai.currentStageId,'investigateOldWell');

@@ -96,12 +96,12 @@ export const STORY_DIALOGUE_TRIGGERS = {
   },
   maelAidOffer: {
     id: 'maelAidOffer', speaker: 'Warden Mael', speakerId: 'wardenMael', appendNpcQuestOptions: false,
-    text: 'Help with my work in Orrakai and I will cover what you owe her from my field allowance. Deliver Mara\'s medicine to one of the sick villagers. Bring clean water from the well stores. Ask any town watch guard about recent Last Dawn sightings; one stands in the open square below the Market Steps, and another watches the infirmary’s west side. Then check on a refugee family near the chapel square. Complete those tasks and your debt to Mara will be settled.',
+    text: 'Help with my work in Orrakai and I will cover what you owe her from my field allowance. Deliver Mara\'s medicine to one of the sick villagers. Bring clean water from the well stores. Ask any town watch guard about recent Last Dawn sightings; one stands in the open square below the Market Steps, and another watches the infirmary’s west side. Complete those tasks and your debt to Mara will be settled.',
     options: [{ id: 'acceptAid', label: 'I will return with something useful.', response: 'Listen, observe, and do not make the plague tents regret letting you stand.', flagsSet: ['mercy.maelIntroductionComplete','mercy.medicineParcelHeld','orrakai_extra_supply_unassigned'], completesTalkObjective: 'wardenMael', closeAfterResponse: true }]
   },
   wardenMercyAidIncomplete: {
     id: 'wardenMercyAidIncomplete', speaker: 'Warden Mael', speakerId: 'wardenMael', appendNpcQuestOptions: false,
-    text: 'I asked you to help with the medicine, water, guard report and refugee family. Finish the work before we discuss what comes next.'
+    text: 'I asked you to help with the medicine, water and guard report. Finish the work before we discuss what comes next.'
   },
   orrakaiSickVillagerAid: {
     id: 'orrakaiSickVillagerAid', speaker: 'Sick Villager', speakerId: 'orrakaiSickVillager', appendNpcQuestOptions: false,

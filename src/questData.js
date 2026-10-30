@@ -32,8 +32,7 @@ export const STORY_QUESTS = {
         objectives: [
           { type: 'talk', npcId: 'orrakaiSickVillager', required: 1, label: 'Deliver medicine to a sick villager' },
           { type: 'talk', npcId: 'orrakaiWaterDistribution', required: 1, label: 'Bring clean water from the well stores' },
-          { type: 'talk', npcId: 'orrakaiLowerGateGuard', required: 1, label: 'Ask any Orrakai town watch guard about Last Dawn sightings' },
-          { type: 'talk', npcId: 'orrakaiRefugeeParent', required: 1, label: 'Check on the refugee family near the chapel square' }
+          { type: 'talk', npcId: 'orrakaiLowerGateGuard', required: 1, label: 'Ask any Orrakai town watch guard about Last Dawn sightings' }
         ]
       },
       {

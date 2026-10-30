@@ -2144,10 +2144,25 @@ function ensureQuestLog(player) {
       if(stage){saved.currentStageTitle=stage.title||stage.text||'';saved.currentStageText=stage.text||'';}
     }
   }
+  reconcileMercyAidObjectives(player);
   reconcileAct1QuestDefinition(player);
   reconcileBloodlineQuestDefinitions(player);
   ensureQuestStateBridge(player);
   syncQuestStateBridgeFromQuestLog(player);
+}
+
+function reconcileMercyAidObjectives(player) {
+  const saved=player.quests?.active?.mercy_in_orrakai;
+  if(saved?.currentStageId!=='aidPlagueTents')return;
+  const quest=getQuest('mercy_in_orrakai');
+  const index=quest.stages.findIndex(stage=>stage.id==='aidPlagueTents');
+  const stage=quest.stages[index];
+  if(objectiveDefinitionsMatch(saved.objectives,stage.objectives))return;
+  // Existing saves may still require the removed family visit. Keep completed
+  // aid tasks, and release players who have already finished all three.
+  saved.stageIndex=index;
+  saved.objectives=rebuildObjectiveProgress(stage.objectives,player,saved.objectives||[]);
+  updateQuestStageCompletion(player,quest.id);
 }
 
 function reconcileBloodlineQuestDefinitions(player) {
