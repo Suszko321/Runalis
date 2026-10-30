@@ -28,6 +28,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
+      - run: npm ci
       - name: Prepare and validate playable files
         run: node tools/prepare-pages.mjs
       - uses: actions/configure-pages@v6

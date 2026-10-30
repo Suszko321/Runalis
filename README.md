@@ -26,7 +26,9 @@ there is no Babylon.js dependency or framework build to install. Actions runs
 and stage only playable files in `_site/`. Documentation, lab pages, backups,
 temporary captures, art working files, and local settings are not published.
 The original nested `Runalis/` upload is retained in repository history.
-For a local package check, run `node tools/prepare-pages.mjs`.
+Run `npm ci` once to install the pinned build dependency. For a local package
+check, run `node tools/prepare-pages.mjs`. Deployment bundles the startup modules
+into one download so mobile browsers do not need hundreds of module requests.
 For a browser deployment smoke test, run `node tools/verify-pages.cjs`, using
 the existing `RUNALIS_NODE_MODULES` convention to locate Playwright.
 

@@ -1,0 +1,10 @@
+{
+  "name": "runalis",
+  "private": true,
+  "scripts": {
+    "build": "node tools/prepare-pages.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

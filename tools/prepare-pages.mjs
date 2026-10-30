@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { build } from 'esbuild';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, '_site');
@@ -38,6 +39,7 @@ function addDirectory(relative) {
 
 add('index.html');
 add('src/boot.js');
+add('src/startup.js');
 add('manifest.webmanifest');
 add('src/main.js');
 add('src/vendor/peerjs-LICENSE.txt');
@@ -77,6 +79,7 @@ for (const relative of files) {
 // Version the complete module graph together. Updating only main.js leaves
 // cached imports (including mobile menus) from the previous release in use.
 const releaseHash = createHash('sha256');
+releaseHash.update(fs.readFileSync(path.join(root, 'package-lock.json')));
 for (const relative of [...files].sort()) {
   if (/\.(html|css|js|webmanifest)$/.test(relative)) releaseHash.update(relative).update(fs.readFileSync(path.join(root, relative)));
 }
@@ -96,6 +99,21 @@ for (const relative of files) {
   } else fs.copyFileSync(path.join(root, relative), destination);
 }
 fs.writeFileSync(path.join(output, '.nojekyll'), '');
+// One download for the startup graph avoids hundreds of concurrent requests on
+// mobile connections. Keep it in src/ so import.meta.url asset paths stay valid.
+const bundle = await build({
+  entryPoints: [path.join(root, 'src/boot.js')],
+  outfile: path.join(output, 'src/boot.js'),
+  bundle: true,
+  format: 'esm',
+  platform: 'browser',
+  target: ['safari15.4', 'chrome100', 'firefox100'],
+  minify: true,
+  legalComments: 'inline',
+  metafile: true
+});
+const bootOutput = Object.values(bundle.metafile.outputs).find(file => file.entryPoint);
+console.log(`Bundled ${Object.keys(bundle.metafile.inputs).length} startup modules into one ${(bootOutput.bytes / 1024 / 1024).toFixed(1)} MiB download.`);
 fs.writeFileSync(path.join(output, 'release.json'),JSON.stringify({release})+'\n');
 const bytes = [...files].reduce((sum, name) => sum + fs.statSync(path.join(output, name)).size, 0);
 console.log(`Prepared ${files.size} game files (${(bytes / 1024 / 1024).toFixed(1)} MiB) in _site; resource paths and module filename case validated.`);

@@ -25,7 +25,12 @@
   <link rel="stylesheet" href="home-screen-prompt.css" />
 </head>
 <body>
-  <div id="mainMenu" class="screen active">
+  <div id="startupStatus" role="status" aria-live="polite" style="position:fixed;inset:0;z-index:10000;display:grid;place-content:center;gap:16px;padding:24px;background:#10151f;color:#eee2c9;text-align:center;font:18px Georgia,serif">
+    <strong>Loading Runalis…</strong>
+    <p data-startup-message>Preparing your saved profiles and main menu.</p>
+    <button type="button" data-startup-retry hidden style="min-height:48px;padding:12px 20px;font:inherit">Retry loading</button>
+  </div>
+  <div id="mainMenu" class="screen active" inert>
     <div class="menu-card">
       <h1>Runalis</h1>
       <p class="subtitle">A chronicle of earth, ash &amp; forgotten oaths</p>
@@ -140,6 +145,6 @@
     </div>
   </div>
 
-  <script type="module" src="src/boot.js"></script>
+  <script src="src/startup.js" defer onerror="document.querySelector('[data-startup-message]').textContent='Runalis could not download. Check your connection, then retry loading the menu.';document.querySelector('[data-startup-retry]').hidden=false;document.querySelector('[data-startup-retry]').onclick=function(){location.reload()}"></script>
 </body>
 </html>
