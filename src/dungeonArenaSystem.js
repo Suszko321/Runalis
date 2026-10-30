@@ -1,3 +1,4 @@
+import {prepareVeyreignTransformation,resetVeyreignTransformation} from './veyreignTransformation.js';
 import {isMalakarSanctum,encounterState,resetMalakar} from './malakarEncounter.js';
 import {TILE} from './data.js';
 import {findNearestActorPassablePoint,isActorPositionPassable,isTilePassable} from './world.js';
@@ -6,7 +7,7 @@ import {tuneDungeonBoss} from './dungeonBossDifficulty.js';
 import {requestPartyEntry,partyEntryPending} from './partyEntrySystem.js';
 const entryLatches = new WeakSet();
 
-const living=e=>e&&!e.dead&&!e.remove&&e.hp>0;
+const living=e=>e&&!e.dead&&!e.remove&&(e.hp>0||e.veyreignTransform!=null);
 const contains=(a,p,inset=0)=>p.x>=a.x+inset&&p.y>=a.y+inset&&p.x<=a.x+a.w-inset&&p.y<=a.y+a.h-inset;
 export function initializeDungeonArena(world){
  if(!['dungeon','tower'].includes(world?.mode)&&!(world?.mode==='sideZone'&&world.dungeonState?.grove))return null;
@@ -54,6 +55,7 @@ function activateArena(world,a,party,bosses){
 export function updateDungeonArena(world,player,game=null){
  if(!['dungeon','tower'].includes(world?.mode)&&!(world?.mode==='sideZone'&&world.dungeonState?.grove))return;
  const a=world.bossArena||initializeDungeonArena(world);if(!a)return;
+ for(const e of world.enemies||[])prepareVeyreignTransformation(world,e);
  const state=world.dungeonState,bosses=(world.enemies||[]).filter(e=>a.bossIds.includes(e.id));
  if(state.cleared||a.bossIds.length&&bosses.every(e=>!living(e))){
   if(a.phase!=='defeated'){clearEliteEncounters(world);world.effects=(world.effects||[]).filter(f=>!f.bossHazard&&!f.arenaId&&f.kind!=='bossTelegraph');}
@@ -88,7 +90,7 @@ export function resetFailedDungeonArena(world){
   e.hp=e.maxHp;e.dead=e.remove=false;e.x=e.homeX;e.y=e.homeY;e.aggro=e.awakened=e.hasDetectedPlayer=e.isInCombat=false;
   e.attackCooldown=0;e.boss=null;e.bossTell=null;e.telegraph=null;e.visualAction=null;e.arenaDormant=true;
   if(e.groveMother){e.groveAttack=null;e.groveRecovery=2;e.groveTurn=0;e.grovePhase=1;}
-  if(e.veyreignLord){e.veyreignAttack=null;e.veyreignRecovery=2;e.veyreignTurn=0;e.veyreignPhase=1;}
+  if(e.veyreignLord)resetVeyreignTransformation(e);
   if(e.orchardCustodian){e.orchardAttack=null;e.orchardRecovery=2;e.orchardTurn=0;e.orchardPhase=1;}
   e.dungeonBossPartyLocked=false;
  }

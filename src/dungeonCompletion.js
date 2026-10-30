@@ -62,6 +62,7 @@ export function syncDungeonCompletion(world){
 export function completeDungeonAfterBoss(world,enemy){
   if(world?.mode!=='dungeon'||!finalFloor(world)||!enemy?.isBoss||enemy.miniBoss||alive(enemy))return false;
   if(isMalakarDungeon(world)&&world.dungeonState?.malakar?.mode!=='victory')return false;
+  if(enemy.veyreignLord&&!enemy.veyreignFeral)return false;
   syncDungeonCompletion(world);
   const state=world.dungeonState;
   if(!(state.requiredBossIds||[state.mainBossEnemyId]).includes(enemy.id)||state.cleared||(world.enemies||[]).some(e=>(state.requiredBossIds||[]).includes(e.id)&&alive(e)))return false;

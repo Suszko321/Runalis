@@ -1,3 +1,4 @@
+import {prepareVeyreignTransformation} from './veyreignTransformation.js';
 import {mitigateEliteHit} from './eliteEncounterSystem.js';
 import {getOathVisualFamily} from './oathbladeProfiles.js';
 import {onOathkeeperMeleeContact,onFellhunterWeaponContact} from './subclassCombat.js';
@@ -1342,7 +1343,7 @@ function resolveMeleeHitbox(player, world, move, state, log) {
   const enemies = world?.enemies || [];
 
   for (const enemy of enemies) {
-    if (!enemy || enemy.hp <= 0) continue;
+    if (!enemy || enemy.hp <= 0 || enemy.veyreignTransform!=null) continue;
 
     const enemyId = getEnemyId(enemy);
     if (state.hitEnemyIds.includes(enemyId)) continue;
@@ -1540,7 +1541,7 @@ function resolveProjectileHits(player, world, projectile, log) {
   const enemies = world?.enemies || [];
 
   for (const enemy of enemies) {
-    if (!enemy || enemy.hp <= 0) continue;
+    if (!enemy || enemy.hp <= 0 || enemy.veyreignTransform!=null) continue;
 
     const enemyId = getEnemyId(enemy);
     if (projectile.hitEnemyIds.includes(enemyId)) continue;
@@ -1634,6 +1635,7 @@ export function calculateWeaponDamage(player, weapon, fallbackWeaponType = 'unar
 }
 
 function applyEnemyDamage(player, world, enemy, damagePacket, move, state, log) {
+  if(enemy.veyreignTransform!=null)return;
   const passiveResult = applyOutgoingClassPassiveDamage(player, enemy, damagePacket.amount, {
     weaponType: damagePacket.weaponType,
     skill: damagePacket.skillId,
@@ -1765,7 +1767,7 @@ function applyEnemyDamage(player, world, enemy, damagePacket, move, state, log) 
 
   spawnHitEffect(world, enemy, move, state, adjustedPacket,player);
 
-  if (enemy.hp <= 0) {
+  if (enemy.hp <= 0 && !prepareVeyreignTransformation(world,enemy)) {
     enemy.dead = true;
     recordEnemyDeathVisual(enemy, {
       classId: player.classId,

@@ -1,5 +1,5 @@
 import {drawEnemyNameplate,enemyPlateLayout} from './enemyNameplateArt.js';
-import {drawVeyreignGround,drawVeyreignEffects,drawVeyreignBat} from './veyreignArt.js';
+import {drawVeyreignGround,drawVeyreignEffects,drawVeyreignBat,royalBeastScale} from './veyreignArt.js';
 import {drawGroveGround,drawGroveMother,drawGroveTells} from './blightedGroveArt.js';
 import {drawOrchardGround,drawOrchardBoss,drawOrchardTells} from './ashenOrchardArt.js';
 import {drawMalakarGround,drawMalakarTelegraphs,drawMalakarActor} from './malakarRenderer.js';
@@ -315,7 +315,7 @@ export function selectEnemyNameplates(ctx, enemies, camera) {
     const p = screen(enemy, camera);
     if (!isOnScreen(ctx, p.x, p.y, 130)) continue;
     if (!isHumanoidEnemy(enemy) && !shouldRenderVisual(enemy, 'enemies', isDeveloperArtMode())) continue;
-    const layout=enemyPlateLayout(ctx,enemy,p.x,p.y-getEnemyHpOffset(enemy));
+    const layout=enemyPlateLayout(ctx,enemy,p.x,p.y-getEnemyHpOffset(enemy,ctx.canvas.height));
     candidates.push({enemy,priority:layout.rank==='boss'?3:layout.rank==='elite'?2:1,
       left:layout.left,right:layout.right,top:layout.top,bottom:layout.bottom});
   }
@@ -335,7 +335,7 @@ export function drawEnemy(ctx, enemy, camera, options = {}) {
 
   const p = screen(enemy, camera);
   // Tall native boss cells remain visible while their feet are below the view.
-  if (!isOnScreen(ctx, p.x, p.y, Math.max(130, getEnemyHpOffset(enemy) + 24))) return;
+  if (!isOnScreen(ctx, p.x, p.y, Math.max(enemy.veyreignFeral?420:130, getEnemyHpOffset(enemy,ctx.canvas.height) + 24))) return;
 
   const visualStatus = getVisualStatus(enemy, 'enemies');
   const developerArtMode = isDeveloperArtMode();
@@ -414,8 +414,8 @@ export function drawEnemy(ctx, enemy, camera, options = {}) {
   drawEnemyStatus(ctx, enemy, p.x, p.y);
   drawFloatingTexts(ctx,enemy,camera);
 
-  if (!enemy.dead && enemy.hp > 0) {
-    const hpOffset = getEnemyHpOffset(enemy);
+  if (!enemy.dead && enemy.hp > 0 && !enemy.veyreignFeral) {
+    const hpOffset = getEnemyHpOffset(enemy,ctx.canvas.height);
     drawEnemyNameplate(ctx,enemy,p.x,p.y-hpOffset,{hideLabel:!!enemy.hideEnemyNameplate||!!options.hideNameplate});
   }
 }
@@ -1757,7 +1757,7 @@ function drawEnemyStatus(ctx, enemy, x, y) {
 
   if (enemy.telegraph?.time > 0) {
     ctx.fillStyle = enemy.telegraph.color || '#ffcc66';
-    rect(ctx, x - 10, y - getEnemyHpOffset(enemy) + 8, 20 * clamp(1 - enemy.telegraph.time / Math.max(0.001, enemy.telegraph.maxTime || 1), 0, 1), 3);
+    rect(ctx, x - 10, y - getEnemyHpOffset(enemy,ctx.canvas.height) + 8, 20 * clamp(1 - enemy.telegraph.time / Math.max(0.001, enemy.telegraph.maxTime || 1), 0, 1), 3);
   }
 
   if (Number(enemy.boss?.recoveryUntil || 0) > now) {
@@ -1850,7 +1850,8 @@ function drawSoakedEnemyStatus(ctx, enemy, x, y, now, soakedUntil) {
   ctx.restore();
 }
 
-function getEnemyHpOffset(enemy) {
+function getEnemyHpOffset(enemy,canvasHeight=800) {
+  if(enemy.veyreignFeral)return 68*royalBeastScale(canvasHeight);
   const profile=getEnemyVisualProfile(enemy);
   if(profile.hpOffset)return profile.hpOffset;
   if (isHumanoidEnemy(enemy)) return 58;

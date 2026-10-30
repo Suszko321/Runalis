@@ -579,7 +579,7 @@ export function damageNearbyParty(enemy, player, world, radius, damage, hitTest 
 
   for (const member of members) {
     if ((member.hp || 0) <= 0) continue;
-    if(!enemyWithinTargetView(enemy,member,world)&&!((enemy.groveMother||enemy.orchardCustodian)&&world?.bossArena?.phase==='active'))continue;
+    if(!enemyWithinTargetView(enemy,member,world)&&!((enemy.groveMother||enemy.orchardCustodian||enemy.veyreignLord)&&world?.bossArena?.phase==='active'))continue;
 
     const distance = Math.hypot((member.x || 0) - enemy.x, (member.y || 0) - enemy.y);
     if (distance > radius || hitTest && !hitTest(member)) continue;

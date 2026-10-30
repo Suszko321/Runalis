@@ -1,3 +1,5 @@
+import {prepareVeyreignTransformation,VEYREIGN_TRANSFORM_SECONDS} from './veyreignTransformation.js';
+import {updateFeralVeyreign} from './veyreignFeralCombat.js';
 import {playSfx} from './audioSystem.js';
 import {damageNearbyParty} from './bossSystem.js';
 import {malakarShapeHits} from './malakarCombat.js';
@@ -29,9 +31,12 @@ export function updateVeyreignCombat(e,w,p,dt,now,game){
   }else if(distance>120){const x=e.x+e.dirX*e.speed*dt,y=e.y+e.dirY*e.speed*dt;if(isActorPositionPassable(w,x,y,e.r||12)){e.x=x;e.y=y;}}
   return true;
  }
+ if(e.veyreignLord)prepareVeyreignTransformation(w,e);
+ if(e.veyreignLord&&e.veyreignTransform!=null){e.veyreignTransform+=dt;e.hp=1;e.arenaDormant=true;e.hitFlash=0;if(e.veyreignTransform>=VEYREIGN_TRANSFORM_SECONDS){delete e.veyreignTransform;e.hp=e.maxHp;e.arenaDormant=false;e.veyreignRecovery=1.1;game?.log?.('The royal blood takes its true shape. The second reign begins.');}return true;}
  if(!e.veyreignLord||e.dead||e.hp<=0)return false;
  if(w.bossArena?.phase!=='active'){e.veyreignAttack=null;e.veyreignRecovery=2;return true;}
  e.arenaDormant=false;e.aggro=e.isInCombat=true;e.speed=0;
+ if(e.veyreignFeral)return updateFeralVeyreign(e,w,p,dt,now,game);
  const phase=e.hp/e.maxHp<=.3?3:e.hp/e.maxHp<=.65?2:1;
  if(phase!==(e.veyreignPhase||1)){e.veyreignPhase=phase;e.veyreignAttack=null;e.veyreignRecovery=2.4;game?.log?.(phase===2?`${e.name} tears the last family banner from his blade. The court answers every heartbeat.`:`The windows go black. ${e.name} hunts without restraint.`);}
  if(e.veyreignRecovery>0){e.veyreignRecovery=Math.max(0,e.veyreignRecovery-dt);return true;}

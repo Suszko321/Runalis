@@ -1,8 +1,18 @@
+import {VEYREIGN_FERAL_MOVES} from './veyreignFeralCombat.js';
+import {VEYREIGN_TRANSFORM_SECONDS} from './veyreignTransformation.js';
 import {sampleEnemyAttackPresentation} from './enemyAttackPresentation.js';
 import {asset} from './spriteArt.js';
 import {VEYREIGN_MOVES} from './veyreignCombat.js';
-const bat=asset('veyreign-bat-beast'),deaths=new WeakMap();
+const bat=asset('veyreign-bat-beast'),royal=asset('veyreign-royal-blood-beast'),deaths=new WeakMap();
+export const royalBeastScale=height=>Math.max(3,Math.min(4,Math.floor((height-150)/80)));
 export function drawVeyreignBat(c,e,x,y){
+ if(e.veyreignFeral){
+  if(!royal?.ready)return false;const now=performance.now()/1000,trans=e.veyreignTransform,dead=e.dead||e.hp<=0,p=sampleEnemyAttackPresentation(e);
+  if(trans!=null&&trans<.7)return false;
+  if(dead&&!deaths.has(e))deaths.set(e,now);const row=trans!=null?0:dead?6:e.hitFlash>0?5:p?.phase==='execution'?3:p?.phase==='recovery'?4:p?2:1;
+  const col=trans!=null?Math.min(47,Math.floor(trans/VEYREIGN_TRANSFORM_SECONDS*48)):dead?Math.min(47,Math.floor((now-deaths.get(e))/1.3*48)):Math.floor(now*12)%48;const maximum=royalBeastScale(c.canvas.height),scale=trans!=null?Math.min(maximum,1+Math.floor(trans/VEYREIGN_TRANSFORM_SECONDS*maximum)):maximum;
+  c.save();c.imageSmoothingEnabled=false;c.fillStyle='rgba(12,3,14,.5)';c.beginPath();c.ellipse(x,y+8,90,23,0,0,Math.PI*2);c.fill();c.drawImage(royal.image,col*60,row*80,60,80,Math.round(x-30*scale),Math.round(y-76*scale),60*scale,80*scale);c.restore();return true;
+ }
  if(!e.batBeast||!bat?.ready)return false;
  const now=performance.now()/1000,dead=e.hp<=0||e.dead,p=sampleEnemyAttackPresentation(e),row=dead?5:e.hitFlash>0?4:p?.phase==='execution'?2:p?.phase==='recovery'?3:p?1:0;
  if(dead&&!deaths.has(e))deaths.set(e,now);const col=dead?Math.min(15,Math.floor((now-deaths.get(e))/.9*16)):Math.floor(now*12)%16;
@@ -26,11 +36,13 @@ export function drawVeyreignGround(c,w,cam){
 }
 export function drawVeyreignEffects(c,w,cam){
  if(!w.dungeonState?.veyreign)return;c.save();const e=w.enemies.find(e=>e.veyreignLord),a=e?.veyreignAttack;
+ if(e?.veyreignTransform!=null){const t=e.veyreignTransform/VEYREIGN_TRANSFORM_SECONDS,x=e.x-cam.x,y=e.y-cam.y;c.strokeStyle='#c53655';c.lineWidth=3;for(let i=0;i<5;i++){c.beginPath();c.ellipse(x,y,35+i*35+t*90,12+i*10,0,0,Math.PI*2);c.stroke();}for(let i=0;i<18;i++){const angle=i*Math.PI/9+t*3,r=30+(1-t)*170;c.fillStyle=i%2?'#dca465':'#ad2346';c.fillRect(Math.round(x+Math.cos(angle)*r),Math.round(y-60+Math.sin(angle)*r*.7-t*130),3,8);}c.font='bold 18px Georgia';c.fillStyle='#ffcfb8';c.textAlign='center';c.fillText('THE CROWN BREAKS. THE HUNGER REMAINS.',c.canvas.width/2,116,Math.max(140,c.canvas.width-720));}
  for(const bat of w.enemies.filter(e=>e.batBeast&&e.hp>0&&e.batAttack)){const a=bat.batAttack;c.strokeStyle=a.released?'#ef7181':'#f0c17b';c.fillStyle=a.released?'rgba(180,35,65,.45)':'rgba(230,170,90,.2)';c.beginPath();c.arc(a.target.x-cam.x,a.target.y-cam.y,75,0,Math.PI*2);c.fill();c.stroke();}
  for(const b of w.arenaBarriers||[]){c.fillStyle='#a34052';c.fillRect(b.x-cam.x,b.y-cam.y,b.w,b.h);}
+ if(a&&a.key==='surge'&&!a.released){c.strokeStyle='#f2c280';c.lineWidth=3;c.beginPath();c.arc(a.origin.x-cam.x,a.origin.y-cam.y,120,a.gap+.5,a.gap+Math.PI*2-.5);c.stroke();}
  if(a){c.strokeStyle=a.released?'#ffb5a4':'#f2c280';c.fillStyle=a.released?'rgba(183,28,59,.65)':'rgba(210,91,98,.25)';c.lineWidth=3;
-  for(const s of a.shapes){c.save();c.translate(s.x-cam.x,s.y-cam.y);c.beginPath();if(s.type==='circle')c.arc(0,0,s.radius,0,Math.PI*2);if(s.type==='ring'){c.arc(0,0,s.radius,0,Math.PI*2);c.arc(0,0,s.inner,0,Math.PI*2,true);}if(s.type==='cone'){c.moveTo(0,0);c.arc(0,0,s.radius,s.angle-s.spread/2,s.angle+s.spread/2);c.closePath();}if(s.type==='lane'){c.rotate(s.angle);c.rect(0,-s.width/2,s.length,s.width);}c.fill();c.stroke();c.restore();}
-  c.fillStyle='#ffe1bd';c.font='bold 16px Georgia';c.textAlign='center';c.fillText(VEYREIGN_MOVES[a.key].name,c.canvas.width/2,78);
+  for(const s of a.shapes){c.save();c.translate(s.x-cam.x,s.y-cam.y);c.beginPath();if(s.type==='circle')c.arc(0,0,s.radius,0,Math.PI*2);if(s.type==='ring'){if(s.gap!=null){c.arc(0,0,s.radius,s.gap+.5,s.gap+Math.PI*2-.5);c.arc(0,0,s.inner,s.gap+Math.PI*2-.5,s.gap+.5,true);c.closePath();}else{c.arc(0,0,s.radius,0,Math.PI*2);c.arc(0,0,s.inner,0,Math.PI*2,true);}}if(s.type==='cone'){c.moveTo(0,0);c.arc(0,0,s.radius,s.angle-s.spread/2,s.angle+s.spread/2);c.closePath();}if(s.type==='lane'){c.rotate(s.angle);c.rect(0,-s.width/2,s.length,s.width);}c.fill();c.stroke();c.restore();}
+  c.fillStyle='#ffe1bd';c.font=c.canvas.height<500?'bold 13px Georgia':'bold 16px Georgia';c.textAlign='center';c.fillText((e.veyreignFeral?VEYREIGN_FERAL_MOVES:VEYREIGN_MOVES)[a.key].name,c.canvas.width/2,e.veyreignFeral?118:78,Math.max(140,c.canvas.width-720));
  }
- if(w.bossArena?.phase==='active'){c.fillStyle='#f3c6b1';c.font='bold 16px Georgia';c.textAlign='center';c.fillText(`${e?.name||'Vampire Lord'} — Phase ${e?.veyreignPhase||1}`,c.canvas.width/2,54);}c.restore();
+ if(w.bossArena?.phase==='active'){c.fillStyle='#f3c6b1';c.font='bold 16px Georgia';c.textAlign='center';c.fillText(e?.veyreignFeral?`FERAL FORM · Phase ${e.veyreignPhase||1}`:`${e?.name||'Vampire Lord'} — Phase ${e?.veyreignPhase||1}`,c.canvas.width/2,e?.veyreignFeral?92:54);}c.restore();
 }

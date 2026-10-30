@@ -1,3 +1,4 @@
+import {prepareVeyreignTransformation} from './veyreignTransformation.js';
 import {regionalLegendaryPool} from './regionalLootSystem.js';
 // legendarySystem.js
 // Legendary boss loot rolls and equipment passive effects.
@@ -472,7 +473,7 @@ function formatLegendarySeconds(value) {
 
 function damageEnemiesNear(world, target, radius, damage, player, label) {
   for (const enemy of world.enemies || []) {
-    if (!enemy || enemy === target || enemy.dead || enemy.hp <= 0 || enemy.remove) continue;
+    if (!enemy || enemy === target || enemy.dead || enemy.hp <= 0 || enemy.remove || enemy.veyreignTransform!=null) continue;
     const distance = Math.hypot((enemy.x || 0) - (target.x || 0), (enemy.y || 0) - (target.y || 0));
     if (distance > radius) continue;
 
@@ -487,7 +488,7 @@ function damageEnemiesNear(world, target, radius, damage, player, label) {
       size: 12
     });
 
-    if (enemy.hp <= 0) {
+    if (enemy.hp <= 0 && !prepareVeyreignTransformation(world,enemy)) {
       enemy.dead = true;
     }
   }

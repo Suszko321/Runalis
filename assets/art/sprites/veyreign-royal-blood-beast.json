@@ -1,0 +1,17 @@
+{
+  "width": 60,
+  "height": 80,
+  "frames": 48,
+  "states": [
+    "transformation",
+    "idle",
+    "anticipation",
+    "execution",
+    "recovery",
+    "hit",
+    "death"
+  ],
+  "fps": 12,
+  "transformSeconds": 4,
+  "palette": "ash violet, royal crimson, antique gold, ivory"
+}

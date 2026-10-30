@@ -1,3 +1,4 @@
+import {prepareVeyreignTransformation} from './veyreignTransformation.js';
 import {ENCOUNTER_VERSION} from './encounterData.js';
 import {makeEnemy} from './overworldUtils.js';
 import {startQuest,openDialogue,updateQuestStageCompletion} from './dialogueSystem.js';
@@ -39,6 +40,7 @@ export function installVeyreign(w){
 }
 export function updateVeyreign(game){
  const w=game.world;if(!isVeyreign(w))return;const p=game.player,s=w.dungeonState.veyreign;if(!s)return;
+ for(const e of w.enemies||[])prepareVeyreignTransformation(w,e);
  if(s.firstVisit&&!p.quests?.active?.[VEYREIGN_QUEST]&&!p.quests?.completed?.[VEYREIGN_QUEST])startQuest(p,VEYREIGN_QUEST);
  for(const o of w.objects)if(o.direction==='down')o.locked=![0,1].every(i=>s.seals?.[`${w.floor}-${i}`]);
  if(s.firstVisit&&game.dialogue&&!s.seen[w.floor]&&!game.dialogue.active){s.seen[w.floor]=true;const c=VEYREIGN_CHAPTERS[w.floor-1];openDialogue(game.dialogue,{npcId:`veyreignChapter${w.floor}`,name:w.floor===5?'Alistair Veyreign':'The Castellan’s Echo',dialogueId:`veyreignChapter${w.floor}`,talk:`${c[0]}. ${c[2]} ${w.floor===5?'“I once opened these gates to save my people. Now I cannot remember their faces. Come. Let us see whether your mercy is stronger than mine.”':''}`},p,w);}
@@ -50,7 +52,7 @@ export function updateVeyreign(game){
  const q=p.quests?.active?.[VEYREIGN_QUEST];for(const o of q?.objectives||[])if(o.type==='storyFlag'&&p.story?.flags?.veyreign?.[o.flag.split('.').at(-1)])o.current=o.required;updateQuestStageCompletion(p,VEYREIGN_QUEST);
 }
 export function veyreignVictory(w,p){
- if(!isVeyreign(w)||!w.dungeonState.veyreign)return;const s=w.dungeonState.veyreign;s.defeated=true;s.eligible||=veyreignParty(p).map(veyreignActorKey);for(const a of veyreignParty(p)){a.veyreignCompleted=true;a.worldMemory||={};a.worldMemory.veyreignCompleted=true;}
+ if(!isVeyreign(w)||!w.dungeonState.veyreign||!w.enemies.some(e=>e.veyreignLord&&e.veyreignFeral&&e.hp<=0))return;const s=w.dungeonState.veyreign;s.defeated=true;s.eligible||=veyreignParty(p).map(veyreignActorKey);for(const a of veyreignParty(p)){a.veyreignCompleted=true;a.worldMemory||={};a.worldMemory.veyreignCompleted=true;}
 }
 export function handleVeyreignInteraction(game,o){
  if(!o.veyreignSeal)return false;const w=game.world,s=w.dungeonState.veyreign;

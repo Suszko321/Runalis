@@ -1,3 +1,4 @@
+import {prepareVeyreignTransformation} from './veyreignTransformation.js';
 import {updateVeyreignCombat} from './veyreignCombat.js';
 import {veyreignVictory} from './veyreignDungeon.js';
 import {updateMalakarCombat} from './malakarCombat.js';
@@ -583,7 +584,7 @@ function applyThornbinderDotDamage(player, enemy, world, amount, sourceName, now
     });
   }
 
-  if (enemy.hp <= 0) {
+  if (enemy.hp <= 0 && !prepareVeyreignTransformation(world,enemy)) {
     onSubclassKill(player,enemy,world,performance.now()/1000);
     enemy.dead = true;
   }
@@ -810,7 +811,7 @@ function updateFellhunterKillZone(player, world, zone, now, log) {
 }
 
 function markEnemyExposed(player, enemy, now, duration = FELLHUNTER_EXPOSED_DURATION, bonusPct = 14, options = {}) {
-  if (!enemy || enemy.dead || enemy.hp <= 0 || enemy.remove) return false;
+  if (!enemy || enemy.dead || enemy.hp <= 0 || enemy.remove || enemy.veyreignTransform!=null) return false;
 
   const bonuses = getSkillTreeBonuses(player);
   const scalar = getEnemyControlScalar(enemy);
@@ -5721,7 +5722,7 @@ function handleEnemyDeath(enemy, player, world, log) {
   recordRepeatableEnemyDeath(world,player,enemy);
   enemy.dead = true;
   enemy.hp = 0;
-  enemy.removeTimer = enemy.groveMother||enemy.orchardCustodian||enemy.batBeast?1.05:0.35;
+  enemy.removeTimer = enemy.veyreignFeral?1.4:enemy.groveMother||enemy.orchardCustodian||enemy.batBeast?1.05:0.35;
   recordEnemyDeathVisual(enemy, {
     classId: player?.classId,
     skill: enemy.pendingWeaponSkillId || player?.classSkill,
@@ -6443,6 +6444,7 @@ function summonFightTarget(summon, target, player, world, dt, log, now) {
 }
 
 function attackSummonTarget(summon, target, player, world, log, now = performance.now()/1000) {
+  if(target.veyreignTransform!=null)return;
   if (summon.attackCooldown > 0 || Math.hypot(target.x-summon.x,target.y-summon.y) > (summon.attackRange || 34) + (target.radius || 0)) return;
   if (!hasLineOfSight(world,summon.x,summon.y,target.x,target.y)) return;
 
@@ -6537,7 +6539,7 @@ function attackSummonTarget(summon, target, player, world, log, now = performanc
     }
   }
 
-  if (target.hp <= 0) {
+  if (target.hp <= 0 && !prepareVeyreignTransformation(world,target)) {
     target.dead = true;
   }
 
@@ -6753,7 +6755,7 @@ function isEnemySoaked(enemy, now = performance.now() / 1000) {
 
 function damageEnemyDirect(player, world, enemy, damage, skill, log, options = {}) {
   options.sourceAbilityId = options.sourceAbilityId || resolveAbilitySourceName(options.sourceName);
-  if (!enemy || enemy.dead || enemy.hp <= 0 || enemy.remove) return false;
+  if (!enemy || enemy.dead || enemy.hp <= 0 || enemy.remove || enemy.veyreignTransform!=null) return false;
   const sunken=isSunkenDamage(player,options),sunkenNow=options.now??performance.now()/1000,sunkenPower=damage;
   if(options.sourceAbilityId&&!options.dot&&!options.proc&&!options.sunkenBurn&&!options.oathBlade&&options.source!=='summon'){
     const sourceAbility=resolveAbilityMorph(player,getAbilityById(options.sourceAbilityId),options.sourceMorph||options.subclassId||getSelectedAbilityMorph(player,options.sourceAbilityId));
@@ -6949,7 +6951,7 @@ function damageEnemyDirect(player, world, enemy, damage, skill, log, options = {
     });
   }
 
-  if (enemy.hp <= 0) {
+  if (enemy.hp <= 0 && !prepareVeyreignTransformation(world,enemy)) {
     enemy.dead = true;
     recordEnemyDeathVisual(enemy, {
       classId: player.classId,

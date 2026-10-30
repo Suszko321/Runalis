@@ -24,7 +24,9 @@ a committed hunting charge, frozen heartbeat marks for each player, crossing
 blood lanes, and an outer midnight ring with a safe inner circle. All attacks
 have tells and impact effects; Bat Beasts have their own delayed diving attack.
 Health: 14,000 / 28,000 / 43,400 / 58,800 for one through four players. The
-attempt's party size cannot shrink when a player disconnects or falls.
+attempt's party size cannot shrink when a player disconnects or falls. Emptying
+this human bar now triggers a mandatory royal beast transformation and a larger
+second bar; see [Royal Blood Beast](../veyreign-feral/README.md).
 
 Defeating the first lord records personal completion for participating actors.
 Each eligible player separately refuses his blood or explicitly accepts permanent

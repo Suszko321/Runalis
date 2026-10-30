@@ -1,3 +1,4 @@
+import {frameVeyreignCamera} from './veyreignTransformation.js';
 import {updateMalakarEncounter,handleMalakarInput,handleMalakarKeyboard} from './malakarEncounter.js';
 import {renderMobileDialogue} from './mobileText.js';
 import {updatePartyEntry,handlePartyEntryInput,handlePartyEntryKeyboard,partyEntryPending,cancelPartyEntry} from './partyEntrySystem.js';
@@ -1722,6 +1723,7 @@ class RunalisGame {
       ? getSharedPartyCameraFocus(this.player)
       : getPartyCameraFocus(this.player);
     if(this.world?.dungeonState?.malakar?.mode==='active'){const boss=this.world.enemies.find(e=>e.malakarSolo);if(boss){cameraFocus.x=(cameraFocus.x+boss.x)/2;cameraFocus.y=(cameraFocus.y+boss.y-130)/2;}}
+    frameVeyreignCamera(this.world,cameraFocus,this.canvas.width,this.canvas.height);
     this.camera.x += (cameraFocus.x - this.canvas.width / 2 - this.camera.x) * 0.12;
     this.camera.y += (cameraFocus.y - this.canvas.height / 2 - this.camera.y) * 0.12;
 
@@ -1785,6 +1787,7 @@ class RunalisGame {
       ? getSharedPartyCameraFocus(this.player)
       : getPartyCameraFocus(this.player);
     if(this.world?.dungeonState?.malakar?.mode==='active'){const boss=this.world.enemies.find(e=>e.malakarSolo);if(boss){cameraFocus.x=(cameraFocus.x+boss.x)/2;cameraFocus.y=(cameraFocus.y+boss.y-130)/2;}}
+    frameVeyreignCamera(this.world,cameraFocus,this.canvas.width,this.canvas.height);
     this.camera.x += (cameraFocus.x - this.canvas.width / 2 - this.camera.x) * 0.12;
     this.camera.y += (cameraFocus.y - this.canvas.height / 2 - this.camera.y) * 0.12;
   }
