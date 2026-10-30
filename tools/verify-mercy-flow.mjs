@@ -74,7 +74,7 @@ assert.equal(stage(),'failedPurificationSite');
 function clearDungeon(id){
  const entrance=g.world.continentRuntime.allObjects.find(o=>o.dungeonId===id);assert(entrance,`entrance ${id}`);Object.assign(g.player,{x:entrance.x,y:entrance.y});assert(enterDungeon(g,entrance));stage();
  if(id==='ashenOrchard'){
-  runChoices(['plan']);
+  talk('orchardTamsin',['plan']);
   for(let i=0;i<2;i++){for(const e of g.world.enemies.filter(e=>e.orchardValveGuard===i))e.hp=0;updateEnemies(0,g.player,g.world,g.log,2,g);const valve=g.world.objects.find(o=>o.orchardValve===i);Object.assign(g.player,{x:valve.x,y:valve.y});interact(g);updateOrchardDungeon(g);}
  }
  while(g.world.floor<g.world.totalFloors){const stairs=g.world.objects.find(o=>o.kind==='dungeonStairs'&&o.direction==='down');if(id==='demonCultLair'&&stairs.targetFloor===g.world.totalFloors){g.world.enemies=[];transitionDungeonFloor(g,stairs);answerMalakarReady(g,0,true);skipMalakarRitual(g);chooseMalakarIntroduction(g,'relic');updateMalakarEncounter(g,3.1);}else assert(transitionDungeonFloor(g,stairs));}

@@ -1,6 +1,6 @@
 import {TILE} from './data.js';
 import {makeEnemy} from './overworldUtils.js';
-import {startQuest,openDialogue,updateQuestStageCompletion} from './dialogueSystem.js';
+import {startQuest,updateQuestStageCompletion} from './dialogueSystem.js';
 import {getStoryFlag,setStoryFlag} from './storyProgress.js';
 import {initializeDungeonArena} from './dungeonArenaSystem.js';
 import {GROVE_QUEST} from './blightedGroveData.js';
@@ -33,7 +33,6 @@ export function createBlightedGrove(options={}){
 }
 export function beginBlightedGrove(game){
  if(!isBlightedGrove(game.world))return;startQuest(game.player,GROVE_QUEST);
- openDialogue(game.dialogue,game.world.objects.find(o=>o.groveSkull),game.player,game.world);
  updateBlightedGrove(game);
 }
 export function updateBlightedGrove(game){

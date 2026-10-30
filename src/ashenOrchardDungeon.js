@@ -1,6 +1,6 @@
 import {makeEnemy} from './overworldUtils.js';
 import {configureEncounterEnemy,dungeonEncounterProfile} from './encounterData.js';
-import {startQuest,openDialogue,updateQuestStageCompletion} from './dialogueSystem.js';
+import {startQuest,updateQuestStageCompletion} from './dialogueSystem.js';
 import {getStoryFlag} from './storyProgress.js';
 import {ORCHARD_QUEST} from './ashenOrchardData.js';
 import {tuneDungeonBoss} from './dungeonBossDifficulty.js';
@@ -48,7 +48,7 @@ export function updateOrchardDungeon(game){
  const q=p.quests?.active?.[ORCHARD_QUEST];for(const o of q?.objectives||[])if(o.type==='storyFlag'&&getStoryFlag(p,o.flag)||o.type==='clearDungeon'&&p.completedDungeons?.ashenOrchard)o.current=o.required;
  updateQuestStageCompletion(p,ORCHARD_QUEST);
 }
-export function beginOrchardDungeon(game){if(!isOrchardDungeon(game.world))return;updateOrchardDungeon(game);const npc=game.world.objects.find(o=>o.npcId==='orchardTamsin');if(npc&&game.player.quests?.active?.[ORCHARD_QUEST]?.currentStageId==='attendant')openDialogue(game.dialogue,npc,game.player,game.world);}
+export function beginOrchardDungeon(game){if(isOrchardDungeon(game.world))updateOrchardDungeon(game);}
 export function handleOrchardInteraction(game,o){
  if(o.orchardValve==null)return false;
  if(game.world.enemies.some(e=>e.orchardValveGuard===o.orchardValve&&!e.dead&&e.hp>0)){game.log?.('The return wheel is tangled in living roots. Clear its pump tenders first.');return true;}return false;

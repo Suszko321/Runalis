@@ -59,7 +59,10 @@ export function updateVeyreign(game){
  for(const e of w.enemies||[])prepareVeyreignTransformation(w,e);
  if(s.firstVisit&&!owner.quests?.active?.[VEYREIGN_QUEST]&&!owner.quests?.completed?.[VEYREIGN_QUEST])startQuest(owner,VEYREIGN_QUEST);
  repairVeyreignMechanisms(w);
- if(s.firstVisit&&game.dialogue&&!s.seen[w.floor]&&!game.dialogue.active){s.seen[w.floor]=true;const c=VEYREIGN_CHAPTERS[w.floor-1];openDialogue(game.dialogue,{npcId:`veyreignChapter${w.floor}`,name:w.floor===5?'Alistair Veyreign':'The Castellan’s Echo',dialogueId:`veyreignChapter${w.floor}`,talk:`${c[0]}. ${c[2]} ${w.floor===5?'“I once opened these gates to save my people. Now I cannot remember their faces. Come. Let us see whether your mercy is stronger than mine.”':''}`},p,w);}
+ if(s.firstVisit&&w.floor===5&&w.bossArena?.phase==='active'&&w.arenaBarriers?.length&&game.dialogue&&!s.seen[5]&&!game.dialogue.active){
+  const boss=w.enemies.find(e=>e.veyreignLord&&e.hp>0&&!e.dead);
+  if(boss&&openDialogue(game.dialogue,{...boss,npcId:'veyreignChapter5',dialogueId:'veyreignChapter5'},p,w))s.seen[5]=true;
+ }
  if(w.bossArena?.phase==='active'&&!s.eligible)s.eligible=veyreignParty(owner).filter(a=>a.hp>0).map(veyreignActorKey);
  if(s.firstVisit&&s.defeated){
   if(!w.objects.some(o=>o.npcId==='veyreignAlistair')&&!s.finalized)w.objects.push({id:'veyreign-offer',kind:'npc',npcId:'veyreignAlistair',name:'Alistair Veyreign — The Last Choice',...point(48,30),vampire:true,skin:'#d2b9aa',shirt:'#632937',hair:'#24202a',r:20,stationary:true,forceLabel:true,veyreignAuthored:true});
@@ -71,6 +74,7 @@ export function veyreignVictory(w,p){
  if(!isVeyreign(w)||!w.dungeonState.veyreign||!w.enemies.some(e=>e.veyreignLord&&e.veyreignFeral&&e.hp<=0))return;const s=w.dungeonState.veyreign;s.defeated=true;s.eligible||=veyreignParty(p).map(veyreignActorKey);for(const a of veyreignParty(p)){a.veyreignCompleted=true;a.worldMemory||={};a.worldMemory.veyreignCompleted=true;}
 }
 export function handleVeyreignInteraction(game,o){
+ if(o.veyreignChapter){const opened=openDialogue(game.dialogue,o,game.player,game.world);if(opened)game.world.dungeonState.veyreign.seen[o.veyreignChapter]=true;return true;}
  if(!o.veyreignSeal)return false;const w=game.world,s=w.dungeonState.veyreign;
  if(w.enemies.some(e=>e.veyreignGuard===o.veyreignSeal&&!e.dead&&!e.remove&&e.hp>0)){game.log?.('The blood tithe still has living guardians. Defeat the Vampire Spawns and Bat Beasts first.');return true;}
  s.seals[o.veyreignSeal]=true;o.interactable=false;o.activated=true;game.log?.('The blood seal breaks. A heartbeat falls silent in the walls.');
@@ -79,7 +83,14 @@ export function handleVeyreignInteraction(game,o){
 export function leaveVeyreign(w,p){if(!isVeyreign(w))return;for(const a of veyreignParty(p))chooseVeyreignFate(a,w,'kill');}
 
 export function repairVeyreignMechanisms(w){
- const s=w.dungeonState.veyreign;s.seals||={};const broken=[0,1].filter(i=>s.seals[`${w.floor}-${i}`]).length;
+ const s=w.dungeonState.veyreign;s.seals||={};
+ if(!s.firstVisit)w.objects=w.objects.filter(o=>!o.veyreignChapter);
+ if(s.firstVisit&&w.floor<5&&!w.objects.some(o=>o.veyreignChapter===w.floor))w.objects.push({
+  id:`veyreign-echo-${w.floor}`,kind:'npc',npcId:`veyreignChapter${w.floor}`,dialogueId:`veyreignChapter${w.floor}`,
+  name:'Castellan Edrik’s Echo',...point(69,121),r:14,stationary:true,disposition:'friendly',interactable:true,
+  forceLabel:true,hideLabel:false,bodyType:'male',skin:'#a9bac4',hair:'#c5c5c5',shirt:'#4c5268',pants:'#292a36',
+  veyreignAuthored:true,veyreignChapter:w.floor
+ });const broken=[0,1].filter(i=>s.seals[`${w.floor}-${i}`]).length;
  for(const o of w.objects){
   if(o.veyreignSeal){o.dungeonMechanism=true;o.questArt='bloodSeal';o.forceLabel=true;o.hideLabel=false;o.labelPriority=12;o.interactable=!s.seals[o.veyreignSeal];o.activated=!!s.seals[o.veyreignSeal];}
   if(o.kind==='dungeonStairs'&&o.direction==='down'){o.locked=broken<2;o.name=broken<2?`Blood Stair — Break the Seals (${broken}/2)`:'Blood Stair — Unsealed';o.lockedMessage='Break both red blood-seal pedestals in the western archive and eastern chapel. Clear each pedestal’s guardians, then interact with it.';}

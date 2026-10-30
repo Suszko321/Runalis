@@ -62,6 +62,7 @@ export function beginMalakarArrival(game){
  const s=encounterState(w);if(s.mode==='victory')return;
  s.mode=s.seenIntro?'introduction':'ritual';s.elapsed=0;s.phase=1;s.grace=2;s.attack=null;s.queue=[];
  for(const [i,p]of partyMembers(game.player).entries()){p.x=(18.5+i)*TILE;p.y=28*TILE;p.dirX=0;p.dirY=-1;p.summons=[];}
+ seal(w);s.sealed=true;
  w.bossArena&&(w.bossArena.phase='dormant');showEncounterPanel(game);
 }
 export function chooseMalakarIntroduction(game,choice){

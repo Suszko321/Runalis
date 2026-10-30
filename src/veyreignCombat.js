@@ -36,6 +36,7 @@ export function updateVeyreignCombat(e,w,p,dt,now,game){
  if(e.veyreignLord)prepareVeyreignTransformation(w,e);
  if(e.veyreignLord&&e.veyreignTransform!=null){e.veyreignTransform+=dt;e.hp=1;e.arenaDormant=true;e.hitFlash=0;if(e.veyreignTransform>=VEYREIGN_TRANSFORM_SECONDS){delete e.veyreignTransform;e.hp=e.maxHp;e.arenaDormant=false;e.veyreignRecovery=1.1;game?.log?.('The royal blood takes its true shape. The second reign begins.');}return true;}
  if(!e.veyreignLord||e.dead||e.hp<=0)return false;
+ if(game?.dialogue?.active&&game.dialogue.speakerId==='veyreignChapter5')return true;
  if(w.bossArena?.phase!=='active'){e.veyreignAttack=null;e.veyreignRecovery=2;return true;}
  e.arenaDormant=false;e.aggro=e.isInCombat=true;e.speed=0;
  if(e.veyreignFeral)return updateFeralVeyreign(e,w,p,dt,now,game);
