@@ -1,0 +1,87 @@
+const {chromium}=require(process.env.RUNALIS_NODE_MODULES+'/playwright');
+const fs=require('node:fs'),assert=require('node:assert/strict'),launch=require('./browser-game-smoke.cjs');
+(async()=>{
+ const browser=await chromium.launch({channel:'msedge',headless:true}),page=await browser.newPage({viewport:{width:1280,height:800}}),errors=[],checks=[];
+ fs.mkdirSync('docs/coop-readiness',{recursive:true});page.on('pageerror',e=>errors.push(e.message));
+ try{
+  await page.addInitScript(()=>{window.testPads=[];navigator.getGamepads=()=>window.testPads;});
+  await page.route('**/src/main.js*',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync('src/main.js','utf8')+'\nwindow.coopGame=()=>currentGame;'}));
+  await launch(page);await page.waitForFunction(()=>coopGame()?.started&&!document.querySelector('#loadingScreen')?.classList.contains('active'));
+  checks.push('Single-player starts through profile menu');
+  await page.evaluate(async()=>{
+   const {createPlayer,chooseClass}=await import('/src/player.js'),{readProfiles,writeProfiles,createSaveState}=await import('/src/gameSave.js');
+   const p=createPlayer('Coop browser P2');chooseClass(p,'fellhunter');p.profileId='coopBrowser';const profiles=readProfiles();profiles.coopBrowser={id:'coopBrowser',name:p.name,updated:2,state:createSaveState({player:p,world:coopGame().world})};writeProfiles(profiles);
+   window.setPad=(slot,axis=0,button=-1)=>{testPads[slot]={id:'Simulated '+slot,index:slot,connected:true,mapping:'standard',axes:[axis,0,0,0],buttons:Array.from({length:16},(_,i)=>({pressed:i===button,value:i===button?1:0}))};};setPad(0);setPad(1,0,9);
+  });
+  await page.locator('#couchCoopJoinOverlay.active').waitFor();await page.evaluate(()=>setPad(1));
+  await page.locator('[data-coop-load]:not([disabled])').filter({hasText:'Coop browser P2'}).click();
+  await page.waitForFunction(()=>coopGame().player.coop.players.length===1);
+  checks.push('Second simulated gamepad joins through real profile picker');
+  const before=await page.evaluate(()=>{const g=coopGame();setPad(0,1);setPad(1,-1);return [g.player.x,g.player.coop.players[0].x];});
+  await page.waitForFunction(([a,b])=>coopGame().player.x>a+8&&coopGame().player.coop.players[0].x<b-8,before);
+  await page.evaluate(()=>{setPad(0);setPad(1);});checks.push('Both gamepads move their own characters simultaneously');
+  const unplug=await page.evaluate(()=>{const g=coopGame();testPads[0]=null;setPad(1,1);return {x:g.player.x,ally:g.player.coop.players[0].x,id:g.player.coop.players[0].profileId};});
+  await page.waitForFunction(x=>coopGame().player.coop.players[0]?.x>x+8,unplug.ally);
+  assert.equal(await page.evaluate(()=>coopGame().player.x),unplug.x);assert.equal(await page.evaluate(()=>coopGame().player.coop.players[0].profileId),unplug.id);
+  await page.evaluate(()=>{setPad(0);testPads[1]=null;});await page.waitForFunction(()=>coopGame().player.coop.players[0].controllerDisconnected);
+  await page.evaluate(()=>setPad(1));await page.waitForFunction(()=>!coopGame().player.coop.players[0].controllerDisconnected);
+  checks.push('Either controller can unplug and reconnect without stealing inputs or deleting P2');
+  await page.evaluate(()=>setPad(1,0,8));await page.waitForSelector('.panel.open');
+  assert(await page.evaluate(()=>coopGame().uiOwner===coopGame().player.coop.players[0]));
+  await page.evaluate(()=>setPad(1));await page.evaluate(()=>setPad(1,0,1));await page.waitForFunction(()=>!document.querySelector('.panel.open'));await page.evaluate(()=>setPad(1));
+  checks.push('P2 opens and closes their own menu through controller input');
+  const combat=await page.evaluate(async()=>{
+   const {createPlayer,chooseClass}=await import('/src/player.js'),{requestBasicAttack}=await import('/src/combatMoves.js'),{updateCombat,updateEnemies}=await import('/src/combat.js'),{makeEnemy}=await import('/src/world.js');
+   const a=createPlayer('Combat P1'),b=createPlayer('Combat P2');for(const [i,p]of [a,b].entries()){chooseClass(p,'oathkeeper');Object.assign(p,{slot:i+1,x:300,y:300,dirX:1,dirY:0});p.equipment.weapon='oldKnife';}a.coop={players:[b]};
+   const w={mode:'dungeon',name:'Controlled arena',width:32,height:32,tiles:Array.from({length:32},()=>Array.from({length:32},()=>({biome:'grass',passable:true}))),objects:[],enemies:[],effects:[],drops:[]};
+   const e=makeEnemy('rat','coop-melee-target','Target',0,0,{x:322,y:300,hp:50000,maxHp:50000,speed:0,damage:10});w.enemies=[e];
+   const now=performance.now()/1000;for(const p of [a,b])requestBasicAttack(p,w,()=>{},now);
+   for(let i=1;i<=20;i++)for(const p of [a,b])updateCombat(p,w,{},.05,now+i*.05,()=>{});
+   const hits=Object.values(e.combatContributors||{}).filter(c=>c.damage>0).length;
+   a.x=900;b.x=300;b.y=300;b.invulnerableUntil=0;const hp=b.hp;
+   for(let i=1;i<=100;i++)updateEnemies(.05,a,w,()=>{},now+2+i*.05);
+   return {hits,p2Damaged:b.hp<hp,p1Unhurt:a.hp===a.maxHp};
+  });assert.equal(combat.hits,2);assert(combat.p2Damaged);assert(combat.p1Unhurt);
+  checks.push('Real combat updates register both players on one enemy and enemy attacks damage P2 independently');
+  const radar=await page.evaluate(async()=>{
+   const {drawEntityRadar}=await import('/src/minimapRadar.js'),{partyColor}=await import('/src/partyIdentity.js');
+   const canvas=document.createElement('canvas');canvas.width=canvas.height=168;const ctx=canvas.getContext('2d'),p={slot:1,x:0,y:0,hp:100},ally={slot:2,x:5000,y:0,hp:100,dirX:0,dirY:-1};p.coop={players:[ally]};
+   const g={player:p,world:{mode:'overworld',tileSize:32,objects:[],enemies:[]}};
+   const stats=drawEntityRadar(ctx,g,168,{labelPlayers:true});const pixels=ctx.getImageData(149,82,6,6).data,color=partyColor(ally),rgb=color.slice(1).match(/../g).map(v=>parseInt(v,16));
+   let found=false;for(let i=0;i<pixels.length;i+=4)if(rgb.every((v,k)=>pixels[i+k]===v))found=true;
+   ally.hp=0;const downed=drawEntityRadar(ctx,g,168);ally.active=false;const left=drawEntityRadar(ctx,g,168);
+   return {found,markers:stats.markers,downed:downed.markers,left:left.markers};
+  });assert(radar.found);assert.equal(radar.markers,2);assert.equal(radar.downed,2);assert.equal(radar.left,1);
+  checks.push('Canvas pixels confirm correctly coloured edge arrow; downed allies remain visible and departed allies disappear');
+  await page.evaluate(async()=>{const g=coopGame(),{createWorld}=await import('/src/world.js');g.world=createWorld({skipPublishedOverride:true});Object.assign(g.player,g.world.spawn);Object.assign(g.player.coop.players[0],{x:g.player.x+1400,y:g.player.y});});
+  await page.waitForFunction(()=>coopGame().currentSplitLayout?.members.length===2);await page.screenshot({path:'docs/coop-readiness/split-screen.png'});
+  checks.push('Overworld renders both viewports with individual minimaps');
+  await page.evaluate(()=>{const g=coopGame();Object.assign(g.player.coop.players[0],{x:g.player.x+32,y:g.player.y});});
+  await page.waitForFunction(()=>coopGame().cameraMode==='sharedParty');
+  await page.evaluate(()=>{const g=coopGame();g.player.coop.players[0].x=g.player.x+g.canvas.width;});
+  await page.waitForFunction(()=>coopGame().cameraMode==='sharedParty'&&coopGame().coopCameraZoom<.95);
+  await page.evaluate(()=>{const g=coopGame();g.player.coop.players[0].x=g.player.x+g.canvas.width*3;});
+  await page.waitForFunction(()=>coopGame().splitScreenActive);
+  await page.evaluate(()=>{const g=coopGame();g.player.coop.players[0].x=g.player.x+32;g.togglePause(true);});
+  await page.locator('#pauseSettingsBtn').click();await page.locator('#coopCameraToggle').click();
+  assert.equal(await page.locator('#coopCameraToggle').innerText(),'Co-op Camera: Forced Splitscreen');
+  await page.locator('#resumeBtn').click();await page.waitForFunction(()=>coopGame().splitScreenActive);
+  await page.evaluate(()=>coopGame().togglePause(true));await page.locator('#coopCameraToggle').click();await page.locator('#resumeBtn').click();
+  await page.waitForFunction(()=>coopGame().cameraMode==='sharedParty');
+  checks.push('Close players join, separation zooms then splits, and saved pause Settings toggle forces split at close range');
+  const hud=await page.evaluate(async()=>{
+   const {drawSplitScreenHud}=await import('/src/splitScreenHud.js'),{createPlayer}=await import('/src/player.js');
+   const draw=(hp,xp,poison)=>{const p=createPlayer('HUD');p.hp=hp;p.maxHp=100;p.skillState.combat.xp=xp;p.poisonTimer=poison;
+    const ctx=document.createElement('canvas').getContext('2d'),labels=[],fill=ctx.fillText.bind(ctx);ctx.fillText=(s,...args)=>{labels.push(s);fill(s,...args);};
+    drawSplitScreenHud(ctx,p,{x:0,y:0,width:640,height:800},{memberCount:2});return labels;};
+   return [draw(17,7,3),draw(91,19,0)];
+  });assert(hud[0].includes('17/100'));assert(hud[1].includes('91/100'));assert(hud[0].some(s=>s.startsWith('7/')&&s.endsWith(' XP')));assert(hud[1].some(s=>s.startsWith('19/')&&s.endsWith(' XP')));assert(hud[0].includes('Poisoned'));assert(!hud[1].includes('Poisoned'));
+  checks.push('HUD draws independent health, XP and poison status for each actor');
+  await page.evaluate(async()=>{const g=coopGame(),{createDungeonWorld}=await import('/src/dungeonSystem.js');g.world=createDungeonWorld({seed:'coop-shared-view'});Object.assign(g.player,g.world.spawn);Object.assign(g.player.coop.players[0],{x:g.player.x+32,y:g.player.y});});
+  await page.waitForFunction(()=>coopGame().cameraMode==='sharedParty');await page.waitForTimeout(600);await page.screenshot({path:'docs/coop-readiness/shared-dungeon.png'});
+  checks.push('Dungeon uses established shared camera with party radar and individual HUDs');
+  await page.evaluate(async()=>{const g=coopGame(),p=g.player.coop.players[0];const {saveAllCouchCoopProfiles,leaveCouchCoopPlayer}=await import('/src/couchCoop.js');if(!saveAllCouchCoopProfiles(g))throw Error('Coop save failed');leaveCouchCoopPlayer(g,p);});
+  await page.waitForFunction(()=>coopGame().player.coop.players.length===0&&!coopGame().splitScreenActive);checks.push('Save and explicit leave return to single-player');
+  assert.deepEqual(errors,[]);fs.writeFileSync('docs/coop-readiness/browser-results.json',JSON.stringify({checks,errors},null,2));console.log(JSON.stringify({checks,errors},null,2));
+ }finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

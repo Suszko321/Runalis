@@ -78,6 +78,8 @@ export function applyDungeonPartyTether(game, actor, nextX, nextY) {
   if (!game || !actor || !isSharedPartyCameraWorld(game.world)) {
     return { x: nextX, y: nextY, limited: false };
   }
+  // Adaptive/forced cameras handle separation; arena barriers still own entry.
+  if (typeof game.isSharedPartyCameraMode === 'function') return {x:nextX,y:nextY,limited:false};
 
   if (String(game.world?.mode || '').toLowerCase() === 'pvparena') {
     return { x: nextX, y: nextY, limited: false };

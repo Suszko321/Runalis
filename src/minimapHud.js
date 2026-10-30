@@ -1,4 +1,5 @@
 import {drawEntityRadar} from './minimapRadar.js';
+import {PARTY_COLORS,partyColor} from './partyIdentity.js';
 import { BIOMES, TILE } from './data.js';
 import { ACT1_OVERWORLD_DISPLAY_NAME, normalizePlayerFacingWorldName } from './worldNames.js';
 
@@ -9,7 +10,6 @@ const DUNGEON_CELL_SIZE = 4;
 const DUNGEON_REVEAL_RADIUS_CELLS = 2;
 const MARKER_DISCOVERY_RADIUS_TILES = 7;
 
-const PARTY_COLORS = ['#f5f1e6'];
 const radarRefresh = new WeakMap();
 
 const SERVICE_KINDS = new Set([
@@ -111,7 +111,7 @@ export function renderMinimapHud(game) {
           <b></b>
           <span></span>
         </div>
-        <canvas id="runalisMinimapCanvas" role="img" aria-label="Local map: player facing arrow, road lines and explored dungeon walls; white friendly dots, red enemies, yellow entrances, blue quests; crown bosses and diamond elites"></canvas>
+        <canvas id="runalisMinimapCanvas" role="img" aria-label="Local map: gold P1, green P2, purple P3, cyan P4; edge arrows point to teammates; white friendly dots, red enemies, yellow entrances, blue quests; crown bosses and diamond elites"></canvas>
       </div>
     `;
     document.body.appendChild(hud);
@@ -185,11 +185,23 @@ export function drawMinimapPanel(ctx, game, viewport, options = {}) {
   ctx.restore();
 }
 
+export function drawPlayerMinimap(ctx, game, actor, viewport, camera, options = {}) {
+  const size = options.size || Math.max(72, Math.min(124, Math.floor(viewport.width * .23), Math.floor(viewport.height * .29)));
+  const x = options.x ?? viewport.x + viewport.width - size - 9;
+  const y = options.y ?? viewport.y + 9;
+  ctx.save();
+  ctx.translate(x, y);
+  drawMinimap(ctx, game, size, {centerWorld:actor,camera,viewport,labelPlayers:true});
+  ctx.restore();
+}
+
 function shouldHideMinimap(game) {
   if (!game?.started || !game?.world || !game?.player) return true;
   if (game.paused) return true;
-  if (getActiveCoopActors(game).length > 0) return true;
-  if (game.dialogue?.active && getActiveCoopActors(game).length === 0) return true;
+  // Local co-op renders radar into its canvas viewports. Online actors keep
+  // the ordinary single-view HUD on each device.
+  if (getActiveCoopActors(game).some(actor => !actor.networkRemote)) return true;
+  if (game.dialogue?.active) return true;
   if (document.querySelector('.panel.open')) return true;
   if (document.getElementById('characterCreatorOverlay')?.classList.contains('active')) return true;
   if (document.getElementById('marketShopOverlay')?.classList.contains('active')) return true;
@@ -336,7 +348,7 @@ function drawPartyLegend(ctx, game, viewport, y) {
   party.forEach((actor, index) => {
     const x = startX + index * 54;
     if (x > viewport.x + viewport.width - 48) return;
-    ctx.fillStyle = PARTY_COLORS[index % PARTY_COLORS.length];
+    ctx.fillStyle = partyColor(actor, index + 1);
     ctx.fillRect(x, y + 2, 9, 9);
     ctx.fillStyle = '#e8d8f3';
     ctx.fillText(`P${Math.max(1, Math.min(4, Number(actor?.slot || actor?.playerNumber || index + 1)))}`, x + 14, y);

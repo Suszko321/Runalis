@@ -236,16 +236,14 @@ export function resolveControllerPlayerAssignments(inputs, preferredHostSlotInde
     .slice()
     .sort((a, b) => Number(a.slotIndex) - Number(b.slotIndex));
 
-  const preferredSlot = Number(preferredHostSlotIndex);
+  const preferredSlot = preferredHostSlotIndex == null ? NaN : Number(preferredHostSlotIndex);
   const player1 = Number.isFinite(preferredSlot)
-    ? connected.find(input => Number(input.slotIndex) === preferredSlot) || connected[0] || null
+    ? connected.find(input => Number(input.slotIndex) === preferredSlot) || null
     : connected[0] || null;
 
   return {
     player1,
-    additionalPlayers: player1
-      ? connected.filter(input => Number(input.slotIndex) !== Number(player1.slotIndex))
-      : []
+    additionalPlayers: connected.filter(input => Number(input.slotIndex) !== (player1 ? Number(player1.slotIndex) : preferredSlot))
   };
 }
 

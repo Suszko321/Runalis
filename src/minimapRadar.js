@@ -3,6 +3,7 @@ import {getQuestsForNpc} from './worldContent.js';
 import {isQuestObjectVisible} from './questInteractables.js';
 import {drawMinimapLineArt} from './minimapLineArt.js';
 import {WORKSHOP_MARKERS,drawWorkshopIcon} from './workshopArt.js';
+import {partyColor,partySlot} from './partyIdentity.js';
 export const RADAR_COLORS=Object.freeze({friendly:'#f5f1e6',enemy:'#ef5554',entrance:'#edc65c',quest:'#59adff'});
 const ENTRANCES=new Set(['dungeonEntrance','towerEntrance','sideZoneEntrance','poiEntrance','poiMarker','dungeonExit','dungeonStairs','capitalGate','capitalExit','travelRouteGate']);
 const ID_FIELDS=['id','npcId','objectId','eventId','poiId','dungeonId','locationId','targetId','sourceEntityId','itemId'];
@@ -80,7 +81,7 @@ function marker(ctx,x,y,color,shape,actor){
  else ctx.arc(x,y,2.5,0,Math.PI*2);
  ctx.stroke();ctx.fill();
 }
-export function drawEntityRadar(ctx,game,size,{centerWorld=game.player,radiusTiles=28,isVisible=()=>true,isTerrainVisible=()=>true,labelPlayers=false}={}){
+export function drawEntityRadar(ctx,game,size,{centerWorld=game.player,radiusTiles=28,isVisible=()=>true,isTerrainVisible=()=>true,labelPlayers=false,camera=null,viewport=null}={}){
  const now=typeof performance!=='undefined'?performance.now():Date.now(),world=game.world,targets=targetsFor(game,now),tile=world.tileSize||32;
  const r=size/2,limit=r-12,worldRadius=radiusTiles*tile,scale=limit/worldRadius,limitSq=worldRadius*worldRadius;
  ctx.clearRect(0,0,size,size);ctx.drawImage(background(ctx,size),0,0);ctx.save();ctx.beginPath();ctx.arc(r,r,r-9,0,Math.PI*2);ctx.clip();
@@ -97,6 +98,17 @@ export function drawEntityRadar(ctx,game,size,{centerWorld=game.player,radiusTil
  for(const e of world.enemies||[])draw(e,'enemy');
  const party=[game.player,...(game.player.coop?.players||[]).filter(p=>p&&p.active!==false)];
  for(const owner of party)for(const s of owner.summons||[])draw(s,'friendly');
- for(const [i,p] of [...party.entries()].reverse()){draw(p,p===game.player?'player':'friendly');if(labelPlayers){ctx.fillStyle=RADAR_COLORS.friendly;ctx.font='9px sans-serif';ctx.fillText(`P${i+1}`,r+(p.x-centerWorld.x)*scale+5,r+(p.y-centerWorld.y)*scale-5);}}
+ // Party location remains visible through fog and while downed so allies can
+ // find each other. Edge arrows point toward the actor, never their facing.
+ for(const [i,p] of [...party.entries()].reverse()){
+  if(p.active===false)continue;
+  const dx=Number(p.x)-Number(centerWorld.x),dy=Number(p.y)-Number(centerWorld.y),distance=Math.hypot(dx,dy);
+  if(!Number.isFinite(distance))continue;
+  const outsideView=p!==centerWorld&&camera&&viewport&&(p.x<camera.x||p.x>camera.x+viewport.width||p.y<camera.y||p.y>camera.y+viewport.height);
+  const edge=distance>worldRadius||outsideView;
+  const factor=edge&&distance>0?(limit-6)/distance:Math.min(scale,distance>0?(limit-6)/distance:scale),x=r+dx*factor,y=r+dy*factor,color=partyColor(p,i+1);
+  marker(ctx,x,y,color,'arrow',edge?{dirX:dx,dirY:dy}:p);counts.markers++;
+  if(labelPlayers){ctx.fillStyle=color;ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText(`P${partySlot(p,i+1)}`,Math.max(16,Math.min(size-16,x)),Math.max(19,Math.min(size-18,y-9)));}
+ }
  ctx.restore();ctx.canvas.__workshopMarkers=counts.services;ctx.canvas.__workshopMarkerSize=size;return counts;
 }

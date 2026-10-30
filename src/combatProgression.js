@@ -69,6 +69,9 @@ export function allocateEncounterXP(actor, contribution, budget) {
   if (!weighted(weights, participation, XP_ALLOCATION.participation)) distribute(weights, SURVIVAL_ATTRIBUTES, XP_ALLOCATION.participation);
   return Object.entries(weights).map(([skillId, weight]) => ({ skillId, base:budget * weight, amount:budget * weight * affinityMultiplier(actor, skillId) }));
 }
+export function resolveEnemyKillActor(enemy, fallback) {
+  return Object.values(enemy?.combatContributors || {}).find(c => c.actorId === enemy.lastDamagedByActorId)?.actor || fallback;
+}
 export function grantSharedCombatKillXp(finalActor, enemy, baseXp, log) {
   if (!enemy || enemy.combatSkillXpAwarded) return;
   if (enemy.trainingDummy || enemy.friendly) {enemy.combatSkillXpAwarded=true;return;}
@@ -80,7 +83,7 @@ export function grantSharedCombatKillXp(finalActor, enemy, baseXp, log) {
   enemy.combatSkillXpAwarded = true;
   const contributors = Object.values(enemy.combatContributors || {}).filter(c => c.actor && (c.damage > 0 || Object.values(c.support || {}).some(v => v > 0)));
   const qualifying = contributors.filter(c => c.playerParticipation && Math.hypot((c.actor.x || 0) - (enemy.x || 0), (c.actor.y || 0) - (enemy.y || 0)) <= 1000);
-  const credited = contributors.find(c => c.actorId === enemy.lastDamagedByActorId)?.actor || finalActor;
+  const credited = resolveEnemyKillActor(enemy, finalActor);
   const reward = safeXP(enemy.baseCombatXp ?? baseXp ?? enemy.xp ?? 0);
   if (!reward) return;
   recordEnemyAbilityStatistics(enemy, qualifying, performance.now()/1000);

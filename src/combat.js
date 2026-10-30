@@ -221,6 +221,7 @@ import {
 } from './combatFeedbackProfiles.js';
 import {
   grantSharedCombatKillXp,
+  resolveEnemyKillActor,
   recordEnemyCombatContribution
 } from './combatProgression.js';
 
@@ -5716,6 +5717,7 @@ function handleEnemyDeath(enemy, player, world, log) {
   }
 
   enemy.deathHandled = true;
+  player = resolveEnemyKillActor(enemy, player);
   if(enemy.veyreignLord)enemy.veyreignAttack=null;
   cancelEnemyAttackPresentation(enemy);enemy.telegraph=null;enemy.bossTell=null;
   if(enemy.boss)enemy.boss.pendingSpecial=null;

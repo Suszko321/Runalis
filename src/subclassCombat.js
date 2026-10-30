@@ -245,7 +245,7 @@ function hit(p,w,a,e,power,h,extra={}){
   if(e.subclassExposedUntil>now)damage*=1+(10+(bonuses.exposedDamagePct||0))/100;
   if(extra.dot)damage*=1+Math.min(40,bonuses.subclassDotPct||0)/100;
   const before=e.hp;
-  h.damage(e,Math.max(1,damage),a.skill,{sourceAbilityId:a.id,sourceName:a.baseName||a.name,element:a.element,magic:true,
+  h.damage(e,Math.max(1,damage),a.skill,{sourceAbilityId:a.id,sourceName:a.baseName||a.name,element:a.element,
     color:a.colors[0],singleTarget:a.maxHits===1,aoe:a.maxHits>1,channelTick:extra.channelTick||extra.dot,quiet:!!extra.dot,subclassApplied:true,subclassId:a.subclassId,now,magic:!(a.hunterMorph&&sub.id==='bloodhound'),...extra});
   const dealt=Math.max(0,before-e.hp);
   if(!dealt)return false;

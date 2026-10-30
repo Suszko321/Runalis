@@ -22,6 +22,9 @@ const base=process.env.RUNALIS_URL||'http://127.0.0.1:8768',out='docs/online-mul
   await host.waitForFunction(()=>[...onlineGame().onlineSession.clients.values()].some(c=>c.actor&&c.ready));await guest.waitForFunction(()=>onlineGame().player.coop.players.some(p=>p.name==='Online host'));
   await guest.waitForFunction(()=>!document.body.classList.contains('couch-coop-active')&&getComputedStyle(document.querySelector('#unitFramesHud')).display!=='none');
   checks.push('Separate browser profiles connect over native WebRTC and join the same host world');
+  const partyColours=async page=>page.evaluate(async()=>{const {partyColor}=await import('/src/partyIdentity.js'),g=onlineGame();return [g.player,...g.player.coop.players].map(p=>[p.name,partyColor(p)]).sort((a,b)=>a[0].localeCompare(b[0]));});
+  assert.deepEqual(await partyColours(host),await partyColours(guest));checks.push('Host and guest agree on each player’s minimap colour');
+  await host.waitForSelector('#runalisMinimapCanvas');await guest.waitForSelector('#runalisMinimapCanvas');checks.push('Online peers retain their standard minimap without local split-screen HUDs');
   const before=await host.evaluate(()=>onlineGame().player.coop.players[0].x);
   const stick=await guest.locator('#mobileStick').boundingBox(),client=await guest.context().newCDPSession(guest),start={id:1,x:stick.x+stick.width/2,y:stick.y+stick.height/2};
   await client.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[start]});await client.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{...start,x:start.x+40}]});

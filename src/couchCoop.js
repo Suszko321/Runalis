@@ -511,9 +511,7 @@ function getControllerInputForAlly(inputs, ally) {
 
   const expectedSlotIndex = ally.controllerSlotIndex ?? Math.max(1, (ally.slot || 2) - 1);
 
-  return inputs.find(input => input?.slotIndex === expectedSlotIndex)
-    || inputs.find(input => getPlayerSlotForControllerInput(input) === ally.slot)
-    || null;
+  return inputs.find(input => input?.slotIndex === expectedSlotIndex) || null;
 }
 
 function isSafeForCouchCoopJoin(game) {

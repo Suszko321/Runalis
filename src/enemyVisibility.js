@@ -8,7 +8,7 @@ export function setEnemyCombatViews(world,game){
   const views=members?members.map((actor,i)=>{
     const viewport=game.getSplitViewportsForMemberCount(members.length)[i];
     return {actor,...game.buildCameraForActor(actor,viewport.width,viewport.height),width:viewport.width,height:viewport.height};
-  }):[{actor:game.player,...(game.renderCamera||game.camera),width:game.canvas.width,height:game.canvas.height,shared:true}];
+  }):[{actor:game.player,...(game.renderCamera||game.camera),width:game.canvas.width/(game.coopCameraZoom||1),height:game.canvas.height/(game.coopCameraZoom||1),shared:true}];
   combatViews.set(world,views);
 }
 export function enemyWithinTargetView(enemy,target,world,margin=0){

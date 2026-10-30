@@ -92,7 +92,8 @@ import {
   toggleGameMenuChooser,
   closeGameMenu
 } from './ui.js';
-import { drawMinimapPanel, renderMinimapHud, updateMinimapExploration } from './minimapHud.js';
+import { drawMinimapPanel, drawPlayerMinimap, renderMinimapHud, updateMinimapExploration } from './minimapHud.js';
+import {cameraPreference,partyCameraLayout} from './coopCamera.js';
 
 import { TILE, getAbilityById } from './data.js';
 import { ACT1_OVERWORLD_DISPLAY_NAME, getDefaultWorldName, normalizePlayerFacingWorldName } from './worldNames.js';
@@ -960,8 +961,8 @@ class RunalisGame {
     this.input.mouseX = (event.clientX - rect.left) * scaleX;
     this.input.mouseY = (event.clientY - rect.top) * scaleY;
 
-    this.input.mouseWorldX = this.input.mouseX + this.camera.x;
-    this.input.mouseWorldY = this.input.mouseY + this.camera.y;
+    this.input.mouseWorldX = this.input.mouseX / (this.coopCameraZoom||1) + this.renderCamera.x;
+    this.input.mouseWorldY = this.input.mouseY / (this.coopCameraZoom||1) + this.renderCamera.y;
     if (!this.mobileControls) this.mouseAimPosition = {x:event.clientX,y:event.clientY};
   }
 
@@ -975,7 +976,7 @@ class RunalisGame {
     );
     const controllerNowActive = !!assignments.player1;
 
-    this.hostControllerSlotIndex = assignments.player1?.slotIndex ?? null;
+    this.hostControllerSlotIndex = assignments.player1?.slotIndex ?? this.hostControllerSlotIndex;
 
     if (controllerNowActive && !this.primaryControllerActive) {
       this.keys.clear();
@@ -1021,14 +1022,11 @@ class RunalisGame {
     const allowedSlots = new Set(
       additionalControllerInputs.map(input => Number(input.slotIndex))
     );
-    const invalidPlayers = getActiveCoopPlayers(this.player).filter(ally => {
-      if (ally.networkRemote) return false;
-      return !allowedSlots.has(Number(ally.controllerSlotIndex));
-    });
-
-    for (const ally of invalidPlayers) {
-      leaveCouchCoopPlayer(this, ally, { reason: 'controllerDisconnected' });
-      this.actorGameViews.delete?.(ally);
+    for (const ally of getActiveCoopPlayers(this.player)) {
+      if (ally.networkRemote) continue;
+      // Keep the character and profile in place during an accidental unplug.
+      // Missing controllers produce neutral input until their slot reconnects.
+      ally.controllerDisconnected = !allowedSlots.has(Number(ally.controllerSlotIndex));
     }
   }
 
@@ -1879,10 +1877,17 @@ class RunalisGame {
       const members = getActiveLocalPlayers(this.player);
       const sharedPartyHud = this.isSharedPartyCameraMode() && members.length > 1;
 
-      draw(this.ctx, this.world, this.player, this.renderCamera, {
-        hideHud: sharedPartyHud
-      });
-      this.drawPartyDirectionIndicators(
+      if (sharedPartyHud) {
+        const zoom=this.coopCameraZoom||1;
+        const surface=this.coopCameraSurface ||= document.createElement('canvas');
+        const width=Math.ceil(this.canvas.width/zoom),height=Math.ceil(this.canvas.height/zoom);
+        if(surface.width!==width)surface.width=width;
+        if(surface.height!==height)surface.height=height;
+        draw(surface.getContext('2d'),this.world,this.player,this.renderCamera,{hideHud:true});
+        this.ctx.imageSmoothingEnabled=false;
+        this.ctx.drawImage(surface,0,0,this.canvas.width,this.canvas.height);
+      } else draw(this.ctx, this.world, this.player, this.renderCamera, {hideHud:false});
+      if(!sharedPartyHud)this.drawPartyDirectionIndicators(
         this.player,
         members,
         this.renderCamera,
@@ -1943,7 +1948,10 @@ class RunalisGame {
 
   isSharedPartyCameraMode() {
     if (this.onlineSession?.role) return false;
-    return isSharedPartyCameraWorld(this.world);
+    const layout=partyCameraLayout(getActiveLocalPlayers(this.player),this.canvas.width,this.canvas.height,this.coopCameraShared??true,cameraPreference());
+    this.coopCameraShared=layout.shared;
+    this.coopCameraTargetZoom=layout.shared?layout.zoom:1;
+    return layout.shared;
   }
 
   drawSplitScreen(members) {
@@ -1967,6 +1975,7 @@ class RunalisGame {
         memberCount: members.length,
         game: this
       });
+      drawPlayerMinimap(this.ctx, this, member, viewport, camera);
     }
 
     if (members.length === 3 && viewports[3]) {
@@ -1994,6 +2003,10 @@ class RunalisGame {
     const height = this.canvas.height;
     const hudWidth = Math.min(292, Math.max(226, Math.floor(width * 0.28)));
     const hudHeight = 154;
+    const mapSize = Math.min(124, width - hudWidth * 2 - 24);
+    if (mapSize >= 72) drawPlayerMinimap(this.ctx, this, this.player,
+      {x:0,y:0,width:width/(this.coopCameraZoom||1),height:height/(this.coopCameraZoom||1)}, this.renderCamera,
+      {size:mapSize,x:(width-mapSize)/2,y:9});
     const viewports = [
       { x: 0, y: 0, width: hudWidth, height: hudHeight },
       { x: width - hudWidth, y: 0, width: hudWidth, height: hudHeight },
@@ -2346,8 +2359,8 @@ class RunalisGame {
     if (primary?.connected && !primary.mobile && primary.hasAim) this.mouseAimPosition = null;
     if (this.mouseAimPosition) {
       const rect = this.canvas.getBoundingClientRect();
-      this.input.mouseWorldX = (this.mouseAimPosition.x-rect.left)*this.canvas.width/rect.width + this.camera.x;
-      this.input.mouseWorldY = (this.mouseAimPosition.y-rect.top)*this.canvas.height/rect.height + this.camera.y;
+      this.input.mouseWorldX = (this.mouseAimPosition.x-rect.left)*this.canvas.width/rect.width/(this.coopCameraZoom||1) + this.renderCamera.x;
+      this.input.mouseWorldY = (this.mouseAimPosition.y-rect.top)*this.canvas.height/rect.height/(this.coopCameraZoom||1) + this.renderCamera.y;
     }
 
     if (primary?.connected) {
@@ -3153,13 +3166,22 @@ class RunalisGame {
   }
 
   buildRenderCamera() {
-    const width = this.canvas?.width || 0;
-    const height = this.canvas?.height || 0;
+    const shared=this.isSharedPartyCameraMode();
+    const target=shared?(this.coopCameraTargetZoom||1):1;
+    this.coopCameraSmoothZoom=shared?(this.coopCameraSmoothZoom??1)+(target-(this.coopCameraSmoothZoom??1))*.12:1;
+    this.coopCameraZoom=Math.round(this.coopCameraSmoothZoom*64)/64;
+    const width = (this.canvas?.width || 0)/this.coopCameraZoom;
+    const height = (this.canvas?.height || 0)/this.coopCameraZoom;
     const worldWidth = getWorldPixelWidth(this.world) || width;
     const worldHeight = getWorldPixelHeight(this.world) || height;
 
     this.renderCamera.x = cameraAxisPosition(this.camera.x, worldWidth, width);
     this.renderCamera.y = cameraAxisPosition(this.camera.y, worldHeight, height);
+    if(shared){
+      const focus=getSharedPartyCameraFocus(this.player);
+      this.renderCamera.x=cameraAxisPosition(focus.x-width/2,worldWidth,width);
+      this.renderCamera.y=cameraAxisPosition(focus.y-height/2,worldHeight,height);
+    }
   }
 
   // ---------------------------------------------------------------------------

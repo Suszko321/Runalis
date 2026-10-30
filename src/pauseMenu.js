@@ -3,6 +3,7 @@
 
 import { returnFromPvpArena } from './pvpArenaSystem.js';
 import {bindFullscreenButtons} from './fullscreenMenu.js';
+import {cameraPreference,COOP_CAMERA_KEY} from './coopCamera.js';
 
 export function ensurePauseOverlay(currentGame = null) {
   let overlay = document.getElementById('pauseOverlay');
@@ -44,6 +45,14 @@ export function bindPauseButtons(currentGame = null) {
   if (overlay) overlay.__runalisGame = currentGame;
   if (overlay) bindFullscreenButtons(overlay);
   const multiplayer=overlay?.querySelector('#pauseMultiplayerBtn');
+  if(overlay&&!overlay.querySelector('#pauseSettingsBtn')){
+    multiplayer?.insertAdjacentHTML('afterend','<button id="pauseSettingsBtn" type="button" aria-expanded="false">Settings</button><div id="pauseSettingsPanel" hidden><h3>Settings</h3><button id="coopCameraToggle" type="button"></button><p>Local co-op camera preference. Online players keep their own view.</p></div>');
+  }
+  const settings=overlay?.querySelector('#pauseSettingsBtn'),panel=overlay?.querySelector('#pauseSettingsPanel'),toggle=overlay?.querySelector('#coopCameraToggle');
+  if(settings)settings.onclick=()=>{panel.hidden=!panel.hidden;settings.setAttribute('aria-expanded',String(!panel.hidden));};
+  const refresh=()=>{if(toggle)toggle.textContent='Co-op Camera: '+(cameraPreference()==='forced'?'Forced Splitscreen':'Join When Close');};
+  refresh();
+  if(toggle)toggle.onclick=()=>{try{localStorage.setItem(COOP_CAMERA_KEY,cameraPreference()==='forced'?'join':'forced');}catch{}refresh();};
   if(multiplayer)multiplayer.onclick=()=>overlay.__runalisGame?.onlineSession?.openMenu();
 
   const resume = document.getElementById('resumeBtn');

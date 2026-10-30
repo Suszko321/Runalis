@@ -21,8 +21,10 @@ import {
 } from './coopReviveSystem.js';
 
 import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
+import {PARTY_COLORS as SLOT_COLORS} from './partyIdentity.js';
+import {getCombatLevelProgress} from './skills.js';
+import {getActivePassiveLabels} from './classPassives.js';
 
-const SLOT_COLORS = ['#ffcc66', '#73d18a', '#b68cff', '#66f0ff'];
 const RESOURCE_COLORS = {
   hp: '#bd6267',
   stamina: '#91ad7e',
@@ -43,7 +45,7 @@ export function drawSplitScreenHud(ctx, player, viewport, options = {}) {
   const panelWidth = Math.min(viewport.width - pad * 2, dense ? 174 : compact ? 238 : 318);
   const panelX = viewport.x + pad;
   const panelY = viewport.y + pad;
-  const panelHeight = dense ? 62 : compact ? 88 : 118;
+  const panelHeight = (dense ? 62 : compact ? 88 : 118) + 14;
 
   ctx.save();
   ctx.imageSmoothingEnabled = false;
@@ -52,7 +54,28 @@ export function drawSplitScreenHud(ctx, player, viewport, options = {}) {
   drawResourceBars(ctx, player, panelX + 8, panelY + (dense ? 24 : compact ? 31 : 39), panelWidth - 16, compact, dense);
 
   if (player.classId === 'lightbringer') {
-    drawLumenPips(ctx, player, panelX + 8, panelY + panelHeight - (dense ? 13 : 18), panelWidth - 16, compact, dense);
+    drawLumenPips(ctx, player, panelX + 8, panelY + panelHeight - (dense ? 27 : 32), panelWidth - 16, compact, dense);
+  }
+  const progress = getCombatLevelProgress(player);
+  const xpY = panelY + panelHeight - 13;
+  ctx.font = dense ? 'bold 7px sans-serif' : 'bold 9px sans-serif';
+  ctx.textAlign = 'left';ctx.textBaseline = 'top';ctx.fillStyle = color;
+  ctx.fillText(`Lv ${progress.level}`, panelX + 8, xpY);
+  ctx.textAlign = 'right';ctx.fillStyle = '#f5edf8';
+  ctx.fillText(`${Math.floor(progress.xp)}/${Math.ceil(progress.next)} XP`, panelX + panelWidth - 8, xpY);
+  ctx.fillStyle = 'rgba(255,255,255,.15)';ctx.fillRect(panelX + 8, xpY + 10, panelWidth - 16, 2);
+  ctx.fillStyle = color;ctx.fillRect(panelX + 8, xpY + 10, (panelWidth - 16) * progress.percent / 100, 2);
+  const statuses = [
+    player.controllerDisconnected ? 'Controller disconnected' : '',
+    ...getActivePassiveLabels(player).map(status => typeof status === 'string' ? status : status.label),
+    player.poisonTimer > 0 ? 'Poisoned' : '',
+    player.burnTimer > 0 ? 'Burning' : '',
+    player.slowTimer > 0 ? 'Slowed' : ''
+  ].filter(Boolean);
+  if (statuses.length) {
+    ctx.fillStyle = 'rgba(3,6,12,.85)';ctx.fillRect(panelX, panelY + panelHeight + 2, panelWidth, 14);
+    ctx.font = dense ? 'bold 7px sans-serif' : 'bold 9px sans-serif';ctx.textAlign = 'left';ctx.textBaseline = 'middle';ctx.fillStyle = '#f5edf8';
+    ctx.fillText(trimText(ctx, statuses.join(' · '), panelWidth - 12, ctx.font), panelX + 6, panelY + panelHeight + 9);
   }
 
   drawHotbar(ctx, player, viewport, compact, color, dense);
@@ -143,8 +166,9 @@ function drawLumenPips(ctx, player, x, y, width, compact, dense = false) {
 
 function drawHotbar(ctx, player, viewport, compact, color, dense = false) {
   const now = performance.now() / 1000;
-  const slotSize = dense ? 27 : compact ? 40 : 52;
   const gap = dense ? 4 : compact ? 6 : 8;
+  const slotSize = Math.min(dense ? 27 : compact ? 40 : 52,
+    Math.max(16, Math.floor((viewport.width - 16 - gap * HOTBAR_SLOT_COUNT) / (HOTBAR_SLOT_COUNT + 1))));
   const totalWidth = slotSize * (HOTBAR_SLOT_COUNT+1) + gap * HOTBAR_SLOT_COUNT;
   const x = viewport.x + Math.max(8, Math.floor((viewport.width - totalWidth) / 2));
   const y = viewport.y + viewport.height - slotSize - (dense ? 7 : compact ? 10 : 16);

@@ -202,6 +202,7 @@ class OnlineSession {
   const party=[g.player,...(g.player.coop?.players||[]).filter(a=>a.active!==false)].map(a=>{
    const visual=wireClone(pick(a,[...VISUAL_FIELDS,'equippedGear','buffs','abilityMorphs','knownAbilities']),refs);
    visual.summons=(a.summons||[]).map(s=>wireClone(s,refs));
+   visual.partyMapSlot=a.slot||a.playerNumber||1;
    return {id:a===g.player?'host':a.networkId||String(a.slot),visual,presentation:actorPresentation(a,refs)};
   });
   for(const entry of party)for(const key of ['abilityCharge','activeChannel','visualAction','downedState','reviveAction'])entry.visual[key] ??=null;
@@ -290,7 +291,7 @@ class OnlineSession {
  guestSaveState(){
   const original=this.backup.player,player=wireClone(this.game.player);
   for(const field of ['x','y','currentZone','currentRegion','regions','story','quests','worldMemory','lastSafeLocation','act1OpeningPending'])if(original[field]!==undefined)player[field]=original[field];
-  player.slot=player.playerNumber=1;delete player.networkRemote;delete player.networkId;delete player.networkMenuBusy;delete player.controllerSlotIndex;delete player.sessionSlot;player.cooldownClockSeconds=performance.now()/1000;
+  player.slot=player.playerNumber=1;delete player.partyMapSlot;delete player.networkRemote;delete player.networkId;delete player.networkMenuBusy;delete player.controllerSlotIndex;delete player.sessionSlot;player.cooldownClockSeconds=performance.now()/1000;
   player.profileId=original.profileId||this.game.profileId;player.origin=original.origin;if(original.id!==undefined)player.id=original.id;
   return {...this.backup,player,currentSession:null,lastKnownLocalPlayers:[],dialogueState:null};
  }
