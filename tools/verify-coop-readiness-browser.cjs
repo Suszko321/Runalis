@@ -79,7 +79,19 @@ const fs=require('node:fs'),assert=require('node:assert/strict'),launch=require(
   checks.push('HUD draws independent health, XP and poison status for each actor');
   await page.evaluate(async()=>{const g=coopGame(),{createDungeonWorld}=await import('/src/dungeonSystem.js');g.world=createDungeonWorld({seed:'coop-shared-view'});Object.assign(g.player,g.world.spawn);Object.assign(g.player.coop.players[0],{x:g.player.x+32,y:g.player.y});});
   await page.waitForFunction(()=>coopGame().cameraMode==='sharedParty');await page.waitForTimeout(600);await page.screenshot({path:'docs/coop-readiness/shared-dungeon.png'});
-  checks.push('Dungeon uses established shared camera with party radar and individual HUDs');
+  checks.push('Dungeon uses shared camera with individual HUDs');
+  const sharedLayout=await page.evaluate(async()=>{
+   const g=coopGame(),{createPlayer}=await import('/src/player.js'),results=[];
+   for(const [width,height]of [[960,600],[640,360]])for(const count of [2,3,4]){
+    const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const ctx=canvas.getContext('2d'),keys=[],circles=[],fill=ctx.fillText.bind(ctx),arc=ctx.arc.bind(ctx);
+    ctx.fillText=(s,x,y,...rest)=>{if(s==='RB')keys.push({x,y});fill(s,x,y,...rest);};ctx.arc=(...args)=>{circles.push(args);arc(...args);};
+    const members=Array.from({length:count},(_,i)=>Object.assign(createPlayer('HUD '+i),{slot:i+1,x:100,y:100}));members[0].coop={players:members.slice(1)};
+    g.drawSharedPartyHud.call({canvas,ctx,player:members[0],world:{},log(){}},members);
+    results.push({width,height,count,keys,circles:circles.length});
+   }return results;
+  });
+  for(const r of sharedLayout){assert.equal(r.circles,0,'Shared HUD must not draw radar');assert.equal(r.keys.length,r.count);assert(r.keys.every(k=>k.x>0&&k.x<r.width&&k.y>r.height-100&&k.y<r.height));assert(r.keys[0].x<r.width/2&&r.keys[1].x>r.width/2);}
+  checks.push('Shared HUD has no radar; 2–4 player hotbars stay inside bottom corners at 960×600 and 640×360');
   await page.evaluate(async()=>{const g=coopGame(),p=g.player.coop.players[0];const {saveAllCouchCoopProfiles,leaveCouchCoopPlayer}=await import('/src/couchCoop.js');if(!saveAllCouchCoopProfiles(g))throw Error('Coop save failed');leaveCouchCoopPlayer(g,p);});
   await page.waitForFunction(()=>coopGame().player.coop.players.length===0&&!coopGame().splitScreenActive);checks.push('Save and explicit leave return to single-player');
   assert.deepEqual(errors,[]);fs.writeFileSync('docs/coop-readiness/browser-results.json',JSON.stringify({checks,errors},null,2));console.log(JSON.stringify({checks,errors},null,2));

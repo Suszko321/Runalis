@@ -2001,17 +2001,13 @@ class RunalisGame {
   drawSharedPartyHud(members) {
     const width = this.canvas.width;
     const height = this.canvas.height;
-    const hudWidth = Math.min(292, Math.max(226, Math.floor(width * 0.28)));
-    const hudHeight = 154;
-    const mapSize = Math.min(124, width - hudWidth * 2 - 24);
-    if (mapSize >= 72) drawPlayerMinimap(this.ctx, this, this.player,
-      {x:0,y:0,width:width/(this.coopCameraZoom||1),height:height/(this.coopCameraZoom||1)}, this.renderCamera,
-      {size:mapSize,x:(width-mapSize)/2,y:9});
+    const hudWidth = Math.min(326, Math.floor(width / 2));
+    const secondRow = 124;
     const viewports = [
-      { x: 0, y: 0, width: hudWidth, height: hudHeight },
-      { x: width - hudWidth, y: 0, width: hudWidth, height: hudHeight },
-      { x: 0, y: height - hudHeight, width: hudWidth, height: hudHeight },
-      { x: width - hudWidth, y: height - hudHeight, width: hudWidth, height: hudHeight }
+      { x: 0, y: 0, width: hudWidth, height },
+      { x: width - hudWidth, y: 0, width: hudWidth, height },
+      { x: 0, y: secondRow, width: hudWidth, height: height - secondRow - 64 },
+      { x: width - hudWidth, y: secondRow, width: hudWidth, height: height - secondRow - 64 }
     ];
 
     for (let i = 0; i < members.length && i < viewports.length; i++) {
@@ -2021,7 +2017,7 @@ class RunalisGame {
         compact: true,
         shared: true,
         slot: getCouchCoopActorSlot(member),
-        memberCount: Math.max(3, members.length),
+        memberCount: members.length,
         game: this
       });
     }

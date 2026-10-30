@@ -24,6 +24,7 @@ import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
 import {PARTY_COLORS as SLOT_COLORS} from './partyIdentity.js';
 import {getCombatLevelProgress} from './skills.js';
 import {getActivePassiveLabels} from './classPassives.js';
+import {drawHudPortrait} from './hudPortrait.js';
 
 const RESOURCE_COLORS = {
   hp: '#bd6267',
@@ -42,7 +43,7 @@ export function drawSplitScreenHud(ctx, player, viewport, options = {}) {
   const compact = dense || !!options.compact || viewport.width < 690 || viewport.height < 430 || memberCount >= 3;
   const color = SLOT_COLORS[slot - 1] || '#e8edf5';
   const pad = dense ? 6 : compact ? 9 : 13;
-  const panelWidth = Math.min(viewport.width - pad * 2, dense ? 174 : compact ? 238 : 318);
+  const panelWidth = Math.min(viewport.width - pad * 2, dense ? 174 : options.shared ? 318 : compact ? 238 : 318);
   const panelX = viewport.x + pad;
   const panelY = viewport.y + pad;
   const panelHeight = (dense ? 62 : compact ? 88 : 118) + 14;
@@ -50,8 +51,15 @@ export function drawSplitScreenHud(ctx, player, viewport, options = {}) {
   ctx.save();
   ctx.imageSmoothingEnabled = false;
   drawHudPanel(ctx, panelX, panelY, panelWidth, panelHeight, color);
-  drawPlayerHeader(ctx, player, slot, panelX + 8, panelY + (dense ? 6 : 8), panelWidth - 16, compact, color, dense);
-  drawResourceBars(ctx, player, panelX + 8, panelY + (dense ? 24 : compact ? 31 : 39), panelWidth - 16, compact, dense);
+  const portraitWidth = dense ? 0 : 48;
+  if(portraitWidth){
+    ctx.fillStyle='#10191e';ctx.fillRect(panelX+8,panelY+8,48,64);
+    drawHudPortrait(ctx,player,panelX+8,panelY+8,48,64);
+    ctx.strokeStyle='#b39860';ctx.lineWidth=1;ctx.strokeRect(panelX+8.5,panelY+8.5,47,63);
+  }
+  const bodyX=panelX+8+(portraitWidth?portraitWidth+8:0),bodyWidth=panelWidth-16-(portraitWidth?portraitWidth+8:0);
+  drawPlayerHeader(ctx, player, slot, bodyX, panelY + (dense ? 6 : 8), bodyWidth, compact, color, dense);
+  drawResourceBars(ctx, player, bodyX, panelY + (dense ? 24 : compact ? 31 : 39), bodyWidth, compact, dense);
 
   if (player.classId === 'lightbringer') {
     drawLumenPips(ctx, player, panelX + 8, panelY + panelHeight - (dense ? 27 : 32), panelWidth - 16, compact, dense);
@@ -84,17 +92,19 @@ export function drawSplitScreenHud(ctx, player, viewport, options = {}) {
 }
 
 function drawHudPanel(ctx, x, y, width, height, color) {
-  drawLexiconFrame(ctx, x, y, width, height, true);
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+  const background=ctx.createLinearGradient(x,y,x+width,y+height);
+  background.addColorStop(0,'rgba(11,20,25,.95)');background.addColorStop(1,'rgba(16,27,32,.85)');
+  ctx.fillStyle=background;ctx.fillRect(x,y,width,height);
+  ctx.strokeStyle = '#9c8457';
   ctx.lineWidth = 1;
   ctx.strokeRect(x + 0.5, y + 0.5, width - 1, height - 1);
-  ctx.fillStyle = color;
-  ctx.fillRect(x, y, 4, height);
+  ctx.strokeStyle='#060d12';ctx.lineWidth=3;ctx.strokeRect(x+3,y+3,width-6,height-6);
+  ctx.fillStyle = color;ctx.fillRect(x,y,3,height);
 }
 
 function drawPlayerHeader(ctx, player, slot, x, y, width, compact, color, dense = false) {
-  const nameFont = dense ? 'bold 9px sans-serif' : compact ? 'bold 11px sans-serif' : 'bold 13px sans-serif';
-  const classFont = dense ? 'bold 7px sans-serif' : compact ? 'bold 9px sans-serif' : 'bold 10px sans-serif';
+  const nameFont = dense ? 'bold 9px Georgia' : compact ? 'bold 11px Georgia' : 'bold 13px Georgia';
+  const classFont = dense ? 'bold 7px Georgia' : compact ? '9px Georgia' : '10px Georgia';
   const name = trimText(ctx, player.name || `Player ${slot}`, width * 0.58, nameFont);
   const className = trimText(ctx, player.className || player.classId || 'Classless', width * 0.46, classFont);
 
@@ -111,7 +121,7 @@ function drawPlayerHeader(ctx, player, slot, x, y, width, compact, color, dense 
 }
 
 function drawResourceBars(ctx, player, x, y, width, compact, dense = false) {
-  const barHeight = dense ? 5 : compact ? 7 : 9;
+  const barHeight = dense ? 5 : compact ? 9 : 10;
   const gap = dense ? 3 : compact ? 5 : 7;
   drawResourceBar(ctx, 'HP', player.hp, player.maxHp, x, y, width, barHeight, RESOURCE_COLORS.hp, dense);
   drawResourceBar(ctx, 'STA', player.stamina, player.maxStamina, x, y + barHeight + gap, width, barHeight, RESOURCE_COLORS.stamina, dense);
@@ -125,9 +135,10 @@ function drawResourceBar(ctx, label, value, max, x, y, width, height, color, den
 
   ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
   ctx.fillRect(x, y, width, height);
-  ctx.fillStyle = color;
+  const fill=ctx.createLinearGradient(x,y,x,y+height);fill.addColorStop(0,color);fill.addColorStop(1,color===RESOURCE_COLORS.hp?'#aa303d':color===RESOURCE_COLORS.stamina?'#438c73':'#7752b4');
+  ctx.fillStyle = fill;
   ctx.fillRect(x, y, fillWidth, height);
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+  ctx.strokeStyle = '#8a805f';
   ctx.strokeRect(x + 0.5, y + 0.5, width - 1, height - 1);
 
   ctx.font = dense ? 'bold 6px sans-serif' : 'bold 7px sans-serif';
@@ -171,7 +182,7 @@ function drawHotbar(ctx, player, viewport, compact, color, dense = false) {
     Math.max(16, Math.floor((viewport.width - 16 - gap * HOTBAR_SLOT_COUNT) / (HOTBAR_SLOT_COUNT + 1))));
   const totalWidth = slotSize * (HOTBAR_SLOT_COUNT+1) + gap * HOTBAR_SLOT_COUNT;
   const x = viewport.x + Math.max(8, Math.floor((viewport.width - totalWidth) / 2));
-  const y = viewport.y + viewport.height - slotSize - (dense ? 7 : compact ? 10 : 16);
+  const y = viewport.y + viewport.height - slotSize - (dense ? 17 : compact ? 20 : 24);
   const weapon = player.equipment?.weapon ? ITEMS[player.equipment.weapon] : null;
   const hotbar = [
     {
@@ -185,8 +196,9 @@ function drawHotbar(ctx, player, viewport, compact, color, dense = false) {
     ...Array.from({length:HOTBAR_SLOT_COUNT},(_,index)=>index).map(index => getAbilitySlotState(player, index, now))
   ];
 
+  drawHudPanel(ctx,x-6,y-6,totalWidth+12,slotSize+22,color);
   for (let i = 0; i < hotbar.length; i++) {
-    drawHotbarSlot(ctx, hotbar[i], x + i * (slotSize + gap), y, slotSize, compact, i === 0 ? color : '#d9c7ef', dense);
+    drawHotbarSlot(ctx, hotbar[i], x + i * (slotSize + gap), y, slotSize, compact, i === 0 ? color : '#c1a16b', dense);
   }
 }
 
@@ -384,27 +396,30 @@ function getAbilitySlotState(player, index, now) {
 }
 
 function drawHotbarSlot(ctx, slot, x, y, size, compact, accent, dense = false) {
-  ctx.fillStyle = slot.ready ? 'rgba(12, 10, 18, 0.84)' : 'rgba(10, 9, 13, 0.66)';
+  const background=ctx.createLinearGradient(x,y,x,y+size);background.addColorStop(0,'#263039');background.addColorStop(1,'#10151d');
+  ctx.fillStyle = background;
   ctx.fillRect(x, y, size, size);
-  ctx.strokeStyle = slot.ready ? accent : 'rgba(255, 255, 255, 0.18)';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = slot.ready ? accent : '#655b48';
+  ctx.lineWidth = 1;
   ctx.strokeRect(x + 1, y + 1, size - 2, size - 2);
 
   ctx.fillStyle = slot.ready ? '#f5edf8' : 'rgba(245, 237, 248, 0.42)';
   ctx.font = dense ? 'bold 9px sans-serif' : compact ? 'bold 13px sans-serif' : 'bold 16px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  if(!drawTechniqueIcon(ctx,slot.ability,x+size*.22,y+size*.19,size*.56))ctx.fillText(slot.icon || '--', x + size / 2, y + size / 2 - (dense ? 1 : compact ? 2 : 4));
+  if(!drawTechniqueIcon(ctx,slot.ability,x+size*.09,y+size*.09,size*.82))ctx.fillText(slot.icon || '--', x + size / 2, y + size / 2 - (dense ? 1 : compact ? 2 : 4));
   if(slot.channelActive){ctx.strokeStyle='#dceaf2';ctx.lineWidth=3;ctx.strokeRect(x+2,y+2,size-4,size-4);}
   if(slot.holdProgress){ctx.fillStyle='#ead49a';ctx.fillRect(x,y+size-3,size*slot.holdProgress,3);}
   if(slot.mastery&&!dense){ctx.font='bold 7px sans-serif';ctx.fillText(`M${slot.mastery}`,x+size-11,y+size-17);}
 
   ctx.fillStyle = 'rgba(3, 6, 12, 0.84)';
-  ctx.fillRect(x + 3, y + 3, dense ? 14 : compact ? 18 : 24, dense ? 9 : compact ? 12 : 15);
-  ctx.font = dense ? 'bold 6px sans-serif' : compact ? 'bold 7px sans-serif' : 'bold 8px sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillStyle = accent;
-  ctx.fillText(slot.key, x + 5, y + (dense ? 8 : compact ? 10 : 13));
+  const badgeWidth=dense?16:22,badgeHeight=dense?10:12;
+  ctx.fillRect(x+(size-badgeWidth)/2,y+size-3,badgeWidth,badgeHeight);
+  ctx.strokeStyle='#98835b';ctx.strokeRect(x+(size-badgeWidth)/2+.5,y+size-2.5,badgeWidth-1,badgeHeight-1);
+  ctx.font = dense ? '7px Georgia' : '9px Georgia';
+  ctx.textAlign = 'center';ctx.textBaseline='middle';
+  ctx.fillStyle = '#eee2c6';
+  ctx.fillText(slot.key,x+size/2,y+size+badgeHeight/2-3);
 
   if (slot.chargeText) {
     ctx.textAlign = 'right';

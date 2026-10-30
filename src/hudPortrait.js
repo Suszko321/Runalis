@@ -3,6 +3,13 @@ import {drawSummonAsset,getSummonEvolutionStage} from './codeAssets.js';
 import {spriteArtStatus} from './spriteArt.js';
 
 const portraits=new Map();
+const portraitImages=new Map();
+export function drawHudPortrait(ctx,actor,x,y,width,height){
+ const url=hudPortraitUrl(actor);
+ let image=portraitImages.get(url);
+ if(!image){image=new Image();image.src=url;if(portraitImages.size>=48)portraitImages.delete(portraitImages.keys().next().value);portraitImages.set(url,image);}
+ if(image.complete&&image.naturalWidth)ctx.drawImage(image,x,y,width,height);
+}
 export function hudPortraitUrl(actor,owner=null){
  const summon=owner!==null;
  const stage=summon?(actor.evolutionStage||getSummonEvolutionStage(actor.kind,owner)):null;

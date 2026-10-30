@@ -1,5 +1,9 @@
 # Couch co-op readiness — October 30, 2026
 
+## Shared HUD layout follow-up
+
+Shared-screen play no longer renders a minimap. P1/P2 hotbars sit in the bottom-left/bottom-right corners; P3/P4 use a second row above those bars. Resource banners stay at the top corners. Local HUDs now reuse the single-player character portrait renderer and skill icons, with matching brass frames, dark iron panels, resource gradients, serif headings, and controller-key badges. Split-screen minimaps remain. Browser validation now includes 13 checks, including radar absence and on-screen bottom hotbar placement for 2–4 players at 960×600 and 640×360. The shared dungeon screenshot was visually reviewed; the build passes.
+
 **READY WITH LIMITATIONS.** The exercised two-player paths pass automated and browser validation. Physical gamepads, television readability, and an extended human play session remain unverified. This is not a claim that every class, quest, device, or networking condition was interactively tested.
 
 ## Adaptive camera follow-up
