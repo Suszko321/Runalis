@@ -131,7 +131,7 @@ export function readProfiles() {
           `Runalis co-op profile migration: migrated ${migration.migrated}, skipped ${migration.skipped}.`
         );
       }
-      return current;
+      return alignProfileNames(current);
     }
 
     // One-time migration attempt from old profile keys.
@@ -148,7 +148,7 @@ export function readProfiles() {
           );
         }
         writeProfiles(slimProfiles);
-        return slimProfiles;
+        return alignProfileNames(slimProfiles);
       }
     }
 
@@ -161,7 +161,7 @@ export function readProfiles() {
       console.info(
         `Runalis co-op profile migration: migrated ${migration.migrated}, skipped ${migration.skipped}.`
       );
-      return current;
+      return alignProfileNames(current);
     }
 
     return {};
@@ -169,6 +169,16 @@ export function readProfiles() {
     console.warn('Failed to read profiles:', err);
     return {};
   }
+}
+
+// Older saves could keep the title-screen default after naming the character.
+// Display the character's saved name without changing its ID or progress.
+function alignProfileNames(profiles) {
+  for (const profile of Object.values(profiles)) {
+    const name = profile?.state?.player?.name;
+    if (typeof name === 'string' && name.trim()) profile.name = name;
+  }
+  return profiles;
 }
 
 export function writeProfiles(profiles) {
@@ -869,7 +879,7 @@ export function hideLoadingScreen() {
   loadingScreen.setAttribute('aria-hidden', 'true');
 }
 
-export function createProfileFromInput(startProfileCallback) {
+export function createNewProfile(startProfileCallback) {
   const mainMenu = document.getElementById('mainMenu');
   const loadingScreen = document.getElementById('loadingScreen');
 
@@ -877,9 +887,8 @@ export function createProfileFromInput(startProfileCallback) {
     return null;
   }
 
-  const input = document.getElementById('profileName');
-
-  const name = (input?.value || 'Wayfarer').trim().slice(0, 22) || 'Wayfarer';
+  // Naming happens in the character creator; this is only a draft profile.
+  const name = 'Wayfarer';
   const id = `profile-${Date.now()}`;
 
   const profiles = readProfiles();
@@ -893,8 +902,6 @@ export function createProfileFromInput(startProfileCallback) {
   };
 
   writeProfiles(profiles);
-
-  if (input) input.value = '';
 
   if (typeof startProfileCallback === 'function') {
     startProfileCallback(profiles[id]);
@@ -967,27 +974,7 @@ export function bindProfileMenu(startProfileCallback) {
   const createProfileBtn = document.getElementById('createProfileBtn');
 
   if (createProfileBtn) {
-    createProfileBtn.onclick = () => createProfileFromInput(startProfileCallback);
-  }
-
-  const profileName = document.getElementById('profileName');
-
-  if (profileName) {
-    profileName.addEventListener('keydown', event => {
-      if (event.key === 'Enter') {
-        createProfileFromInput(startProfileCallback);
-      }
-    });
-
-    profileName.addEventListener('focus', () => {
-      const items = getProfileMenuFocusableElements();
-      const index = items.indexOf(profileName);
-
-      if (index >= 0) {
-        profileMenuFocusIndex = index;
-        applyProfileMenuFocus();
-      }
-    });
+    createProfileBtn.onclick = () => createNewProfile(startProfileCallback);
   }
 
   renderProfileList(startProfileCallback);
@@ -1064,14 +1051,6 @@ function handleProfileMenuControllerInput(input) {
       return true;
     }
 
-    const profileName = document.getElementById('profileName');
-
-    if (document.activeElement === profileName) {
-      profileName.blur();
-      applyProfileMenuFocus();
-      return true;
-    }
-
     profileMenuFocusIndex = 0;
     applyProfileMenuFocus();
     return true;
@@ -1108,7 +1087,6 @@ function getProfileMenuFocusableElements() {
         '#mainFullscreenBtn',
         '#creditsBtn',
         '#quitGameBtn',
-        '#profileName',
         '#createProfileBtn',
         '#profileList [data-load]',
         '#profileList [data-delete]',
@@ -1266,11 +1244,6 @@ function activateProfileMenuFocusedElement() {
   const selected = items[profileMenuFocusIndex];
 
   if (!selected) return;
-
-  if (selected.id === 'profileName') {
-    selected.focus();
-    return;
-  }
 
   if (typeof selected.click === 'function') {
     selected.click();

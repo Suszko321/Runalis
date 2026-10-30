@@ -41,7 +41,7 @@ const base=process.env.RUNALIS_URL||'http://127.0.0.1:8768';
   // Complete the actual touch creator rather than manufacturing a readiness
   // flag, then verify a newly created character can host as well.
   await page.locator('[data-action="pause"]').tap();await page.locator('#saveQuitBtn').tap();await page.locator('#mainMenu.active').waitFor();
-  await page.locator('#profileName').fill('Online creator check');await page.locator('#createProfileBtn').tap();await page.locator('#characterCreatorOverlay.active').waitFor();
+  await page.locator('#createProfileBtn').tap();await page.locator('#characterCreatorOverlay.active').waitFor();
   await page.locator('[data-creator-class="oathkeeper"]').tap();await page.locator('[data-creator-proceed]').tap();await page.locator('[data-creator-start]').tap();
   await page.waitForFunction(()=>!document.querySelector('#characterCreatorOverlay.active'));
   await page.locator('[data-action="skip"]').tap();await page.waitForFunction(()=>mobileGame().world.mode==='maraHouse'&&mobileGame().dialogue.active);

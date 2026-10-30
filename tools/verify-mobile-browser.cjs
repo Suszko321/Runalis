@@ -79,7 +79,7 @@ const base=process.env.RUNALIS_URL||'http://127.0.0.1:8768',out='docs/mobile-con
   await page.waitForFunction(()=>mobileGame().dialogue.lineComplete);assert(await page.evaluate(()=>mobileGame().dialogue.revealedTokenCount===mobileGame().dialogue.tokens.length));checks.push('Native canvas touch reveals dialogue');
   await page.screenshot({path:out+'/dialogue.png'});
   await page.locator('[data-action="pause"]').tap();await page.locator('#saveQuitBtn').tap();await page.waitForSelector('#mainMenu.active');assert.equal(await page.locator('#mobileControls').count(),0);checks.push('Save & Quit removes touch controls');
-  await page.locator('#profileName').fill('Mobile creation review');await page.locator('#createProfileBtn').tap();await page.waitForSelector('#characterCreatorOverlay.active');
+  await page.locator('#createProfileBtn').tap();await page.waitForSelector('#characterCreatorOverlay.active');
   await page.locator('[data-creator-class="oathkeeper"]').tap();await page.locator('[data-creator-proceed]').tap();
   const appearanceButtons=page.locator('[data-creator-next]');assert((await appearanceButtons.first().boundingBox()).height>=44);
   const beforeAppearance=await page.locator('[data-creator-row]').first().innerText();await appearanceButtons.first().tap();assert.notEqual(await page.locator('[data-creator-row]').first().innerText(),beforeAppearance);

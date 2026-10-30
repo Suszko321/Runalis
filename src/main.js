@@ -506,6 +506,7 @@ class RunalisGame {
     ensurePlayerDialogueAndQuestState(this.player);
     ensurePlayerAppearance(this.player);
     applyAppearanceToPlayer(this.player, this.player.appearance);
+    this.profileName = this.player.name;
     ensureCouchCoop(this);
     this.setUiOwner(this.player);
 
@@ -3329,9 +3330,9 @@ function bindMainMenuActions() {
   document.getElementById('continueGameBtn')?.addEventListener('click', () => {
     const profile = Object.values(readProfiles()).sort((a, b) => Number(b.updated || 0) - Number(a.updated || 0))[0];
     if (profile) startProfile(profile);
-    else document.getElementById('profileName')?.focus();
+    else document.getElementById('createProfileBtn')?.click();
   });
-  document.getElementById('newGameBtn')?.addEventListener('click', () => document.getElementById('profileName')?.focus());
+  document.getElementById('newGameBtn')?.addEventListener('click', () => document.getElementById('createProfileBtn')?.click());
   document.getElementById('settingsBtn')?.addEventListener('click', () => showLexiconMessage('Settings', 'Gameplay settings are available from the in-game menus.'));
   document.getElementById('creditsBtn')?.addEventListener('click', () => showLexiconMessage('Credits', 'Runalis — original dark-fantasy RPG project and code-drawn world.'));
   document.getElementById('quitGameBtn')?.addEventListener('click', () => {

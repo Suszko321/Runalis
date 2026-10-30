@@ -81,7 +81,7 @@ const fs=require('node:fs');
   await live.goto('http://127.0.0.1:8768/');
   await live.locator('[data-home-screen-continue]').click();
   await live.locator('[data-mobile-portrait]').click();
-  await live.locator('#profileName').fill('Mobile Flow');
+  assert.equal(await live.locator('#profileName').count(),0);
   await live.locator('#createProfileBtn').click();
   await live.locator('[data-creator-class="oathkeeper"]').click();
   assert(await live.locator('body').evaluate(e=>e.classList.contains('mobile-input')));

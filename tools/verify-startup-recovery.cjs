@@ -5,7 +5,7 @@ const http=require('node:http');
 const path=require('node:path');
 const root=path.resolve('_site');
 const key='runalis-profiles-v7-slim-save';
-const saved=JSON.stringify({existing:{id:'existing',name:'Existing iPhone profile',updated:1,state:null}});
+const saved=JSON.stringify({existing:{id:'existing',name:'Wayfarer',updated:1,state:{version:18,player:{name:'Petal',profileName:'Wayfarer',level:17,gold:320}}}});
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.webmanifest':'application/manifest+json','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2'};
 const server=http.createServer((req,res)=>{
  let relative=new URL(req.url,'http://localhost').pathname.replace(/^\/Runalis\//,'/');
@@ -55,24 +55,33 @@ const server=http.createServer((req,res)=>{
       await page.locator('[data-startup-retry]').click();
      }
      await page.locator('[data-load="existing"]').waitFor();
+     assert.match(await page.locator('[data-load="existing"]').textContent(),/Petal/,'Older default profile names use the saved character name');
      assert.equal(await page.locator('#startupStatus').count(),0);
      assert.equal(await page.locator('#mainMenu').evaluate(e=>e.inert),false);
      assert.equal(await page.evaluate(key=>localStorage.getItem(key),key),saved);
      assert(!new URL(page.url()).searchParams.has('_runalis_retry'));
      if(failure==='none'){
       assert.equal(scripts.length,2,'Startup must only download the loader and bundled game');
-      await page.locator('#profileName').fill('Mobile startup review');
-      await page.locator('#createProfileBtn').tap();
+      assert.equal(await page.locator('#profileName').count(),0);
+      await page.locator(engine===webkit?'#createProfileBtn':'#newGameBtn').tap();
       await page.locator('[data-creator-class="oathkeeper"]').tap();
       await page.locator('[data-creator-proceed]').tap();
       await page.locator('[data-creator-name]').fill('Startup Hero');
       await page.locator('[data-creator-start]').tap();
       await page.waitForFunction(()=>!document.querySelector('#characterCreatorOverlay').classList.contains('active'));
       await page.waitForFunction(key=>Object.values(JSON.parse(localStorage.getItem(key))).some(p=>p.state?.player?.name==='Startup Hero'),key);
+      assert.equal(await page.locator('#activeProfileLabel').textContent(),'Startup Hero');
+      const created=await page.evaluate(key=>Object.values(JSON.parse(localStorage.getItem(key))).find(p=>p.state?.player?.name==='Startup Hero'),key);
+      assert.equal(created.name,'Startup Hero');
+      assert.equal(created.state.player.profileName,'Startup Hero');
       await page.reload();
       await page.locator('[data-load="existing"]').waitFor();
       assert.equal(await page.locator('#profileList [data-load]').count(),2);
-      assert.deepEqual(await page.evaluate(key=>JSON.parse(localStorage.getItem(key)).existing,key),JSON.parse(saved).existing);
+      assert.match(await page.locator(`[data-load="${created.id}"]`).textContent(),/Startup Hero/);
+      assert.deepEqual(await page.evaluate(key=>JSON.parse(localStorage.getItem(key)).existing,key),{...JSON.parse(saved).existing,name:'Petal'});
+      await page.locator(`[data-load="${created.id}"]`).tap();
+      await page.waitForFunction(()=>document.querySelector('#app').classList.contains('active')&&!document.querySelector('#loadingScreen').classList.contains('active'));
+      assert.equal(await page.locator('#activeProfileLabel').textContent(),'Startup Hero');
      }
      assert.deepEqual(errors,[]);
      checks.push(`${engine.name()}: ${failure}, existing save preserved and menu usable`);

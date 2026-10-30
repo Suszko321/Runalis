@@ -26,7 +26,6 @@ async function smoke(browser, url, label) {
   page.on('response', r => { requests.push(r.url()); if (r.status() >= 400) failures.push(`${r.status()} ${r.url()}`); });
   page.on('requestfailed', r => failures.push(`${r.failure()?.errorText} ${r.url()}`));
   await page.goto(url);
-  await page.locator('#profileName').fill('Pages smoke test');
   await page.locator('#createProfileBtn').click();
   await page.locator('[data-creator-class]').first().waitFor({ timeout: 30000 });
   const creator = page.locator('#characterCreatorOverlay');

@@ -399,6 +399,7 @@ export function applyAppearanceToPlayer(player, appearance = {}) {
 
   if (safeAppearance.name) {
     player.name = safeAppearance.name;
+    player.profileName = safeAppearance.name;
   }
 
   player.bodyType = safeAppearance.bodyType;
@@ -1012,6 +1013,11 @@ function finishCharacterCreation(overlay) {
 
   const hadClass = !!game.player.classId;
   applyAppearanceToPlayer(game.player, appearance);
+  game.profileName = game.player.name;
+  if (!game.hostGame) {
+    const label = document.getElementById('activeProfileLabel');
+    if (label) label.textContent = game.profileName;
+  }
 
   if (!game.player.classId) {
     chooseGameClass(game, state.classId || DEFAULT_CLASS_ID);
