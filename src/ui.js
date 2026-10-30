@@ -2411,7 +2411,14 @@ function setMainPanelDomState(game, activeTabId = null) {
     if(worldMap){worldMap.surveyView=null;worldMap.surveyCursor=null;worldMap.surveyRenderKey=null;}
   }
 
-  if (activeTabId !== 'skills') resetAbilityControllerSelection(game);
+  if (activeTabId !== 'skills') {
+    resetAbilityControllerSelection(game);
+    if(game?.uiState)game.uiState.mobileAbilityDetailOpen=false;
+    // Closing a workspace does not rebuild its hidden markup. Dismiss the
+    // sheet in both state and DOM before showing the section chooser.
+    document.querySelector('#skills .mobile-detail-open')?.classList.remove('mobile-detail-open');
+    closeMobileTreeDetail(game);
+  }
 
   if (isOpen && game?.uiState) {
     game.uiState.menuChooserOpen = false;

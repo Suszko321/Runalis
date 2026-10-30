@@ -216,10 +216,12 @@ html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .mob
 html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-detail-info{position:static!important;height:auto!important;max-height:none!important;overflow:visible!important;display:block!important}
 html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-morph-picker{position:static!important;display:block!important;height:auto!important}
 html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-morph-options{display:grid!important;grid-template-columns:1fr!important;height:auto!important}
-body.mobile-input .panel:has(.mobile-detail-open) > .tabs,body.mobile-input #skills:has(.mobile-detail-open) > .skills-sheet-tabs{visibility:hidden!important;pointer-events:none!important}
+body.mobile-input .panel.open:not(.menu-chooser):has(#skills.active .mobile-detail-open) > .tabs,body.mobile-input #skills.active:has(.mobile-detail-open) > .skills-sheet-tabs{visibility:hidden!important;pointer-events:none!important}
 html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-pane{display:block!important}
 html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-assign{display:flex!important;min-width:0!important;min-height:48px!important}
-html:root body.mobile-input.fullscreen-menu-design #app .game-shell .panel:has(#skills .mobile-detail-open) > .tabs{display:none!important}
+/* Only the visible skill sheet owns this navigation override. Hidden skill
+   markup must never hide the chooser or another workspace's navigation. */
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell .panel.open:not(.menu-chooser):has(#skills.active .mobile-detail-open) > .tabs{display:none!important}
 html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills:has(.mobile-detail-open) > .skills-sheet-tabs{display:none!important}
 /* Full-screen touch workspaces: one native document flow, no desktop clipping. */
 html:root body.mobile-input.fullscreen-menu-design #app .game-shell .panel.open{
