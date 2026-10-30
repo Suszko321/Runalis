@@ -45,8 +45,9 @@ export function createMobileControls(game, actions) {
   document.body.append(root);
   const input = {connected:true, mobile:true, slotIndex:-2, moveX:0, moveY:0};
   const pointers = new Map();
+  const pointerTypes = new Map();
   const abort = new AbortController();
-  const listen = (target, type, fn) => target.addEventListener(type, fn, {signal:abort.signal, passive:false});
+  const listen = (target, type, fn, options={}) => target.addEventListener(type, fn, {signal:abort.signal, passive:false,...options});
   const stick = root.querySelector('#mobileStick');
   const knob = stick.querySelector('span');
   const reticle = root.querySelector('.mobile-aim-reticle');
@@ -60,7 +61,7 @@ export function createMobileControls(game, actions) {
   resizeCanvas();
   const held = name => [...pointers.values()].some(value => value === name);
   function reset() {
-    pointers.clear(); stickId = null;
+    pointers.clear(); pointerTypes.clear(); stickId = null;
     aimPointerId = aimPoint = null;
     input.mouseAimActive = false;
     reticle.hidden = true;
@@ -82,20 +83,26 @@ export function createMobileControls(game, actions) {
     input.moveY = length > radius*.16 ? y/Math.max(radius,length) : 0;
     knob.style.transform = `translate(${x*scale}px,${y*scale}px)`;
   }
+  function capture(element,id) {
+    // A browser can end/reassign a contact before capture is established.
+    // Global termination and touch reconciliation still own its cleanup.
+    try { element.setPointerCapture(id); } catch {}
+  }
   listen(root, 'pointerdown', event => {
     const button = event.target.closest('[data-hold]');
     if (!button && event.target !== stick && !stick.contains(event.target)) return;
     event.preventDefault(); event.stopPropagation(); actions.unlock();
     if (blocked() || game.primaryControllerActive) return;
+    if(pointers.has(event.pointerId))endPointer(event.pointerId,true);
     if (!button) {
       if (stickId !== null) return;
-      stickId = event.pointerId; pointers.set(stickId,'move'); move(event);
-      stick.setPointerCapture(stickId); return;
+      stickId = event.pointerId; pointers.set(stickId,'move'); pointerTypes.set(stickId,event.pointerType); move(event);
+      capture(stick,stickId); return;
     }
     const name = button.dataset.hold;
     if (button.disabled) return;
     const alreadyHeld = held(name);
-    pointers.set(event.pointerId,name); button.setPointerCapture(event.pointerId);
+    pointers.set(event.pointerId,name); pointerTypes.set(event.pointerId,event.pointerType); capture(button,event.pointerId);
     if (!alreadyHeld) input[`${name}Pressed`] = true;
     input[`${name}Held`] = true;
     if (name === 'interact') { input.confirmPressed = !alreadyHeld; input.confirmHeld = true; }
@@ -105,19 +112,38 @@ export function createMobileControls(game, actions) {
     if (event.pointerId !== stickId) return;
     event.preventDefault(); move(event);
   });
-  function release(event) {
-    const name = pointers.get(event.pointerId);
+  function endPointer(id,cancelled) {
+    const name = pointers.get(id);
     if (!name) return;
-    event.preventDefault(); pointers.delete(event.pointerId);
+    pointers.delete(id); pointerTypes.delete(id);
     if (name === 'move') { stickId = null; input.moveX = input.moveY = 0; knob.style.transform = ''; return; }
     if (held(name)) return;
     input[`${name}Held`] = false;
-    if (event.type === 'pointerup') input[`${name}Released`] = true;
+    if (!cancelled) input[`${name}Released`] = true;
     else { input[`${name}Pressed`] = false; actions.cancelCharge(); }
-    if (name === 'interact') { input.confirmHeld = false; input.confirmReleased = event.type === 'pointerup'; }
+    if (name === 'interact') { input.confirmHeld = false; input.confirmReleased = !cancelled; }
     root.querySelector(`[data-hold="${name}"]`)?.classList.remove('held');
   }
-  for (const type of ['pointerup','pointercancel','lostpointercapture']) listen(root,type,release);
+  function release(event) {
+    if(!pointers.has(event.pointerId))return;
+    event.preventDefault();endPointer(event.pointerId,event.type!=='pointerup');
+  }
+  for (const type of ['pointerup','pointercancel','lostpointercapture']) listen(window,type,release,{capture:true});
+  function touchControl(target) {
+    const button=target?.closest?.('[data-hold]');
+    if(button&&root.contains(button))return button.dataset.hold;
+    if(target===stick||stick.contains(target))return 'move';
+    if(target===game.canvas)return 'aim';
+    return null;
+  }
+  // Pointer capture can lose its terminal event on mobile. TouchEvent targets
+  // retain the original control, so reconcile with contacts still physically
+  // down; lifting a skill finger must not release a separate movement finger.
+  for(const type of ['touchend','touchcancel'])listen(window,type,event=>{
+    const down=new Set(Array.from(event.touches||[],t=>touchControl(t.target)));
+    for(const [id,name]of [...pointers])if(pointerTypes.get(id)==='touch'&&!down.has(name))endPointer(id,type==='touchcancel');
+    if(aimPointerId!==null&&!down.has('aim')){aimPointerId=null;if(type==='touchcancel')aimPoint=null;}
+  },{capture:true});
   // A separate finger on the world steers aim; buttons and the movement wheel
   // never count as aiming touches. Capture lets a held aim continue off canvas.
   listen(game.canvas, 'pointerdown', event => {
@@ -125,7 +151,7 @@ export function createMobileControls(game, actions) {
     event.preventDefault(); actions.unlock();
     aimPointerId = event.pointerId;
     aimPoint = {x:event.clientX,y:event.clientY};
-    game.canvas.setPointerCapture(event.pointerId);
+    capture(game.canvas,event.pointerId);
   });
   listen(game.canvas, 'pointermove', event => {
     if (event.pointerId !== aimPointerId) return;

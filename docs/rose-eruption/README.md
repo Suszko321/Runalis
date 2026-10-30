@@ -21,3 +21,5 @@ The dedicated pixel rose has closed-bud, unfolding and open poses; whole-pixel e
 - Original, Fae and Acolyte definitions still match the protected snapshot.
 
 Backups of changed existing files are in `backups/rose-eruption-2026-10-13/`. The existing Thorn Lash ID, mastery, unlock and hotbar assignment are preserved.
+
+Mobile charge-release reliability now also has a [dedicated regression pass](../rose-eruption-mobile/README.md), covering lost pointer termination, native multi-touch, cancellation and recovery.
