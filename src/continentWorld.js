@@ -53,7 +53,7 @@ function buildBlueprint(){
  const structures=[...scene.structures,...orrakai.structures];
  const packed=packAuthoredTiles(echoryn.tiles);
  const newRoads=CONTINENT_ROADS.filter(r=>['orrakai-south-approach','continental-pilgrim-road','black-pine-ridge','blackfen-crossing'].includes(r.id));
- const trees=echoryn.echorynTrees.filter(t=>!newRoads.some(r=>routeDistance(t.x/TILE,t.y/TILE,r)<r.width/2+2)&&!navStones.some(s=>Math.hypot(t.x-s.x,t.y-s.y)<(['nav-hearthmereFrontier-ashenOrchard','nav-hearthmereFrontier-demonCultLair'].includes(s.id)?6:3)*TILE));
+ const trees=echoryn.echorynTrees.filter(t=>!newRoads.some(r=>routeDistance(t.x/TILE,t.y/TILE,r)<r.width/2+2)&&!navStones.some(s=>Math.hypot(t.x-s.x,t.y-s.y)<(['nav-hearthmereFrontier-ashenOrchard','nav-hearthmereFrontier-demonCultLair','nav-hearthmereFrontier-castleVeyr'].includes(s.id)?6:3)*TILE));
  const treeBuckets=new Map();for(const t of trees)for(let by=Math.floor((t.y-20)/512);by<=Math.floor((t.y+20)/512);by++)for(let bx=Math.floor((t.x-20)/512);bx<=Math.floor((t.x+20)/512);bx++){const key=`${bx},${by}`,bucket=treeBuckets.get(key)||[];bucket.push(t);treeBuckets.set(key,bucket);}
  return {objects,enemies,locations,navStones,clearings,structures,packed,encounterAreas:scene.encounterAreas,echoryn:{terrainFeatures:echoryn.terrainFeatures,trees,treeBuckets,revision:echoryn.echorynRevision},landscapes:echoryn.landscapes||[]};
 }

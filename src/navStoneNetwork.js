@@ -24,10 +24,10 @@ export function spaceNavStoneNetwork(objects) {
   for(const stone of candidates)if(retained.every(other=>Math.hypot(other.x-stone.x,other.y-stone.y)>=MIN_NAV_STONE_SPACING))retained.push(stone);
   const saintOrvane=retained.find(stone=>stone.id==='nav-aureateMarches-west');
   if(saintOrvane)saintOrvane.name='Saint Orvane Waystone';
-  // The main quest's Orchard camp and Keep approach need their own destinations
+  // The Orchard camp, Keep and Castle approaches need their own destinations
   // even inside the general regional spacing floor. Add them after spacing so
   // they cannot displace another established stone.
-  for(const id of ['nav-hearthmereFrontier-ashenOrchard','nav-hearthmereFrontier-demonCultLair']){
+  for(const id of ['nav-hearthmereFrontier-ashenOrchard','nav-hearthmereFrontier-demonCultLair','nav-hearthmereFrontier-castleVeyr']){
     const stone=objects.find(o=>o.kind==='navStone'&&o.id===id);if(stone)retained.push(stone);
   }
   const keep=new Set(retained);
