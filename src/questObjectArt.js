@@ -1,6 +1,6 @@
 // Small physical evidence, drawn in the native pixel palette. These models have
 // no asynchronous asset dependency and remain readable while atlases load.
-export const QUEST_EVIDENCE_ART=['document','lantern','wax','cloth','ritual','tracks','roots','water','remains','toy','mechanism','reliquary','stone','satchel','table','arrow','echo'];
+export const QUEST_EVIDENCE_ART=['bloodSeal','document','lantern','wax','cloth','ritual','tracks','roots','water','remains','toy','mechanism','reliquary','stone','satchel','table','arrow','echo'];
 export function getQuestEvidenceArt(o){
  if(QUEST_EVIDENCE_ART.includes(o.questArt))return o.questArt;
  const s=`${o.id||''} ${o.name||''}`.toLowerCase();
@@ -29,7 +29,9 @@ export function drawQuestEvidence(ctx,o,x,y){
  const line=(color,width,points)=>{ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();};
  ctx.save();ctx.translate(Math.round(x),Math.round(y));ctx.imageSmoothingEnabled=false;
  ctx.fillStyle='rgba(10,13,12,.32)';ctx.beginPath();ctx.ellipse(0,8,23,6,0,0,Math.PI*2);ctx.fill();
- if(type==='document'){
+ if(type==='bloodSeal'){
+  f('#231621',-22,-8,44,18);f('#78605d',-18,-13,36,17);f('#ba8671',-16,-15,32,3);f('#491429',-12,-43,24,29);f('#a82548',-9,-40,18,24);line('#edb090',2,[[0,-39],[-7,-28],[0,-18],[7,-28],[0,-39]]);f('#ff7184',-2,-33,4,10);f('#d19a68',-17,-46,34,4);f('#451b31',-2,5,4,10);
+ }else if(type==='document'){
   f('#372e25',-19,-19,36,29);f('#b6a079',-17,-21,33,27);f('#dfca98',-14,-19,26,22);
   for(let i=0;i<4;i++)f('#74664c',-10,-14+i*5,18-i%2*7,2);
   f('#382e28',-18,-21,7,5);f('#725338',11,-1,5,7);f('#904538',5,-8,7,7);f('#c57d4d',7,-7,2,3);

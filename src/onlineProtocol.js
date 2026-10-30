@@ -1,6 +1,6 @@
 // Versioned, bounded data shared by the browser transport and its tests.
 export const ONLINE_PROTOCOL = 1;
-export const ONLINE_BUILD = 'runalis-online-4';
+export const ONLINE_BUILD = 'runalis-online-5';
 export const MAX_PACKET_BYTES = 6*1024*1024;
 const forbidden = new Set(['__proto__','prototype','constructor','questOwner','world','hostGame','actorGameViews','continentalTerrain','continentRuntime','renderCache','canvas','ctx','audio','coop','networkPresentation']);
 export function wireClone(value,references=null) {

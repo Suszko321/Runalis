@@ -1,5 +1,6 @@
 // Sparse gameplay mutations only. Authored geography and scenery are rebuilt.
 // Stable entity IDs, rather than chunk residency, own persistent state.
+import {protectNavSanctuary} from './navStoneSanctuary.js';
 const objectBaselines = new WeakMap();
 const OBJECT_FLAGS = ['depleted', 'claimed', 'remove', 'removed', 'locked', 'opened', 'activated', 'completed', 'looted', 'triggered', 'eventTriggered', 'rewardClaimed'];
 const ENEMY_FLAGS = ['dead', 'remove', 'enemyWorldLootGenerated', 'enemyEquipmentLootRolled', 'deathHandled', 'bossRewardClaimed', 'defeatRewardClaimed'];
@@ -219,7 +220,7 @@ export function restoreContinentalState(game) {
   const host = game?.hostGame || game, world = host?.world, player = host?.player;
   if (!player || world?.continentId !== 'runalis' || !world.continentRuntime) return false;
   continentalMemory(player);
-  for (const entity of entitiesIn(world, 'enemies')) applyContinentalEntityState(entity, player, 'enemy');
+  for (const entity of entitiesIn(world, 'enemies')) {applyContinentalEntityState(entity, player, 'enemy');protectNavSanctuary(world,entity);}
   for (const entity of entitiesIn(world, 'objects')) applyContinentalEntityState(entity, player, 'object');
   const ids = new Set((world.drops || []).map(drop => drop.id));
   world.drops ||= [];

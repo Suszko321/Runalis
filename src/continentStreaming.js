@@ -1,5 +1,6 @@
 // Reuses the existing gameplay update/render loops with bounded resident lists.
 // Chunk residency never owns rewards, deaths, discovery or resource timers.
+import {protectNavSanctuary,protectNavSanctuaries} from './navStoneSanctuary.js';
 import {TILE} from './data.js';
 import {continentRegionAt,continentEcologyAt,continentRoadAt,CONTINENT_WIDTH,CONTINENT_HEIGHT} from './continentDefinition.js';
 import {captureContinentalState,restoreContinentalState,applyContinentalEntityState,continentalGeneratedEntities,continentalDrops} from './continentPersistence.js';
@@ -18,9 +19,10 @@ export function createContinentalRuntime(world,{objects,enemies,terrain}){
   if(!entity?.id||byId.has(entity.id))return;
   entity.sourceRegionId ||= continentRegionAt(entity.x/TILE,entity.y/TILE).id;
   entity.homeX ??=entity.x;entity.homeY ??=entity.y;
+  if(playerRef)applyContinentalEntityState(entity,playerRef,kind==='enemies'?'enemy':'object');
+  if(kind==='enemies')protectNavSanctuary(world,entity,allEnemies);
   const c=chunkAt(entity.homeX,entity.homeY);c[kind].push(entity);byId.set(entity.id,entity);
   if(['continentPine','continentWillow'].includes(entity.propType))c.treeColliders.push(entity);
-  if(playerRef)applyContinentalEntityState(entity,playerRef,kind==='enemies'?'enemy':'object');
  }
  for(const o of objects)register(o);for(const e of enemies)register(e,'enemies');
  function hydrate(cx,cy,player){
@@ -72,7 +74,7 @@ export function createContinentalRuntime(world,{objects,enemies,terrain}){
   const centers=actors.filter(a=>a&&Number.isFinite(a.x)&&Number.isFinite(a.y)).map(a=>[Math.floor(a.x/ENTITY_CHUNK_SIZE),Math.floor(a.y/ENTITY_CHUNK_SIZE)]),next=centers.map(c=>c.join(',')).sort().join('|');
   if(!force&&next===signature&&player===playerRef)return false;
   signature=next;collectInjected();activeKeys.clear();
-  if(player&&player!==playerRef){playerRef=player;for(const o of allObjects)applyContinentalEntityState(o,player);for(const e of allEnemies)applyContinentalEntityState(e,player,'enemy');}
+  if(player&&player!==playerRef){playerRef=player;for(const o of allObjects)applyContinentalEntityState(o,player);for(const e of allEnemies){applyContinentalEntityState(e,player,'enemy');protectNavSanctuary(world,e);}}
   for(const [cx,cy] of centers)for(let dy=-PRELOAD_CHUNK_RADIUS;dy<=PRELOAD_CHUNK_RADIUS;dy++)for(let dx=-PRELOAD_CHUNK_RADIUS;dx<=PRELOAD_CHUNK_RADIUS;dx++){
    const chunk=hydrate(cx+dx,cy+dy,player);if(chunk&&Math.abs(dx)<=ACTIVE_CHUNK_RADIUS&&Math.abs(dy)<=ACTIVE_CHUNK_RADIUS)activeKeys.add(chunk.id);
   }
@@ -91,7 +93,7 @@ export function createContinentalRuntime(world,{objects,enemies,terrain}){
  }
  function previewAt(x,y,player){
   const cx=Math.floor(x/ENTITY_CHUNK_SIZE),cy=Math.floor(y/ENTITY_CHUNK_SIZE),result={objects:[],enemies:[]};
-  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const c=hydrate(cx+dx,cy+dy,player);if(c){result.objects.push(...c.objects);result.enemies.push(...c.enemies);}}
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const c=hydrate(cx+dx,cy+dy,player);if(c){protectNavSanctuaries(world,c.enemies);result.objects.push(...c.objects);result.enemies.push(...c.enemies);}}
   return result;
  }
  function refresh(game){collectInjected();captureContinentalState(game);const p=game.player,party=[p,...(p?.coop?.players||[]).filter(a=>a.active!==false&&a.joined!==false)];activate(party,p,true);updateRegion(game);}
@@ -101,6 +103,7 @@ export function createContinentalRuntime(world,{objects,enemies,terrain}){
  }
  function update(game,dt=0){
   if(game.world!==world)return;
+  protectNavSanctuaries(world);
   if(playerRef!==game.player){playerRef=game.player;restoreContinentalState(game);activate([game.player,...(game.player.coop?.players||[]).filter(a=>a.active!==false&&a.joined!==false)],game.player,true);}
   timer-=dt;if(timer<=0){timer=.5;const party=[game.player,...(game.player.coop?.players||[]).filter(a=>a.active!==false&&a.joined!==false)];collectInjected();captureContinentalState(game);retireTransient(party);activate(party,game.player);}
   updateRegion(game);

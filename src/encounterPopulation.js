@@ -1,3 +1,4 @@
+import {navSanctuaryAt,protectNavSanctuaries} from './navStoneSanctuary.js';
 import {TILE} from './data.js';
 import {CONTINENT_ROADS,continentRoadAt} from './continentDefinition.js';
 import {alongRoute} from './echorynGeography.js';
@@ -38,7 +39,7 @@ export function buildPopulationAreas(world){
  return areas;
 }
 export function populationPositionSafe(world,party,x,y,radius=14){
- if(!isActorPositionPassable(world,x,y,radius))return false;
+ if(navSanctuaryAt(world,x,y,160)||!isActorPositionPassable(world,x,y,radius))return false;
  if(Math.hypot(x-21*TILE,y-31*TILE)<28*TILE)return false;
  if(party.some(p=>Math.hypot(p.x-x,p.y-y)<512||enemyWithinTargetView({x,y},p,world,96)))return false;
  const locations=world.continentLocations||world.objects||[];
@@ -49,6 +50,7 @@ export function populationPositionSafe(world,party,x,y,radius=14){
 export function updateAuthoredPopulation(game,dt,spawnPack,spawnTraveler=null){
  const w=game.world,p=game.player,memory=continentalMemory(p),now=Number(p.worldMemory?.elapsed)||0;
  const party=[p,...(p.coop?.players||[]).filter(a=>a.active!==false&&a.joined!==false&&a.hp>0)];
+ protectNavSanctuaries(w);
  w.populationAreas ||= buildPopulationAreas(w);
  const state=w.overworldPopulationState ||= {timer:0};state.timer-=dt;if(state.timer>0)return;state.timer=1.2;
  const runtime=w.continentRuntime;let changed=false;

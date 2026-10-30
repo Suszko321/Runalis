@@ -13,7 +13,9 @@ Alistair. This dungeon has no mandatory main-campaign dependency.
 4. Crimson Reliquary: the stolen heartbeats sustaining the lord.
 5. Court of the Last Heartbeat: Alistair Veyreign, Vampire Lord.
 
-The first four floors each contain two guarded blood seals. All associated
+The first four floors each contain two guarded blood seals. They are now
+144x140 tiles with nine rooms and 32 enemies per floor; see the
+[progression and expansion correction](../veyreign-progression-fix/README.md). All associated
 Vampire Spawns and Bat Beasts must fall before the seal can break. Each floor
 has an opening conversation with two substantive optional questions. Normal
 stairs, party consent, arena sealing, wipe resets and victory portals use the

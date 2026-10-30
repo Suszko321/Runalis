@@ -26,6 +26,9 @@ export function isQuestInteractable(object){
 export function isQuestObjectVisible(object,player){
  if(!isQuestInteractable(object))return true;
  if(object.interactable===false)return false;
+ // Floor mechanisms are necessary on first and repeat runs, independently of
+ // the optional narrative quest. Their floor residency and activation own visibility.
+ if(object.dungeonMechanism||object.veyreignSeal)return !object.activated;
  if(!player)return false;
  const owner=player.questOwner||player;
  // Shared campaign objects follow the host, including in split-screen play.

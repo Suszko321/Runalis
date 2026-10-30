@@ -1429,6 +1429,7 @@ export function applySaveToGame(game, saveState) {
   restoreContinentalState(game);
   installMalakarSanctum(game.world);
   installVeyreign(game.world);
+  if(game.world.veyreignLayoutMigrated){for(const [i,a]of [game.player,...(game.player.coop?.players||[])].entries())Object.assign(a,{x:game.world.spawn.x+(i%2)*32,y:game.world.spawn.y+Math.floor(i/2)*32});delete game.world.veyreignLayoutMigrated;}
   if(game.world.dungeonState?.veyreign)initializeDungeonArena(game.world);
   syncDungeonCompletion(game.world);
   syncBossReturnPortals(game.world);
