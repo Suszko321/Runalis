@@ -26,9 +26,9 @@ export function clearEliteEncounters(world){
  const r=runtimes.get(world);if(r){r.hazards.length=0;for(const p of r.actors){delete p.eliteFrost;delete p.eliteFrozenUntil;delete p.eliteFrostRecoveryUntil;}r.actors=[];r.motion=new WeakMap();}
  world.encounterBarriers=[];for(const e of world.enemies||[]){e.eliteGuardActive=e.eliteHealing=false;e.eliteTelegraph=null;e.eliteAttackPauseTimer=0;states.delete(e);cancelEnemyAttackPresentation(e);}
 }
-export function getEliteHazards(world){return runtimes.get(world)?.hazards||[];}
-export function getEliteActors(world){return runtimes.get(world)?.actors||[];}
-export function getEliteStatePresentation(enemy){const s=states.get(enemy);return {guardCharge:s?.frontalHits||0,healProgress:s?.healEnd?clamp(1-(s.healEnd-s.clock)/1.8,0,1):0,healReleased:s?.healVisualEnd>s?.clock,healReleaseProgress:s?.healVisualEnd?clamp(1-(s.healVisualEnd-s.clock)/.4,0,1):0};}
+export function getEliteHazards(world){return world?.networkGuest?world.networkPresentation?.eliteEncounters?.hazards||[]:runtimes.get(world)?.hazards||[];}
+export function getEliteActors(world){return world?.networkGuest?world.networkPresentation?.eliteEncounters?.actors||[]:runtimes.get(world)?.actors||[];}
+export function getEliteStatePresentation(enemy){if(enemy.networkPresentation?.eliteState)return enemy.networkPresentation.eliteState;const s=states.get(enemy);return {guardCharge:s?.frontalHits||0,healProgress:s?.healEnd?clamp(1-(s.healEnd-s.clock)/1.8,0,1):0,healReleased:s?.healVisualEnd>s?.clock,healReleaseProgress:s?.healVisualEnd?clamp(1-(s.healVisualEnd-s.clock)/.4,0,1):0};}
 export function resetEliteEnemy(world,enemy){
  const r=runtimes.get(world);if(r)r.hazards=r.hazards.filter(h=>h.owner!==enemy);
  world.encounterBarriers=(world.encounterBarriers||[]).filter(b=>b.owner!==enemy);

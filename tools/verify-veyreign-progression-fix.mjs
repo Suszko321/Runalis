@@ -24,7 +24,7 @@ function game(){const player=createPlayer('Seal interaction review');chooseClass
 for(const repeat of [false,true]){
  const g=game();if(repeat)g.player.veyreignCompleted=true;assert(enterDungeon(g,{id:'castleVeyr',dungeonId:'castleVeyr',name:'Castle Veyreign',...g.world.spawn}));
  for(let floor=1;floor<5;floor++){
-  const w=g.world;updateVeyreign(g);closeDialogue(g.dialogue,{immediate:true});assert.equal(w.width,144);assert.equal(w.height,140);assert.equal(w.rooms.length,9);assert.equal(w.enemies.length,32);
+  const w=g.world;updateVeyreign(g);closeDialogue(g.dialogue,{immediate:true});assert.equal(w.width,144);assert.equal(w.height,140);assert.equal(w.rooms.length,9);assert.equal(w.enemies.length,60);
   const stair=w.objects.find(o=>o.direction==='down');assert(stair.locked);let walked=0;
   for(const seal of w.objects.filter(o=>o.veyreignSeal)){
    assert(isQuestObjectVisible(seal,g.player),'Required seal hidden');walked+=walkTo(g,seal);assert.equal(nearestObject(g),seal);interact(g);assert(!w.dungeonState.veyreign.seals[seal.veyreignSeal],'Guards must prevent use');

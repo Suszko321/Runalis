@@ -19,6 +19,7 @@ export function beginVeyreignMove(e,w,p,key){
 }
 export function updateVeyreignCombat(e,w,p,dt,now,game){
  if(e.batBeast&&e.hp>0&&!e.dead){
+  e.eliteAttackPauseTimer=Math.max(0,(e.eliteAttackPauseTimer||0)-dt);if(e.eliteHealing||e.eliteAttackPauseTimer>0){e.batAttack=null;return true;}
   const party=veyreignParty(p).filter(a=>a.hp>0),t=party.reduce((a,b)=>!a||Math.hypot(b.x-e.x,b.y-e.y)<Math.hypot(a.x-e.x,a.y-e.y)?b:a,null);if(!t)return true;
   e.batCooldown=Math.max(0,(e.batCooldown||0)-dt);const distance=Math.hypot(t.x-e.x,t.y-e.y),visible=hasLineOfSight(w,e.x,e.y,t.x,t.y);
   if(distance>550||!visible){e.batAttack=null;return true;}

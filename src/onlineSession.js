@@ -9,13 +9,13 @@ import {renderOnlineFishing,handleFishingMiniGameInput} from './survivalSkills.j
 import {createOnlinePeer,bindOnlineConnection} from './onlineTransport.js';
 import {ONLINE_PROTOCOL,ONLINE_BUILD,wireClone,passwordRoom,roomProof,checkRoomProof,sanitizeOnlineInput,mergeOnlineInput,clearOnlineEdges,rebaseCharacterClock} from './onlineProtocol.js';
 import {createOnlineMenu} from './onlineMenu.js';
-import {hostPresentationRefs,actorPresentation,hydratePresentation} from './onlinePresentation.js';
+import {hostPresentationRefs,actorPresentation,hydratePresentation,eliteEncounterPresentation} from './onlinePresentation.js';
 import {observeSfx,playSfx} from './audioSystem.js';
 import {cancelActiveAbilityCharge,cancelActiveHeavyAttackCharge} from './combat.js';
 import {answerPartyEntry,partyEntrySnapshot,receivePartyEntry,partyEntryPending,cancelPartyEntry} from './partyEntrySystem.js';
 
 const CHARACTER_FIELDS=['name','appearance','bodyType','skin','hair','shirt','pants','boots','inventory','equipment','equippedGear','equipmentProgressionVersion','gearInstanceSequence','equipmentInstances','ownedGear','gearInstances','loadout','gold','attributes','attributePoints','skillState','skillTree','skills','knownAbilities','unlockedAbilities','unlockedPassives','abilityMorphs','abilityMastery','abilityExpertise','skillExpertise','expertise','crafting','craftingState','recipeUnlocks','inputBindings'];
-const VISUAL_FIELDS=['name','x','y','dirX','dirY','hp','maxHp','stamina','maxStamina','spirit','maxSpirit','isMoving','walkTime','lifeState','downedState','reviveAction','combatState','actionState','visualAction','visualHitUntil','abilityCharge','activeChannel','summons','traps','combatEffects','floatingTexts','flags','classId','className','appearance','bodyType','skin','hair','shirt','pants','boots','equipment','loadout','level','combatLevel','bloodline','gravecaller','lightbringer','currentZone','lastCombatAimX','lastCombatAimY'];
+const VISUAL_FIELDS=['name','x','y','dirX','dirY','hp','maxHp','stamina','maxStamina','spirit','maxSpirit','isMoving','walkTime','lifeState','downedState','reviveAction','combatState','actionState','visualAction','visualHitUntil','abilityCharge','activeChannel','summons','traps','combatEffects','floatingTexts','flags','classId','className','appearance','bodyType','skin','hair','shirt','pants','boots','equipment','loadout','level','combatLevel','bloodline','gravecaller','lightbringer','currentZone','lastCombatAimX','lastCombatAimY','eliteFrost','eliteFrozenUntil','eliteFrostRecoveryUntil'];
 const pick=(object,fields)=>Object.fromEntries(fields.filter(key=>object[key]!==undefined).map(key=>[key,object[key]]));
 const sceneIds=new WeakMap();let nextScene=0;
 const sceneKey=world=>{if(!sceneIds.has(world))sceneIds.set(world,++nextScene);return `${sceneIds.get(world)}:${world.mode}:${world.floor||0}:${world.seed||0}`;};
@@ -205,9 +205,10 @@ class OnlineSession {
    return {id:a===g.player?'host':a.networkId||String(a.slot),visual,presentation:actorPresentation(a,refs)};
   });
   for(const entry of party)for(const key of ['abilityCharge','activeChannel','visualAction','downedState','reviveAction'])entry.visual[key] ??=null;
+  for(const entry of party)for(const key of ['eliteFrost','eliteFrozenUntil','eliteFrostRecoveryUntil'])entry.visual[key] ??=0;
   const full=Date.now()>(record.profileAt||0);if(full)record.profileAt=Date.now()+500;
   const sounds=this.audioQueue.filter(e=>e.id>(record.audioCursor||0));record.audioCursor=this.audioSequence;
-  return {type:'state',clock:performance.now(),groups,party,sounds,self:p.networkId,profile:full?wireClone(p,refs):null,entryReady:partyEntrySnapshot(g,p),paused:!!g.paused||partyEntryPending(g),meta:wireClone(pick(g.world,['mode','name','theme','floor','depth','tier','regionId','actId','safeZone','cleared','dungeonState','bossRoomCenter','floorType','bossArena','arenaBarriers'])),dialogue:g.dialogue?.active&&g.dialogue.actor===p?wireClone({...g.dialogue,actor:undefined,world:undefined}):null,fishing:g.fishingMiniGame?.active&&g.fishingMiniGame.player===p?wireClone({...g.fishingMiniGame,object:undefined,player:undefined,objectId:g.fishingMiniGame.object?.id}):null};
+  return {type:'state',clock:performance.now(),groups,party,sounds,eliteEncounters:eliteEncounterPresentation(g.world,refs),self:p.networkId,profile:full?wireClone(p,refs):null,entryReady:partyEntrySnapshot(g,p),paused:!!g.paused||partyEntryPending(g),meta:wireClone(pick(g.world,['mode','name','theme','floor','depth','tier','regionId','actId','safeZone','cleared','dungeonState','bossRoomCenter','floorType','bossArena','arenaBarriers'])),dialogue:g.dialogue?.active&&g.dialogue.actor===p?wireClone({...g.dialogue,actor:undefined,world:undefined}):null,fishing:g.fishingMiniGame?.active&&g.fishingMiniGame.player===p?wireClone({...g.fishingMiniGame,object:undefined,player:undefined,objectId:g.fishingMiniGame.object?.id}):null};
  }
  receiveState(packet){
   const g=this.game,busy=this.isMenuBusy();
@@ -225,6 +226,7 @@ class OnlineSession {
    const values=this.receivedGroups[group] ||=new Map();for(const id of delta.remove||[])values.delete(id);for(const e of delta.upsert||[]){const old=values.get(e.id);if(old){this.applyVisual(old,e.value,true);values.set(e.id,old);}else values.set(e.id,e.value);}g.world[group]=[...values.values()];
   }
   for(const entry of packet.party||[]){const actor=entry.id===packet.self?g.player:this.partyActors.get(entry.id);if(actor)actor.networkPresentation=entry.presentation;}
+  g.world.networkPresentation={eliteEncounters:packet.eliteEncounters||{hazards:[],actors:[],states:[]}};
   hydratePresentation(g,packet.self,this.partyActors);
   const old=!!g.dialogue.active;
   if(packet.dialogue)Object.assign(g.dialogue,packet.dialogue,{actor:g.player,world:g.world,ownerSlot:1});
@@ -260,6 +262,9 @@ class OnlineSession {
   for(const [target,pose]of this.smoothing){const t=Math.min(1,(now-pose.at)/100);target.x=pose.x+(pose.toX-pose.x)*t;target.y=pose.y+(pose.toY-pose.y)*t;if(t>=1)this.smoothing.delete(target);}
   // Presentation only: combat, collisions, damage and expiry remain host-owned.
   if(!this.hostPaused){
+   const eliteHazards=g.world.networkPresentation?.eliteEncounters?.hazards||[];
+   for(const hazard of eliteHazards)hazard.age=Math.min(hazard.warning+hazard.duration,hazard.age+dt);
+   if(g.world.networkPresentation?.eliteEncounters)g.world.networkPresentation.eliteEncounters.hazards=eliteHazards.filter(h=>h.age<h.warning+h.duration);
    for(const effect of [...(g.world.effects||[]),...(g.world.combatEffects||[])]){if(Number.isFinite(effect.age))effect.age+=dt;if(effect.mantleVisual?.active)effect.mantleVisual.elapsed+=dt;if(effect.stormVisual?.active)effect.stormVisual.elapsed+=dt;}
    for(const actor of [g.player,...(g.player.coop?.players||[])]){
    if(actor.isMoving)actor.walkTime=(actor.walkTime||0)+dt*9;

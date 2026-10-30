@@ -2,6 +2,12 @@ import {getSubclassCombatState,getSubclassResourceLabel} from './subclassCombat.
 import {getSunkenPressureState} from './sunkenPressureSystem.js';
 import {getCombatTechniqueState} from './combatExpansion.js';
 import {wireClone} from './onlineProtocol.js';
+import {getEliteHazards,getEliteActors,getEliteStatePresentation} from './eliteEncounterSystem.js';
+
+// Visual data only. Guests never run the modifier coordinator or apply damage.
+export function eliteEncounterPresentation(world,refs){
+ return {hazards:wireClone(getEliteHazards(world),refs),actors:wireClone(getEliteActors(world),refs),states:(world.enemies||[]).filter(e=>e.eliteModifiers?.length).map(e=>({id:e.id,state:getEliteStatePresentation(e)}))};
+}
 
 export function hostPresentationRefs(game){
  const refs=new Map();
@@ -32,4 +38,6 @@ export function hydratePresentation(game,selfId,partyActors){
  }
  for(const [,actor]of actors){for(const key of ['networkPresentation','combatState','activeChannel','combatEffects','buffs'])if(actor[key])hydrate(actor[key]);for(const summon of actor.summons||[])for(const key of Object.keys(summon))summon[key]=hydrate(summon[key]);for(const key of ['subclassState','techniqueState'])if(actor.networkPresentation?.[key])actor.networkPresentation[key].world=game.world;}
  for(const effect of [...(game.world.effects||[]),...(game.world.combatEffects||[])]){hydrate(effect);if(effect.mantleVisual)effect.mantleVisual.world=game.world;}
+ const elites=game.world.networkPresentation?.eliteEncounters;
+ if(elites){hydrate(elites);for(const entry of elites.states||[]){const enemy=refs.get('enemy:'+entry.id);if(enemy)enemy.networkPresentation={eliteState:entry.state};}}
 }

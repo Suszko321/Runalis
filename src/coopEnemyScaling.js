@@ -216,6 +216,7 @@ export function applyCoopEnemyCountScalingToWorld(world, hostPlayer, options = {
   const candidates = world.enemies.filter(enemy => {
     if (!enemy || enemy.dead || enemy.remove || (enemy.hp || 0) <= 0) return false;
     if (enemy.coopScaledClone || enemy.summonedBy || enemy.summonedByBoss) return false;
+    if (enemy.veyreignPopulationRole==='elite') return false;
     if (isBossEnemy(enemy) || enemy.miniBoss || enemy.bossType || enemy.bossId) return false;
     return true;
   });

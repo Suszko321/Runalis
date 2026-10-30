@@ -19,7 +19,7 @@ const tick=g=>{closeDialogue(g.dialogue,{immediate:true});updateEnemies(0,g.play
 for(const fate of ['kill','turn']){
  const g=game(fate);assert(enterDungeon(g,entrance));
  for(let floor=1;floor<=4;floor++){
-  const w=g.world;assert.equal(w.floor,floor);assert.equal(w.totalFloors,5);assert.equal(w.enemies.length,32);assert(w.enemies.every(e=>e.batBeast||e.vampire));tick(g);
+  const w=g.world;assert.equal(w.floor,floor);assert.equal(w.totalFloors,5);assert.equal(w.enemies.length,60);assert(w.enemies.every(e=>e.batBeast||e.vampire));tick(g);
   const stair=w.objects.find(o=>o.direction==='down');assert(stair.locked);assert(!transitionDungeonFloor(g,stair));
   for(const o of w.objects.filter(o=>o.veyreignSeal)){handleVeyreignInteraction(g,o);assert(!w.dungeonState.veyreign.seals[o.veyreignSeal]);}
   for(const e of w.enemies)e.hp=0;tick(g);

@@ -1,3 +1,4 @@
+import {initializeVeyreignPopulation} from './veyreignPopulation.js';
 import {prepareVeyreignTransformation} from './veyreignTransformation.js';
 import {ENCOUNTER_VERSION} from './encounterData.js';
 import {makeEnemy} from './overworldUtils.js';
@@ -23,7 +24,7 @@ export function installVeyreign(w){
  else{route([[72,123],[72,100],[25,100],[23,100],[23,60],[69,60],[90,60],[90,91],[119,91],[138,91],[138,44],[119,44],[90,44],[90,23],[71,23]]);route([[71,23],[23,23]]);}
 
  w.spawn=w.floor===5?point(48,79):point(72,125);w.bossRoomCenter=w.floor===5?point(48,32):null;
- if(restored){w.objects=saved.objects;w.enemies=saved.enemies;w.drops=saved.drops||[];repairVeyreignMechanisms(w);return;}
+ if(restored){w.objects=saved.objects;w.enemies=saved.enemies;w.drops=saved.drops||[];initializeVeyreignPopulation(w);repairVeyreignMechanisms(w);return;}
  if(oldAuthored&&w.floor<5)w.veyreignLayoutMigrated=true;
  w.objects=[];w.enemies=[];w.drops=oldAuthored?(saved.drops||[]).map((d,i)=>({...d,x:w.spawn.x+(i%4)*20,y:w.spawn.y-40-Math.floor(i/4)*20})):[];
  const object=(kind,id,name,x,y,extra={})=>w.objects.push({kind,id,name,...point(x,y),r:20,veyreignAuthored:true,veyreignLayoutVersion:2,...extra});
@@ -47,7 +48,8 @@ export function installVeyreign(w){
   object('signpost','veyreign-threshold','The Last Heartbeat',48,60,{interactable:!!s.firstVisit,hideLabel:!s.firstVisit,talk:'The throne chamber will seal around the whole company. Alistair hunts the outer ring, marks each heartbeat, and sweeps the court with blood. Read his tells. There are no borrowed hearts left.'});
  }
  for(const r of w.rooms){for(let i=0;i<4;i++)object('townProp',`veyreign-decor-${w.floor}-${r.id}-${i}`,'Court of Veyreign',r.x+2+(i%2)*(r.w-5),r.y+2+Math.floor(i/2)*(r.h-5),{propType:w.floor===1?'contractTable':w.floor===2?'graveMarker':w.floor===3?'column':w.floor===4?'purificationBrazier':'memorialStone',decorative:true,interactable:false,hideLabel:true});}
- for(const e of w.enemies){e.encounterStatsVersion=ENCOUNTER_VERSION;e.encounterRegion='castleVeyr';e.encounterTier=e.veyreignLord?'boss':'ordinary';e.eliteInitialized=true;e.baseCombatXp=e.xp;}
+ initializeVeyreignPopulation(w);
+ for(const e of w.enemies)if(e.veyreignLord){e.encounterStatsVersion=ENCOUNTER_VERSION;e.encounterRegion='castleVeyr';e.encounterTier='boss';e.eliteInitialized=true;e.baseCombatXp=e.xp;}
  for(const o of w.objects){const old=priorObjects.get(o.id);if(old)for(const key of ['claimed','depleted','opened','looted','rewardClaimed'])if(old[key]!=null)o[key]=old[key];}
  repairVeyreignMechanisms(w);
  w.dungeonState.mainBossEnemyId='veyreign-lord';w.dungeonState.requiredBossIds=['veyreign-lord'];delete w.dungeonState.arenas?.[w.floor];
