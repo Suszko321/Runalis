@@ -21,6 +21,12 @@ has an opening conversation with two substantive optional questions. Normal
 stairs, party consent, arena sealing, wipe resets and victory portals use the
 existing dungeon framework.
 
+Failed boss attempts return to the Castle Nav Stone. Re-entry during the same
+session skips to a safe position outside the boss-room threshold, retaining the
+eight broken seals. Save & Quit or a browser/profile reload ends that expedition:
+the player returns to the surface and the next entry starts from floor one.
+Personal completion and vampire choices persist. See [dungeon retries](../dungeon-retry/README.md).
+
 Each combat room now has one elite Vampire Spawn and four weaker reinforcements.
 See the [elite and population pass](../veyreign-population/README.md) for modifier
 coverage, role balance, saved-run migration and online effect synchronization.

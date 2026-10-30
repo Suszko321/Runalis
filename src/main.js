@@ -3,6 +3,7 @@ import {updateMalakarEncounter,handleMalakarInput,handleMalakarKeyboard} from '.
 import {renderMobileDialogue} from './mobileText.js';
 import {updatePartyEntry,handlePartyEntryInput,handlePartyEntryKeyboard,partyEntryPending,cancelPartyEntry} from './partyEntrySystem.js';
 import {rememberRepeatableInstance} from './instanceEncounterMemory.js';
+import {returnDungeonToNavStone,resetDungeonSession} from './dungeonSystem.js';
 import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
 import {initMobileShell, createMobileControls} from './mobileControls.js';
 import {createOnlineSession} from './onlineSession.js';
@@ -494,6 +495,7 @@ class RunalisGame {
       this.camera.y = this.player.y - this.canvas.height / 2;
     } else if (savedState) {
       this.applySave(savedState);
+      resetDungeonSession(this);
     } else {
       this.giveStartingItems();
       this.player.act1OpeningPending = true;
@@ -1706,6 +1708,7 @@ class RunalisGame {
     if (!this.developerEditor || !this.developerEditor.aiPaused) {
       updateEnemies(dt, this.player, this.world, this.log, now, this);
       if(partyEntryPending(this))return;
+      if(this.resolveCombatDefeat(now))return;
       updateOverworldEncounters(this, dt, now);
       this.updateRespawns(dt);
       this.updateAmbientNpcs(dt);
@@ -1766,6 +1769,7 @@ class RunalisGame {
     if (!this.developerEditor || !this.developerEditor.aiPaused) {
       updateEnemies(dt, this.player, this.world, this.log, now, this);
       if(partyEntryPending(this))return;
+      if(this.resolveCombatDefeat(now))return;
       updateOverworldEncounters(this, dt, now);
       this.updateRespawns(dt);
       this.updateAmbientNpcs(dt);
@@ -2140,8 +2144,17 @@ class RunalisGame {
     ctx.restore();
   }
 
+  resolveCombatDefeat(now) {
+    if(this.world?.mode==='pvpArena')return false;
+    updateCoopReviveTimers(this,0,now);
+    if(this.player.hp<=0&&!handleActorZeroHpForCoop(this,this.player,now))this.handlePlayerDefeated();
+    return !!this.deathScreen?.active;
+  }
+
   handlePlayerDefeated() {
     if(this.deathScreen?.active)return;
+    cancelPartyEntry(this,'',false);
+    closeDialogue(this.dialogue,{immediate:true});
     cancelActiveAbilityCharge(this.player);
     cancelActiveHeavyAttackCharge(this.player,this.world);
     this.clearDefeatCombatState(this.player);
@@ -2158,6 +2171,7 @@ class RunalisGame {
   completePlayerRespawn() {
     const lostGold = this.applyDeathGoldPenalty();
 
+    if(this.world?.mode==='dungeon')returnDungeonToNavStone(this);
     this.restorePlayerVitalsAfterDefeat(this.player);
     this.clearDefeatCombatState(this.player);
     this.respawnAtLastSafeLocation();
@@ -2261,7 +2275,7 @@ class RunalisGame {
   respawnAtLastSafeLocation() {
     // Every death uses the same surface destination, including failed instances.
     rememberRepeatableInstance(this,{failed:true});
-    if(this.world?.mode==='dungeon')exitDungeon(this,{force:true});
+    if(this.world?.mode==='dungeon')returnDungeonToNavStone(this);
     if(this.world?.mode==='sideZone')exitSideZone(this);
     if(this.world?.mode==='tower')exitTower(this,{force:true});
     if(!this.world?.navStones?.length){
@@ -2837,6 +2851,7 @@ class RunalisGame {
   }
 
   saveAndQuit() {
+    if(!this.deathScreen?.active&&!this.developerEditor)resetDungeonSession(this);
     const saved = this.save(false);
 
     if (!saved) {

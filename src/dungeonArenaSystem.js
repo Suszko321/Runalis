@@ -9,6 +9,15 @@ const entryLatches = new WeakSet();
 
 const living=e=>e&&!e.dead&&!e.remove&&(e.hp>0||e.veyreignTransform!=null);
 const contains=(a,p,inset=0)=>p.x>=a.x+inset&&p.y>=a.y+inset&&p.x<=a.x+a.w-inset&&p.y<=a.y+a.h-inset;
+export function bossRetryArrival(world){
+ const a=world?.bossArena;if(!a||a.phase==='defeated'||world.dungeonState?.cleared)return null;
+ const gates=(world.arenaGates||[]).map(g=>{
+  const x=g.x+g.w/2,y=g.y+g.h/2;
+  const horizontal=g.w>g.h;
+  return {x:x+(horizontal?0:x<a.x+a.w/2?-64:64),y:y+(horizontal?(y<a.y+a.h/2?-64:64):0)};
+ }).sort((p,q)=>Math.hypot(p.x-world.spawn.x,p.y-world.spawn.y)-Math.hypot(q.x-world.spawn.x,q.y-world.spawn.y));
+ return gates.find(p=>!contains(a,p,-24)&&isActorPositionPassable(world,p.x,p.y,18))||world.spawn;
+}
 export function initializeDungeonArena(world){
  if(!['dungeon','tower'].includes(world?.mode)&&!(world?.mode==='sideZone'&&world.dungeonState?.grove))return null;
  const bosses=(world.enemies||[]).filter(e=>e.isDungeonMainBoss||e.isBoss&&!e.miniBoss&&!e.summonedBy&&!e.summonedByBoss);
@@ -85,6 +94,7 @@ export function resetFailedDungeonArena(world){
  entryLatches.delete(world);
  resetMalakar(world);
  const a=world?.bossArena;if(!a||a.phase==='defeated'||world.dungeonState?.cleared)return;
+ if(world.mode==='dungeon'&&a.phase==='active')world.dungeonState.bossRetry={floor:world.floor||1,arenaId:a.id};
  a.phase='resetting';clearEliteEncounters(world);world.arenaBarriers=[];
  for(const e of world.enemies||[])if(a.bossIds.includes(e.id)){
   e.hp=e.maxHp;e.dead=e.remove=false;e.x=e.homeX;e.y=e.homeY;e.aggro=e.awakened=e.hasDetectedPlayer=e.isInCombat=false;

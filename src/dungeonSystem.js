@@ -5,7 +5,8 @@ import {requestPartyEntry} from './partyEntrySystem.js';
 import {canUseBossReturnPortal} from './bossReturnPortals.js';
 import {installOrchardDungeon,beginOrchardDungeon,updateOrchardDungeon} from './ashenOrchardDungeon.js';
 import {configureEncounterEnemy,dungeonEncounterProfile,ENCOUNTER_VERSION} from './encounterData.js';
-import {initializeDungeonArena,resetFailedDungeonArena} from './dungeonArenaSystem.js';
+import {initializeDungeonArena,resetFailedDungeonArena,bossRetryArrival} from './dungeonArenaSystem.js';
+import {placeAtNavStone} from './navStoneNetwork.js';
 import {clearEliteEncounters} from './eliteEncounterSystem.js';
 import {dressWorld} from './worldAuthorship.js';
 import {syncDungeonCompletion} from './dungeonCompletion.js';
@@ -64,7 +65,8 @@ import {
 } from './floatingText.js';
 
 import {
-  markPartyDungeonEnteredObjective
+  markPartyDungeonEnteredObjective,
+  closeDialogue
 } from './dialogueSystem.js';
 
 const DUNGEON_BASELINE_PLAYABLE_TILES = 800;
@@ -214,28 +216,31 @@ export function enterDungeon(game, entrance, options = {}) {
   if(!prior||canReset)dungeonState.populationCycle=prior?Number(prior.populationCycle||0)+1:0;
   dungeonOptions.seed=dungeonState.seed;
   ledger[dungeonOptions.dungeonId]=dungeonState;
+  dungeonState.surfaceReturnPoint={...hostGame.overworldState.returnPoint,regionId:hostGame.overworldState.regionId};
   if(isVeyreign(dungeonOptions)&&!dungeonState.veyreign){dungeonState.cleared=false;dungeonState.finalBossDefeated=false;dungeonState.currentFloor=1;dungeonState.floorStates={};dungeonState.bossReturns={};dungeonState.arenas={};dungeonState.veyreign={version:1,firstVisit:!(hostGame.player.veyreignCompleted||hostGame.player.worldMemory.veyreignCompleted),seals:{},choices:{},seen:{}};}
+  const retryFloor=!dungeonState.cleared?dungeonState.bossRetry?.floor:null;
   const dungeon = createDungeonWorld({
     ...dungeonOptions,
     dungeonState,
-    floor: dungeonState.currentFloor||1,
+    floor: retryFloor||dungeonState.currentFloor||1,
     playerCount: getCoopEnemyScalingPlayerCount(hostGame.player)
   });
 
   hostGame.world = dungeon;
+  const arrival=retryFloor===dungeon.floor?bossRetryArrival(dungeon):null;
   hostGame.world.effects.push({
     kind: 'enemyPulse',
     layer: 'front',
-    x: dungeon.spawn.x,
-    y: dungeon.spawn.y,
+    x: arrival?.x??dungeon.spawn.x,
+    y: arrival?.y??dungeon.spawn.y,
     color: dungeon.theme === 'demon' ? '#ef6f5e' : '#b68cff',
     radius: 58,
     ttl: 0.7,
     age: 0
   });
 
-  hostGame.player.x = dungeon.spawn.x;
-  hostGame.player.y = dungeon.spawn.y;
+  hostGame.player.x = arrival?.x??dungeon.spawn.x;
+  hostGame.player.y = arrival?.y??dungeon.spawn.y;
   hostGame.player.dirX = 0;
   hostGame.player.dirY = 1;
   hostGame.player.currentZone = dungeon.name;
@@ -246,6 +251,7 @@ export function enterDungeon(game, entrance, options = {}) {
   hostGame.camera.y = hostGame.player.y - hostGame.canvas.height / 2;
 
   hostGame.log?.(`Entered ${dungeon.name}.`);
+  if(arrival)hostGame.log?.('The cleared route remains open. You return to the boss threshold; enter when the party is ready.');
   beginOrchardDungeon(hostGame);
   markPartyDungeonEnteredObjective(actor || hostGame.player, dungeon.dungeonId || dungeon.poiId || dungeon.entranceId);
 
@@ -263,6 +269,42 @@ export function rememberDungeonRun(game,{failed=false}={}){
  if(failed)resetFailedDungeonArena(w);saveActiveDungeonFloorState(w);
  const state=w.dungeonState;if(state.cleared&&!state.resetAt)state.resetAt=(Number(host.player.worldMemory?.elapsed)||0)+1800;
  host.player.worldMemory ||= {};host.player.worldMemory.dungeonRuns ||= {};host.player.worldMemory.dungeonRuns[w.dungeonId]=state;clearEliteEncounters(w);
+}
+
+// Defeat and session boundaries must leave the instance before anyone can be
+// restored to life. Repair missing legacy surface data rather than retaining a
+// sealed boss arena as a respawn destination.
+export function returnDungeonToNavStone(game){
+ const host=getWorldTransitionGame(game),w=host?.world;
+ if(w?.mode!=='dungeon'||host.onlineSession?.role==='guest')return false;
+ if(host.dialogue)closeDialogue(host.dialogue,{immediate:true});
+ rememberDungeonRun(host,{failed:true});
+ if(!host.overworldState){
+  const p=w.dungeonState?.surfaceReturnPoint;
+  host.overworldState={continentId:'runalis',geographyVersion:CONTINENT_VERSION,mode:'overworld',regionId:p?.regionId||'hearthmereFrontier',entranceId:w.entranceId,returnPoint:p?{x:p.x,y:p.y}:null};
+ }
+ if(!exitDungeon(host,{force:true}))return false;
+ if(!w.dungeonState?.surfaceReturnPoint){
+  const stone=host.world.navStones?.find(s=>s.id===`nav-hearthmereFrontier-${w.dungeonId}`);
+  if(stone)Object.assign(host.player,{x:stone.x,y:stone.y});
+ }
+ placeAtNavStone(host,host.player);
+ return true;
+}
+
+// Called only on actual profile login/logout, never by save rehydration or
+// online scene snapshots. Character quests, rewards and bloodlines persist.
+export function resetDungeonSession(game){
+ const host=getWorldTransitionGame(game);if(!host?.player||host.onlineSession?.role==='guest')return false;
+ const returned=returnDungeonToNavStone(host);
+ if(host.player.worldMemory)host.player.worldMemory.dungeonRuns={};
+ if(returned){
+  host.player.currentPosition={x:host.player.x,y:host.player.y};
+  host.camera.x=host.player.x-(host.canvas?.width||0)/2;host.camera.y=host.player.y-(host.canvas?.height||0)/2;
+  host.placeCoopPlayersNearHost?.();
+  host.log?.('The dungeon expedition has ended. Its halls will be repopulated on your next entry.');
+ }
+ return returned;
 }
 export function exitDungeon(game, exit = {}) {
   const hostGame = getWorldTransitionGame(game);
