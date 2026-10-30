@@ -1,9 +1,10 @@
 // The city continues beyond the north/west map edge; this is only its south apron.
 import {TILE} from './data.js';
+export const ORRAKAI_SURFACE_GATE=Object.freeze({x:10.5*TILE,y:3.5*TILE});
 export const ORRAKAI_SOUTH_ROAD={id:'orrakai-south-approach',name:'Orrakai South Road',roadClass:'rural',width:4,points:[[10.5,2],[10.5,8.5],[14.5,13.5],[20,20],[26.5,28.5],[32,34]]};
 export function configureOrrakaiApproach(objects,locations){
  const positions={
-  'capital-gate-prototype':[10.5,3.5],'nav-hearthmereFrontier-outpost':[14.5,13.5],
+  'capital-gate-prototype':[ORRAKAI_SURFACE_GATE.x/TILE,ORRAKAI_SURFACE_GATE.y/TILE],'nav-hearthmereFrontier-outpost':[14.5,13.5],
   orrakaiSouthGateGuard:[13.5,6.5],orrakaiRoadScout:[8.5,10.5],outpostCampfire:[7.5,14.5],outpostShrine:[18.5,11.5],
   'signpost-outpost-1':[12.5,8.5],roadCookMira:[7.5,17.5],covenantRoadPhysician:[21.5,15.5],
   act1ReliefWagonNearRoad:[23.5,13.5],act1MedicineNearRoad:[23.5,16.5],act1RoadPurificationBrazier:[21.5,18.5],

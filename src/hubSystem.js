@@ -12,6 +12,7 @@ import { createWorld, findNearestActorPassablePoint } from './world.js';
 import { createOverworldReturnState, restoreOverworldFromState,rememberDungeonRun } from './dungeonSystem.js';
 import { captureContinentalState, restoreContinentalState } from './continentPersistence.js';
 import { CONTINENT_VERSION } from './continentDefinition.js';
+import {ORRAKAI_SURFACE_GATE} from './orrakaiExterior.js';
 import { addItem, removeItem, countItem, gainXp } from './player.js';
 import { addLootText, addQuestText, addStatusText } from './floatingText.js';
 import { openMarketShop } from './shopSystem.js';
@@ -113,10 +114,13 @@ export function exitCapitalHub(game, exit = null) {
 
   if (!hostGame?.player || hostGame.world?.mode !== 'capital') return false;
 
-  const state = hostGame.overworldState || {};
-
-  hostGame.world = hostGame.capitalReturnWorld?.continentId==='runalis'
-    ? hostGame.capitalReturnWorld : restoreOverworldFromState(state);
+  const cached=hostGame.capitalReturnWorld;
+  const cachedGate=cached&&surfaceCapitalGate(cached,'south');
+  // A town exit belongs to the current authored approach. Old return snapshots
+  // and cached pre-relocation gates must not choose the retired entrance.
+  const currentApproach=cached?.continentId==='runalis'&&cached.continentRuntime&&cachedGate&&
+    Math.hypot(cachedGate.x-ORRAKAI_SURFACE_GATE.x,cachedGate.y-ORRAKAI_SURFACE_GATE.y)<1;
+  hostGame.world=currentApproach?cached:createWorld({spawnRegionId:'hearthmereFrontier'});
   const gateId = 'south';
   const gate = surfaceCapitalGate(hostGame.world,gateId);
   const arrival = surfaceGateArrival(hostGame.world,gate,gateId);
@@ -199,6 +203,7 @@ function clearPartyTravelCombatState(game) {
   ];
 
   for (const actor of party) {
+    actor.moveTarget=null;
     cancelActiveAbilityCharge(actor);
     cancelActiveHeavyAttackCharge(actor, game.world);
 
