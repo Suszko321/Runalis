@@ -398,3 +398,12 @@ html:root body.fullscreen-menu-design #app #skills .hotbar-empty-symbol {font-si
  html:root body.fullscreen-menu-design #app #skills .ability-hotbar-clear {min-height:18px!important; padding:1px!important; font-size:11px!important;}
 }
 
+/* Hotbar placement stays visible for touch, mouse and compact workspaces. */
+html:root body.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-pane > .ability-hotbar-header {display:block!important;min-width:0;}
+html:root body.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-tools {display:flex!important;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+html:root body.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-tools h3 {margin:0!important;}
+html:root body.fullscreen-menu-design #app .game-shell #skills [data-clear-all-ability-slots] {min-height:32px!important;padding:5px 9px!important;white-space:nowrap;font:600 12px/1.2 system-ui,sans-serif!important;}
+html:root body.fullscreen-menu-design #app .game-shell #skills .choosing-hotbar-skill .hotbar-placement-status {display:block!important;margin:5px 0!important;color:#ffe2a1!important;font:12px/1.35 system-ui,sans-serif!important;}
+html:root body.fullscreen-menu-design #app .game-shell #skills .ability-hotbar-assign.awaiting-skill {position:relative;border:2px solid #ffe0a0!important;outline:2px solid #bd8c3a!important;outline-offset:2px;background:#4b3821!important;box-shadow:inset 0 0 12px #e5ad4940,0 0 15px #e5ad4980!important;}
+html:root body.fullscreen-menu-design #app .game-shell #skills .hotbar-selection-marker {position:absolute!important;top:1px;right:3px;font:bold 12px/1 system-ui,sans-serif!important;color:#fff3cf!important;}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills [data-clear-all-ability-slots] {min-height:44px!important;}

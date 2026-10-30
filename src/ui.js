@@ -114,6 +114,7 @@ import {
 import {
   assignAbilityToSlot,
   clearAbilitySlot,
+  clearAllAbilitySlots,
   getAbilityAvailability,
   getAbilityCategory,
   getKnownActiveAbilities
@@ -1036,6 +1037,8 @@ function resetAbilityControllerSelection(game) {
   if (!game?.uiState) return;
   game.uiState.abilityAssignmentMode = false;
   game.uiState.pendingAbilityId = null;
+  game.uiState.hotbarTargetSlot = null;
+  game.uiState.hotbarSkillChoice = null;
   if (game.uiAbilityControllerState) {
     game.uiAbilityControllerState.region = 'ability';
     game.uiAbilityControllerState.morphAbilityId = null;
@@ -1169,6 +1172,8 @@ function beginAbilityAssignment(game, abilityId) {
   game.uiState.selectedAbilityId = abilityId;
   game.uiState.pendingAbilityId = abilityId;
   game.uiState.abilityAssignmentMode = true;
+  game.uiState.hotbarTargetSlot = null;
+  game.uiState.hotbarSkillChoice = null;
 
   const state = game.uiAbilityControllerState || syncAbilityControllerState(game).state;
   const assignedSlot = game.player.loadout?.abilitySlots?.indexOf(abilityId) ?? -1;
@@ -1198,6 +1203,7 @@ function cancelAbilityAssignment(game) {
 function completeAbilityAssignment(game, slot) {
   const abilityId = game.uiState.pendingAbilityId || game.uiState.selectedAbilityId;
   const result = assignAbilityToSlot(game.player, slot, abilityId);
+  if(!result.ok)game.uiState.mobileAbilityFeedback=result.reason;
   if(document.body.classList.contains('mobile-input')){
     game.uiState.mobileAbilityFeedback=result.ok?`${result.ability.name} equipped in tile ${slot+1}.`:result.reason;
     if(result.ok){game.uiState.selectedAbilityId=abilityId;game.uiState.mobileAbilityDetailOpen=false;}
@@ -1209,6 +1215,8 @@ function completeAbilityAssignment(game, slot) {
   if (result.ok) {
     game.uiState.abilityAssignmentMode = false;
     game.uiState.pendingAbilityId = null;
+    game.uiState.hotbarTargetSlot = null;
+    game.uiState.hotbarSkillChoice = null;
     const state = game.uiAbilityControllerState || syncAbilityControllerState(game).state;
     state.region = 'ability';
   }
@@ -2107,6 +2115,8 @@ function createDefaultUIState() {
     abilityCategory: 'all',
     abilityAssignmentMode: false,
     pendingAbilityId: null,
+    hotbarTargetSlot: null,
+    hotbarSkillChoice: null,
     lastInputMode: 'mouse',
     selectedSkillId: null,
     selectedCharacterStat: 'Level'
@@ -2295,9 +2305,11 @@ function bindSubtabs(player, game) {
 
   document.querySelectorAll('[data-ability-category]').forEach(btn => {
     btn.onclick = () => {
+      const targetSlot=game.uiState.hotbarTargetSlot;
       game.uiState.abilityCategory = btn.dataset.abilityCategory || 'all';
       game.uiState.selectedAbilityId = null;
       resetAbilityControllerSelection(game);
+      game.uiState.hotbarTargetSlot=targetSlot;
       renderUI(player, game.logLines || [], game);
     };
   });
@@ -2312,9 +2324,16 @@ function bindSubtabs(player, game) {
       if (!document.body.classList.contains('mobile-input')&&canMouseDriveMenuSelection(game)) selectAbility();
     };
     btn.onclick = () => {
+      const targetSlot=game.uiState.hotbarTargetSlot;
       selectAbility();
-      if(document.body.classList.contains('mobile-input'))game.uiState.mobileAbilityDetailOpen=true;
       resetAbilityControllerSelection(game);
+      if(Number.isInteger(targetSlot)){
+        game.uiState.hotbarTargetSlot=targetSlot;
+        game.uiState.pendingAbilityId=btn.dataset.selectAbilityId;
+        completeAbilityAssignment(game,targetSlot);return;
+      }
+      game.uiState.hotbarSkillChoice=btn.dataset.selectAbilityId;
+      if(document.body.classList.contains('mobile-input'))game.uiState.mobileAbilityDetailOpen=true;
       renderUI(player,game.logLines||[],game);
     };
   });
@@ -2322,10 +2341,16 @@ function bindSubtabs(player, game) {
   document.querySelectorAll('[data-assign-selected-slot]').forEach(btn => {
     btn.onclick = () => {
       const slot = Number(btn.dataset.assignSelectedSlot);
-      if (!game.uiState.pendingAbilityId) {
-        game.uiState.pendingAbilityId = game.uiState.selectedAbilityId;
+      if(game.uiState.abilityAssignmentMode||game.uiState.hotbarSkillChoice===game.uiState.selectedAbilityId){
+        game.uiState.pendingAbilityId=game.uiState.pendingAbilityId||game.uiState.hotbarSkillChoice;
+        completeAbilityAssignment(game,slot);return;
       }
-      completeAbilityAssignment(game, slot);
+      const oldTarget=game.uiState.hotbarTargetSlot;
+      resetAbilityControllerSelection(game);
+      game.uiState.hotbarTargetSlot=oldTarget===slot?null:slot;
+      game.uiState.mobileAbilityDetailOpen=false;
+      game.uiState.mobileAbilityFeedback='';
+      renderUI(player,game.logLines||[],game);
     };
   });
 
@@ -2339,6 +2364,13 @@ function bindSubtabs(player, game) {
       renderUI(player, game.logLines || [], game);
       if(document.body.classList.contains('mobile-input'))game.save?.(false);
     };
+  });
+  document.querySelector('[data-clear-all-ability-slots]')?.addEventListener('click',()=>{
+    clearAllAbilitySlots(player);resetAbilityControllerSelection(game);
+    game.uiState.mobileAbilityDetailOpen=false;
+    game.uiState.mobileAbilityFeedback='Hotbar cleared. Tap a slot, then choose a skill.';
+    game.log?.('Hotbar cleared. Your skills and morphs remain learned.');
+    renderUI(player,game.logLines||[],game);game.save?.(false);
   });
   bindMobileSkills(game,(id,slot)=>{game.uiState.pendingAbilityId=id;completeAbilityAssignment(game,slot);});
 }
@@ -3907,10 +3939,11 @@ function abilitySheet(player, game) {
   game.uiState.abilityAssignmentMode=assignmentMode;
   if(!pending)game.uiState.pendingAbilityId=null;
   const placementAbility = assignmentMode ? pending : selected;
+  const targetSlot=Number.isInteger(game.uiState.hotbarTargetSlot)?game.uiState.hotbarTargetSlot:null;
 
   return `
     <div class="ability-management-onepage ${game.uiState.mobileAbilityDetailOpen?'mobile-detail-open':''} ${assignmentMode ? 'assignment-mode' : ''}" data-ability-assignment-mode="${assignmentMode ? 'true' : 'false'}">
-      <p class="mobile-skills-tip">Tap a skill to view its morphs. Drag its icon onto a hotbar tile to equip or replace a skill. You can also tap a skill, then tap a tile.</p>
+      <p class="mobile-skills-tip">Tap a hotbar slot, then a skill to equip it. Each skill occupies one slot. Tap a skill to view its morphs, or drag its icon onto a slot.</p>
       <div class="card ability-category-pane">
         <h3>Technique Library</h3>
         
@@ -3936,18 +3969,18 @@ function abilitySheet(player, game) {
         <div class="mobile-skill-clear-options">${(player.loadout?.abilitySlots||[]).map((id,slot)=>id===selected?.id?`<button type="button" data-clear-ability-slot="${slot}">Clear tile ${slot+1}</button>`:'').join('')}</div>
       </div>
 
-      <div class="card ability-hotbar-pane">
-        <div>
-          <h3>${assignmentMode ? `Place ${escapeHtml(pending.name)}` : 'Hotbar'}</h3>
-          <p class="mobile-skills-feedback" role="status">${escapeHtml(game.uiState.mobileAbilityFeedback||'Your gameplay hotbar · drop an icon on a skill tile')}</p>
+      <div class="card ability-hotbar-pane ${targetSlot!==null?'choosing-hotbar-skill':''}">
+        <div class="ability-hotbar-header">
+          <div class="ability-hotbar-tools"><h3>${assignmentMode ? `Place ${escapeHtml(pending.name)}` : 'Hotbar'}</h3><button type="button" data-clear-all-ability-slots aria-label="Clear all hotbar skills" ${player.loadout?.abilitySlots?.some(Boolean)?'':'disabled'}>Clear all</button></div>
+          <p class="mobile-skills-feedback hotbar-placement-status" role="status" aria-live="polite">${escapeHtml(targetSlot!==null?`${game.uiState.mobileAbilityFeedback?game.uiState.mobileAbilityFeedback+' ':''}Slot ${targetSlot+1} selected — tap a skill. Tap the slot again to cancel.`:game.uiState.mobileAbilityFeedback||'Tap a slot, then choose a skill.')}</p>
           <p class="tag ability-desktop-help">${assignmentMode
             ? 'Choose a slot, then press A. Press B to return or X to clear a slot.'
             : selected
               ? 'Press A to assign the selected skill. Press X to choose an available morph.'
-              : 'Select an ability, then choose a slot.'}</p>
+              : 'Tap a slot, then choose a skill.'}</p>
         </div>
         <div class="ability-hotbar-row">
-          ${Array.from({length:HOTBAR_SLOT_COUNT},(_,slot)=>slot).map(slot => abilityHotbarSlot(player, slot, placementAbility, assignmentMode)).join('')}
+          ${Array.from({length:HOTBAR_SLOT_COUNT},(_,slot)=>slot).map(slot => abilityHotbarSlot(player, slot, placementAbility, assignmentMode, slot===targetSlot)).join('')}
           ${['Attack','Sprint','Dodge','Interact'].map(name=>`<div class="mobile-hotbar-fixed-action" aria-disabled="true">${name}</div>`).join('')}
         </div>
       </div>
@@ -4064,13 +4097,14 @@ function renderAbilityFacts(player,ability) {
 }
 function informationLabelForResource(id){return id==='spirit'?'Spirit':id==='stamina'?'Stamina':id||'resources';}
 
-function abilityHotbarSlot(player, slot, selected, assignmentMode = false) {
+function abilityHotbarSlot(player, slot, selected, assignmentMode = false, awaitingSkill=false) {
   const assigned = resolveSubclassAbility(player,player.loadout?.abilitySlots?.[slot]);
   const availability = assigned ? getAbilityAvailability(player, assigned) : null;
 
   return `
     <div class="ability-hotbar-slot ${assigned && !availability?.usable ? 'unavailable' : ''} ${assignmentMode ? 'assignment-target' : ''}">
-      <button type="button" class="ability-hotbar-assign" data-ability-hotbar-slot="${slot}" data-assign-selected-slot="${slot}" aria-label="${escapeHtml(`${abilitySlotLabel(slot,player)}: ${assigned?.name||'Empty'}${assigned?.subclassName?` · ${assigned.subclassName}`:''}`)}" title="${escapeHtml(assigned?.name||'Assign selected ability')}" ${selected ? '' : 'disabled'}>
+      <button type="button" class="ability-hotbar-assign ${awaitingSkill?'awaiting-skill':''}" data-ability-hotbar-slot="${slot}" data-assign-selected-slot="${slot}" aria-pressed="${awaitingSkill}" aria-label="${escapeHtml(`${abilitySlotLabel(slot,player)}: ${assigned?.name||'Empty'}${assigned?.subclassName?` · ${assigned.subclassName}`:''}${awaitingSkill?' · Selected; choose a skill':''}`)}" title="${escapeHtml(awaitingSkill?'Selected — choose a skill':assigned?.name||'Select this hotbar slot')}" ${selected ? '' : 'disabled'}>
+        ${awaitingSkill?'<span class="hotbar-selection-marker" aria-hidden="true">✓</span>':''}
         <i class="ability-hotbar-icon" aria-hidden="true">${assigned?hudArtIcon(assigned.id,escapeHtml(HUD_ABILITY_ICONS[assigned.id]||createAbilityFallbackIcon(assigned)),player):'<span class="hotbar-empty-symbol">◇</span>'}</i>
         <b class="ability-hotbar-binding">${escapeHtml(document.body.classList.contains('mobile-input')?`Skill ${slot+1}`:abilitySlotLabel(slot,player))}</b>
         <span class="ability-hotbar-name">${escapeHtml(assigned?assigned.name:'Empty')}</span>

@@ -1,7 +1,10 @@
 // Only one shared skill menu can own touch input, including in co-op.
 let activeBinding=null;
 let suppressClickUntil=0;
-if(typeof document!=='undefined')document.addEventListener('click',event=>{if(Date.now()<suppressClickUntil&&event.target.closest('.ability-management-onepage')){event.preventDefault();event.stopImmediatePropagation();}},true);
+if(typeof document!=='undefined')document.addEventListener('click',event=>{if(event.isTrusted&&Date.now()<suppressClickUntil&&event.target.closest('.ability-management-onepage')){event.preventDefault();event.stopImmediatePropagation();}},true);
+// Suppress only the trailing click from a drag. A fresh touch is a new action,
+// even if the player immediately taps a skill or another hotbar slot.
+if(typeof document!=='undefined')document.addEventListener('pointerdown',()=>{suppressClickUntil=0;},true);
 
 export function bindMobileSkills(game,assign){
   activeBinding?.abort();activeBinding=null;
@@ -18,14 +21,15 @@ export function bindMobileSkills(game,assign){
   abort.signal.addEventListener('abort',clean);
   root.addEventListener('pointerdown',event=>{
     const icon=event.target.closest('[data-select-ability-id] > i');
-    if(!icon||drag||event.button!==0)return;
-    const button=icon.closest('[data-select-ability-id]');
-    drag={pointer:event.pointerId,id:button.dataset.selectAbilityId,x:event.clientX,y:event.clientY,button,active:false};
-    root.setPointerCapture(event.pointerId);
+    const button=event.target.closest('[data-select-ability-id]');
+    if(!button||drag||event.button!==0)return;
+    drag={pointer:event.pointerId,id:button.dataset.selectAbilityId,x:event.clientX,y:event.clientY,button,canDrag:!!icon,moved:false,active:false};
+    try{root.setPointerCapture(event.pointerId);}catch{}
   },{signal:abort.signal});
   root.addEventListener('pointermove',event=>{
     if(!drag||drag.pointer!==event.pointerId)return;
     if(!drag.active&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)<8)return;
+    if(!drag.canDrag){drag.moved=true;return;}
     event.preventDefault();
     if(!drag.active){
       drag.active=true;document.body.classList.add('mobile-skill-dragging');
@@ -40,9 +44,9 @@ export function bindMobileSkills(game,assign){
   },{signal:abort.signal,passive:false});
   root.addEventListener('pointerup',event=>{
     if(!drag||drag.pointer!==event.pointerId)return;
-    const {id,active,button}=drag,slot=target?Number(target.dataset.assignSelectedSlot):null;
-    if(active){event.preventDefault();suppressClickUntil=Date.now()+350;}
-    clean();if(active&&slot!==null)assign(id,slot);else if(!active)button.click();
+    const {id,active,moved,button}=drag,slot=target?Number(target.dataset.assignSelectedSlot):null;
+    if(active||!moved){event.preventDefault();suppressClickUntil=Date.now()+350;}
+    clean();if(active&&slot!==null)assign(id,slot);else if(!active&&!moved)button.click();
   },{signal:abort.signal});
   root.addEventListener('pointercancel',clean,{signal:abort.signal});
   root.addEventListener('lostpointercapture',clean,{signal:abort.signal});

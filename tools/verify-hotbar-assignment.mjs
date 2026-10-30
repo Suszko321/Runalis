@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import {createPlayer,chooseClass,migratePlayer} from '../src/player.js';
+import {normalizeAbilityManagementState,assignAbilityToSlot,assignAbilityToFirstEmptySlot,clearAllAbilitySlots} from '../src/abilityLoadoutSystem.js';
+import {sanitizeForSave,normalizeProfileSave} from '../src/gameSave.js';
+import {getAbilityMastery} from '../src/abilityMasterySystem.js';
+import {selectAbilityMorph} from '../src/abilityMorphSystem.js';
+import {refreshClassAbilityUnlocks} from '../src/gameInteraction.js';
+const p=createPlayer('Hotbar');chooseClass(p,'oathkeeper');const strike='oathkeeperOathStrike';
+assert(assignAbilityToSlot(p,0,strike).ok);assert(assignAbilityToSlot(p,2,strike).ok);assert.equal(p.loadout.abilitySlots[0],null);assert.equal(p.loadout.abilitySlots[2],strike);assert.equal(p.loadout.abilitySlots.filter(id=>id===strike).length,1);
+const moved=assignAbilityToSlot(p,2,'block');assert.equal(moved.movedFromSlot,4);assert.equal(p.loadout.abilitySlots[4],null);assert.equal(p.loadout.abilitySlots[2],'block');assert(p.knownAbilities.includes(strike));
+const before=[...p.loadout.abilitySlots];assert(assignAbilityToFirstEmptySlot(p,'block').ok);assert.deepEqual(p.loadout.abilitySlots,before);
+console.log('PASS assigning moves a skill, replaces the destination and retains learned ownership; auto-fill never moves an assigned skill');
+const legacy=createPlayer('Legacy');chooseClass(legacy,'thornbinder');legacy.loadout.abilitySlots=['block','block','thornbinderThornLash','vineWhip','block'];normalizeAbilityManagementState(legacy);assert.deepEqual(legacy.loadout.abilitySlots,['block',null,'thornbinderThornLash',null,null]);assert(legacy.knownAbilities.includes('thornbinderThornLash'));
+console.log('PASS old duplicate assignments and aliases normalize to one slot per skill');
+getAbilityMastery(p,strike,true).level=10;assert(selectAbilityMorph(p,strike,'holyknight',100).ok);p.cooldowns={[strike]:123};const known=[...p.knownAbilities];assert(clearAllAbilitySlots(p));for(let i=0;i<3;i++)migratePlayer(p);assert.deepEqual(p.loadout.abilitySlots,[null,null,null,null,null]);assert.deepEqual(p.knownAbilities,known);assert.equal(p.abilityMorphs[strike],'holyknight');assert.equal(p.cooldowns[strike],123);
+const loaded=normalizeProfileSave(sanitizeForSave(p));migratePlayer(loaded);assert.deepEqual(loaded.loadout.abilitySlots,[null,null,null,null,null]);assert(loaded.knownAbilities.includes('block'));assert(assignAbilityToSlot(loaded,1,'block').ok);
+console.log('PASS clear all survives normalization/save reload and retains Block ownership, morphs and cooldowns');
+for(const cls of ['oathkeeper','gravecaller','thornbinder','lightbringer','fellhunter','waverider','classless']){const actor=createPlayer(cls);chooseClass(actor,cls);clearAllAbilitySlots(actor);for(let i=0;i<3;i++)refreshClassAbilityUnlocks({player:actor});assert.deepEqual(actor.loadout.abilitySlots,[null,null,null,null,null],cls);assert(assignAbilityToSlot(actor,2,'block').ok);refreshClassAbilityUnlocks({player:actor});assert.equal(actor.loadout.abilitySlots[2],'block');}
+console.log('PASS class refresh preserves cleared bars and explicit assignments across every standard class and Classless');
+assert(assignAbilityToSlot(loaded,3,strike).ok);loaded.classId='thornbinder';const old=[...loaded.loadout.abilitySlots];assert(!assignAbilityToSlot(loaded,2,strike).ok);assert.deepEqual(loaded.loadout.abilitySlots,old);
+console.log('PASS a refused assignment does not move or remove existing skills');

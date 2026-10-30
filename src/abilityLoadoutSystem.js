@@ -41,15 +41,17 @@ export function normalizeAbilityManagementState(player) {
   const sourceSlots = Array.isArray(player.loadout.abilitySlots)
     ? player.loadout.abilitySlots
     : [];
+  const assignedIds=new Set();
   const slots = Array.from({ length: HOTBAR_SLOT_COUNT }, (_, index) => {
     const initialBlock=index===HOTBAR_SLOT_COUNT-1&&sourceSlots[index]===undefined&&Number(player.abilityLayoutVersion||0)<HOTBAR_LAYOUT_VERSION;
     const id = normalizeAbilityId(initialBlock?BLOCK_ABILITY_ID:sourceSlots[index]);
-    return ACTIVE_ABILITY_IDS.has(id) ? id : null;
+    if(!ACTIVE_ABILITY_IDS.has(id)||assignedIds.has(id))return null;
+    assignedIds.add(id);return id;
   });
 
   // Old saves sometimes had assigned abilities missing from unlockedAbilities,
   // including a legacy fourth slot. Preserve every valid assignment in the
-  // learned pool while preserving all explicit hotbar assignments.
+  // learned pool. Duplicate assignments retain their first slot.
   for (const id of sourceSlots) {
     const normalized = normalizeAbilityId(id);
     if (normalized && ACTIVE_ABILITY_IDS.has(normalized) && !known.includes(normalized)) known.push(normalized);
@@ -116,12 +118,15 @@ export function assignAbilityToSlot(player, slotIndex, abilityId) {
     return { ok: false, reason: availability.reason };
   }
 
-  player.loadout.abilitySlots[slotIndex] = abilityId;
-  return { ok: true, reason: 'Assigned', ability, slotIndex };
+  const previousSlot=player.loadout.abilitySlots.indexOf(abilityId);
+  player.loadout.abilitySlots=player.loadout.abilitySlots.map((id,index)=>index===slotIndex?abilityId:id===abilityId?null:id);
+  return { ok: true, reason: 'Assigned', ability, slotIndex, movedFromSlot:previousSlot>=0&&previousSlot!==slotIndex?previousSlot:null };
 }
 
 export function assignAbilityToFirstEmptySlot(player, abilityId) {
   normalizeAbilityManagementState(player);
+  const assignedSlot=player.loadout.abilitySlots.indexOf(normalizeAbilityId(abilityId));
+  if(assignedSlot>=0)return {ok:true,reason:'Already assigned',ability:getAbilityById(abilityId),slotIndex:assignedSlot};
   const emptySlot = player.loadout.abilitySlots.findIndex(id => !id);
   if (emptySlot < 0) return { ok: false, reason: 'Unlocked but unassigned.' };
   return assignAbilityToSlot(player, emptySlot, abilityId);
@@ -134,6 +139,13 @@ export function clearAbilitySlot(player, slotIndex) {
   }
 
   player.loadout.abilitySlots[slotIndex] = null;
+  return true;
+}
+
+export function clearAllAbilitySlots(player) {
+  if(!player)return false;
+  normalizeAbilityManagementState(player);
+  player.loadout.abilitySlots=Array(HOTBAR_SLOT_COUNT).fill(null);
   return true;
 }
 
@@ -209,9 +221,9 @@ function getEquippedWeaponType(player) {
 }
 
 function uniqueValidAbilityIds(values) {
-  return uniqueStrings(values)
+  return [...new Set(uniqueStrings(values)
     .map(normalizeAbilityId)
-    .filter(id => ACTIVE_ABILITY_IDS.has(id));
+    .filter(id => ACTIVE_ABILITY_IDS.has(id)))];
 }
 
 function uniqueStrings(values) {

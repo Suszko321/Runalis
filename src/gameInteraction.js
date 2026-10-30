@@ -1250,10 +1250,6 @@ export function refreshClassAbilityUnlocks(game) {
   migratePlayer(player);
 
   if (!player.classId || !player.classSkill) {
-    if (player.classId === 'classless') {
-      player.loadout = player.loadout || {};
-      player.loadout.abilitySlots = [null, null, null, null];
-    }
     return;
   }
 
@@ -1271,22 +1267,13 @@ export function refreshClassAbilityUnlocks(game) {
     unlockActiveAbility(player, qAbility, { autoAssignEmpty: false });
   }
 
-  if (qAbility && !player.loadout.abilitySlots.includes(qAbility) && !player.loadout.abilitySlots.some(Boolean)) {
-    assignAbilityToSlot(player, 0, qAbility);
-  }
-
   if (player.classId === 'gravecaller') {
     const summonAbility = 'summonLich';
     if (!player.unlockedAbilities.includes(summonAbility)) {
       unlockActiveAbility(player, summonAbility, { autoAssignEmpty: false });
     }
 
-    if (!player.loadout.abilitySlots.includes(summonAbility)) {
-      const preferredSlot = !player.loadout.abilitySlots[1]
-        ? 1
-        : player.loadout.abilitySlots.findIndex(slot => !slot);
-      if (preferredSlot >= 0) assignAbilityToSlot(player, preferredSlot, summonAbility);
-    }
+    // Ownership refresh must not refill slots the player deliberately cleared.
   }
 }
 
