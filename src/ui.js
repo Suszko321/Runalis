@@ -296,12 +296,21 @@ function renderUIContent(player, logLines, game, options = {}) {
   // not rebuild hidden inventories, graphs and controller bindings.
   const hudOnly = options.hudOnly && !game.uiState.activeMainTab && !game.uiState.menuChooserOpen;
   if (!hudOnly) {
-    renderCharacter(player, game);
-    renderSkills(player, game);
-    renderInventory(player, game);
-    renderQuests(player, game);
-    renderWorldMap(player, game);
-    renderLog(logLines);
+    if(game.localMenuFrame){
+      if(game.uiState.activeMainTab==='skills')renderSkills(player,game);
+      if(game.uiState.activeMainTab==='inventory')renderInventory(player,game);
+      if(game.uiState.activeMainTab==='character')renderCharacter(player,game);
+      if(game.uiState.activeMainTab==='quests')renderQuests(player,game);
+      if(game.uiState.activeMainTab==='map')renderWorldMap(player,game);
+      if(game.uiState.activeMainTab==='log')renderLog(logLines);
+    }else{
+      renderCharacter(player, game);
+      renderSkills(player, game);
+      renderInventory(player, game);
+      renderQuests(player, game);
+      renderWorldMap(player, game);
+      renderLog(logLines);
+    }
     decorateInGameMenuPanels(game);
   }
 
@@ -1369,6 +1378,8 @@ function clearPendingInventorySalvageIfTargetChanged(game, element) {
 
 export function toggleGameMenuChooser(game) {
   if (!game) return false;
+  const host=game.hostGame||game;
+  if(!game.localMenuFrame&&host.localMenus?.eligible(game.player))return host.localMenus.toggle(game.player);
 
   const panelRoot = document.querySelector('.panel');
   if (!panelRoot) return false;

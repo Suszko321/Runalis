@@ -94,6 +94,7 @@ import {
 } from './ui.js';
 import { drawMinimapPanel, drawPlayerMinimap, renderMinimapHud, updateMinimapExploration } from './minimapHud.js';
 import {cameraPreference,partyCameraLayout} from './coopCamera.js';
+import {createLocalPlayerMenus} from './localPlayerMenus.js';
 
 import { TILE, getAbilityById } from './data.js';
 import { ACT1_OVERWORLD_DISPLAY_NAME, getDefaultWorldName, normalizePlayerFacingWorldName } from './worldNames.js';
@@ -509,6 +510,7 @@ class RunalisGame {
     applyAppearanceToPlayer(this.player, this.player.appearance);
     this.profileName = this.player.name;
     ensureCouchCoop(this);
+    this.localMenus=createLocalPlayerMenus(this);
     this.setUiOwner(this.player);
 
     const label = document.getElementById('activeProfileLabel');
@@ -933,6 +935,7 @@ class RunalisGame {
     this.started = false;
     this.onlineSession?.destroy();
     this.deathScreen?.destroy();
+    this.localMenus?.destroy();
     this.mobileControls?.destroy();
     this.developerEditor?.destroy();
     this.developerEditor = null;
@@ -1141,7 +1144,7 @@ class RunalisGame {
     if(handlePartyEntryInput(this))return true;
     if(this.deathScreen?.active&&this.deathScreen.handleController(this.getAllControllerInputsForUi()))return true;
     if(handleMalakarInput(this))return true;
-    const controllerInputs = this.getAllControllerInputsForUi();
+    const controllerInputs = this.getAllControllerInputsForUi().filter(input=>!this.localMenus?.handleInput(input,this.getActorForControllerInput(input)));
 
     if (this.world?.mode === 'act1Opening' && !isBlockingDomOverlayActive() && controllerInputs.some(input => input?.confirmPressed || input?.cancelPressed || input?.backPressed)) {
       requestAct1OpeningSkip(this);
@@ -1408,6 +1411,7 @@ class RunalisGame {
   }
 
   handleGameplayControllerInput(now, dt = 0) {
+    if(this.getPrimaryControllerInput()?.menuConsumed)return;
     const primary = this.getPrimaryControllerInput();
 
     if (!primary?.connected) return;
@@ -1478,6 +1482,7 @@ class RunalisGame {
     this.deathScreen?.update(now);
 
     this.updateControllerInputs();
+    this.localMenus?.sync();
     this.mobileControls?.update(now);
     const entryBlocked=updatePartyEntry(this);
     if (entryBlocked) {
@@ -1797,6 +1802,7 @@ class RunalisGame {
 
   isActorInterfaceBusy(actor) {
     if (!actor) return false;
+    if(this.localMenus?.isBusy(actor))return true;
     if(actor===this.player&&document.querySelector('#onlineMultiplayerOverlay.active'))return true;
     if(this.workshopService?.active&&this.workshopService.actor===actor)return true;
 
@@ -1948,6 +1954,7 @@ class RunalisGame {
 
   isSharedPartyCameraMode() {
     if (this.onlineSession?.role) return false;
+    if(this.localMenus?.hasOpen())return false;
     const layout=partyCameraLayout(getActiveLocalPlayers(this.player),this.canvas.width,this.canvas.height,this.coopCameraShared??true,cameraPreference());
     this.coopCameraShared=layout.shared;
     this.coopCameraTargetZoom=layout.shared?layout.zoom:1;

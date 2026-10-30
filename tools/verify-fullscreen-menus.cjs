@@ -16,7 +16,9 @@ const out='docs/fullscreen-menus';fs.mkdirSync(out,{recursive:true});
     for(const slot of ['weapon','helm','chest','legs','trinket'])p.equipment[slot]=p.inventory.find(e=>data.ITEMS[e.id].slot===slot)?.id||null;
     p.quests={active:Object.fromEntries(Array.from({length:30},(_,i)=>['review'+i,{id:'review'+i,name:'Expedition '+(i+1),title:'Expedition '+(i+1),description:'Explore a distant ruin.',objectives:[{text:'Reach the ruin',current:0,target:1}]}])),completed:{}};
     const game={player:p,world:{mode:'overworld',regionId:'menuReview',tiles:Array.from({length:60},()=>Array.from({length:80},()=>({biome:'grass',forestWall:false}))),objects:[],enemies:[],navStones:[],width:80,height:60},camera:{x:0,y:0},logLines:Array.from({length:100},(_,i)=>'World event '+(i+1)),log(text){this.logLines.push(text)},save(){},keys:{},input:{},canvas:document.querySelector('#game')};
-    document.querySelector('#mainMenu').classList.remove('active');document.querySelector('#app').classList.add('active');ui.initUI(game);
+    // This fixture deliberately skips main.js; remove the startup blocker
+    // that the normal boot sequence clears before exposing gameplay.
+    document.getElementById('startupStatus')?.remove();document.querySelector('#mainMenu').classList.remove('active');document.querySelector('#app').classList.add('active');ui.initUI(game);
     game.renderOwnedUI=()=>ui.renderUI(p,game.logLines,game);game.renderOwnedUI();
     window.menuReview={ui,players,p,game,data,loadout};
    });

@@ -135,7 +135,7 @@ function bindScrollReadButtons(root,player,game,rerender) {
   });
 }
 function bindInventoryPreviewRows(player, game, rerender) {
-  document.querySelectorAll('[data-inventory-item-index]:not([data-coterie-inventory-row])').forEach(row => {
+  document.querySelectorAll('.inventory-list-row[data-inventory-item-index]:not([data-coterie-inventory-row])').forEach(row => {
     const selectItem = () => {
       const index = Number(row.dataset.inventoryItemIndex);
       const subtab = row.dataset.inventorySubtab || game.uiState.inventorySubtab || 'equipment';
@@ -151,7 +151,7 @@ function bindInventoryPreviewRows(player, game, rerender) {
         updateEquipmentFocusRegionDom(game);
       }
 
-      document.querySelectorAll('[data-inventory-item-index]').forEach(itemRow => {
+      document.querySelectorAll('.inventory-list-row[data-inventory-item-index]').forEach(itemRow => {
         itemRow.classList.toggle('active', itemRow === row);
         itemRow.setAttribute('aria-selected', itemRow === row ? 'true' : 'false');
       });
@@ -164,7 +164,7 @@ function bindInventoryPreviewRows(player, game, rerender) {
     };
 
     row.onmouseenter = () => {
-      if (document.body.dataset.menuInputMode !== 'controller') selectItem();
+      if (!game.localMenuFrame && document.body.dataset.menuInputMode !== 'controller') selectItem();
     };
     row.onfocus = selectItem;
     row.onclick = selectItem;
@@ -1006,7 +1006,7 @@ function bindCoterieRows(player, game, rerender) {
     };
 
     row.onmouseenter = () => {
-      if (document.body.dataset.menuInputMode !== 'controller') selectSlot();
+      if (!game.localMenuFrame && document.body.dataset.menuInputMode !== 'controller') selectSlot();
     };
     row.onfocus = selectSlot;
     row.onclick = () => {
@@ -1051,7 +1051,7 @@ function bindCoterieRows(player, game, rerender) {
     };
 
     row.onmouseenter = () => {
-      if (document.body.dataset.menuInputMode !== 'controller') selectItem();
+      if (!game.localMenuFrame && document.body.dataset.menuInputMode !== 'controller') selectItem();
     };
     row.onfocus = selectItem;
     row.onclick = selectItem;
@@ -1098,7 +1098,7 @@ function bindEquipmentSlotRows(player, game, rerender) {
     };
 
     row.onmouseenter = () => {
-      if (document.body.dataset.menuInputMode !== 'controller') selectSlot();
+      if (!game.localMenuFrame && document.body.dataset.menuInputMode !== 'controller') selectSlot();
     };
     row.onfocus = selectSlot;
     row.onclick = selectSlot;

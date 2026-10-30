@@ -1,5 +1,9 @@
 /* One opaque workspace, with contextual navigation and independent scroll panes.
    This stylesheet intentionally supersedes the old floating/owner-size layouts. */
+@media(max-height:420px){
+  html:root body.fullscreen-menu-design:not(.local-menu-document) #app #skills .ability-pool-list {min-height:52px!important;}
+  html:root body.fullscreen-menu-design:not(.local-menu-document) #app #skills .ability-pool-button {box-sizing:border-box!important;width:calc(100% - 4px)!important;}
+}
 html:root body.fullscreen-menu-design #app .panel.open:not(.menu-chooser) {
   position:fixed!important; inset:0!important; width:100vw!important; height:100dvh!important;
   max-width:none!important; max-height:none!important; margin:0!important; padding:0!important;

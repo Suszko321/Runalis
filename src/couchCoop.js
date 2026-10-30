@@ -227,7 +227,7 @@ export function updateCouchCoop(game, dt, now, controllerInputs = null) {
     }
 
     const rawInput = buildAllyInput(game, ally, controllerInput, null);
-    const input = isCoopActorBusy(game, ally) ? suppressAllyGameplayInput(rawInput) : rawInput;
+    const input = isCoopActorBusy(game, ally)||controllerInput?.menuConsumed ? suppressAllyGameplayInput(rawInput) : rawInput;
 
     if (!canPvpActorAct(ally, game.world)) {
       cancelActiveHeavyAttackCharge(ally, game.world);
@@ -1919,6 +1919,7 @@ function createAllyGameView(game, ally) {
 }
 
 function isCoopActorBusy(game, ally) {
+  if(game.localMenus?.isBusy(ally))return true;
   if (ally.networkMenuBusy) return true;
   if (game?.dialogue?.active && game.dialogue.actor === ally) return true;
 

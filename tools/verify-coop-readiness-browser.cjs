@@ -26,9 +26,9 @@ const fs=require('node:fs'),assert=require('node:assert/strict'),launch=require(
   await page.evaluate(()=>{setPad(0);testPads[1]=null;});await page.waitForFunction(()=>coopGame().player.coop.players[0].controllerDisconnected);
   await page.evaluate(()=>setPad(1));await page.waitForFunction(()=>!coopGame().player.coop.players[0].controllerDisconnected);
   checks.push('Either controller can unplug and reconnect without stealing inputs or deleting P2');
-  await page.evaluate(()=>setPad(1,0,8));await page.waitForSelector('.panel.open');
-  assert(await page.evaluate(()=>coopGame().uiOwner===coopGame().player.coop.players[0]));
-  await page.evaluate(()=>setPad(1));await page.evaluate(()=>setPad(1,0,1));await page.waitForFunction(()=>!document.querySelector('.panel.open'));await page.evaluate(()=>setPad(1));
+  await page.evaluate(()=>setPad(1,0,8));await page.frameLocator('.local-player-menu[data-owner-slot="2"]').locator('.panel.open').waitFor();
+  assert(await page.evaluate(()=>coopGame().localMenus.isBusy(coopGame().player.coop.players[0])));
+  await page.evaluate(()=>setPad(1));await page.evaluate(()=>setPad(1,0,1));await page.waitForFunction(()=>!document.querySelector('.local-player-menu'));await page.evaluate(()=>setPad(1));
   checks.push('P2 opens and closes their own menu through controller input');
   const combat=await page.evaluate(async()=>{
    const {createPlayer,chooseClass}=await import('/src/player.js'),{requestBasicAttack}=await import('/src/combatMoves.js'),{updateCombat,updateEnemies}=await import('/src/combat.js'),{makeEnemy}=await import('/src/world.js');
