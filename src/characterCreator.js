@@ -587,11 +587,6 @@ function renderCharacterCreator(overlay, options = {}) {
     ? classStepHtml(state, selectedClass)
     : appearanceStepHtml(state, appearance, selectedClass, game);
 
-  if (state.currentStep === 'appearance' && document.body.classList.contains('mobile-input')) {
-    const panel = overlay.querySelector('.creator-appearance-panel');
-    panel.insertBefore(overlay.querySelector('.creator-preview-panel'), panel.querySelector('.creator-action-row'));
-  }
-
   bindCharacterCreatorEvents(overlay);
   startCreatorPreview(overlay);
   updateCreatorHoldVisual(overlay);
