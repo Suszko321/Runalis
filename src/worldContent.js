@@ -222,7 +222,7 @@ export const FACTIONS = {
     id: 'castleCourt',
     name: 'House Veyr',
     alignment: 'uncertain',
-    description: 'The ruined noble bloodline tied to Castle Veyr.'
+    description: 'The ruined noble bloodline tied to Castle Veyreign.'
   },
 
   bandits: {
@@ -308,16 +308,16 @@ export const WORLD_POIS = {
 
   gothicCastle: {
     id: 'gothicCastle',
-    name: 'Castle Veyr',
+    name: 'Castle Veyreign',
     kind: 'gothicCastle',
     factionId: 'castleCourt',
     tileX: 565,
     tileY: 105,
     radius: 96,
-    recommendedLevel: 10,
+    recommendedLevel: 25,
     description:
       'A black-spired castle overlooking the broken chapel road. Its banners are gone, but candles still burn in the windows.',
-    discoveredText: 'Castle Veyr discovered.',
+    discoveredText: 'Castle Veyreign discovered.',
     mapIcon: 'castle',
     theme: 'gothic',
     arrivalType: 'Cursed Noble Fortress',
@@ -727,7 +727,7 @@ export const NPCS = {
   lordVeyrShade: {
     id: 'lordVeyrShade',
     objectId: 'lordVeyrShade',
-    name: 'Lord Veyr’s Shade',
+    name: 'Castellan Edrik’s Echo',
     factionId: 'castleCourt',
     disposition: 'uncertain',
     role: 'Gothic Castle NPC',
@@ -735,7 +735,7 @@ export const NPCS = {
     tileY: 66,
     dialogueId: 'lordVeyrShadeIntro',
     questIds: ['theBlackSpire', 'vampireRedChalice'],
-    description: 'A noble ghost bound to Castle Veyr by an oath he will not explain.'
+    description: 'A noble ghost bound to Castle Veyreign by an oath he will not explain.'
   },
 
   thornboundSeer: {
@@ -1518,7 +1518,7 @@ export const DIALOGUES = {
       },
       {
         id: 'veyr',
-        label: 'Tell me about Castle Veyr.',
+        label: 'Tell me about Castle Veyreign.',
         response:
           'House Veyr guarded the chapel before pride hollowed them out. Their shade remains, wearing duty like a chain.',
         startsQuest: 'theVeyrBloodline',
@@ -1648,7 +1648,7 @@ export const DIALOGUES = {
 
   lordVeyrShadeIntro: {
     id: 'lordVeyrShadeIntro',
-    speaker: 'Lord Veyr’s Shade',
+    speaker: 'Castellan Edrik’s Echo',
     text:
       'You stand beneath my ruined house and still cast a living shadow. Either you are brave, ignorant, or sent.',
     options: [
@@ -2035,7 +2035,7 @@ export const QUESTS = {
     recommendedLevel: 1,
     type: 'main',
     summary:
-      'Castle Veyr has awakened beyond Orrakai, and the frontier disappearances point toward a history the council buried.',
+      'Castle Veyreign has awakened beyond Orrakai, and the frontier disappearances point toward a history the council buried.',
     stages: [
       {
         id: 'findYourLead',
@@ -2049,12 +2049,12 @@ export const QUESTS = {
       },
       {
         id: 'findCastleVeyr',
-        text: 'Find the evidence that points back to Castle Veyr and the sealed history of Runalis.',
+        text: 'Find the evidence that points back to Castle Veyreign and the sealed history of Runalis.',
         objectives: [{ type: 'discoverPoi', poiId: 'gothicCastle', required: 1 }]
       },
       {
         id: 'enterCastleVeyr',
-        text: 'Enter Castle Veyr through the old frontier road.',
+        text: 'Enter Castle Veyreign through the old frontier road.',
         objectives: [{ type: 'enterDungeon', dungeonId: 'castleVeyr', required: 1 }]
       },
       {
@@ -2103,7 +2103,7 @@ export const QUESTS = {
       },
       {
         id: 'veyrBlood',
-        text: 'Reach Castle Veyr and speak with Lord Veyr Shade.',
+        text: 'Reach Castle Veyreign and speak with Lord Veyr Shade.',
         objectives: [
           { type: 'discoverPoi', poiId: 'gothicCastle', required: 1 },
           { type: 'talk', npcId: 'lordVeyrShade', required: 1 }
@@ -2111,7 +2111,7 @@ export const QUESTS = {
       },
       {
         id: 'veyrSeal',
-        text: 'Clear Castle Veyr and take the black-spire seal.',
+        text: 'Clear Castle Veyreign and take the black-spire seal.',
         objectives: [{ type: 'clearDungeon', dungeonId: 'castleVeyr', required: 1 }]
       },
       {
@@ -2254,16 +2254,16 @@ export const QUESTS = {
     recommendedLevel: 10,
     type: 'story',
     summary:
-      'Sister Elyra believes Castle Veyr is tied to the chapel’s continuing unrest.',
+      'Sister Elyra believes Castle Veyreign is tied to the chapel’s continuing unrest.',
     stages: [
       {
         id: 'discoverCastle',
-        text: 'Discover Castle Veyr.',
+        text: 'Discover Castle Veyreign.',
         objectives: [{ type: 'discoverPoi', poiId: 'gothicCastle', required: 1 }]
       },
       {
         id: 'speakShade',
-        text: 'Speak with Lord Veyr’s Shade.',
+        text: 'Speak with Castellan Edrik’s Echo.',
         objectives: [{ type: 'talk', npcId: 'lordVeyrShade', required: 1 }]
       }
     ],
@@ -2280,11 +2280,11 @@ export const QUESTS = {
     recommendedLevel: 12,
     type: 'story',
     summary:
-      'Lord Veyr’s Shade speaks of a sealed darkness beneath his ruined house.',
+      'Castellan Edrik’s Echo speaks of a sealed darkness beneath his ruined house.',
     stages: [
       {
         id: 'holdCastle',
-        text: 'Defeat 3 Veyr Wraiths near Castle Veyr.',
+        text: 'Defeat 3 Veyr Wraiths near Castle Veyreign.',
         objectives: [{ type: 'kill', enemyKind: 'veyrWraith', required: 3 }]
       },
       {
@@ -2471,7 +2471,7 @@ export const QUESTS = {
       },
       {
         id: 'confirmCastle',
-        text: 'Discover Castle Veyr.',
+        text: 'Discover Castle Veyreign.',
         objectives: [{ type: 'discoverPoi', poiId: 'gothicCastle', required: 1 }]
       },
       {

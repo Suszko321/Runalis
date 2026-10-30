@@ -11,6 +11,7 @@
 // - Trigger hostile NPC conversion when dialogue option requests it.
 // - Provide UI-ready dialogue state.
 
+import {chooseVeyreignFate} from './veyreignRules.js';
 import {getCampaignStageId} from './act1CampaignData.js';
 import {
   getDialogue,
@@ -1229,6 +1230,7 @@ function conditionValues(value) {
 
 function applyDialogueOptionEffects(dialogueState, option, player, world, originNodeId = null) {
   if (!option) return;
+  if(option.veyreignFate&&!chooseVeyreignFate(player,world,option.veyreignFate)){dialogueState.effectReplyText='This offer is no longer available. No change has been made to your bloodline.';return;}
   if(option.orderAction) applyOrderChoice(player,option.orderAction);
   const campaignOwner=getQuestOwner(player);
   if(Number.isInteger(option.regulatorStep)&&!getStoryFlag(campaignOwner,'act1.machineAligned')) {

@@ -1,3 +1,4 @@
+import {veyreignConversation} from './veyreignRules.js';
 import {CAMPAIGN_ID,ACT1_ROUTES,CAMPAIGN_DIALOGUES,CAMPAIGN_STAGES} from './act1CampaignData.js';
 import {getStoryFlag} from './storyProgress.js';
 import {GROVE_DIALOGUES,GROVE_QUEST} from './blightedGroveData.js';
@@ -6,6 +7,7 @@ import {fieldConversation,campaignFollowup} from './campaignFieldConversations.j
 
 export function getCampaignConversation(npc,p,world){
  if(!p)return null;
+ const veyreign=veyreignConversation(npc,p,world);if(veyreign)return veyreign;
  const progress=p.questOwner||p,id=npc.npcId,mercy=progress.quests?.active?.mercy_in_orrakai?.currentStageId;
  const select=key=>CAMPAIGN_DIALOGUES[key];
  const reminder=(key,text,options=[])=>({id:`campaign:${key}:${id}`,speaker:npc.name,speakerId:id,text,options,appendNpcQuestOptions:false});

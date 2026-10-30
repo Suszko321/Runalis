@@ -7,6 +7,7 @@
 // - Rear-facing weapons/off-hands behind the body; front/side gear above it.
 // - Body remains code-drawn at the original gameplay scale.
 
+import {drawVampireFace} from './vampireFaceArt.js';
 import {drawHumanIdentityArt} from './humanIdentityArt.js';
 import {drawFactionCloak,isFactionGuard,drawFactionGuard} from './factionEquipmentArt.js';
 import { humanSpriteReady, drawHumanSprite,asset,drawRestingWeaponHand,applyHumanTorsoMotion } from './spriteArt.js';
@@ -210,6 +211,7 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
     animationPose
   });
 
+  if(actor.veyreignLord){ctx.fillStyle='#451528';ctx.beginPath();ctx.moveTo(-13,-30+bob);ctx.lineTo(13,-30+bob);ctx.lineTo(22,15+bob);ctx.lineTo(-22,15+bob);ctx.fill();ctx.fillStyle='#b79359';ctx.fillRect(-13,-29+Math.round(bob),26,2);}
   drawFactionCloak(ctx,actor,facing,bob,animationPose,false);
   if(factionGuard&&shieldBehindBody(facing))drawGuard();
   const spriteUsesClassicHead = customHeadReady() || !['short', 'ponytail'].includes(hairStyle);
@@ -380,6 +382,7 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
   else if(replacementGloves)drawLegwearGloves(rearWeapon?'support':facing==='left'?'primary':'all');
   else if(useSprite&&!options.weaponSheathed&&!rearWeapon)drawRestingWeaponHand(ctx,handParts);
   drawHandTrinketArt(ctx,armActor,animationPose,facing,bob);
+  drawVampireFace(ctx,actor,{bodyType,hairStyle,facing,bob});
   if(factionGuard&&!shieldBehindBody(facing))drawGuard();
 
   ctx.restore();

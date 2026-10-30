@@ -1,3 +1,5 @@
+import {installVeyreign,updateVeyreign,leaveVeyreign} from './veyreignDungeon.js';
+import {isVeyreign} from './veyreignRules.js';
 import {installMalakarSanctum,dressMalakarApproach,isMalakarDungeon,requestMalakarEntry} from './malakarEncounter.js';
 import {requestPartyEntry} from './partyEntrySystem.js';
 import {canUseBossReturnPortal} from './bossReturnPortals.js';
@@ -212,6 +214,7 @@ export function enterDungeon(game, entrance, options = {}) {
   if(!prior||canReset)dungeonState.populationCycle=prior?Number(prior.populationCycle||0)+1:0;
   dungeonOptions.seed=dungeonState.seed;
   ledger[dungeonOptions.dungeonId]=dungeonState;
+  if(isVeyreign(dungeonOptions)&&!dungeonState.veyreign){dungeonState.cleared=false;dungeonState.finalBossDefeated=false;dungeonState.currentFloor=1;dungeonState.floorStates={};dungeonState.bossReturns={};dungeonState.arenas={};dungeonState.veyreign={version:1,firstVisit:!(hostGame.player.veyreignCompleted||hostGame.player.worldMemory.veyreignCompleted),seals:{},choices:{},seen:{}};}
   const dungeon = createDungeonWorld({
     ...dungeonOptions,
     dungeonState,
@@ -256,6 +259,7 @@ export function enterDungeon(game, entrance, options = {}) {
 
 export function rememberDungeonRun(game,{failed=false}={}){
  const host=game?.hostGame||game,w=host?.world;if(w?.mode!=='dungeon')return;
+ if(w.dungeonState?.veyreign?.defeated)leaveVeyreign(w,host.player);
  if(failed)resetFailedDungeonArena(w);saveActiveDungeonFloorState(w);
  const state=w.dungeonState;if(state.cleared&&!state.resetAt)state.resetAt=(Number(host.player.worldMemory?.elapsed)||0)+1800;
  host.player.worldMemory ||= {};host.player.worldMemory.dungeonRuns ||= {};host.player.worldMemory.dungeonRuns[w.dungeonId]=state;clearEliteEncounters(w);
@@ -283,6 +287,7 @@ export function exitDungeon(game, exit = {}) {
   }
 
   if(hostGame.world?.mode==='dungeon'){
+    leaveVeyreign(hostGame.world,hostGame.player);
     if(exit.force)resetFailedDungeonArena(hostGame.world);
     saveActiveDungeonFloorState(hostGame.world);
     const state=hostGame.world.dungeonState;
@@ -949,6 +954,7 @@ export function restoreDungeonFromSaveState(saveState) {
   installMalakarSanctum(world);
   dressMalakarApproach(world);
   installOrchardDungeon(world);
+  installVeyreign(world);
   initializeDungeonArena(world);
   syncDungeonCompletion(world);
   return world;
@@ -1099,6 +1105,7 @@ export function createDungeonWorld(options = {}) {
     tier,
     structureImportance: options.structureImportance
   });
+  if(dungeonId==='castleVeyr')dungeonState.totalFloors=5;
   const totalFloors = Math.max(1, Number(dungeonState.totalFloors || classification.floors || 1));
   const floor = clampInt(options.floor || dungeonState.currentFloor || 1, 1, totalFloors);
   dungeonState.currentFloor = floor;
@@ -1196,13 +1203,15 @@ export function createDungeonWorld(options = {}) {
   installMalakarSanctum(world);
   dressMalakarApproach(world);
   installOrchardDungeon(world);
+  installVeyreign(world);
   initializeDungeonArena(world);
   syncDungeonCompletion(world);
   return world;
 }
 
-export function updateDungeonEvents(world,player,dt,log){
+export function updateDungeonEvents(world,player,dt,log,game=null){
   updateOrchardDungeon({world,player,log});
+  updateVeyreign(game||{world,player,log});
   if(!['dungeon','sideZone'].includes(world?.mode)||world.dungeonState?.malakar)return;
   for(const object of world.objects||[])if(object.pendingSpawnDelay!=null){object.pendingSpawnDelay-=dt;if(object.pendingSpawnDelay<=0){delete object.pendingSpawnDelay;triggerDungeonEvent({world,player,log},object,true);}}
   for(const [id,event] of Object.entries(world.dungeonState?.activeEvents||{})){if(event.completed)continue;

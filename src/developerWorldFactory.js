@@ -9,7 +9,7 @@ export const DEVELOPER_MAP_OPTIONS = Object.freeze([
   { id: 'echoryn', name: 'Echoryn Forest / Orrakai Frontier', type: 'overworld' },
   { id: 'ashen-orchard', name: 'Ashen Orchard', type: 'overworld-poi', poiId: 'ashenOrchard' },
   { id: 'ruined-chapel', name: 'Ruined Chapel', type: 'overworld-poi', poiId: 'brokenChapel' },
-  { id: 'castle-veyr', name: 'Castle Veyr', type: 'dungeon', dungeonId: 'castleVeyr', theme: 'castle' },
+  { id: 'castle-veyr', name: 'Castle Veyreign', type: 'dungeon', dungeonId: 'castleVeyr', theme: 'castle' },
   { id: 'aureate-marches', name: 'Aureate Marches', type: 'region', regionId: 'aureateMarches' },
   { id: 'ascension-wastes', name: 'Ascension Wastes', type: 'region', regionId: 'ascensionWastes' },
   { id: 'pilgrim-road', name: 'Pilgrim Road', type: 'route', routeId: 'pilgrimRoad' },

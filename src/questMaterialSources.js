@@ -19,7 +19,7 @@ export const QUEST_MATERIAL_SOURCES = Object.freeze({
   lightstormWard: 'Runecraft one from frontier materials or search the guarded Watcher Ridge Tower cache.',
   paleRune: 'Runecraft one from Pale Essence and Bone Shards or search the Watcher Ridge Tower cache.',
   lanternMoss: 'Forage glowing moss patches in marshes, ruins, and shadowed roads.',
-  veyrSigil: 'Defeat wraiths and Veyr Wraiths around Castle Veyr and Watcher Ridge.',
+  veyrSigil: 'Defeat wraiths and Veyr Wraiths around Castle Veyreign and Watcher Ridge.',
   hollowEye: 'Defeat Blighted Corpses along the Blighted Road and in corrupted frontier areas.',
   crackedRelic: 'Defeat Blighted Corpses or wraiths, search ruins and crypts, or earn one from frontier quests.'
 });

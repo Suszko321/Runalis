@@ -9,6 +9,7 @@ import {CONTINENT_REGIONS} from './continentDefinition.js';
 import {menuDirection,directionalMenuItem} from './menuNavigation.js';
 import {ensureHumanoidEnemyEquipment,migrateLastDawnDisplayText} from './humanoidEnemies.js';
 import {migrateOrrakaiPosition} from './orrakaiLayout.js';
+import {installVeyreign} from './veyreignDungeon.js';
 import {syncDungeonCompletion} from './dungeonCompletion.js';
 import {migrateEchorynPosition} from './echorynLayout.js';
 import {captureContinentalState,restoreContinentalState} from './continentPersistence.js';
@@ -1427,6 +1428,8 @@ export function applySaveToGame(game, saveState) {
   game.world.continentRuntime?.activate?.([game.player],game.player);
   restoreContinentalState(game);
   installMalakarSanctum(game.world);
+  installVeyreign(game.world);
+  if(game.world.dungeonState?.veyreign)initializeDungeonArena(game.world);
   syncDungeonCompletion(game.world);
   syncBossReturnPortals(game.world);
   game.logLines = migrated.logLines;

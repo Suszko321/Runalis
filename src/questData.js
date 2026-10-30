@@ -2,6 +2,7 @@
 // Implementation-ready story and companion quests for the three-act Runalis arc.
 
 import { MERCY_ENDING, CAMPAIGN_STAGES } from './act1CampaignData.js';
+import {VEYREIGN_QUEST_DATA} from './veyreignData.js';
 import {GROVE_QUEST,GROVE_QUEST_DATA} from './blightedGroveData.js';
 import {ORCHARD_QUEST,ORCHARD_QUEST_DATA} from './ashenOrchardData.js';
 import { ORDER_QUESTS } from './yourOrder.js';
@@ -681,110 +682,7 @@ export const BLOODLINE_QUESTS = {
     }
   },
 
-  vampireRedChalice: {
-    id: 'vampireRedChalice',
-    title: 'The Red Chalice Under Veyr',
-    giverNpcId: 'lordVeyrShade',
-    recommendedLevel: 15,
-    type: 'bloodline',
-    hidden: true,
-    exclusiveGroup: 'act1Bloodline',
-    bloodline: 'vampire',
-    requiresTurnIn: true,
-    summary:
-      'Uncover the secret Veyr blood rite, descend into the oldest hollow, and drink without becoming a servant.',
-    stages: [
-      {
-        id: 'veyrBloodDoor',
-        title: 'The Body Refuses the Grave',
-        text: 'Find Castle Veyr and ask its dead lord why his bloodline still refuses the grave.',
-        objectives: [
-          { type: 'discoverPoi', poiId: 'gothicCastle', required: 1, label: 'Discover Castle Veyr' },
-          { type: 'talk', npcId: 'lordVeyrShade', required: 1, label: 'Question Lord Veyr\'s Shade' },
-          { type: 'talk', npcId: 'sisterElyra', required: 1, label: 'Ask Sister Elyra about the bloodless dead' }
-        ],
-        rewards: {
-          xp: { spirit: 40, renown: 40 },
-          items: [['graveAsh', 2]]
-        }
-      },
-      {
-        id: 'invitationInTheDark',
-        title: 'Invitation in the Dark',
-        text: 'Learn what the Red Chalice offers and what hunger takes from those who accept it.',
-        objectives: [
-          { type: 'talk', npcId: 'kaelenDusk', required: 1, label: 'Ask Kaelen Dusk about deathless hunger' },
-          { type: 'collect', itemId: 'graveAsh', required: 4 },
-          { type: 'collect', itemId: 'veyrSigil', required: 1, label: 'Recover a Veyr Sigil' }
-        ],
-        rewards: {
-          xp: { spirit: 65, runecraft: 40, renown: 50 },
-          items: [['boneShard', 3]]
-        }
-      },
-      {
-        id: 'trialOfRestraint',
-        title: 'Trial of Restraint',
-        text: 'Face the blood-drunk dead and prove hunger can remain a command rather than a master.',
-        objectives: [
-          { type: 'killAny', enemyKinds: ['wraith', 'veyrWraith', 'gravebound'], required: 8, label: 'Defeat the blood-drunk dead' },
-          { type: 'collect', itemId: 'hollowEye', required: 2, label: 'Recover Blighted Eyes as restraint tokens' },
-          { type: 'talk', npcId: 'maraVell', required: 1, label: 'Hear Mara\'s warning about endless hunger' }
-        ],
-        rewards: {
-          xp: { blade: 65, spirit: 80, renown: 70 },
-          items: [['shrineTonic', 1]],
-          storyFlags: ['bloodline.vampire.restraintProven']
-        }
-      },
-      {
-        id: 'hungerTrial',
-        title: 'The Sealed Crypt',
-        text: 'Enter the oldest hollow, uncover the Veyr inheritance, and defeat what immortality made feral.',
-        objectives: [
-          { type: 'discoverPoi', poiId: 'oldHollowDungeon', required: 1, label: 'Find the Old Blighted Dungeon' },
-          { type: 'enterDungeon', dungeonId: 'oldHollowDungeon', required: 1, label: 'Enter the Sealed Crypt' },
-          { type: 'clearDungeon', dungeonId: 'oldHollowDungeon', required: 1, label: 'Defeat the crypt guardian' }
-        ],
-        rewards: {
-          xp: { blade: 95, spirit: 110, renown: 100 },
-          items: [['crackedRelic', 1]]
-        }
-      },
-      {
-        id: 'chaliceOffering',
-        title: 'The Last Warm Breath',
-        text: 'Prepare the Crimson Vessel, then hear both the dead lord and the living healer before choosing.',
-        objectives: [
-          { type: 'collect', itemId: 'graveAsh', required: 8 },
-          { type: 'collect', itemId: 'boneShard', required: 8 },
-          { type: 'collect', itemId: 'crackedRelic', required: 1, label: 'Acquire a vessel for the old blood' },
-          { type: 'talk', npcId: 'maraVell', required: 1, label: 'Speak with Mara before leaving ordinary life' },
-          { type: 'talk', npcId: 'lordVeyrShade', required: 1, label: 'Prepare the Red Chalice with Lord Veyr' }
-        ],
-        rewards: {
-          xp: { crafting: 85, spirit: 115, renown: 80 },
-          items: [['fieldRations', 8]],
-          storyFlags: ['bloodline.vampire.chalicePrepared']
-        }
-      },
-      {
-        id: 'chooseTheRedChalice',
-        title: 'The Thirst Behind the Veil',
-        text: 'Return to Lord Veyr\'s Shade. The Red Chalice will wait until you willingly surrender your last warm breath.',
-        objectives: [
-          { type: 'talk', npcId: 'lordVeyrShade', required: 1, label: 'Face the permanent Vampire choice' }
-        ]
-      }
-    ],
-    rewards: {
-      xp: { spirit: 420, blade: 300, renown: 360 },
-      items: [['graveAsh', 3], ['fieldRations', 25]],
-      storyFlags: ['bloodline.quest.vampireComplete'],
-      bloodline: 'vampire',
-      bloodlineSkillPoints: 2
-    }
-  }
+  vampireRedChalice: VEYREIGN_QUEST_DATA
 };
 
 // Keep stage identifiers for migration while completing the formerly unfinished arc.

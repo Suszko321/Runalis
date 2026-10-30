@@ -1012,7 +1012,7 @@ export const ITEMS = {
     rarity: 'rare',
     stack: true,
     value: 24,
-    desc: 'A dark reflective shard from Castle Veyr.'
+    desc: 'A dark reflective shard from Castle Veyreign.'
   },
 
   fieldstone: {
@@ -1934,7 +1934,7 @@ export const ITEMS = {
     power: 6,
     spirit: 2,
     traits: ['Noble Edge', 'Ghost-Forged'],
-    desc: 'A narrow noble blade from Castle Veyr.'
+    desc: 'A narrow noble blade from Castle Veyreign.'
   },
 
   hunterBow: {
@@ -6039,7 +6039,7 @@ export const QUESTS = {
     title: 'Wrong by Morning',
     stages: [
       'Discover Pilgrim Bridge.',
-      'Discover Castle Veyr.',
+      'Discover Castle Veyreign.',
       'Discover Mirror Grove.'
     ]
   },

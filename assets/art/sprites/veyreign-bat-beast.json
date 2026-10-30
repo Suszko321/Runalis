@@ -1,0 +1,15 @@
+{
+  "width": 60,
+  "height": 80,
+  "frames": 16,
+  "fps": 12,
+  "states": [
+    "idle",
+    "anticipation",
+    "execution",
+    "recovery",
+    "hit",
+    "death"
+  ],
+  "style": "dark fantasy pixel art"
+}

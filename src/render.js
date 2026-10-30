@@ -1,4 +1,5 @@
 import {drawEnemyNameplate,enemyPlateLayout} from './enemyNameplateArt.js';
+import {drawVeyreignGround,drawVeyreignEffects,drawVeyreignBat} from './veyreignArt.js';
 import {drawGroveGround,drawGroveMother,drawGroveTells} from './blightedGroveArt.js';
 import {drawOrchardGround,drawOrchardBoss,drawOrchardTells} from './ashenOrchardArt.js';
 import {drawMalakarGround,drawMalakarTelegraphs,drawMalakarActor} from './malakarRenderer.js';
@@ -109,6 +110,7 @@ export function draw(ctx, world, player, camera, options = {}) {
   drawMalakarGround(ctx,world,camera);
   drawGroveGround(ctx,world,camera);
   drawOrchardGround(ctx,world,camera);
+  drawVeyreignGround(ctx,world,camera);
   drawSceneArtBack(ctx, world, camera);
   drawEnvironmentAtmosphere(ctx, world, camera, 'back');
   drawPresentationBack(ctx, world, player, camera, options);
@@ -151,6 +153,7 @@ export function draw(ctx, world, player, camera, options = {}) {
   drawMalakarTelegraphs(ctx,world,camera);
   drawGroveTells(ctx,world,camera);
   drawOrchardTells(ctx,world,camera);
+  drawVeyreignEffects(ctx,world,camera);
   drawEnvironmentAtmosphere(ctx, world, camera, 'front');
   drawPresentationFront(ctx, world, player, camera, options);
   drawSceneArtFront(ctx, world, player, camera);
@@ -360,8 +363,10 @@ export function drawEnemy(ctx, enemy, camera, options = {}) {
     ctx.globalAlpha = reaction.alpha ?? 1;
   }
 
-  const rasterEnemy = !humanoid && (bossType ? drawBossSprite(ctx, enemy, p.x, p.y, bossType) : drawEnemySprite(ctx, enemy, p.x, p.y));
-  if (humanoid) {
+  const rasterEnemy = !enemy.batBeast && !humanoid && (bossType ? drawBossSprite(ctx, enemy, p.x, p.y, bossType) : drawEnemySprite(ctx, enemy, p.x, p.y));
+  if (drawVeyreignBat(ctx,enemy,p.x,p.y)) {
+    // Native 60x80 Bat Beast atlas shares normal health/status layers below.
+  } else if (humanoid) {
     drawHumanActor(ctx, getHumanoidEnemyActor(enemy), camera, {scale:1});
   } else if (rasterEnemy) {
     // Preserve the authoritative reaction transform and status/tell layers.

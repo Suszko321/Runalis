@@ -283,8 +283,8 @@ function addHandPlacedDecor(objects) {
   objects.push(makeDecorObject('brokenWall', 'oldhollow-wall-1', 'Broken Wall', 270, 203, { scale: 1.0 }));
   objects.push(makeDecorObject('ruinPillar', 'oldhollow-pillar-1', 'Ruin Pillar', 293, 202, { scale: 1.1 }));
 
-  // Gothic Castle Veyr dressing.
-  objects.push(makeDecorObject('gothicCastle', 'castle-veyr-poi', 'Castle Veyr', 292, 52, {
+  // Gothic Castle Veyreign dressing.
+  objects.push(makeDecorObject('gothicCastle', 'castle-veyr-poi', 'Castle Veyreign', 292, 52, {
     scale: 1.25,
     r: 34,
     poiId: 'gothicCastle',
@@ -1010,15 +1010,15 @@ function addStoryContentObjects(objects) {
     talk: 'Sister Elyra: "Mind your step. The chapel floor remembers everyone who died praying here."'
   }));
 
-  // Castle Veyr gothic NPC.
-  objects.push(makeObject('npc', 'lordVeyrShade', 'Lord Veyr’s Shade', 276, 66, {
+  // Castle Veyreign gothic NPC.
+  objects.push(makeObject('npc', 'lordVeyrShade', 'Castellan Edrik’s Echo', 276, 66, {
     npcId: 'lordVeyrShade',
     dialogueId: 'lordVeyrShadeIntro',
     factionId: 'castleCourt',
     disposition: 'uncertain',
     role: 'questGiver',
     classId: 'gravecaller',
-    talk: 'Lord Veyr’s Shade: "The living cross my threshold with warm blood and loud questions."'
+    talk: 'Castellan Edrik’s Echo: "The living cross my threshold with warm blood and loud questions."'
   }));
 
   // Thornwood quest giver.

@@ -1,6 +1,7 @@
 import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
 import {returnToZoneEntrance} from './bossReturnPortals.js';
 import {handleGroveInteraction} from './blightedGrove.js';
+import {handleVeyreignInteraction} from './veyreignDungeon.js';
 import {handleOrchardInteraction} from './ashenOrchardDungeon.js';
 import {isQuestObjectVisible} from './questInteractables.js';
 import {handleCampaignInteraction} from './act1CampaignRuntime.js';
@@ -25,7 +26,7 @@ import {hasLineOfSight} from './world.js';
 // - harvesting / fishing
 // - campfire / shrine
 // - dungeon entry / exit routing
-// - Castle Veyr / large POI interaction routing
+// - Castle Veyreign / large POI interaction routing
 //
 // main.js should call these functions with the active game instance.
 
@@ -233,7 +234,7 @@ export function interact(game) {
     return;
   }
 
-  if (handleOrchardInteraction(game,nearest)||handleGroveInteraction(game,nearest)||handleCampaignInteraction(game,nearest)) return;
+  if (handleVeyreignInteraction(game,nearest)||handleOrchardInteraction(game,nearest)||handleGroveInteraction(game,nearest)||handleCampaignInteraction(game,nearest)) return;
 
   switch (nearest.kind) {
     case 'worldRelic':
@@ -1727,7 +1728,7 @@ export function enterCastleVeyr(game, castle) {
     ...castle,
     kind: 'dungeonEntrance',
     id: castle.id || 'castleVeyrEntrance',
-    name: castle.name || 'Castle Veyr',
+    name: castle.name || 'Castle Veyreign',
     dungeonId: castle.dungeonId || 'castleVeyr',
     theme: castle.theme || 'ruin',
     tier: castle.tier || 2,
@@ -1736,7 +1737,7 @@ export function enterCastleVeyr(game, castle) {
     r: castle.r || castle.radius || 72
   };
 
-  game.log('You enter Castle Veyr.');
+  game.log('You enter Castle Veyreign.');
 
   enterDungeon(game, entrance);
 }

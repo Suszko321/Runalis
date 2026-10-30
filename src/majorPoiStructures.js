@@ -31,7 +31,7 @@ const RESOURCE_KINDS = new Set([
 export const MAJOR_POI_STRUCTURES = Object.freeze({
   castleVeyr: {
     id: 'castleVeyr',
-    name: 'Castle Veyr',
+    name: 'Castle Veyreign',
     anchor: ACT1_LANDMARKS.castleVeyr,
     style: 'veyr',
     footprint: Object.freeze({ width: 30, height: 22 }),
@@ -41,16 +41,16 @@ export const MAJOR_POI_STRUCTURES = Object.freeze({
     cleanupRadius: 22,
     entrance: {
       id: 'castleVeyrOverworldEntrance',
-      name: 'Castle Veyr',
-      dungeonName: 'Castle Veyr: The Oathbound Court',
+      name: 'Castle Veyreign',
+      dungeonName: 'Castle Veyreign: The Oathbound Court',
       poiId: 'gothicCastle',
       dungeonId: 'castleVeyr',
       theme: 'ruin',
       tier: 3,
-      recommendedLevel: 15,
+      recommendedLevel: 25,
       offset: [0, 0],
       labelOffset: 92,
-      talk: 'The dead gate of Castle Veyr stands open just wide enough to invite the living inside.'
+      talk: 'The dead gate of Castle Veyreign stands open just wide enough to invite the living inside.'
     },
     pieces: [
       piece('courtyard', 0, -9, { width: 25, height: 16 }),

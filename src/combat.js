@@ -1,3 +1,5 @@
+import {updateVeyreignCombat} from './veyreignCombat.js';
+import {veyreignVictory} from './veyreignDungeon.js';
 import {updateMalakarCombat} from './malakarCombat.js';
 import {updateGroveCombat} from './blightedGroveCombat.js';
 import {updateOrchardCombat} from './ashenOrchardCombat.js';
@@ -1023,7 +1025,7 @@ export function cancelActiveHeavyAttackCharge(player, world = null) {
 export function updateEnemies(dt, player, world, log, now = performance.now() / 1000, game = null) {
   ensureCombatPlayer(player);
   setEnemyCombatViews(world,game);
-  updateDungeonEvents(world,player,dt,log);
+  updateDungeonEvents(world,player,dt,log,game);
   updateDungeonArena(world,player,game);
   if(partyEntryPending(game))return;
   if(world?.mode==='dungeon'&&world.dungeonState){player.worldMemory ||= {};player.worldMemory.dungeonRuns ||= {};player.worldMemory.dungeonRuns[world.dungeonId]=world.dungeonState;}
@@ -1042,9 +1044,10 @@ export function updateEnemies(dt, player, world, log, now = performance.now() / 
     if (!enemy) continue;
 
     ensureEnemyState(enemy);
-    if((enemy.groveMother||enemy.orchardCustodian)&&enemy.hp>0){updateEnemyTimers(enemy,dt);updateFloatingTexts(enemy,dt);}
+    if((enemy.groveMother||enemy.orchardCustodian||enemy.veyreignLord||enemy.batBeast)&&enemy.hp>0){updateEnemyTimers(enemy,dt);updateFloatingTexts(enemy,dt);}
     if(enemy.groveMother&&updateGroveCombat(enemy,world,player,dt,now,game))continue;
     if(enemy.orchardCustodian&&updateOrchardCombat(enemy,world,player,dt,now,game))continue;
+    if((enemy.veyreignLord||enemy.batBeast)&&updateVeyreignCombat(enemy,world,player,dt,now,game))continue;
     if(enemy.malakarSolo&&updateMalakarCombat(enemy,world,player,dt,now,game))continue;
     updateFloatingTexts(enemy,dt);
     if(enemy.arenaDormant&&enemy.hp>0)continue;
@@ -5712,12 +5715,13 @@ function handleEnemyDeath(enemy, player, world, log) {
   }
 
   enemy.deathHandled = true;
+  if(enemy.veyreignLord)enemy.veyreignAttack=null;
   cancelEnemyAttackPresentation(enemy);enemy.telegraph=null;enemy.bossTell=null;
   if(enemy.boss)enemy.boss.pendingSpecial=null;
   recordRepeatableEnemyDeath(world,player,enemy);
   enemy.dead = true;
   enemy.hp = 0;
-  enemy.removeTimer = enemy.groveMother||enemy.orchardCustodian?1.05:0.35;
+  enemy.removeTimer = enemy.groveMother||enemy.orchardCustodian||enemy.batBeast?1.05:0.35;
   recordEnemyDeathVisual(enemy, {
     classId: player?.classId,
     skill: enemy.pendingWeaponSkillId || player?.classSkill,
@@ -5741,6 +5745,7 @@ function handleEnemyDeath(enemy, player, world, log) {
   markKillObjective(player, enemy);
 
   if (enemy.isBoss && !enemy.miniBoss) {
+    if(enemy.veyreignLord)veyreignVictory(world,questPlayer);
     if (completeDungeonAfterBoss(world,enemy)) {
       markPartyDungeonClearedObjective(player, world.dungeonId || world.poiId || world.entranceId || world.name);
       log?.(`${world.name || 'Dungeon'} cleared. A portal opens back to the entrance.`);

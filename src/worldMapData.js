@@ -189,14 +189,14 @@ export const ACT1_WORLD_MAP = {
     {
       id: 'castleVeyr',
       sourcePoiId: 'gothicCastle',
-      name: 'Castle Veyr',
+      name: 'Castle Veyreign',
       type: 'castle',
       category: 'Major POI',
       x: L.castleVeyr[0],
       y: L.castleVeyr[1],
       icon: 'CV',
       major: true,
-      recommendedLevel: 10,
+      recommendedLevel: 25,
       tags: ['undead', 'vampire', 'castle'],
       description: 'A cursed noble fortress and major Act I landmark tied to Veyr bloodline content.'
     },

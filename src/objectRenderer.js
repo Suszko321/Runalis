@@ -581,7 +581,7 @@ function drawObjectUnrotated(ctx, object, camera, questActor = null) {
     drawGothicCastle(ctx, object, p.x, p.y);
 
     if (shouldDrawObjectLabel(object, 'gothicCastle')) {
-      label(ctx, object.name || 'Castle Veyr', p.x, p.y - 92, {
+      label(ctx, object.name || 'Castle Veyreign', p.x, p.y - 92, {
         priority: object.labelPriority || 6
       });
     }
@@ -773,6 +773,7 @@ export function getNpcRenderActor(npc) {
     activeChannel: npc.activeChannel,
     id: npc.id,
     npcId: npc.npcId,
+    vampire: npc.vampire,
     name: npc.name,
     role: npc.role,
     factionId: npc.factionId,

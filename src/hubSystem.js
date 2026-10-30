@@ -402,7 +402,7 @@ export function useGuildClerk(game) {
     player.capitalUnlocked = true;
     player.tower = player.tower || {};
     player.tower.unlocked = true;
-    game.log?.('Guild Clerk: Orrakai is the last safe town before the frontier hardens. Castle Veyr woke last night, and the council wants the road kept open anyway.');
+    game.log?.('Guild Clerk: Orrakai is the last safe town before the frontier hardens. Castle Veyreign woke last night, and the council wants the road kept open anyway.');
     game.log?.('Use the town gates: south returns to Act I roads, north checks the Frontier Road expedition requirements.');
     addQuestText(player, 'Main Routes Marked', { color: '#ffcc66' });
     return true;
@@ -412,7 +412,7 @@ export function useGuildClerk(game) {
     player.guildBounties.veyrWardenPaid = true;
     player.gold += 160;
     addItem(player, 'veyrglassShard', 2);
-    game.log?.('Guild Clerk: Castle Veyr proof accepted. 160 gold and Veyrglass Shard x2.');
+    game.log?.('Guild Clerk: Castle Veyreign proof accepted. 160 gold and Veyrglass Shard x2.');
     addLootText(player, 'Veyr Bounty Paid', { color: '#66f0ff' });
     return true;
   }
@@ -466,7 +466,7 @@ export function useGuildClerk(game) {
     return true;
   }
 
-    game.log?.('Guild Clerk: current postings are Castle Veyr proof, The Blighted Elk bounty, Malakar kill proof, and Tower floor 10.');
+    game.log?.('Guild Clerk: current postings are Castle Veyreign proof, The Blighted Elk bounty, Malakar kill proof, and Tower floor 10.');
     game.log?.('Orrakai services are consolidated here: market, bank, smith, alchemist, shrine, training yard, and the Frontier Road gate.');
   addStatusText(player, 'Guild Notices Updated', { color: '#66f0ff' });
   return true;
