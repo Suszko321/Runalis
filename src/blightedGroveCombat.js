@@ -1,3 +1,4 @@
+import {selectBossAttackTarget} from './bossCombatTargets.js';
 import {getEnemyTargetablePlayers} from './coopEnemyScaling.js';
 import {playSfx} from './audioSystem.js';
 import {damageNearbyParty} from './bossSystem.js';
@@ -5,7 +6,7 @@ import {malakarShapeHits} from './malakarCombat.js';
 import {beginEnemyAttackPresentation,syncEnemyAttackPresentation,releaseEnemyAttackPresentation,cancelEnemyAttackPresentation} from './enemyAttackPresentation.js';
 export const GROVE_MOVES={rake:{name:'Cradlebreaker',tell:1.25,recovery:2.5},seeds:{name:'Names Beneath Your Feet',tell:1.7,recovery:2.1},hollow:{name:'The Hollow Embrace',tell:1.5,recovery:2.6},rain:{name:'A Garden of Teeth',tell:1.6,recovery:2.4}};
 export function beginGroveMove(e,w,p,key){
- const members=getEnemyTargetablePlayers(p).filter(a=>a.joined!==false),target=members[(e.groveTurn||0)%Math.max(1,members.length)]||p,angle=Math.atan2(target.y-e.y,target.x-e.x),phase=e.grovePhase||1,def=GROVE_MOVES[key];
+ const members=getEnemyTargetablePlayers(p).filter(a=>a.joined!==false),target=selectBossAttackTarget(e,p,e.groveTurn||0)||p,angle=Math.atan2(target.y-e.y,target.x-e.x),phase=e.grovePhase||1,def=GROVE_MOVES[key];
  const a={key,elapsed:0,tell:def.tell,recovery:def.recovery,shapes:[],released:false,phase};
  if(key==='rake')a.shapes=[{type:'cone',x:e.x,y:e.y,angle,radius:320,spread:phase===3?2.8:2.1}];
  if(key==='seeds')a.shapes=members.flatMap(t=>[{type:'circle',x:t.x,y:t.y,radius:phase===3?100:82},...(phase>=2?[{type:'circle',x:t.x+130,y:t.y,radius:70},{type:'circle',x:t.x-130,y:t.y,radius:70}]:[])]);

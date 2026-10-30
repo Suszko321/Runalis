@@ -18,6 +18,8 @@ import { getEnemyAttackProfile } from './animationProfiles.js';
 import {beginEnemyAttackPresentation,syncEnemyAttackPresentation,releaseEnemyAttackPresentation} from './enemyAttackPresentation.js';
 import {enemyWithinTargetView} from './enemyVisibility.js';
 import {getEnemyTargetablePlayers} from './coopEnemyScaling.js';
+import {getBossCombatTargets} from './bossCombatTargets.js';
+import {applyTargetDamage} from './enemyBehaviors.js';
 import {
   applyEnemyStrengthScaling,
   applyGlobalEnemyDamageMultiplier
@@ -575,15 +577,21 @@ function telegraphRoots(enemy, world, radius) {
 
 export function damageNearbyParty(enemy, player, world, radius, damage, hitTest = null, label = 'Shockwave', combatNow = performance.now()/1000) {
   const scaledDamage = applyGlobalEnemyDamageMultiplier(damage);
-  const members = getEnemyTargetablePlayers(player);
+  const players = getEnemyTargetablePlayers(player);
+  const members = getBossCombatTargets(player);
 
   for (const member of members) {
     if ((member.hp || 0) <= 0) continue;
-    if(!enemyWithinTargetView(enemy,member,world)&&!((enemy.groveMother||enemy.orchardCustodian||enemy.veyreignLord)&&world?.bossArena?.phase==='active'))continue;
+    if(!enemyWithinTargetView(enemy,member,world)&&!((enemy.isBoss||enemy.groveMother||enemy.orchardCustodian||enemy.veyreignLord||enemy.malakarSolo)&&world?.bossArena?.phase==='active'))continue;
 
     const distance = Math.hypot((member.x || 0) - enemy.x, (member.y || 0) - enemy.y);
     if (distance > radius || hitTest && !hitTest(member)) continue;
     if (world && !hasLineOfSight(world, enemy.x, enemy.y, member.x, member.y, { startSkip: 1, endSkip: 1 })) continue;
+
+    if(!players.includes(member)){
+      applyTargetDamage(enemy,member,scaledDamage,world,null,{label,now:combatNow,arenaImpact:true,rootPlayer:player});
+      continue;
+    }
 
     if (Number(member.invulnerableUntil || 0) > performance.now() / 1000) {
       addStatusText(member, 'Protected', {

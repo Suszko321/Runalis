@@ -171,7 +171,7 @@ export function getEnemyTargetThreatMultiplier(enemy, target, kind = 'player', b
   }
 
   if (kind === 'summon') {
-    multiplier *= 0.96;
+    multiplier *= enemy?.isBoss ? 3 : 0.96;
   }
 
   return multiplier;

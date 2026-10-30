@@ -982,7 +982,7 @@ function applyChargeImpact(enemy,target,world,log,telegraph,dirX,dirY){
 }
 
 export function applyTargetDamage(enemy, target, damage, world, log, options = {}) {
-  if(!enemyWithinTargetView(enemy,target,world))return {hpDamage:0};
+  if(!enemyWithinTargetView(enemy,target,world)&&!(options.arenaImpact&&world?.bossArena?.phase==='active'))return {hpDamage:0};
   const rawDamage = Math.max(1, Math.ceil(Number(damage || 1)));
   const targetIsSummon = target?.kindTag === 'summon' || target?.displayName && target?.alive !== undefined && !target?.classId;
   const now = options.now ?? performance.now() / 1000;
@@ -1058,8 +1058,9 @@ export function applyTargetDamage(enemy, target, damage, world, log, options = {
   target.hp = Math.max(0, (target.hp || 0) - hpDamage);
   if(targetIsSummon&&healthLost>0){
     target.lastHitAt=now;target.hitFlash=Math.max(target.hitFlash||0,.12);
-    applySummonThornRetaliation(target,damageSource,world,healthLost,now,log,combatParties.get(damageSource)||combatParties.get(enemy));
+    applySummonThornRetaliation(target,damageSource,world,healthLost,now,log,options.rootPlayer||combatParties.get(damageSource)||combatParties.get(enemy));
   }
+  if(targetIsSummon&&target.hp<=0){target.alive=false;target.dead=true;target.dismissed=false;}
   if (!targetIsSummon && hpDamage > 0) {
     cancelActiveHeavyAttackCharge(target,world);
     onPlayerTookDamage(target,hpDamage,damageSource,world,log,now);

@@ -1,3 +1,4 @@
+import {selectBossAttackTarget} from './bossCombatTargets.js';
 import {prepareVeyreignTransformation,VEYREIGN_TRANSFORM_SECONDS} from './veyreignTransformation.js';
 import {updateFeralVeyreign} from './veyreignFeralCombat.js';
 import {playSfx} from './audioSystem.js';
@@ -8,7 +9,7 @@ import {isActorPositionPassable,hasLineOfSight} from './world.js';
 import {veyreignParty} from './veyreignRules.js';
 export const VEYREIGN_MOVES={cleave:{name:'The King’s Due',tell:1.15,recovery:1.6},hunt:{name:'A Name in the Dark',tell:1.5,recovery:1.7},hearts:{name:'Every Heartbeat Answered',tell:1.65,recovery:1.6},eclipse:{name:'The Mercy of Midnight',tell:2,recovery:2},cross:{name:'The Bloodline Severed',tell:1.6,recovery:1.8}};
 export function beginVeyreignMove(e,w,p,key){
- const party=veyreignParty(p).filter(a=>a.hp>0),t=party[(e.veyreignTurn||0)%Math.max(1,party.length)]||p,angle=Math.atan2(t.y-e.y,t.x-e.x),phase=e.veyreignPhase||1;
+ const party=veyreignParty(p).filter(a=>a.hp>0),t=selectBossAttackTarget(e,p,e.veyreignTurn||0)||p,angle=Math.atan2(t.y-e.y,t.x-e.x),phase=e.veyreignPhase||1;
  const a={...VEYREIGN_MOVES[key],key,elapsed:0,shapes:[],origin:{x:e.x,y:e.y}};
  if(key==='cleave')a.shapes=[{type:'cone',x:e.x,y:e.y,angle,spread:Math.PI*1.35,radius:210+phase*20}];
  if(key==='hunt'){a.shapes=[{type:'lane',x:e.x,y:e.y,angle,length:720,width:95+phase*10}];a.destination={x:Math.max(28*32,Math.min(68*32,t.x)),y:Math.max(14*32,Math.min(49*32,t.y))};}

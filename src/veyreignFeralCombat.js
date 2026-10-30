@@ -1,3 +1,4 @@
+import {selectBossAttackTarget} from './bossCombatTargets.js';
 import {damageNearbyParty} from './bossSystem.js';
 import {malakarShapeHits} from './malakarCombat.js';
 import {beginEnemyAttackPresentation,syncEnemyAttackPresentation,releaseEnemyAttackPresentation,cancelEnemyAttackPresentation} from './enemyAttackPresentation.js';
@@ -6,7 +7,7 @@ import {veyreignParty,veyreignActorKey} from './veyreignRules.js';
 import {playSfx} from './audioSystem.js';
 export const VEYREIGN_FERAL_MOVES={surge:{name:'Tides of the Crimson Crown',tell:1.3,recovery:.85,duration:3.1},talons:{name:'The Royal Butchery',tell:.95,recovery:1,duration:.35},rain:{name:'Blood Calls to Blood',tell:1.15,recovery:.9,duration:.35},dive:{name:'The Sovereign Descends',tell:1.05,recovery:.85,duration:.4},eclipse:{name:'An Empire of Hunger',tell:1.6,recovery:1.2,duration:.4}};
 export function beginFeralVeyreignMove(e,w,p,key){
- const party=veyreignParty(p).filter(a=>a.hp>0),target=party[(e.veyreignTurn||0)%Math.max(1,party.length)]||p,angle=Math.atan2(target.y-e.y,target.x-e.x);
+ const party=veyreignParty(p).filter(a=>a.hp>0),target=selectBossAttackTarget(e,p,e.veyreignTurn||0)||p,angle=Math.atan2(target.y-e.y,target.x-e.x);
  const a={...VEYREIGN_FERAL_MOVES[key],key,elapsed:0,origin:{x:e.x,y:e.y},shapes:[],hits:{},gap:angle+Math.PI/2};
  if(key==='talons')a.shapes=[{type:'cone',x:e.x,y:e.y,angle,spread:Math.PI*1.35,radius:350}];
  if(key==='rain')a.shapes=party.map(t=>({type:'circle',x:t.x,y:t.y,radius:135}));

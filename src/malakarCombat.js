@@ -1,3 +1,4 @@
+import {selectBossAttackTarget,getBossCombatTargets} from './bossCombatTargets.js';
 import {encounterState,partyMembers} from './malakarEncounter.js';
 import {damageNearbyParty} from './bossSystem.js';
 import {playSfx} from './audioSystem.js';
@@ -23,8 +24,8 @@ export function malakarShapeHits(shape,p){
 }
 export function startMalakarMove(e,w,p,key,now=0){
  const s=encounterState(w),def=MALAKAR_MOVES[key],phase=s.phase||1;
- const target=partyMembers(p).filter(a=>a.hp>0)[(s.turn||0)%(partyMembers(p).filter(a=>a.hp>0).length||1)]||p;
- const a={key,elapsed:0,step:0,targetIndex:partyMembers(p).indexOf(target),angle:aim(e,target),origin:{x:e.x,y:e.y},target:{x:target.x,y:target.y},shapes:[],hit:[],released:false,tell:def.tell,recovery:def.recovery,phase};
+ const target=selectBossAttackTarget(e,p,s.turn||0)||p;
+ const a={key,elapsed:0,step:0,targetIndex:partyMembers(p).indexOf(target),targetSummonId:target.kindTag==='summon'?target.id:null,angle:aim(e,target),origin:{x:e.x,y:e.y},target:{x:target.x,y:target.y},shapes:[],hit:[],released:false,tell:def.tell,recovery:def.recovery,phase};
  if(key==='cleave'){a.strikes=phase===3?3:2;a.tell=phase===3?1.05:.95;}
  if(key==='charge'){const d=Math.min(500,distance(e,target)),angle=aim(e,target);a.destination={x:clamp(e.x+Math.cos(angle)*d,160,1120),y:clamp(e.y+Math.sin(angle)*d,192,976)};}
  s.attack=a;s.last=key;s.turn=(s.turn||0)+1;e.boss ||= {};e.boss.phase=phase;
@@ -33,7 +34,7 @@ export function startMalakarMove(e,w,p,key,now=0){
  updateShapes(e,w,p,a);return a;
 }
 function updateShapes(e,w,p,a){
- const target=partyMembers(p)[a.targetIndex]||p,angle=a.angle;
+ const target=(a.targetSummonId?getBossCombatTargets(p).find(t=>t.id===a.targetSummonId):partyMembers(p)[a.targetIndex])||p,angle=a.angle;
  if(a.key==='cleave')a.shapes=[{type:'cone',x:e.x,y:e.y,angle,radius:a.step===a.strikes-1?175:145,spread:a.step===a.strikes-1?2.6:2.1}];
  if(a.key==='charge'){const dx=a.destination.x-a.origin.x,dy=a.destination.y-a.origin.y;a.shapes=[{type:'lane',...a.origin,angle:Math.atan2(dy,dx),length:Math.hypot(dx,dy),width:86}];}
  if(a.key==='brand'){if(a.elapsed<.85)a.target={x:target.x,y:target.y};a.shapes=[{type:'circle',...a.target,radius:82}];a.tracking=a.elapsed<.85;}
@@ -74,7 +75,7 @@ export function updateMalakarCombat(e,w,p,dt,now,game){
   a=startMalakarMove(e,w,p,key,now);
  }
  a.elapsed+=dt;a.flash=Math.max(0,(a.flash||0)-dt);
- if(a.key==='cleave'&&a.elapsed<a.tell*.45){const t=partyMembers(p)[a.targetIndex]||p;a.angle=aim(e,t);}
+ if(a.key==='cleave'&&a.elapsed<a.tell*.45){const t=(a.targetSummonId?getBossCombatTargets(p).find(t=>t.id===a.targetSummonId):partyMembers(p)[a.targetIndex])||p;a.angle=aim(e,t);}
  updateShapes(e,w,p,a);
  const tell=e.bossTell;if(tell){tell.time=Math.max(0,a.tell-a.elapsed);tell.x=e.x+Math.cos(a.angle)*100;tell.y=e.y+Math.sin(a.angle)*100;syncEnemyAttackPresentation(e,tell,now);}
  if(a.key==='charge'&&a.elapsed>=a.tell&&a.elapsed<a.tell+.65){
@@ -85,7 +86,7 @@ export function updateMalakarCombat(e,w,p,dt,now,game){
  }else if(a.key!=='charge'&&a.elapsed>=a.tell&&!a.released)impact(e,w,p,a,now,game);
  const active=a.key==='charge'?.65:.22;
  if(a.elapsed>=a.tell+active){
-  if(a.key==='cleave'&&a.step<a.strikes-1||a.key==='signature'&&a.step<2){a.step++;a.elapsed=0;a.released=false;a.tell=a.key==='signature'?1.45:a.step===a.strikes-1?1.1:.85;a.angle=aim(e,partyMembers(p)[a.targetIndex]||p);e.bossTell={...e.bossTell,maxTime:a.tell,time:a.tell};beginEnemyAttackPresentation(e,e.bossTell,now);}
+  if(a.key==='cleave'&&a.step<a.strikes-1||a.key==='signature'&&a.step<2){a.step++;a.elapsed=0;a.released=false;a.tell=a.key==='signature'?1.45:a.step===a.strikes-1?1.1:.85;a.angle=aim(e,(a.targetSummonId?getBossCombatTargets(p).find(t=>t.id===a.targetSummonId):partyMembers(p)[a.targetIndex])||p);e.bossTell={...e.bossTell,maxTime:a.tell,time:a.tell};beginEnemyAttackPresentation(e,e.bossTell,now);}
   else finish(e,w,a);
  }
  return true;
