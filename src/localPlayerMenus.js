@@ -1,5 +1,7 @@
 // Each local player gets an isolated menu document/focus state, backed by the
 // live actor. No second game, input poller, simulation, or save store is started.
+import {selectAbilityMorph} from './abilityMorphSystem.js';
+import {clearAbilityMorphCombatState} from './subclassCombat.js';
 export function createLocalPlayerMenus(game) {
   const sessions=new Map();
   const eligible=actor=>{const members=[game.player,...(game.player.coop?.players||[])].filter(p=>p&&p.active!==false&&!p.networkRemote);return !game.onlineSession?.role&&!actor?.networkRemote&&members.length>1&&members.includes(actor);};
@@ -29,7 +31,12 @@ export function createLocalPlayerMenus(game) {
       script.textContent=`import * as ui from ${JSON.stringify(url.href)};window.localMenuUI=ui;window.dispatchEvent(new Event('runalis-menu-ready'));`;
       script.onload=()=>{
         if(sessions.get(actor)!==s||s.ui)return;
-        const view=Object.assign(Object.create(game.getActorGameView(actor)),{localMenuFrame:true,uiMenuView:null,uiState:null,uiControllerState:null,uiSkillTreeControllerState:null,onlineSession:null,player:actor,hostGame:game,log:game.log,logLines:game.logLines,keys:new Set(),input:{},canvas:d.getElementById('menuCanvas'),primaryControllerActive:true,save:()=>actor===game.player?game.save(false):game.getActorGameView(actor).save(false),shake:()=>{}});
+        const view=Object.assign(Object.create(game.getActorGameView(actor)),{localMenuFrame:true,uiMenuView:null,uiState:null,uiControllerState:null,uiSkillTreeControllerState:null,uiAbilityControllerState:null,onlineSession:null,player:actor,hostGame:game,log:game.log,logLines:game.logLines,keys:new Set(),input:{},canvas:d.getElementById('menuCanvas'),primaryControllerActive:true,save:()=>actor===game.player?game.save(false):game.getActorGameView(actor).save(false),shake:()=>{}});
+        view.changeAbilityMorph=(id,morph)=>{
+          const result=selectAbilityMorph(actor,id,morph,performance.now()/1000);
+          if(result.ok&&result.changed)clearAbilityMorphCombatState(actor,id);
+          return result;
+        };
         Object.defineProperty(view,'world',{get:()=>game.world,set:world=>{game.world=world;}});
         s.view=view;s.ui=w.localMenuUI;
         s.ui.initUI(view);s.ui.renderUI(actor,game.logLines,view);s.ui.toggleGameMenuChooser(view);
@@ -51,6 +58,7 @@ export function createLocalPlayerMenus(game) {
     document.body.append(frame);sync();return true;
   }
   return {eligible,open,close,sync,hasOpen:()=>sessions.size>0,isBusy:actor=>sessions.has(actor),destroy(){for(const actor of [...sessions.keys()])close(actor);},toggle(actor){if(sessions.has(actor))close(actor);else return open(actor);return true;},handleInput(input,actor){
+    if(input.dropOutPressed)return false;
     if(!actor||game.paused||!eligible(actor))return false;
     const s=sessions.get(actor);
     if(s){

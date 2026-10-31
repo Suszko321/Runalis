@@ -980,6 +980,7 @@ class RunalisGame {
     const controllerNowActive = !!assignments.player1;
 
     this.hostControllerSlotIndex = assignments.player1?.slotIndex ?? this.hostControllerSlotIndex;
+    this.player.controllerSlotIndex=this.hostControllerSlotIndex;
 
     if (controllerNowActive && !this.primaryControllerActive) {
       this.keys.clear();
@@ -1388,6 +1389,13 @@ class RunalisGame {
 
   confirmAndLeaveCoopSessionForActor(actor) {
     if (!actor || actor === this.player) return false;
+    // The explicit local two-button shortcut has the same save-and-leave
+    // semantics as the player's menu action. Native confirm dialogs cannot
+    // be operated by gamepads and suspend the other player's simulation.
+    if(this.localMenus?.eligible(actor)){
+      this.localMenus.close(actor);
+      return this.leaveCoopSessionForActor(actor);
+    }
 
     if (typeof window !== 'undefined') {
       const slot = getCouchCoopActorSlot(actor);

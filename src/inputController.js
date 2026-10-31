@@ -49,9 +49,31 @@ export function updateControllerManager(manager) {
   if (!manager?.supported) return manager;
 
   const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  const available=Array.from(pads||[]).map((pad,index)=>pad?{pad,index,id:String(pad.id||`gamepad-${index}`)}:null).filter(p=>p&&p.pad.connected!==false);
+  const claimed=new Set(),assigned=new Map();
+  // Prefer the browser's live Gamepad object when it remains available; two
+  // controllers of the same model often expose exactly the same ID string.
+  for(const slot of manager.slots){
+    const match=available.find(p=>!claimed.has(p.index)&&p.pad===slot.deviceObject);
+    if(match){assigned.set(slot,match);claimed.add(match.index);}
+  }
+  // Logical controller slots belong to players. Browser device indices may
+  // change after reconnect; match a known device before allocating new slots.
+  for(const slot of manager.slots){
+    if(slot.deviceId==null||assigned.has(slot))continue;
+    let match=available.find(p=>!claimed.has(p.index)&&p.index===slot.hardwareIndex&&p.id===slot.deviceId);
+    if(!match&&manager.slots.filter(s=>s.deviceId===slot.deviceId).length===1&&available.filter(p=>p.id===slot.deviceId).length===1)match=available.find(p=>!claimed.has(p.index)&&p.id===slot.deviceId);
+    if(match){assigned.set(slot,match);claimed.add(match.index);}
+  }
+  for(const device of available){
+    if(claimed.has(device.index))continue;
+    const slot=manager.slots.find(s=>s.deviceId==null&&s.index===device.index)||manager.slots.find(s=>s.deviceId==null);
+    if(slot){slot.deviceId=device.id;assigned.set(slot,device);claimed.add(device.index);}
+  }
 
   for (const slot of manager.slots) {
-    const pad = pads?.[slot.index] || null;
+    const device=assigned.get(slot),pad=device?.pad||null;
+    if(device){slot.hardwareIndex=device.index;slot.deviceObject=pad;}
 
     slot.connected = !!pad;
     slot.id = pad?.id || null;
@@ -204,7 +226,7 @@ export function getControllerInput(manager, slotIndex = 0) {
     customizePressed: backPressed,
 
     // Hold Start + Back to drop Player 2 out.
-    dropOutPressed: backPressed && held(slot, BUTTON.START),
+    dropOutPressed: (backPressed && held(slot, BUTTON.START)) || (pausePressed && held(slot, BUTTON.BACK)),
 
     // Extra raw button aliases for future menus/gameplay.
     xPressed: pressed(slot, BUTTON.X),

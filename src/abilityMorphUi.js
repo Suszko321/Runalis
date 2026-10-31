@@ -57,10 +57,13 @@ export function renderAbilityMorphChoices(player,id){
 }
 export function bindAbilityMorphControls(player,game,render,root=document){
   root.querySelectorAll('[data-ability-morph]').forEach(btn=>btn.onclick=()=>{
-    const result=selectAbilityMorph(player,btn.dataset.morphAbility,btn.dataset.abilityMorph);
-    if(result.ok&&result.changed){clearAbilityMorphCombatState(player,btn.dataset.morphAbility);game.uiState.abilityAssignmentMode=false;game.uiState.pendingAbilityId=null;}
+    const result=game.changeAbilityMorph?game.changeAbilityMorph(btn.dataset.morphAbility,btn.dataset.abilityMorph):selectAbilityMorph(player,btn.dataset.morphAbility,btn.dataset.abilityMorph);
+    if(result.ok&&result.changed){if(!game.changeAbilityMorph)clearAbilityMorphCombatState(player,btn.dataset.morphAbility);game.uiState.abilityAssignmentMode=false;game.uiState.pendingAbilityId=null;}
+    game.uiState.abilityMorphFeedback=result.reason;
     if(document.body.classList.contains('mobile-input'))game.uiState.mobileAbilityFeedback=result.reason;
     game.log?.(result.reason);render(player,game.logLines||[],game);
-    if(result.ok&&result.changed&&document.body.classList.contains('mobile-input'))game.save?.(false);
+    const picker=document.querySelector('.ability-morph-picker');
+    if(picker){const message=document.createElement('p');message.setAttribute('role','status');message.textContent=result.reason;picker.append(message);}
+    if(result.ok&&result.changed&&(game.localMenuFrame||document.body.classList.contains('mobile-input')))game.save?.(false);
   });
 }

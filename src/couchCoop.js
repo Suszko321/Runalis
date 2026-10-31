@@ -181,6 +181,7 @@ export function updateCouchCoop(game, dt, now, controllerInputs = null) {
   const inputs = normalizeCoopControllerInputs(controllerInputs);
 
   for (const controllerInput of inputs) {
+    if(controllerInput?.dropOutPressed||controllerInput?.menuConsumed)continue;
     const slotNumber = getPlayerSlotForController(game, controllerInput);
     if (slotNumber < 2 || slotNumber > 4) continue;
 
@@ -705,7 +706,7 @@ function normalizeCouchCoopSlots(player) {
 
   const players = pruneInactiveCouchCoopRuntimePlayers(player);
   const usedSlots = new Set();
-  const usedControllerSlots = new Set();
+  const usedControllerSlots = new Set(Number.isInteger(player.controllerSlotIndex)?[player.controllerSlotIndex]:[]);
 
   for (const ally of players) {
     if (!ally) continue;

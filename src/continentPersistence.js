@@ -1,6 +1,7 @@
 // Sparse gameplay mutations only. Authored geography and scenery are rebuilt.
 // Stable entity IDs, rather than chunk residency, own persistent state.
 import {protectNavSanctuary} from './navStoneSanctuary.js';
+import {scaleEnemyStats} from './overworldUtils.js';
 const objectBaselines = new WeakMap();
 const OBJECT_FLAGS = ['depleted', 'claimed', 'remove', 'removed', 'locked', 'opened', 'activated', 'completed', 'looted', 'triggered', 'eventTriggered', 'rewardClaimed'];
 const ENEMY_FLAGS = ['dead', 'remove', 'enemyWorldLootGenerated', 'enemyEquipmentLootRolled', 'deathHandled', 'bossRewardClaimed', 'defeatRewardClaimed'];
@@ -9,6 +10,7 @@ const GENERATED_FIELDS = ['id', 'kind', 'archetype', 'name', 'x', 'y', 'homeX', 
 const MAX_GENERATED = 192;
 GENERATED_FIELDS.push('encounterStatsVersion','encounterTier','encounterRegion','rewardSeed','populationAreaId','populationCycle','populationNextAt','encounterEvent','eliteInitialized','locked','completed','rewardSuppressed','summonedBy','summonedByBoss');
 GENERATED_FIELDS.push('deathHandled','eliteHealRemaining');
+GENERATED_FIELDS.push('fastCombatVersion');
 GENERATED_FIELDS.push('stamina','maxStamina','spirit','maxSpirit','subclassId');
 const PERSISTENT_OBJECT_KINDS = new Set(['npc', 'navStone', 'worldSecret', 'worldRelic', 'worldChest', 'worldCache', 'chest', 'cache', 'supplyCache', 'poiInvestigation', 'dungeonEntrance', 'sideZoneEntrance', 'towerEntrance', 'travelRouteEntrance', 'travelRouteExit', 'travelCheckpoint', 'dungeonDoor', 'event', 'worldEvent', 'herb', 'reed', 'gravecap', 'bone', 'ore', 'rock', 'tree', 'log', 'deadwood', 'rareTree', 'fish', 'runestone', 'ashFruit', 'lanternMoss', 'bell']);
 const record = value => value && typeof value === 'object' && !Array.isArray(value) ? value : {};
@@ -169,6 +171,15 @@ export function continentalGeneratedEntities(player, kind = 'enemy', bounds = nu
     if (saved.entityType !== kind || !finite(saved.x) || !finite(saved.y)) continue;
     if (bounds && (saved.x < bounds.minX || saved.y < bounds.minY || saved.x >= bounds.maxX || saved.y >= bounds.maxY)) continue;
     const entity = {...saved};
+    if(kind==='enemy'&&saved.dynamicEncounterId&&!saved.fastCombatVersion&&!saved.simulatedPlayer){
+      // Legacy patrol saves baked in combat tempo but lost its applied flag.
+      // Rebuild only tempo from the patrol's authored kind/tier, never HP/loot.
+      const authored=scaleEnemyStats(saved.kind,saved.tier||1);
+      const legacyElite=!saved.encounterStatsVersion&&saved.eliteInitialized?({swift:1.25,blink:1.12,charger:1.18,fleeing:1.38}[saved.eliteModifier]||1):1;
+      entity.speed=authored.speed*1.28*legacyElite;
+      entity.attackRate=Math.max(.35,authored.attackRate*.78);
+      entity.fastCombatVersion=1;
+    }
     delete entity.entityType; delete entity.expiresAt;
     if (saved.equipment) entity.equipment = {...saved.equipment};
     for(const key of ['appearance','eliteModifiers','patrolRoute','rewards'])if(saved[key])entity[key]=cleanSmallState(saved[key]);
