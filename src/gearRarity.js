@@ -10,15 +10,16 @@ export const GEAR_RARITIES=Object.freeze({
 });
 export function canonicalGearRarity(value){return ({occult:'rare',epic:'legendary',relic:'legendary',ancient:'primordial',mythical:'mythic'})[value]||(GEAR_RARITIES[value]?value:'common');}
 export const isGear=item=>['weapon','armour','trinket'].includes(item?.type);
-export function gearGradeAllowed(base,rarity){return !base?.allowedGearRarities||base.allowedGearRarities.includes(canonicalGearRarity(rarity));}
-export function gearRarity(base,entry){const grade=canonicalGearRarity(entry?.gearRarity||base?.rarity);return gearGradeAllowed(base,grade)?grade:canonicalGearRarity(base.rarity);}
+export function gearGradeAllowed(base,rarity,entry){return !base?.allowedGearRarities||base.allowedGearRarities.includes(canonicalGearRarity(rarity))||(entry?.rarityAscensions>0&&GEAR_RARITIES[canonicalGearRarity(rarity)].rank>GEAR_RARITIES[canonicalGearRarity(base.rarity)].rank);}
+export function gearRarity(base,entry){const grade=canonicalGearRarity(entry?.gearRarity||base?.rarity);return gearGradeAllowed(base,grade,entry)?grade:canonicalGearRarity(base.rarity);}
 export function instanceGearItem(base,entry){
  if(!base||!isGear(base))return base;
  if(base.gearInstanceResolved)return base;
  const rarity=gearRarity(base,entry);
- if(entry?.rarityRollVersion!==1)return {...base,rarity};
+ const refinementSteps=Math.min(5,Math.max(0,Math.floor(Number(entry?.rarityAscensions)||0)))*19;
+ if(entry?.rarityRollVersion!==1)return {...base,rarity,refinementSteps};
  const multiplier=GEAR_RARITIES[rarity].power/GEAR_RARITIES[canonicalGearRarity(base.rarity)].power;
- const item={...base,rarity,gearRarityMultiplier:multiplier,itemLevel:entry.itemLevel,gearInstanceResolved:true};
+ const item={...base,rarity,gearRarityMultiplier:multiplier,itemLevel:entry.itemLevel,gearInstanceResolved:true,refinementSteps};
  for(const key of ['baseDamage','power','armour','spirit','focusPower','maxHp','maxStamina','maxSpirit','strength','dexterity','essence','primaryMultiplier','secondaryMultiplier','value'])if(Number.isFinite(base[key]))item[key]=Math.round(base[key]*multiplier*100)/100;
  if(GEAR_RARITIES[rarity].rank<3)delete item.legendaryPassive;
  if(canonicalGearRarity(base.rarity)==='mythic'&&GEAR_RARITIES[rarity].rank<4){delete item.setId;delete item.weaponSetId;}

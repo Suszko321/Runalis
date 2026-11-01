@@ -1,7 +1,7 @@
 import {ITEMS,getAllRecipes} from './data.js';
 import {countItem} from './player.js';
 import {getRecipeCraftStatus,upgradeOwnedGear,craftRecipe} from './craftingSystem.js';
-import {normalizeEquipmentProgression,isTieredEquipment,makeOwnedGearUpgradeQuote} from './equipmentProgressionSystem.js';
+import {normalizeEquipmentProgression,isTieredEquipment,makeOwnedGearUpgradeQuote,upgradeEntryPreview} from './equipmentProgressionSystem.js';
 import {beginWorkshopSession,endWorkshopSession,workshopAccessStatus} from './workshopAccess.js';
 import {itemStatBlock} from './panelInventory.js';
 import {menuDirection,directionalMenuItem} from './menuNavigation.js';
@@ -33,8 +33,9 @@ function detail(s,row){
  }
  const item=instanceGearItem(ITEMS[row.entry.id],row.entry),quote=makeOwnedGearUpgradeQuote(p,row.id);
  if(s.category==='deconstruct')return `<h3>${escape(row.name)}</h3><p>${escape(row.meta)}</p>${itemStatBlock(p,item,row.entry)}<h4>Deconstruct into</h4>${gearDeconstructionRewards(item).map(([id,n])=>`<p>${escape(ITEMS[id]?.name||id)} ×${n}</p>`).join('')}<p>This permanently consumes this copy. Equipped gear is protected.</p><button data-workshop-perform>${s.pending?.type==='deconstruct'&&s.pending.instanceId===row.id?'Confirm Deconstruct':'Review Deconstruction'}</button>`;
- const missing=quote?.cost.materials.filter(([id,n])=>countItem(p,id)<n)||[],affordable=quote&&p.gold>=quote.cost.gold&&!missing.length;
- return `<h3>${escape(row.name)}</h3><p>${escape(row.meta)}</p><p>${escape(item?.desc||'')}</p><div class="workshop-comparison"><section><h4>Current · Tier ${row.entry.upgradeTier}</h4>${itemStatBlock(p,item,row.entry)}</section><section><h4>${quote?`After · Tier ${quote.targetTier}`:'Maximum Tier 20'}</h4>${quote?itemStatBlock(p,item,{...row.entry,upgradeTier:quote.targetTier}):'<p>This piece has reached its upgrade cap.</p>'}</section></div>${quote?`<h4>Materials · Available / Required</h4>${requirements(p,quote.cost.materials)}<p class="${p.gold>=quote.cost.gold?'enough':'missing'}">Ash Coins: ${p.gold||0} / ${quote.cost.gold}</p><p class="missing">${escape(missing.length?'Missing upgrade materials.':p.gold<quote.cost.gold?'Not enough Ash Coins.':'')}</p><button data-workshop-perform ${affordable?'':'disabled'}>${s.pending?.instanceId===quote.instanceId&&s.pending.currentTier===quote.currentTier?'Confirm Upgrade':'Review Upgrade'}</button>`:''}`;
+ const missing=quote?.cost.materials.filter(([id,n])=>countItem(p,id)<n)||[],affordable=quote&&!quote.blockedReason&&p.gold>=quote.cost.gold&&!missing.length;
+ const action=quote?.promotion?'Ascension':'Upgrade',pending=s.pending?.instanceId===quote?.instanceId&&s.pending?.currentTier===quote?.currentTier&&s.pending?.currentRarity===quote?.currentRarity;
+ return `<h3>${escape(row.name)}</h3><p>${escape(row.meta)}</p><p>${escape(item?.desc||'')}</p><div class="workshop-comparison"><section><h4>Current · ${GEAR_RARITIES[gearRarity(ITEMS[row.entry.id],row.entry)].name} +${row.entry.upgradeTier}</h4>${itemStatBlock(p,item,row.entry)}</section><section><h4>${quote?`After · ${GEAR_RARITIES[quote.targetRarity].name} +${quote.targetTier}`:'Maximum · Primordial +20'}</h4>${quote?itemStatBlock(p,ITEMS[row.entry.id],upgradeEntryPreview(row.entry,quote)):'<p>This piece has completed every rarity and upgrade tier.</p>'}</section></div>${quote?.promotion?'<p>Ascension raises rarity and restarts at +1. All strength earned through completed upgrade cycles is retained. The same item, equipment and appearance are preserved.</p>':''}${quote?`<h4>Materials · Available / Required</h4>${requirements(p,quote.cost.materials)}<p class="${p.gold>=quote.cost.gold?'enough':'missing'}">Ash Coins: ${p.gold||0} / ${quote.cost.gold}</p><p class="missing">${escape(quote.blockedReason|| (missing.length?'Missing upgrade materials.':p.gold<quote.cost.gold?'Not enough Ash Coins.':''))}</p><button data-workshop-perform ${affordable?'':'disabled'}>${pending?'Confirm':'Review'} ${action}</button>`:''}`;
 }
 function refresh(game){
  const host=game.hostGame||game,s=host.workshopService,overlay=document.getElementById('workshopServiceOverlay');if(!s||!overlay)return;
@@ -81,7 +82,7 @@ function performSelected(game){
  if(s.kind==='craftsman')success=craftRecipe(s.actor,row.recipe.id,game);
  else{
   const quote=makeOwnedGearUpgradeQuote(s.actor,row.id);if(!quote)return false;
-  if(!s.pending||s.pending.instanceId!==quote.instanceId||s.pending.currentTier!==quote.currentTier){s.pending=quote;s.message=`Confirm ${row.name}: Tier ${quote.currentTier} → ${quote.targetTier}, ${quote.cost.gold} Ash Coins. The listed materials will be consumed.`;refresh(game);document.querySelector('[data-workshop-perform]')?.focus({preventScroll:true});return false;}
+  if(!s.pending||s.pending.instanceId!==quote.instanceId||s.pending.currentTier!==quote.currentTier||s.pending.currentRarity!==quote.currentRarity){s.pending=quote;s.message=`Confirm ${row.name}: ${GEAR_RARITIES[quote.currentRarity].name} +${quote.currentTier} → ${GEAR_RARITIES[quote.targetRarity].name} +${quote.targetTier}, ${quote.cost.gold} Ash Coins. The listed materials will be consumed.`;refresh(game);document.querySelector('[data-workshop-perform]')?.focus({preventScroll:true});return false;}
   success=upgradeOwnedGear(s.actor,s.pending,game);s.pending=null;
  }
  s.message=success?(s.kind==='blacksmith'?'Upgrade complete. The same item now carries its new tier.':'Crafting complete. The result is in your inventory.'):'Requirements changed. Review the current costs and materials.';

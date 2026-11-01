@@ -34,7 +34,7 @@ const foe=(id='test',x=295,y=320)=>({id,name:'Test enemy',kind:'rat',x,y,hp:1000
 const aim={combatAimX:1,combatAimY:0,hasAim:true,ability0Held:true},time=()=>performance.now()/1000+30;
 const equip=(p,id)=>{const required=Math.max(ITEMS[id]?.minCombatLevel||1,GEAR_RARITIES[canonicalGearRarity(ITEMS[id]?.rarity)].rank>=4?50:1);if(required>1){p.skillState.combat.level=Math.max(required,p.skillState.combat.level);p.combatLevel=p.skillState.combat.level;}assert.ok(addItem(p,id));assert.ok(equipGearEntry(p,p.inventory.findLastIndex(i=>i.id===id)));};
 const set=(p,id,n=3)=>{for(const item of MYTHICAL_SETS[id].pieces.slice(0,n))equip(p,item);};
-const funds=(p)=>{p.gold=1e6;for(const id of ['ironScrap','arcaneDust','sturdyHardwood','amberResin','fieldstone','blackironOre','thornsilkFiber','graveSilver','spiritwoodSplinter','lumenQuartz','tideglassCrystal','oathsteelShard','towerFragment'])addItem(p,id,1000);workshopFixture(p);};
+const funds=(p)=>{p.gold=1e10;for(const id of ['ironScrap','arcaneDust','sturdyHardwood','amberResin','fieldstone','blackironOre','thornsilkFiber','graveSilver','spiritwoodSplinter','lumenQuartz','tideglassCrystal','oathsteelShard','towerFragment','bossCore','cultAsh','paleEssence','boneShard'])addItem(p,id,100000);workshopFixture(p);};
 const total=(p,id)=>p.inventory.filter(i=>i.id===id).reduce((n,i)=>n+i.qty,0);
 
 test('all new acquisitions, duplicate copies and swaps retain individual tiers',()=>{
@@ -46,12 +46,12 @@ test('every rarity shares twenty tiers, fixed acquisition stats and one cap',()=
  for(const rarity of ['common','uncommon','rare','occult','epic','relic','legendary','mythic','primordial','ancient']){
   const item=Object.values(ITEMS).find(i=>i.rarity===rarity&&isTieredEquipment(i)) || {...ITEMS.oldKnife,id:'verify-'+rarity,rarity};const synthetic=!ITEMS[item.id];if(synthetic)ITEMS[item.id]=item;const p=actor();equip(p,item.id);assert.equal(getEquipmentTier(p,item.slot),1);funds(p);
   for(let n=2;n<=20;n++){assert.ok(commitGearUpgrade(p,makeUpgradeQuote(p,item.slot)).ok);assert.equal(getEquipmentTier(p,item.slot),n);}
-  assert.equal(makeUpgradeQuote(p,item.slot),null);assert.equal(getTierUpgradeCost(item,21),null);if(synthetic)delete ITEMS[item.id];
+  assert.equal(makeUpgradeQuote(p,item.slot)?.promotion||false,GEAR_RARITIES[canonicalGearRarity(item.rarity)].rank<5);assert.equal(getTierUpgradeCost(item,21),null);if(synthetic)delete ITEMS[item.id];
  }
 });
 test('upgrade costs jump at tier six and remain monotonic through twenty',()=>{
- for(let n=2;n<=20;n++){const cost=getTierUpgradeCost(ITEMS.demonseedScythe,n);report.costs.push(cost);if(n>2)assert.ok(cost.gold>report.costs.at(-2).gold);assert.equal(new Set(cost.materials.map(([id])=>id)).size,cost.materials.length);for(const [id,qty] of cost.materials){assert.ok(ITEMS[id]);assert.ok(qty>0);}}
- assert.ok(report.costs[4].gold>report.costs[3].gold*3);assert.ok(report.costs.at(-1).materials.some(([id])=>id==='towerFragment'));
+ for(let n=2;n<=20;n++){const cost=getTierUpgradeCost(ITEMS.oldKnife,n);report.costs.push(cost);if(n>2)assert.ok(cost.gold>report.costs.at(-2).gold);assert.equal(new Set(cost.materials.map(([id])=>id)).size,cost.materials.length);for(const [id,qty] of cost.materials){assert.ok(ITEMS[id]);assert.ok(qty>0);}}
+ assert.ok(report.costs[4].gold>report.costs[3].gold*3);assert.ok(!report.costs.at(-1).materials.some(([id])=>id==='bossCore')); assert.ok(getTierUpgradeCost(ITEMS.demonseedScythe,20).materials.some(([id])=>id==='bossCore'));
 });
 test('failed, stale and repeated upgrade transactions cannot consume resources',()=>{
  const p=actor();equip(p,'demonseedScythe');workshopFixture(p);p.gold=0;let q=makeUpgradeQuote(p,'weapon'),before=JSON.stringify(p);assert.equal(commitGearUpgrade(p,q).ok,false);assert.equal(JSON.stringify(p),before);

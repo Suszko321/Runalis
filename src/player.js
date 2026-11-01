@@ -1214,7 +1214,7 @@ export function addItem(player, id, qty = 1, metadata = {}) {
     }
   } else {
     for (let i = 0; i < safeQty; i++) {
-      const gearMetadata=metadata.rarityRollVersion===1?{upgradeTier:metadata.upgradeTier,gearRarity:canonicalGearRarity(metadata.gearRarity),rarityRollVersion:1,itemLevel:Math.max(1,Math.floor(Number(metadata.itemLevel)||1))}:{};
+      const gearMetadata=metadata.rarityRollVersion===1?{upgradeTier:metadata.upgradeTier,gearRarity:canonicalGearRarity(metadata.gearRarity),rarityRollVersion:1,rarityAscensions:Math.min(5,Math.max(0,Math.floor(Number(metadata.rarityAscensions)||0))),itemLevel:Math.max(1,Math.floor(Number(metadata.itemLevel)||1))}:{};
       player.inventory.push(isTieredEquipment(item) ? createGearEntry(player,id,gearMetadata) : { id, qty: 1 });
     }
   }

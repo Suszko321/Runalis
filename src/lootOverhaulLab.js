@@ -17,8 +17,8 @@ injectRunalisUiStyles();
 
 const select=document.querySelector('#set'),tier=document.querySelector('#tier'),pose=document.querySelector('#pose'),canvas=document.querySelector('#review'),ctx=canvas.getContext('2d');
 select.innerHTML=Object.values(MYTHICAL_SETS).map(set=>`<option value="${set.id}">${set.name}</option>`).join('')+'<option value="mixed">Drowned 3 + Ashen 2</option><option value="demonseed">Demonseed Scythe</option>';
-const materialIds=['ironScrap','arcaneDust','sturdyHardwood','amberResin','fieldstone','blackironOre','thornsilkFiber','graveSilver','spiritwoodSplinter','lumenQuartz','tideglassCrystal','oathsteelShard','towerFragment'];
-const actor=(classId='classless')=>{const p=createPlayer('Gear review');chooseClass(p,classId,()=>{});Object.assign(p,{id:'lab-'+classId,x:80,y:170,dirX:1,dirY:0,spiritAwakened:true,hp:1000,maxHp:1000,spirit:1000,maxSpirit:1000,stamina:1000,maxStamina:1000,gold:100000});return p;};
+const materialIds=['ironScrap','arcaneDust','sturdyHardwood','amberResin','fieldstone','blackironOre','thornsilkFiber','graveSilver','spiritwoodSplinter','lumenQuartz','tideglassCrystal','oathsteelShard','towerFragment','bossCore','paleEssence','cultAsh','boneShard'];
+const actor=(classId='classless')=>{const p=createPlayer('Gear review');chooseClass(p,classId,()=>{});p.skillState.combat.level=100;p.combatLevel=100;Object.assign(p,{id:'lab-'+classId,x:80,y:170,dirX:1,dirY:0,spiritAwakened:true,hp:1000,maxHp:1000,spirit:1000,maxSpirit:1000,stamina:1000,maxStamina:1000,gold:100000});return p;};
 const equip=(p,id)=>{addItem(p,id);equipGearEntry(p,p.inventory.findLastIndex(e=>e.id===id));};
 const dress=(p,id)=>MYTHICAL_SETS[id].pieces.forEach(item=>equip(p,item));
 const gallery=Object.keys(MYTHICAL_SETS).map(id=>{const p=actor();dress(p,id);return p;});

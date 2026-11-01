@@ -1,5 +1,9 @@
 # Gear itemization · November 1, 2026
 
+[Lifelong forge progression](../gear-ascension/README.md) allows owned gear to
+ascend rarity after +20, retain completed-cycle strength and restart at +1.
+Primordial +20 is the final cap; the new smith cost schedule supersedes old costs.
+
 Follow-up: [enemy delivery and dungeon quality](../enemy-loot-delivery/README.md)
 now governs dungeon rarity and final-boss odds. Non-gear enemy rewards are credited
 immediately with a white collection feed. The level formula below remains the

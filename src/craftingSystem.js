@@ -80,8 +80,8 @@ export function upgradeOwnedGear(player,quote,game){
   player.crafting ||= {};
   player.crafting.upgradesPerformed=(player.crafting.upgradesPerformed || 0)+1;
   gainXp(player,'crafting',18+(result.targetTier-1)*6,game?.log);
-  game?.log?.(`Upgraded ${ITEMS[result.itemId].name} to Tier ${result.targetTier}/20.`);
-  addStatusText(player,`Tier ${result.targetTier}/20`,{color:'#ffcc66',ttl:1.25});
+  game?.log?.(`${result.promotion?'Ascended':'Upgraded'} ${ITEMS[result.itemId].name} to ${result.targetRarity} +${result.targetTier}/20.`);
+  addStatusText(player,`${result.targetRarity} +${result.targetTier}/20`,{color:'#ffcc66',ttl:1.25});
   return true;
 }
 

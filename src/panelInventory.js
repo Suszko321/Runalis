@@ -1,9 +1,9 @@
 import {vampireOutsideHealing} from './vampireRules.js';
-import {instanceGearItem} from './gearRarity.js';
+import {instanceGearItem,GEAR_RARITIES} from './gearRarity.js';
 import {gearBagCount,canCarryGear,gearEquipReason} from './gearItemization.js';
 import {isGearInstanceEquipped} from './gearServices.js';
 ﻿import {equipmentPurpose,equipmentScaling,abilitySummary,abilityRequirements} from './uiInformation.js';
-import {equipGearEntry,unequipGearEntry,getTierStatBonus,getEquipmentTier} from './equipmentProgressionSystem.js';
+import {equipGearEntry,unequipGearEntry,getTierStatBonus,getEquipmentTier,makeUpgradeQuote,upgradeEntryPreview} from './equipmentProgressionSystem.js';
 import {synchronizeEquipmentBoundSkills,dismissCoterieForEquipmentChange} from './equipmentBoundSkills.js';
 import { calculateWeaponDamage } from './combatMoves.js';
 import { readSkillScroll } from './skillScrollSystem.js';
@@ -1144,11 +1144,8 @@ export function equipmentSlotCard(player, slot, label, itemId, options = {}) {
   const rarity = RARITY?.[item.rarity];
   const rarityColor = rarity?.color || '#b8c0cc';
   const upgradeLevel = getGearUpgradeLevel(player, slot);
-  const nextCost = getUpgradeCost(item, upgradeLevel + 1);
-  const costText = [
-    `${nextCost.gold} gold`,
-    ...nextCost.materials.map(([id, qty]) => `${ITEMS[id]?.name || id} x${qty}`)
-  ].join(', ');
+  const nextQuote=makeUpgradeQuote(player,slot);
+  const costText=nextQuote?`${GEAR_RARITIES[nextQuote.targetRarity].name} +${nextQuote.targetTier}: ${nextQuote.cost.gold} gold, ${nextQuote.cost.materials.map(([id,qty])=>`${ITEMS[id]?.name||id} x${qty}`).join(', ')}`:'Primordial +20 · Maximum';
 
   return `
     <div class="equipment-slot ${compact ? 'compact' : ''}">
@@ -1175,7 +1172,7 @@ export function equipmentSlotCard(player, slot, label, itemId, options = {}) {
 export function itemStatBlock(player, item, entry = null) {
   entry ||= player.equipment?.[item.slot]===item.id?player.equippedGear?.[item.slot]:null;
   item=instanceGearItem(item,entry);
-  const upgradeBonus=entry?getTierStatBonus(item,entry.upgradeTier):0;
+  const upgradeBonus=entry?getTierStatBonus(item,entry.upgradeTier,entry):0;
   const rows = [];
 
   if(item.type==='weapon'){
@@ -1331,8 +1328,8 @@ function getComparisonRows(player, item, equippedItem,entry) {
   }
 
   for (const key of ['armour', 'spirit', 'power', 'heal', 'stamina']) {
-    const value = Number(item?.[key] || 0)+(key==='armour'&&item?.type!=='weapon'&&item?.armour!==undefined?getTierStatBonus(item,entry?.upgradeTier):0);
-    const equippedValue = Number(equippedItem?.[key] || 0)+(key==='armour'&&equippedItem?.type!=='weapon'&&equippedItem?.armour!==undefined?getTierStatBonus(equippedItem,player.equippedGear?.[equippedItem.slot]?.upgradeTier):0);
+    const value = Number(item?.[key] || 0)+(key==='armour'&&item?.type!=='weapon'&&item?.armour!==undefined?getTierStatBonus(item,entry?.upgradeTier,entry):0);
+    const equippedValue = Number(equippedItem?.[key] || 0)+(key==='armour'&&equippedItem?.type!=='weapon'&&equippedItem?.armour!==undefined?getTierStatBonus(equippedItem,player.equippedGear?.[equippedItem.slot]?.upgradeTier,player.equippedGear?.[equippedItem.slot]):0);
     if (value || equippedValue) {
       rows.push({ label: titleCase(key), delta: Number((value-equippedValue).toFixed(2)) });
     }
@@ -1343,34 +1340,15 @@ function getComparisonRows(player, item, equippedItem,entry) {
 
 function upgradeCostBlock(player, slot, item) {
   if (!item || !isUpgradable(item)) return '';
-
-  const current = getGearUpgradeLevel(player, slot);
-  if(current>=19)return '<section class="equipment-upgrade-cost"><h3>Tier 20/20 · Maximum</h3></section>';
-  const cost = getUpgradeCost(item, current + 1);
-  const materials = cost.materials.map(([id, qty]) => {
-    const have = countItem(player, id);
-    return `
-      <div class="stat-row">
-        <span>${escapeHtml(ITEMS[id]?.name || id)}</span>
-        <b class="${have >= qty ? 'good-text' : 'bad-text'}">${have} / ${qty}</b>
-      </div>
-    `;
-  }).join('');
-
-  return `
-    <section class="equipment-upgrade-cost">
-      <h3>Blacksmith · Next Tier ${current+2}/20</h3>
-      <p>${item.type==='weapon'?`Strike power: ${calculateDisplayWeaponDamage(player,item)} → ${calculateDisplayWeaponDamage(player,item,{...player.equippedGear[slot],upgradeTier:current+2})}`:item.type==='trinket'?`Tier bonus: +${getTierStatBonus(item,current+1).toFixed(2)} → +${getTierStatBonus(item,current+2).toFixed(2)}`:`Armour: ${(Number(item.armour||0)+getTierStatBonus(item,current+1)).toFixed(2)} → ${(Number(item.armour||0)+getTierStatBonus(item,current+2)).toFixed(2)}`}</p>
-      <p class="tag">Owned / required. Bring this piece to Mara’s forge in Orrakai.</p>
-      <div class="stat-row">
-        <span>Ash Coins</span>
-        <b class="${(player.gold || 0) >= cost.gold ? 'good-text' : 'bad-text'}">${player.gold || 0} / ${cost.gold}</b>
-      </div>
-      ${materials}
-    </section>
-  `;
+  const quote=makeUpgradeQuote(player,slot);
+  if(!quote)return '<section class="equipment-upgrade-cost"><h3>Primordial +20 · Maximum</h3></section>';
+  const entry=player.equippedGear[slot],preview=upgradeEntryPreview(entry,quote);
+  const materials=quote.cost.materials.map(([id,qty])=>`<div class="stat-row"><span>${escapeHtml(ITEMS[id]?.name||id)}</span><b class="${countItem(player,id)>=qty?'good-text':'bad-text'}">${countItem(player,id)} / ${qty}</b></div>`).join('');
+  return `<section class="equipment-upgrade-cost"><h3>Blacksmith · ${GEAR_RARITIES[quote.targetRarity].name} +${quote.targetTier}/20</h3>
+    ${item.type==='weapon'?`<p>Strike power: ${calculateDisplayWeaponDamage(player,ITEMS[item.id],entry)} → ${calculateDisplayWeaponDamage(player,ITEMS[item.id],preview)}</p>`:''}
+    <p>${quote.promotion?'Ascend rarity at the forge. Completed upgrade strength is retained.':'Bring this piece to the blacksmith to upgrade it.'}</p>
+    <p class="bad-text">${escapeHtml(quote.blockedReason)}</p><div class="stat-row"><span>Ash Coins</span><b>${player.gold||0} / ${quote.cost.gold}</b></div>${materials}</section>`;
 }
-
 function compactItemSummary(player, item) {
   if (!item) return 'Empty';
   if (item.type === 'weapon') return `${weaponTypeLabel(item.weaponType)} / ${calculateDisplayWeaponDamage(player, item)} dmg`;
@@ -1485,7 +1463,7 @@ function isItemCompatibleWithCoterieSlot(item, slot) {
 function getCoterieGearBonus(item,entry=null) {
   if (!item) return { damage: 0, armour: 0, maxHp: 0 };
 
-  const upgrade=getTierStatBonus(item,entry?.upgradeTier);
+  const upgrade=getTierStatBonus(item,entry?.upgradeTier,entry);
   const weaponPower = Number(item.baseDamage || item.damage || item.power || 0);
   const armourPower = Number(item.armour || item.armor || 0);
   const spiritPower = Number(item.spirit || 0);
@@ -2111,5 +2089,5 @@ function tierIdentityBlock(player,item,entry) {
 function informationArmour(player,item) {
   const slot=item.slot==='jewelry'?'trinket':item.slot;
   const tier=player.equipment?.[slot]===item.id?getEquipmentTier(player,slot):1;
-  return Number((Number(item.armour||0)+getTierStatBonus(item,tier)).toFixed(2));
+  return Number((Number(item.armour||0)+getTierStatBonus(item,tier,player.equippedGear?.[slot])).toFixed(2));
 }

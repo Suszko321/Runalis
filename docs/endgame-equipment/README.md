@@ -2,8 +2,9 @@
 
 November 1, 2026. Twelve four-piece ensembles add **48 new items**, each with a
 helm, chest, legs and mantle in the existing four non-weapon slots. Each design
-exists at one exact quality; no Common, Uncommon or Rare copies can drop or be
-acquired. Existing items retain their unrestricted rarity system.
+drops at one exact quality; no Common, Uncommon or Rare copies can drop or be
+acquired. Owned pieces may [ascend above their authored quality at the forge](../gear-ascension/README.md)
+after completing +20, retaining the same appearance and set identity.
 
 | Style | Legendary · 50 | Mythical · 65 | Primordial · 80 |
 | --- | --- | --- | --- |

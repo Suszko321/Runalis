@@ -7,7 +7,7 @@ export function canCarryGear(player,id,qty=1){return !isGear(ITEMS[id])||gearBag
 export function gearEquipReason(player,id,metadata={}){
  const item=ITEMS[id];if(!item?.endgameExclusive)return '';
  if(Number(player?.combatLevel||1)<item.minCombatLevel)return `Combat Level ${item.minCombatLevel} is required for ${item.name}.`;
- if(!gearGradeAllowed(item,metadata.gearRarity||item.rarity))return `${item.name} exists only at ${GEAR_RARITIES[item.rarity].name} quality.`;
+ if(!gearGradeAllowed(item,metadata.gearRarity||item.rarity,metadata))return `${item.name} must be found at its original quality before ascending at the blacksmith.`;
  return '';
 }
 export function gearAcquisitionReason(player,id,qty=1,metadata={}){

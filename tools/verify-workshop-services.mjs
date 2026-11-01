@@ -18,7 +18,7 @@ import {classifyRadarMarker} from '../src/minimapRadar.js';
 const report={checks:[]},test=(name,fn)=>{fn();report.checks.push(name);console.log('PASS '+name);};
 const actor=()=>{const p=createPlayer('Workshop review');Object.assign(p,{x:320,y:320,hp:500,gold:100000,act1OpeningPending:false});for(const s of Object.values(p.skillState.skills))s.level=100;return p;};
 const equip=(p,id)=>{addItem(p,id);assert(equipGearEntry(p,p.inventory.findLastIndex(e=>e.id===id)));};
-const fund=p=>{const ids=new Set(getAllRecipes().flatMap(r=>r.materials.map(([id])=>id)));for(const id of ['ironScrap','blackironOre','arcaneDust','towerFragment','oathsteelShard'])ids.add(id);for(const id of ids)addItem(p,id,ITEMS[id]?.type==='tool'?2:100);};
+const fund=p=>{const ids=new Set(getAllRecipes().flatMap(r=>r.materials.map(([id])=>id)));for(const id of ['ironScrap','blackironOre','arcaneDust','towerFragment','oathsteelShard','bossCore','cultAsh','paleEssence','boneShard'])ids.add(id);for(const id of ids)addItem(p,id,ITEMS[id]?.type==='tool'?2:100);};
 const possessions=p=>JSON.stringify({inventory:p.inventory,gold:p.gold,crafting:p.crafting});
 
 test('Orrakai has one named provider for each service, reachable with actor collision',()=>{
@@ -43,19 +43,19 @@ test('equipped and bag weapons, armour and trinkets upgrade the right individual
  for(const id of ['oldKnife','leatherVest','paleRune']){
   const p=actor();equip(p,id);addItem(p,id);fund(p);workshopFixture(p);const slot=ITEMS[id].slot==='jewelry'?'trinket':ITEMS[id].slot;
   const bag=p.inventory.findLast(e=>e.id===id),identity=bag.instanceId,other=p.equippedGear[slot].instanceId,q=makeOwnedGearUpgradeQuote(p,identity),before=p.gold,material=countItem(p,'ironScrap');bag.affixes=[{id:'keen',amount:2}];
-  assert(commitGearUpgrade(p,q).ok);assert.equal(p.gold,before-q.cost.gold);assert.equal(countItem(p,'ironScrap'),material-1);assert.equal(bag.instanceId,identity);assert.equal(bag.upgradeTier,2);assert.deepEqual(bag.affixes,[{id:'keen',amount:2}]);assert.equal(p.equippedGear[slot].instanceId,other);assert.equal(getEquipmentTier(p,slot),1);
+  assert(commitGearUpgrade(p,q).ok);assert.equal(p.gold,before-q.cost.gold);assert.equal(countItem(p,'ironScrap'),material-q.cost.materials.find(([id])=>id==='ironScrap')[1]);assert.equal(bag.instanceId,identity);assert.equal(bag.upgradeTier,2);assert.deepEqual(bag.affixes,[{id:'keen',amount:2}]);assert.equal(p.equippedGear[slot].instanceId,other);assert.equal(getEquipmentTier(p,slot),1);
   assert(commitGearUpgrade(p,makeUpgradeQuote(p,slot)).ok);assert.equal(getEquipmentTier(p,slot),2);
  }
 });
 test('co-op service sessions charge only their owner and expire when that actor leaves',()=>{
  const p=actor(),g=workshopFixture(p),ally=actor();endWorkshopSession(p);p.coop={players:[ally]};equip(ally,'oldKnife');fund(ally);
- const view=Object.create(g);view.hostGame=g;view.player=ally;assert(beginWorkshopSession(view,g.world.objects[0],'blacksmith'));assert(!workshopAccessStatus(p,'blacksmith').ok);const gold=p.gold,before=ally.gold;assert(commitGearUpgrade(ally,makeUpgradeQuote(ally,'weapon')).ok);assert.equal(p.gold,gold);assert.equal(ally.gold,before-20);p.coop.players=[];assert(!workshopAccessStatus(ally,'blacksmith').ok);
+ const view=Object.create(g);view.hostGame=g;view.player=ally;assert(beginWorkshopSession(view,g.world.objects[0],'blacksmith'));assert(!workshopAccessStatus(p,'blacksmith').ok);const gold=p.gold,before=ally.gold;assert(commitGearUpgrade(ally,makeUpgradeQuote(ally,'weapon')).ok);assert.equal(p.gold,gold);assert.equal(ally.gold,before-5);p.coop.players=[];assert(!workshopAccessStatus(ally,'blacksmith').ok);
 });
 test('quotes reject moved items, duplicate confirmations, changed tiers and missing costs atomically',()=>{
  const p=actor();equip(p,'oldKnife');addItem(p,'oldKnife');fund(p);workshopFixture(p);let q=makeUpgradeQuote(p,'weapon');p.gold=0;let before=JSON.stringify(p);assert(!commitGearUpgrade(p,q).ok);assert.equal(JSON.stringify(p),before);
  p.gold=10000;p.inventory=p.inventory.filter(e=>e.id!=='ironScrap');before=JSON.stringify(p);assert(!commitGearUpgrade(p,q).ok);assert.equal(JSON.stringify(p),before);addItem(p,'ironScrap',100);
  const bag=p.inventory.find(e=>e.id==='oldKnife');q=makeOwnedGearUpgradeQuote(p,bag.instanceId);equipGearEntry(p,p.inventory.indexOf(bag));before=JSON.stringify(p);assert(!commitGearUpgrade(p,q).ok);assert.equal(JSON.stringify(p),before);
- q=makeUpgradeQuote(p,'weapon');assert(commitGearUpgrade(p,q).ok);before=JSON.stringify(p);assert(!commitGearUpgrade(p,q).ok);assert.equal(JSON.stringify(p),before);p.equippedGear.weapon.upgradeTier=20;assert.equal(makeUpgradeQuote(p,'weapon'),null);
+ q=makeUpgradeQuote(p,'weapon');assert(commitGearUpgrade(p,q).ok);before=JSON.stringify(p);assert(!commitGearUpgrade(p,q).ok);assert.equal(JSON.stringify(p),before);p.equippedGear.weapon.upgradeTier=20;assert.equal(makeUpgradeQuote(p,'weapon').promotion,true);
 });
 test('all 63 original recipes consume their ingredients and preserve output and profession XP',()=>{
  assert.equal(getAllRecipes().length,63);
