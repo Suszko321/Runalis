@@ -1,3 +1,4 @@
+import {vampireHealthCost} from './vampireRules.js';
 import { ABILITY_GAMEPAD_LABELS } from './abilityBindings.js';
 import { getAbilityAvailability } from './abilityLoadoutSystem.js';
 import { getMasteryProgress,applyAbilityMastery } from './abilityMasterySystem.js';
@@ -386,12 +387,12 @@ function getAbilitySlotState(player, index, now) {
     name: ability.name,
     ability,mastery:getMasteryProgress(player,ability.id).level,channelActive:ability.heldBlock?!!player.actionState?.blocking&&!player.actionState?.guardBroken:player.activeChannel?.abilityId===ability.id,holdProgress:player.abilityCharge?.abilityId===ability.id?player.abilityCharge.progress:0,
     icon: createAbilityIcon(ability),
-    ready:ready && getAbilityAvailability(player,ability).usable && (player[ability.costType] || 0)>=(ability.heldBlock?2:ability.cost),
+    ready:ready && getAbilityAvailability(player,ability).usable && (ability.vampire?player.hp-vampireHealthCost(player,ability)>=1:(player[ability.costType] || 0)>=(ability.heldBlock?2:ability.cost)),
     cooldownPercent,
     cooldownText,
     chargeText: useChargeState.maxCharges > 1 ? `${useChargeState.charges}/${useChargeState.maxCharges}` : '',
     rechargeProgress:useChargeState.maxCharges>1&&useChargeState.recharging?useChargeState.rechargeProgress:0,
-    resourceLow:(player[ability.costType]||0)<(ability.heldBlock?2:ability.cost)
+    resourceLow:(ability.vampire?player.hp-vampireHealthCost(player,ability)<1:(player[ability.costType]||0)<(ability.heldBlock?2:ability.cost))
   };
 }
 

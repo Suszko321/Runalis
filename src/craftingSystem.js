@@ -1,5 +1,8 @@
 import {commitGearUpgrade,makeUpgradeQuote,getEquipmentTier,getEquipmentTierBonus,getTierUpgradeCost} from './equipmentProgressionSystem.js';
 import {workshopAccessStatus,hasCampfireCraftAccess} from './workshopAccess.js';
+import {gearAcquisitionReason} from './gearItemization.js';
+import {instanceGearItem} from './gearRarity.js';
+import {gearDeconstructionRewards,isGearInstanceEquipped} from './gearServices.js';
 // craftingSystem.js
 // Salvage, recipe crafting, and gear upgrade foundation.
 
@@ -18,27 +21,30 @@ const RARITY_SALVAGE = {
   relic: [['arcaneDust', 4], ['veyrglassShard', 1]],
   legendary: [['arcaneDust', 5], ['bossCore', 1]],
   mythic: [['arcaneDust', 6], ['towerFragment', 1]],
-  ancient: [['arcaneDust', 8], ['towerFragment', 2]]
+  ancient: [['arcaneDust', 8], ['towerFragment', 2]],
+  primordial: [['ironScrap', 12], ['arcaneDust', 8], ['towerFragment', 2]]
 };
 
 export function salvageInventoryItem(player, bagIndex, game) {
   const entry = player?.inventory?.[bagIndex];
   if (!entry) return false;
 
-  const item = ITEMS[entry.id || entry.itemId];
+  const item = instanceGearItem(ITEMS[entry.id || entry.itemId],entry);
+  const access=workshopAccessStatus(player,'blacksmith');
+  if(!access.ok){game?.log?.('Visit a blacksmith to deconstruct gear.');return false;}
   if (!item || !isSalvageable(item)) {
     game?.log?.('That item cannot be salvaged.');
     addStatusText(player, 'Cannot Salvage', { color: '#9facbf' });
     return false;
   }
 
-  if (entry.instanceId?Object.values(player.equippedGear || {}).some(ref=>ref?.instanceId===entry.instanceId):Object.values(player.equipment || {}).includes(item.id)) {
+  if (isGearInstanceEquipped(player,entry)) {
     game?.log?.(`${item.name} is equipped and protected from salvage.`);
     addStatusText(player, 'Equipped Item Protected', { color: '#ffcc66' });
     return false;
   }
 
-  const rewards = getSalvageRewards(item);
+  const rewards = gearDeconstructionRewards(item);
 
   player.inventory.splice(bagIndex,1);
 
@@ -106,6 +112,8 @@ export function getRecipeCraftStatus(player, recipeOrId) {
   }
 
   const output = ITEMS[recipe.output];
+  const acquisition=gearAcquisitionReason(player,recipe.output,recipe.outputQty||1);
+  if(acquisition)return {ok:false,reason:acquisition,recipe};
   if (output?.type === 'tool' && !output.stack && countItem(player, recipe.output) > 0) {
     return {
       ok: false,

@@ -145,7 +145,7 @@ function impact(world,h,actors,now,hurt,log){
     const dx=h.x-p.x,dy=h.y-p.y,d=Math.hypot(dx,dy)||1;moveActorWithCollision(p,world,dx/d*Math.min(h.tier>=3?48:28,d),dy/d*Math.min(h.tier>=3?48:28,d));
    }continue;
   }
-  const source={...h.owner,combatSource:h.owner,x:h.geometry?.x??h.x,y:h.geometry?.y??h.y};
+  const source={...h.owner,combatSource:h.owner,element:['molten','moltenDeath','chamber'].includes(h.kind)?'fire':h.owner.element,x:h.geometry?.x??h.x,y:h.geometry?.y??h.y};
   const label={shatter:'Shatter',chamber:'Infernal execution',collapse:'Vortex collapse',moltenDeath:'Magma eruption'}[h.kind]||ELITE_MODIFIERS[h.kind]?.name||'Elite strike';
   const result=hurt?.(source,p,Math.max(1,Math.round((h.owner.damage||h.owner.dmg||5)*h.multiplier)),world,log,{label,now,heavy:['critical','execution'].includes(h.danger)});
   if(h.kind==='freezer')applyFrost(world,h,p,result,now);

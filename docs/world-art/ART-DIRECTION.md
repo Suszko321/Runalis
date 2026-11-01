@@ -1,5 +1,9 @@
 # Runalis player-led art direction
 
+Historical implementation reference. The consolidated [RUNALIS Art Bible](../RUNALIS_ART_BIBLE.md)
+governs future work; this document preserves the measured player-led production
+decisions and their original compatibility constraints.
+
 Reference: the existing male and female 64 × 80 cells, retained byte for byte.
 The neutral south-facing source silhouettes occupy 63–64 pixels vertically and
 roughly 34 pixels across. Four directional rows and four locomotion cells remain

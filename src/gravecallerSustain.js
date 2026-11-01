@@ -1,3 +1,4 @@
+import {vampireOutsideHealing} from './vampireRules.js';
 // Gravecaller sustain is attached to specific attacks, not every necrotic hit.
 // Budgets belong to the recipient, so crowds, summons and co-op owners share
 // the same limits. Fractional healing never creates free HP on tiny hits.
@@ -23,7 +24,7 @@ export function restoreGravecallerHealth(p,amount,{source='spell',now=performanc
  const elapsed=Math.max(0,Number.isFinite(now)?now-a.last:0);a.last=Math.max(a.last,now);
  a.total=Math.min(max*GRAVECALLER_SUSTAIN.burst,a.total+elapsed*max*GRAVECALLER_SUSTAIN.refill);
  a.summons=Math.min(max*GRAVECALLER_SUSTAIN.summonBurst,a.summons+elapsed*max*GRAVECALLER_SUSTAIN.summonRefill);
- const value=Math.max(0,Math.min(amount,max-hp,a.total,source==='summon'?a.summons:Infinity));
+ const value=Math.max(0,Math.min(vampireOutsideHealing(p,amount),max-hp,a.total,source==='summon'?a.summons:Infinity));
  if(!value)return 0;
  p.hp=Math.min(max,hp+value);a.total-=value;if(source==='summon')a.summons-=value;return value;
 }

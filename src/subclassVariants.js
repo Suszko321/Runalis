@@ -1,3 +1,5 @@
+import {resolveVampireMorph} from './vampireData.js';
+import {describeTankTaunt} from './tankTaunt.js';
 import {getAbilityById} from './data.js';
 import {LICH_FORMS,LICH_ABILITY_ID,BOUND_DEAD_FORMS,BOUND_DEAD_ABILITY_ID} from './lichSummonSystem.js';
 import {getBalancedAbility} from './abilityCombatProfiles.js';
@@ -122,6 +124,7 @@ export function resolveSubclassAbility(player,abilityOrId){
 }
 export function resolveAbilityMorph(player,abilityOrId,morphId){
   const original=typeof abilityOrId==='string'?getAbilityById(abilityOrId):abilityOrId;
+  if(original?.vampire)return resolveVampireMorph(original,morphId);
   const sub=SUBCLASSES[morphId];
   if(!original)return original;
   if(!sub||normalizeSubclassClassId(original.classId)!==sub.classId||normalizeSubclassClassId(player?.classId)!==sub.classId)return original.subclassId?getAbilityById(original.id):original;
@@ -251,6 +254,7 @@ export function resolveAbilityMorph(player,abilityOrId,morphId){
     if(rate&&!ability.gardenGraveMorph)ability.desc=ability.desc.replace('Recover life from effective damage.','').trim()+' Direct hits steal life from damage actually dealt; secondary effects do not heal.';
   }
   if(sub.id==='cryomancer')applyCryomancerTuning(ability,base);
+  ability.desc=describeTankTaunt(ability).desc;
   if(original===getAbilityById(original.id))cache.set(key,Object.freeze(ability));
   return ability;
 }

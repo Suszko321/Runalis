@@ -15,7 +15,7 @@ import {cancelActiveAbilityCharge,cancelActiveHeavyAttackCharge} from './combat.
 import {answerPartyEntry,partyEntrySnapshot,receivePartyEntry,partyEntryPending,cancelPartyEntry} from './partyEntrySystem.js';
 
 const CHARACTER_FIELDS=['name','appearance','bodyType','skin','hair','shirt','pants','boots','inventory','equipment','equippedGear','equipmentProgressionVersion','gearInstanceSequence','equipmentInstances','ownedGear','gearInstances','loadout','gold','attributes','attributePoints','skillState','skillTree','skills','knownAbilities','unlockedAbilities','unlockedPassives','abilityMorphs','abilityMastery','abilityExpertise','skillExpertise','expertise','crafting','craftingState','recipeUnlocks','inputBindings'];
-const VISUAL_FIELDS=['name','x','y','dirX','dirY','hp','maxHp','stamina','maxStamina','spirit','maxSpirit','isMoving','walkTime','lifeState','downedState','reviveAction','combatState','actionState','visualAction','visualHitUntil','abilityCharge','activeChannel','summons','traps','combatEffects','floatingTexts','flags','classId','className','appearance','bodyType','skin','hair','shirt','pants','boots','equipment','loadout','level','combatLevel','bloodline','gravecaller','lightbringer','currentZone','lastCombatAimX','lastCombatAimY','eliteFrost','eliteFrozenUntil','eliteFrostRecoveryUntil'];
+const VISUAL_FIELDS=['name','x','y','dirX','dirY','hp','maxHp','stamina','maxStamina','spirit','maxSpirit','isMoving','walkTime','lifeState','downedState','reviveAction','combatState','actionState','visualAction','visualHitUntil','vampireForm','vampireFrenzyUntil','vampireInstinct','abilityCharge','activeChannel','summons','traps','combatEffects','floatingTexts','flags','classId','className','appearance','bodyType','skin','hair','shirt','pants','boots','equipment','loadout','level','combatLevel','bloodline','gravecaller','lightbringer','currentZone','lastCombatAimX','lastCombatAimY','eliteFrost','eliteFrozenUntil','eliteFrostRecoveryUntil'];
 const pick=(object,fields)=>Object.fromEntries(fields.filter(key=>object[key]!==undefined).map(key=>[key,object[key]]));
 const sceneIds=new WeakMap();let nextScene=0;
 const sceneKey=world=>{if(!sceneIds.has(world))sceneIds.set(world,++nextScene);return `${sceneIds.get(world)}:${world.mode}:${world.floor||0}:${world.seed||0}`;};
@@ -205,7 +205,7 @@ class OnlineSession {
    visual.partyMapSlot=a.slot||a.playerNumber||1;
    return {id:a===g.player?'host':a.networkId||String(a.slot),visual,presentation:actorPresentation(a,refs)};
   });
-  for(const entry of party)for(const key of ['abilityCharge','activeChannel','visualAction','downedState','reviveAction'])entry.visual[key] ??=null;
+  for(const entry of party)for(const key of ['vampireForm','abilityCharge','activeChannel','visualAction','downedState','reviveAction'])entry.visual[key] ??=null;
   for(const entry of party)for(const key of ['eliteFrost','eliteFrozenUntil','eliteFrostRecoveryUntil'])entry.visual[key] ??=0;
   const full=Date.now()>(record.profileAt||0);if(full)record.profileAt=Date.now()+500;
   const sounds=this.audioQueue.filter(e=>e.id>(record.audioCursor||0));record.audioCursor=this.audioSequence;

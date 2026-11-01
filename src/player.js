@@ -1,4 +1,6 @@
 import {HOTBAR_SLOT_COUNT,HOTBAR_LAYOUT_VERSION} from './hotbarConfig.js';
+import {gearAcquisitionReason,equippedGearItem} from './gearItemization.js';
+import {GEAR_RARITIES,canonicalGearRarity} from './gearRarity.js';
 import {normalizeEquipmentProgression,createGearEntry,isTieredEquipment,getEquipmentTierBonus} from './equipmentProgressionSystem.js';
 import {synchronizeEquipmentBoundSkills} from './equipmentBoundSkills.js';
 import {migrateLichSummons} from './lichSummonSystem.js';
@@ -1188,7 +1190,7 @@ export function awakenSpirit(player, log) {
 // INVENTORY
 // -----------------------------------------------------------------------------
 
-export function addItem(player, id, qty = 1) {
+export function addItem(player, id, qty = 1, metadata = {}) {
   const item = ITEMS[id];
 
   if (!item) {
@@ -1199,6 +1201,7 @@ export function addItem(player, id, qty = 1) {
   migratePlayer(player);
 
   const safeQty = Math.max(1, Math.floor(qty || 1));
+  if(gearAcquisitionReason(player,id,safeQty,metadata))return false;
   if(id==='ashCoin'){player.gold=(Number(player.gold)||0)+safeQty;return true;}
 
   if (item.stack) {
@@ -1211,7 +1214,8 @@ export function addItem(player, id, qty = 1) {
     }
   } else {
     for (let i = 0; i < safeQty; i++) {
-      player.inventory.push(isTieredEquipment(item) ? createGearEntry(player,id) : { id, qty: 1 });
+      const gearMetadata=metadata.rarityRollVersion===1?{upgradeTier:metadata.upgradeTier,gearRarity:canonicalGearRarity(metadata.gearRarity),rarityRollVersion:1,itemLevel:Math.max(1,Math.floor(Number(metadata.itemLevel)||1))}:{};
+      player.inventory.push(isTieredEquipment(item) ? createGearEntry(player,id,gearMetadata) : { id, qty: 1 });
     }
   }
 
@@ -1301,8 +1305,8 @@ export function skillName(skillId) {
 export function getPower(player) {
   ensureProgressionPlayer(player);
 
-  const weapon = player.equipment.weapon ? ITEMS[player.equipment.weapon] : null;
-  const trinket = player.equipment.trinket ? ITEMS[player.equipment.trinket] : null;
+  const weapon = equippedGearItem(player,'weapon');
+  const trinket = equippedGearItem(player,'trinket');
 
   const primarySkill = weaponProficiency(weapon, player.loadout?.primarySkill || 'blade');
 
@@ -1342,10 +1346,11 @@ export function getPower(player) {
 export function getArmour(player) {
   ensureProgressionPlayer(player);
 
-  const helm = player.equipment.helm ? ITEMS[player.equipment.helm] : null;
-  const chest = player.equipment.chest ? ITEMS[player.equipment.chest] : null;
-  const legs = player.equipment.legs ? ITEMS[player.equipment.legs] : null;
-  const trinket = player.equipment.trinket ? ITEMS[player.equipment.trinket] : null;
+  const helm = equippedGearItem(player,'helm');
+  const weapon = equippedGearItem(player,'weapon');
+  const chest = equippedGearItem(player,'chest');
+  const legs = equippedGearItem(player,'legs');
+  const trinket = equippedGearItem(player,'trinket');
 
   const combatLevel = Math.max(1, player.combatLevel || 1);
   const defenceLevel = Math.max(1, getSkillLevel(player.skillState, 'defence'));
@@ -1356,6 +1361,7 @@ export function getArmour(player) {
     (1 + levelStat(combatLevel)) * 0.15 +
     (1 + levelStat(defenceLevel)) * 0.55 +
     (helm?.armour || 0) +
+    (weapon?.armour || 0) +
     (chest?.armour || 0) +
     (legs?.armour || 0) +
     (trinket?.armour || 0) +
@@ -1439,7 +1445,7 @@ export function getEquippedItem(player, slot) {
   migratePlayer(player);
 
   const itemId = player.equipment?.[slot];
-  return itemId ? ITEMS[itemId] || null : null;
+  return itemId ? equippedGearItem(player,slot) || null : null;
 }
 
 export function getEquippedWeapon(player) {

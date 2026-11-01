@@ -73,8 +73,8 @@ test('supported campfire preparation remains local and cannot impersonate a work
  for(const id of CAMPFIRE_RECIPES){const p=actor(),g=workshopFixture(p,'craftsman');endWorkshopSession(p);fund(p);const station={id:'fire',kind:'campfire',x:p.x+24,y:p.y,r:12};g.world.objects.push(station);assert(craftRecipe(p,id,g,{source:'campfire',station}),id);assert(!craftRecipe(p,id,g,{source:'campfire',station:{...station}}));p.x+=200;assert(!craftRecipe(p,id,g,{source:'campfire',station}));}
  const p=actor(),g=workshopFixture(p);fund(p);const fire={kind:'campfire',x:p.x,y:p.y};g.world.objects.push(fire);assert(!craftRecipe(p,'ironScrapBundle',g,{source:'campfire',station:fire}));
 });
-test('smith material refinement and portable salvage retain original rewards',()=>{
- const p=actor(),g=workshopFixture(p);addItem(p,'ironOre',2);let n=countItem(p,'ironScrap');assert(supplyBlacksmithMaterials(g));assert.equal(countItem(p,'ironScrap'),n+3);endWorkshopSession(p);n=countItem(p,'ironScrap');assert(!supplyBlacksmithMaterials(g));assert.equal(countItem(p,'ironScrap'),n);addItem(p,'oldKnife');assert(salvageInventoryItem(p,p.inventory.findLastIndex(e=>e.id==='oldKnife'),g));
+test('smith refinement and deconstruction require the live blacksmith',()=>{
+ const p=actor(),g=workshopFixture(p);addItem(p,'ironOre',2);let n=countItem(p,'ironScrap');assert(supplyBlacksmithMaterials(g));assert.equal(countItem(p,'ironScrap'),n+3);endWorkshopSession(p);n=countItem(p,'ironScrap');assert(!supplyBlacksmithMaterials(g));assert.equal(countItem(p,'ironScrap'),n);addItem(p,'oldKnife');assert(!salvageInventoryItem(p,p.inventory.findLastIndex(e=>e.id==='oldKnife'),g));const forge=workshopFixture(p);assert(salvageInventoryItem(p,p.inventory.findLastIndex(e=>e.id==='oldKnife'),forge));
 });
 test('standard dialogue offers real services while retaining Mara quest options and Leave',()=>{
  const w=createCapitalHubWorld({skipPublishedOverride:true});

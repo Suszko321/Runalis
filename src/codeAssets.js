@@ -1,4 +1,7 @@
 import {bowAimRotation} from './bowOrientation.js';
+import {summonEvolutionPresentation} from './summonEvolution.js';
+import {drawSummonEvolutionArt} from './summonEvolutionArt.js';
+import {drawGravecallerEvolutionArt,gravecallerEvolutionFrame} from './gravecallerEvolutionArt.js';
 // codeAssets.js
 // Runalis equipment and summon presentation. Generated raster assets are used
 // where coverage exists; remaining legacy families are tracked in the manifest.
@@ -151,12 +154,25 @@ function isEldritchSummonKind(kind) {
 // -----------------------------------------------------------------------------
 
 export function drawSummonAsset(ctx, summon, player, x, y) {
+  const presentation=summonEvolutionPresentation(summon,player);
+  if(drawGravecallerEvolutionArt(ctx,summon,presentation,x,y))return;
+  if(drawSummonEvolutionArt(ctx,summon,presentation,x,y))return;
+  ctx.save();
+  try{
+    // Grow about the existing ground pivot; no position/hitbox/stat mutation.
+    ctx.translate(Math.round(x),Math.round(y+16));ctx.scale(presentation.scale,presentation.scale);
+    drawSummonBody(ctx,summon,player,0,-16,presentation);
+  }finally{ctx.restore();}
+}
+
+function drawSummonBody(ctx, summon, player, x, y, presentation) {
   const stage = summon.evolutionStage || getSummonEvolutionStage(summon.kind, player);
   // Coterie gear still contributes stats; a morphed actor keeps its authored body.
   if(isBoundDeadMorph(summon)&&drawSummonArt(ctx,summon,stage,x,y))return;
   if (['wolf','miniDemon'].includes(summon.kind) && drawSummonArt(ctx,summon,summon.kind,x,y)) return;
   const marksman=isNecroSummonKind(summon.kind)&&/marksman/i.test(summon.skeletonRole||summon.skeletonRoleName||summon.role||'');
   const visualSummon=marksman&&!summon.coterieEquipment?.weapon?{...summon,coterieEquipment:{...(summon.coterieEquipment||{}),weapon:'hunterBow'}}:summon;
+  if(presentation?.graveArt==='skeleton'&&drawEquippedSkeletonArt(ctx,visualSummon,stage,x,y,summon,presentation))return;
   if(isNecroSummonKind(summon.kind)&&Object.values(visualSummon.coterieEquipment||{}).some(Boolean)){
     if(drawEquippedSkeletonArt(ctx,visualSummon,stage,x,y,summon))return;
     // Keep the original attachment fallback while the authored body loads.
@@ -195,22 +211,29 @@ export function drawSummonAsset(ctx, summon, player, x, y) {
 // NECROMANCER SUMMON EVOLUTION
 // -----------------------------------------------------------------------------
 
-function drawEquippedSkeletonArt(ctx,summon,stage,x,y,identity=summon){
+function drawEquippedSkeletonArt(ctx,summon,stage,x,y,identity=summon,presentation){
   if(!['skeletonServant','skeletalKnight'].includes(stage))return false;
-  const sheet=asset('skeleton-forge');if(!sheet?.ready)return false;
+  const evolution=presentation?.graveArt==='skeleton'?gravecallerEvolutionFrame('skeleton',presentation.tier):null;
+  const sheet=evolution?.record||asset('skeleton-forge');if(!sheet?.ready)return !!evolution;
   const {frame,facing}=gravecallerMotionPose(identity);
-  const scale=stage==='skeletalKnight'?.75:.68,gear=getSummonCoterieGear(summon);
+  const equipped=Object.values(summon.coterieEquipment||{}).some(Boolean);
+  const scale=evolution&&!equipped?(stage==='skeletalKnight'?.58:.54):stage==='skeletalKnight'?.75:.68,gear=getSummonCoterieGear(summon);
   ctx.save();ctx.translate(Math.round(x),Math.round(y));ctx.scale(facing===-1?1:-1,1);ctx.imageSmoothingEnabled=false;
   drawPixelGroundShadow(ctx,0,16,stage==='skeletalKnight'?19:16,5,.4);
-  ctx.drawImage(sheet.image,frame*96,0,96,112,gravecallerBodyOffset('skeleton-forge',frame,scale)-Math.round(48*scale),16-Math.round(106*scale),Math.round(96*scale),Math.round(112*scale));
+  if(evolution)ctx.drawImage(sheet.image,frame*evolution.width,evolution.row*112,evolution.width,112,-Math.round(evolution.width/2*scale),16-Math.round(106*scale),Math.round(evolution.width*scale),Math.round(112*scale));
+  else ctx.drawImage(sheet.image,frame*96,0,96,112,gravecallerBodyOffset('skeleton-forge',frame,scale)-Math.round(48*scale),16-Math.round(106*scale),Math.round(96*scale),Math.round(112*scale));
   // Body alignment keeps armour attached to a stable torso through each stride.
-  const armour=gear.armour||(stage==='skeletalKnight'?ITEMS.graveboundChest:null);
+  const defaultKnightGear=stage==='skeletalKnight'&&(!evolution||equipped);
+  const armour=gear.armour||(defaultKnightGear?ITEMS.graveboundChest:null);
   if(armour)drawWearableArt(ctx,getCoterieGearProfile(armour),'left',0,-10,0,{state:'idle',bodyType:'male'});
-  if(stage==='skeletalKnight')drawWearableArt(ctx,getCoterieGearProfile(ITEMS.graveboundHelm),'left',0,-6,0,{state:'idle',bodyType:'male'});
-  if(gear.charm)drawTrinketArt(ctx,getCoterieGearProfile(gear.charm),'left',0,-10,0);
+  if(defaultKnightGear)drawWearableArt(ctx,getCoterieGearProfile(ITEMS.graveboundHelm),'left',0,-6,0,{state:'idle',bodyType:'male'});
+  if(gear.charm)drawTrinketArt(ctx,gear.charm.id,'left',0,-10,0);
   const hand=frame===3?[-29,-30]:frame===1||frame===2?[-15,-15]:[-11,-17];
   const weapon=gear.weapon||ITEMS.blackIronSword;
-  drawEquippedArt(ctx,weapon.id,getCoterieGearProfile(weapon),hand[0],hand[1],-1);
+  if(evolution&&!equipped){
+    ctx.save();ctx.translate(hand[0],hand[1]);ctx.scale(.4,.4);
+    drawEquippedArt(ctx,weapon.id,getCoterieGearProfile(weapon),0,0,-1);ctx.restore();
+  }else drawEquippedArt(ctx,weapon.id,getCoterieGearProfile(weapon),hand[0],hand[1],-1);
   ctx.restore();return true;
 }
 asset('skeleton-forge');

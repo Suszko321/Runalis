@@ -1,0 +1,10 @@
+# Player locomotion and authored attack/bow/cast exports retained on 2026-10-31.
+# This is preservation evidence, not approval to change player identity.
+4c81fda00e47e41d1cd1a7a8d2fd67e103463efb28426ed4276f05e7dcddab5c  assets/art/sprites/human-male.png
+465c8713813a9f83bee6eb7dbba545efe95cba4e9cc9460e1b12f84494f3b1f7  assets/art/sprites/human-male-attack.png
+d39e8c32880a442d9c24d970538fd1135f7826c3b128224d3c6d4fb3cacde2be  assets/art/sprites/human-male-bow.png
+bf0d521462216f6005d9adf8cb51250e8d3f556891c57f4610dea83b471cb4c9  assets/art/sprites/human-male-cast.png
+8db385e0dd84ed26cefa7edcf955d20d3c18bbc83a1d2ba46c79992be8506d45  assets/art/sprites/human-female.png
+ed5bd349c675714fb5fff52f2af290647e1b9e2f032cb0e148ea3e018ac4d2ce  assets/art/sprites/human-female-attack.png
+ebb97eaea9f7571d278858cec91873142ff7e667afd38ff8697ee52427fcfb7f  assets/art/sprites/human-female-bow.png
+a8162e74a514c26f142393bf8331f1b152f4f14af534d60a5a9202371ac6b50c  assets/art/sprites/human-female-cast.png

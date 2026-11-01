@@ -1,4 +1,5 @@
 import {MYTHICAL_SETS} from './mythicalEquipmentData.js';
+import {equippedGearItem} from './gearItemization.js';
 import {EQUIPMENT_SLOTS} from './equipmentProgressionSystem.js';
 // setBonusSystem.js
 // Armour and weapon set bonus foundation.
@@ -162,13 +163,13 @@ export function getActiveSetBonuses(player) {
 
   const seen=new Set();
   for (const slot of EQUIPMENT_SLOTS) {
-    const itemId=equipment[slot],item=ITEMS[itemId];
+    const itemId=equipment[slot],item=equippedGearItem(player,slot);
     if(!item || (item.slot==='jewelry'?'trinket':item.slot)!==slot || seen.has(itemId))continue;seen.add(itemId);
 
-    const setId = getItemSetId(itemId);
+    const setId = getItemSetId(item);
     if (setId) armourCounts[setId] = (armourCounts[setId] || 0) + 1;
 
-    const weaponSetId = getItemWeaponSetId(itemId);
+    const weaponSetId = getItemWeaponSetId(item);
     if (weaponSetId) weaponCounts[weaponSetId] = (weaponCounts[weaponSetId] || 0) + 1;
   }
 

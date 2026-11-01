@@ -1,3 +1,4 @@
+import {VAMPIRE_ICON_PATHS} from './vampireData.js';
 import { COMBAT_EXPANSION_ABILITIES, CLASS_COMBAT_PALETTES } from './combatExpansionData.js';
 import { LEGACY_SKILL_ART,SHARED_SKILL_PALETTES } from './skillArtProfiles.js';
 
@@ -36,10 +37,10 @@ export const TECHNIQUE_ICON_PATHS = {
 };
 const cachedPaths=new Map();
 export function getAbilityIconPath(ability) {
-  return LEGACY_SKILL_ART[ability?.id]?.path || TECHNIQUE_ICON_PATHS[ability?.effectProfile] || null;
+  return VAMPIRE_ICON_PATHS[ability?.id] || LEGACY_SKILL_ART[ability?.id]?.path || TECHNIQUE_ICON_PATHS[ability?.effectProfile] || null;
 }
 export function getAbilityIconPalette(ability) {
-  return SHARED_SKILL_PALETTES[ability?.id] || CLASS_COMBAT_PALETTES[ability?.classId] || ['#b9b19a','#f5ecd5','#393c3e'];
+  return (ability?.vampire?['#c74c6b','#f6c1c7','#32182c']:null) || SHARED_SKILL_PALETTES[ability?.id] || CLASS_COMBAT_PALETTES[ability?.classId] || ['#b9b19a','#f5ecd5','#393c3e'];
 }
 export function techniqueIconMarkup(ability) {
   if(!getAbilityIconPath(ability))return null;

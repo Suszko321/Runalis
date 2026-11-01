@@ -1,0 +1,19 @@
+{
+  "width": 128,
+  "height": 128,
+  "frames": 4,
+  "fps": 8,
+  "states": [
+    "idle",
+    "anticipation",
+    "execution",
+    "recovery",
+    "hit",
+    "death"
+  ],
+  "pivot": [
+    64,
+    122
+  ],
+  "style": "dark fantasy pixel art"
+}

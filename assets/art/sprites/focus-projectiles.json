@@ -1,0 +1,13 @@
+{
+  "source": "assets/art/source/boss-armory/focusProjectiles.png",
+  "width": 32,
+  "height": 32,
+  "columns": 4,
+  "rows": 4,
+  "identityCount": 16,
+  "pivot": [
+    16,
+    16
+  ],
+  "direction": "right"
+}

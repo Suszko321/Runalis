@@ -1,3 +1,4 @@
+import {installIronMire,updateIronMire} from './ironMireDungeon.js';
 import {installVeyreign,updateVeyreign,leaveVeyreign} from './veyreignDungeon.js';
 import {isVeyreign} from './veyreignRules.js';
 import {installMalakarSanctum,dressMalakarApproach,isMalakarDungeon,requestMalakarEntry} from './malakarEncounter.js';
@@ -253,6 +254,7 @@ export function enterDungeon(game, entrance, options = {}) {
   hostGame.log?.(`Entered ${dungeon.name}.`);
   if(arrival)hostGame.log?.('The cleared route remains open. You return to the boss threshold; enter when the party is ready.');
   beginOrchardDungeon(hostGame);
+  updateIronMire(hostGame);
   markPartyDungeonEnteredObjective(actor || hostGame.player, dungeon.dungeonId || dungeon.poiId || dungeon.entranceId);
 
   addStatusText(actor || hostGame.player, 'Dungeon Entered', {
@@ -996,6 +998,7 @@ export function restoreDungeonFromSaveState(saveState) {
   installMalakarSanctum(world);
   dressMalakarApproach(world);
   installOrchardDungeon(world);
+  installIronMire(world);
   installVeyreign(world);
   initializeDungeonArena(world);
   syncDungeonCompletion(world);
@@ -1245,6 +1248,7 @@ export function createDungeonWorld(options = {}) {
   installMalakarSanctum(world);
   dressMalakarApproach(world);
   installOrchardDungeon(world);
+  installIronMire(world);
   installVeyreign(world);
   initializeDungeonArena(world);
   syncDungeonCompletion(world);
@@ -1252,6 +1256,7 @@ export function createDungeonWorld(options = {}) {
 }
 
 export function updateDungeonEvents(world,player,dt,log,game=null){
+  updateIronMire(game||{world,player,log});
   updateOrchardDungeon({world,player,log});
   updateVeyreign(game||{world,player,log});
   if(!['dungeon','sideZone'].includes(world?.mode)||world.dungeonState?.malakar)return;

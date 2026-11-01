@@ -1,3 +1,5 @@
+import {grantWorldItem} from './lootSystem.js';
+import {vampireOutsideHealing} from './vampireRules.js';
 // survivalSkills.js
 // World-skill helpers for gathering tools, fishing, rations, and visible actions.
 
@@ -217,7 +219,7 @@ export function useRationFromBag(player, entry, item, game) {
   const stamina = Math.max(0, Number(item.stamina || 0));
   const spirit = player.spiritAwakened ? Math.max(0, Number(item.spirit || 0)) : 0;
 
-  player.hp = Math.min(player.maxHp || 100, beforeHp + heal);
+  player.hp = Math.min(player.maxHp || 100, beforeHp + vampireOutsideHealing(player,heal));
   player.stamina = Math.min(player.maxStamina || 100, beforeSta + stamina);
   player.spirit = Math.min(player.maxSpirit || 0, beforeSpirit + spirit);
 
@@ -280,8 +282,8 @@ function finishFishingMiniGame(game, success, failMessage = null) {
   }
 
   const reward = rollFishingReward(player, state);
-  addItem(player, reward.itemId, reward.qty);
-  markPartyCollectObjective(player, reward.itemId, reward.qty);
+  const carried=grantWorldItem(player,game.world,reward.itemId,reward.qty);
+  if(carried)markPartyCollectObjective(player, reward.itemId, reward.qty);
   gainXp(player, 'fishing', reward.xp, game.log);
   const newFishingLevel = getSkillLevel(player.skillState, 'fishing');
 

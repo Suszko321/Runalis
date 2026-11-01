@@ -71,18 +71,18 @@ test('Death Harvest restores Spirit without health, and only one class node impr
  const nodes=Object.values(SKILL_TREE_NODES).filter(n=>n.tree==='spirit');assert.equal(nodes.filter(n=>n.bonuses?.lifestealPct).length,0);assert.equal(nodes.filter(n=>n.bonuses?.gravecallerLifestealPct).length,1);
  p.skillTree.spent={spirit_root:1,spirit_harvest:1,spirit_soul_siphon:1,spirit_vital_theft:1,spirit_grave_command:1};assert.equal(getSkillTreeBonuses(p).gravecallerLifestealPct,2);
 });
-test('Vampire bloodline training still improves eligible drains without adding lifesteal to unrelated spells',()=>{
+test('Vampire no longer adds universal lifesteal; outside class recovery receives Mortal Frailty',()=>{
  const p=player(),w=world();prepare(p,'graveSpark');p.bloodline={id:'vampire'};
  const nodes=getSkillTreeNodesByTree('vampire').filter(n=>n.bonuses?.lifestealPct);p.skillTree.spent=Object.fromEntries(nodes.map(n=>[n.id,1]));
  migratePlayer(p);p.hp=p.maxHp*.3;p.spirit=p.maxSpirit;
- const bonus=nodes.reduce((sum,n)=>sum+n.bonuses.lifestealPct,0),before=p.hp;w.enemies=[foe(1)];assert.ok(useAbility(0,p,w,()=>{},clock,aim));steps(p,w,.5);
- assert.ok(Math.abs(p.hp-before-(8+8+bonus)/100)<1e-8,`Expected ${(8+8+bonus)/100}, received ${p.hp-before}`);
+ assert.equal(nodes.length,0);const before=p.hp;w.enemies=[foe(1)];assert.ok(useAbility(0,p,w,()=>{},clock,aim));steps(p,w,.5);
+ assert.ok(Math.abs(p.hp-before-.08*.9)<1e-8,`Expected ${.08*.9}, received ${p.hp-before}`);
 });
-test('Gravecaller Vampire weapon attacks retain bloodline lifesteal and cannot heal from overkill',()=>{
+test('Gravecaller Vampire ordinary knife attacks no longer gain universal bloodline lifesteal',()=>{
  const p=player(),w=world();p.bloodline={id:'vampire'};p.equipment.weapon='oldKnife';migratePlayer(p);p.hp=p.maxHp*.3;
  w.enemies=[foe(1,282,320)];const before=p.hp;assert.ok(requestBasicAttack(p,w,aim,()=>{},clock));
  for(let i=0;i<80;i++){clock+=1/120;updateWeaponCombat(p,w,aim,1/120,clock,()=>{});}
- assert.equal(w.enemies[0].hp,0);assert.ok(Math.abs(p.hp-before-.08)<1e-8);
+ assert.equal(w.enemies[0].hp,0);assert.equal(p.hp,before);
 });
 test('sustain belongs to deliberate drain skills, not every Deathknight mark, field, curse or beam',()=>{
  assert.equal(gravecallerSkillLifesteal('bloodLance','base'),8);assert.equal(gravecallerSkillLifesteal('bloodLance','acolyte'),0);

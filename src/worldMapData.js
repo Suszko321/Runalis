@@ -306,15 +306,15 @@ export const ACT1_WORLD_MAP = {
     {
       id: 'ironMire',
       sourcePoiId: 'ironMireDungeon',
-      name: 'Iron Mire Sink',
+      name: 'Abandoned Iron Vault',
       type: 'mine',
       category: 'Mining / Dungeon',
       x: L.ironMire[0],
       y: L.ironMire[1],
       icon: 'IM',
-      recommendedLevel: 9,
+      recommendedLevel: 16,
       tags: ['mining', 'dungeon'],
-      description: 'A flooded mire descent and Act I mining route for ore, bone, and mire resources.'
+      description: 'A dangerous mid–Act I mine: restore emergency pumps, recover three lost crew rolls, and confront the Drowned Iron Foreman beneath the bell.'
     },
     {
       id: 'oldHollow',

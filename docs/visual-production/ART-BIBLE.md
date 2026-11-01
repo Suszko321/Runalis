@@ -1,5 +1,9 @@
 # Runalis — earth, ash and brass
 
+Historical production guide. The consolidated [RUNALIS Art Bible](../RUNALIS_ART_BIBLE.md)
+now governs future work, including the explicit 60 × 80 reference / retained
+64 × 80 player export distinction. Keep this document as production history.
+
 The supplied adventurers, modular clothing and crimson sorcerer establish the visual identity. Warm leather, charcoal cloth, near-black contours, tarnished gold and pale steel live against quiet moss, timber and stone. Violet belongs to grave magic; holy effects use ivory/gold, water cyan, thorns muted green, eldritch red/black. Preserve existing class color semantics.
 
 ## Pixel and animation contract

@@ -1,3 +1,5 @@
+import {retireRemovedQuestState} from './questRoster.js';
+import {vampireHealthCost} from './vampireRules.js';
 ﻿import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
 import {abilitySummary,abilityRequirements,abilityScaling,equipmentPurpose,equipmentScaling,informationNumber} from './uiInformation.js';
 import {getAbilityChargeTime} from './chargeSystem.js';
@@ -36,7 +38,6 @@ import { skillTreeIconMarkup } from './skillTreeIconArt.js';
 import {hudPortraitMarkup} from './hudPortrait.js';
 import {
   ITEMS,
-  QUESTS,
   RARITY,
   getAbilityById,
   getAbilitySkillRequirement
@@ -3180,6 +3181,7 @@ function renderCharacterSheet(player, weapon, game) {
 }
 
 function bloodlineModifierSummary(bloodline) {
+ if(bloodline.id==='vampire')return 'Blood Price · night/dungeon damage +15% · daylight −15% · outside healing −10% · fire/holy damage taken +10%';
  const labels={abilityDamagePct:'Bloodline ability damage',fireDamagePct:'Fire damage',holyDamagePct:'Holy damage',necroticDamagePct:'Necrotic damage',healingReceivedPct:'Healing received',incomingDamageTakenPct:'Incoming damage',lifestealPct:'Lifesteal'};
  return Object.entries(bloodline.modifiers||{}).map(([key,value])=>`${labels[key]||prettyId(key)} ${value>0?'+':''}${value}%`).join(' · ');
 }
@@ -4058,12 +4060,13 @@ function renderAbilityFacts(player,ability) {
   const cast=channel?(channel.mode==='hold'?'Hold to channel; release or dodge to stop':`Channel for ${informationNumber(channel.duration)}s`):ability.canCharge?`Tap to cast; hold to charge (${informationNumber(getAbilityChargeTime(player,ability))}s)`:'Press to use';
   rows.push(['Use',cast]);
   const cost=!ability.subclassId&&ability.id==='oathkeeperLastRite'?Math.max(24,Math.ceil(Number(ability.cost||42)*(1-Math.max(0,getSkillTreeBonuses(player).lastRiteCostReductionPct||0)/100))):ability.cost;
-  rows.push([channel?'Start cost':'Cost',`${informationNumber(cost)} ${informationLabelForResource(ability.costType)}${ability.canCharge?' before charge':''}`]);
+  rows.push([channel?'Start cost':'Cost',ability.vampire?`${ability.hpCostPct}% maximum HP (${informationNumber(vampireHealthCost(player,ability))} HP after perks)`:`${informationNumber(cost)} ${informationLabelForResource(ability.costType)}${ability.canCharge?' before charge':''}`]);
   if(ability.subclassHealthCost)rows.push(['Health cost',`${Math.round(ability.subclassHealthCost*100)}% of current health`]);
-  if(channel)rows.push(['While active',`${informationNumber(channel.costPerSecond)} ${informationLabelForResource(ability.costType)}/s${channel.healthPerSecond?` + ${informationNumber(channel.healthPerSecond)} Health/s`:''}`]);
+  if(channel&&ability.vampire)rows.push(['While active','1% maximum HP / second before Chalice']);
+  else if(channel)rows.push(['While active',`${informationNumber(channel.costPerSecond)} ${informationLabelForResource(ability.costType)}/s${channel.healthPerSecond?` + ${informationNumber(channel.healthPerSecond)} Health/s`:''}`]);
   if(channel?.mode==='hold')rows.push(['Movement',channel.movementMode==='locked'?'Stationary':channel.movementMode==='free'?'Normal speed':`${Math.round((channel.movementMultiplier||0)*100)}% speed`]);
   if(profile.maxCharges>1)rows.push(['Recovery',`${profile.maxCharges} uses · ${informationNumber(profile.rechargeTime)}s per use`]);
-  else rows.push(['Recovery',channel?'No cooldown':`${informationNumber(profile.rechargeTime)}s${ability.summonType?' after group ends':''}`]);
+  else rows.push(['Recovery',ability.channelEndCooldown?`${ability.cd}s after channel ends`:channel?'No cooldown':`${informationNumber(profile.rechargeTime)}s${ability.summonType?' after group ends':''}`]);
   if(ability.range>0&&!ability.summonType)rows.push(['Reach',`${informationNumber(ability.range/32)} tiles${ability.canCharge?' before charge':''}`]);
   if(ability.faeFlowerField){
     rows[rows.findIndex(([label])=>label==='Reach')]=['Area',`${informationNumber(ability.subclassRadius/32)}-tile radius around your cast position, before tree bonuses`];
@@ -4462,120 +4465,7 @@ function getObjectiveLabel(objective) {
 }
 
 function syncLegacyQuestDisplayState(player) {
-  if (!player) return;
-
-  player.quest = player.quest || {};
-  player.quests = player.quests || { active: {}, completed: {} };
-  player.quests.active = player.quests.active || {};
-  player.quests.completed = player.quests.completed || {};
-
-  syncLegacyFirstOath(player);
-  syncLegacyHungryShrine(player);
-  syncLegacyHumanBeginning(player);
-}
-
-function syncLegacyFirstOath(player) {
-  const firstOathState = Number(player.quest?.firstOath || 0);
-
-  if (player.quests.active.firstOath || player.quests.completed.firstOath) {
-    delete player.quests.active.firstOathLegacy;
-    delete player.quests.completed.firstOathLegacy;
-    return;
-  }
-
-  if (firstOathState >= 3) {
-    delete player.quests.active.firstOathLegacy;
-
-    player.quests.completed.firstOathLegacy = {
-      id: 'firstOathLegacy',
-      title: QUESTS?.firstOath?.title || 'First Oath of Runalis',
-      completedAt: performance.now()
-    };
-
-    return;
-  }
-
-  const stage = getFirstOathStage(player);
-  const emberleaf = countItem(player, 'emberleaf');
-  const ironOre = countItem(player, 'ironOre');
-
-  player.quests.active.firstOathLegacy = {
-    id: 'firstOathLegacy',
-    title: QUESTS?.firstOath?.title || 'First Oath of Runalis',
-    description: stage?.text || 'Prove you can gather, endure, and fight if needed.',
-    stageIndex: Math.max(0, firstOathState),
-    objectives: firstOathState <= 1
-      ? [
-          {
-            type: 'collect',
-            itemId: 'emberleaf',
-            current: Math.min(emberleaf, 3),
-            required: 3
-          },
-          {
-            type: 'collect',
-            itemId: 'ironOre',
-            current: Math.min(ironOre, 2),
-            required: 2
-          }
-        ]
-      : [
-          {
-            type: 'talk',
-            npcId: 'wardenMael',
-            current: 0,
-            required: 1
-          }
-        ],
-    complete: false,
-    readyToTurnIn: false
-  };
-}
-
-function syncLegacyHungryShrine(player) {
-  if (player.spiritAwakened || Number(player.quest?.hungryShrine || 0) >= 2) {
-    delete player.quests.active.hungryShrineLegacy;
-
-    player.quests.completed.hungryShrineLegacy = {
-      id: 'hungryShrineLegacy',
-      title: QUESTS?.hungryShrine?.title || 'The Hungry Shrine',
-      completedAt: performance.now()
-    };
-
-    return;
-  }
-
-  const gravecap = countItem(player, 'gravecap');
-  const boneShard = countItem(player, 'boneShard');
-
-  player.quests.active.hungryShrineLegacy = {
-    id: 'hungryShrineLegacy',
-    title: QUESTS?.hungryShrine?.title || 'The Hungry Shrine',
-    description: 'Find the Hungry Shrine and bring the offering it wants.',
-    stageIndex: 0,
-    objectives: [
-      {
-        type: 'collect',
-        itemId: 'gravecap',
-        current: Math.min(gravecap, 2),
-        required: 2
-      },
-      {
-        type: 'collect',
-        itemId: 'boneShard',
-        current: Math.min(boneShard, 1),
-        required: 1
-      }
-    ],
-    complete: false,
-    readyToTurnIn: false
-  };
-}
-
-function syncLegacyHumanBeginning(player) {
-  if (!player?.quests?.active) return;
-
-  delete player.quests.active.humanBeginningLegacy;
+  retireRemovedQuestState(player);
 }
 
 function prettyId(value) {
@@ -4600,48 +4490,9 @@ function renderLog(lines) {
   `;
 }
 
-export function getFirstOathStage(p) {
-  if (!p?.quest) {
-    return {
-      stage: 0,
-      text: QUESTS?.firstOath?.stages?.[0] || 'Speak with Warden Mael.'
-    };
-  }
+// Compatibility API for old lab imports; the retired tutorial has no stage.
+export function getFirstOathStage() { return null; }
 
-  if (p.quest.firstOath === 0) {
-    return {
-      stage: 0,
-      text: QUESTS?.firstOath?.stages?.[0] || 'Speak with Warden Mael.'
-    };
-  }
-
-  if (countItem(p, 'emberleaf') < 3 || countItem(p, 'ironOre') < 2) {
-    return {
-      stage: 1,
-      text: QUESTS?.firstOath?.stages?.[1] || 'Gather Emberleaf x3 and Iron Ore x2.'
-    };
-  }
-
-  if ((p.quest.hollowlings || 0) < 3) {
-    return {
-      stage: 2,
-      text: QUESTS?.firstOath?.stages?.[2] || 'Defeat Blighted Corpses x3.'
-    };
-  }
-
-  if (p.quest.firstOath < 3) {
-    return {
-      stage: 3,
-      text: QUESTS?.firstOath?.stages?.[3] || 'Return to Warden Mael.'
-    };
-  }
-
-  return {
-    done: true,
-    stage: 4,
-    text: 'You completed your first oath and earned standing in Runalis.'
-  };
-}
 
 // -----------------------------------------------------------------------------
 // GENERIC UI HELPERS

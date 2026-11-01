@@ -4,6 +4,8 @@ import {TIDEGLASS_RAPIER_ART,drawTideglassRapierModel} from './tideglassRapierAr
 import {isHandTrinket} from './handTrinketArt.js';
 import {drawFactionHelm,drawFactionTrinket,drawFactionWeapon,drawFactionGarmentDetail} from './factionEquipmentArt.js';
 import {bowSourceSide} from './bowOrientation.js';
+import {BOSS_ARMORY_ART} from './bossArmoryArtData.js';
+import {drawBossArmoryWeapon} from './bossArmoryArt.js';
 
 export function weaponArtIndex(id,profile={}) {
   const text=String(id).toLowerCase(),type=profile.weaponType;
@@ -31,11 +33,13 @@ export function weaponArtIndex(id,profile={}) {
 // around its handle, rather than around the center of its bounding rectangle.
 const GRIPS=[[39,89],[39,91],[28,85],[39,87],[39,75],[39,74],[33,58],[39,70],[17,74],[39,72],[39,70],[39,74],[39,89],[40,85],[39,86],[39,88]];
 export function equippedArtReady(id,profile){
+  if(BOSS_ARMORY_ART[id])return !!asset(BOSS_ARMORY_ART[id].sheet)?.ready;
   if(profile?.faction)return true;
   if(id==='tideglassRapier')return true;
   const index=weaponArtIndex(id,profile);return index!==null && !!asset(index>=16?'arcane-special':'weapons-equipped')?.ready;
 }
 export function drawEquippedArt(ctx,id,profile,x,y,side=1) {
+  if(drawBossArmoryWeapon(ctx,id,x,y,profile?.weaponType==='bow'?bowSourceSide(side):side))return true;
   if(drawFactionWeapon(ctx,id,profile,x,y,side))return true;
   if(id==='tideglassRapier'){
     const a=asset('tideglass-rapier');

@@ -1,3 +1,4 @@
+import {drawVampireEffect} from './vampireArt.js';
 import {drawEncounterEffects} from './encounterArt.js';
 import {drawClassMovement} from './classMovementArt.js';
 import {drawWorkshopStrike} from './workshopArt.js';
@@ -57,6 +58,7 @@ import {
   sampleWeaponAttackPose
 } from './playerAttackAnimation.js';
 import { getProjectileVisualProfile } from './combatFeedbackProfiles.js';
+import {drawFocusProjectile} from './bossArmoryArt.js';
 import {drawCombatEffectArt,drawSkillReleaseArt} from './combatArt.js';
 
 // -----------------------------------------------------------------------------
@@ -258,6 +260,8 @@ export function drawCombatProjectiles(ctx, player, camera, now=performance.now()
     const y = projectile.y - camera.y;
 
     if (!isOnScreen(ctx, x, y, 100)) continue;
+
+    if(drawFocusProjectile(ctx,projectile,x,y))continue;
 
     if (projectile.kind === 'necroticBolt') {
       drawNecroticBoltProjectile(ctx, projectile, x, y);
@@ -1247,6 +1251,7 @@ function isDirectionalChargePreview(charge) {
 // -----------------------------------------------------------------------------
 
 function drawEffect(ctx, fx, camera) {
+  if(drawVampireEffect(ctx,fx,camera))return;
   if(fx.kind==='workshopStrike'){drawWorkshopStrike(ctx,fx,camera);return;}
   if(fx.kind==='classMovement'){drawClassMovement(ctx,fx,camera);return;}
   if(drawFellhunterEffect(ctx,fx,camera))return;

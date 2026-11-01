@@ -29,6 +29,8 @@ jobs:
         with:
           node-version: '24'
       - run: npm ci
+      - name: Check engineering foundations
+        run: npm run check:engineering
       - name: Prepare and validate playable files
         run: node tools/prepare-pages.mjs
       - uses: actions/configure-pages@v6

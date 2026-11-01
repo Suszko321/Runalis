@@ -62,11 +62,11 @@ export function installCampaignWorld(w){
     prop('greyhavenMedicine','medicineCrates',42,91),prop('greyhavenPatientCot','infirmaryCot',44,92),prop('greyhavenWash','washBasin',42,93),prop('greyhavenFood','sacks',34,84),prop('greyhavenTools','anvil',28,82),
     prop('greyhavenBench','bench',32,87),prop('greyhavenHearth','campfire',32,83),
     npc('tavinHolt','Tavin Holt',32,85,{poiId:'greyhaven',hair:'#b9b2a4',shirt:'#79634b'}),npc('ionaVey','Iona Vey',36,85,{bodyType:'female',hair:'#674332',shirt:'#526a47'}),npc('pellRusk','Pell Rusk',36,88,{hair:'#9c6c3f',shirt:'#68808b'}),
-    npc('greyhavenLedger','Order Ledger',34,87,{kind:'townProp',propType:'contractTable',campaignFixture:true}),
-    makeObject('townProp','greyhavenCistern','Overgrown Cistern',29,93,{propType:'well',interactable:true,campaignAction:'cistern',talk:'Clear the moss, replace the cover and flush the old water. Tavin has left the tools here.'}),
+    prop('greyhavenLedger','contractTable',34,87),
+    makeObject('townProp','greyhavenCistern','Overgrown Cistern',29,93,{propType:'well',interactable:false,decorative:true}),
     npc('greyhavenFamily','Renn, Displaced Farmer',45,76),npc('greyhavenMerchant','Merchant Sella',58,94),
     prop('greyhavenRoadStation','continentRuin',64,93,{artWidth:140,artHeight:130}),
-    makeObject('townProp','greyhavenRecords','Fellowship Archive Chest',65,95,{propType:'bankChest',interactable:true,campaignAction:'archive',talk:'Repair accounts and road charters. These are civic records, not forbidden revelations.'}),
+    makeObject('townProp','greyhavenRecords','Fellowship Archive Chest',65,95,{propType:'bankChest',interactable:false,decorative:true}),
     npc('corvenDask','Corven Dask',38,84),npc('derrenHale','Derren Hale',36,93),npc('lysaHale','Lysa Hale',37,94,{bodyType:'female',hair:'#77513f'}),
     npc('greyhavenAttendant','Covenant Attendant',38,95,{shirt:'#eee2c6'}),npc('greyhavenMael','Warden Mael',33,91),
   ];
@@ -104,8 +104,6 @@ export function updateAct1Campaign(game,dt=0){
     if(!w.objects.some(o=>o.id==='maelEveningVisitor'))w.objects.push(npc('maelEveningVisitor','Warden Mael',9,6));
   }
   if(p.quests?.completed?.[MERCY_ID]&&!p.quests?.completed?.[CAMPAIGN_ID]&&!p.quests?.active?.[CAMPAIGN_ID])startQuest(p,CAMPAIGN_ID);
-  if(p.quests?.completed?.[MERCY_ID]&&getStoryFlag(p,'order.met')&&!p.quests?.active?.yourOrder1&&!p.quests?.completed?.yourOrder1)startQuest(p,'yourOrder1');
-  for(let i=1;i<9;i++)if(p.quests?.completed?.[`yourOrder${i}`]&&!p.quests?.active?.[`yourOrder${i+1}`]&&!p.quests?.completed?.[`yourOrder${i+1}`])startQuest(p,`yourOrder${i+1}`);
   if(p.quests?.completed?.[MERCY_ID]&&getStoryFlag(p,'mercy.paymentRequested')&&!getStoryFlag(p,'mercy.paymentPaid')){addItem(p,'ashCoin',20);setStoryFlag(p,'mercy.paymentPaid');}
   updateOrderWorld(game);
   // Reconcile only persistent facts. Talking and fighting never complete by proximity.
@@ -148,13 +146,6 @@ function updateRite(game,dt){
 }
 function updateOrderWorld(game){
   const p=game.player,w=game.world,o=ensureOrder(p),has=id=>getStoryFlag(p,`order.${id}`),kills=p.campaignKills||{};
-  if(has('met')&&has('metIona')&&has('metPell'))setStoryFlag(p,'order.surveyed');
-  if(has('materials')&&has('food')&&has('cistern')&&has('residents')&&kills.greyhavenBeastA&&kills.greyhavenBeastB)setStoryFlag(p,'order.restored');
-  if(Object.values(o.members).filter(m=>m.consented&&m.assigned).length>=3)setStoryFlag(p,'order.staffed');
-  const scout=Object.values(o.members).find(m=>m.assigned&&['scouting','guard'].includes(m.role));
-  if(scout)setStoryFlag(p,'order.escortReady');
-  if(has('staffed')&&o.operation==='security'&&kills.greyhavenRoadBeastA&&kills.greyhavenRoadBeastB){o.operations.security=true;o.operationReady=true;}
-  if(o.shelterOutcome==='negligence'&&o.facilities.medicine&&o.food>=2){o.food-=2;o.shelterOutcome='sheltered';game.log?.('The stocked treatment room contains the fever. Lysa is recovering.');}
   if(w.mode!=='overworld')return;
   const objects=allObjects(w);
   for(const e of w.continentRuntime?.allEnemies||w.enemies)if(kills[e.id]){e.dead=true;e.remove=true;e.hp=0;e.deathHandled=true;}
@@ -167,21 +158,14 @@ function updateOrderWorld(game){
   const garden=objects.find(a=>a.id==='greyhavenGarden');if(garden)garden.depleted=!has('restored');
   const cistern=objects.find(a=>a.id==='greyhavenCistern');if(cistern&&has('cistern'))cistern.name='Clean Covered Cistern';
   const banner=objects.find(a=>a.id==='greyhavenBanner');if(banner&&has('founded')){banner.color={gold:'#d9ad4f',green:'#78a65c',blue:'#629bd1',crimson:'#b84e46'}[o.color]||'#d9ad4f';banner.symbol=o.banner;banner.name=o.name;banner.hideLabel=false;}
-  const member=objects.find(a=>a.npcId===scout?.id);
-  if(member&&o.operation==='relief'&&!o.operations.relief&&Math.hypot(p.x-35*TILE,p.y-85*TILE)<24*TILE){member.x=p.x-36;member.y=p.y+24;}
   if(o.operations.trade){const merchant=objects.find(a=>a.id==='greyhavenMerchant');if(merchant)move(merchant,38,88);}
 }
 export function handleCampaignInteraction(game,object){
   if(!isQuestObjectVisible(object,game.player))return false;
   if(object.campaignFixture){openDialogue(game.dialogue,object,game.player,game.world);return true;}
   if(!object.campaignAction)return false;
-  const p=game.player,o=ensureOrder(p);
   if(object.campaignAction==='maraHome'){
     return enterMaraHouse(game);
-  }
-  if(object.campaignAction==='cistern'){setStoryFlag(p,'order.cistern');game.log?.('You clear the cistern, flush the foul water and secure its cover.');return true;}
-  if(object.campaignAction==='archive'){
-    if(o.operation==='recovery'&&getStoryFlag(p,'order.staffed')){o.operations.recovery=true;o.operationReady=true;game.log?.('You recover the fellowship’s repair accounts and civic charters. Return to the hall ledger.');}else game.log?.(object.talk);return true;
   }
   return false;
 }

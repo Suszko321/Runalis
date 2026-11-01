@@ -1,3 +1,4 @@
+import {vampireOutsideHealing} from './vampireRules.js';
 import {getAbilityEffectiveness} from './skillExpertiseSystem.js';
 import {hasLineOfSight} from './world.js';
 // One timed buff per owner, using actual post-mitigation damage from the ledger.
@@ -21,5 +22,5 @@ export function restorePetalStormHealth(p,damage,enemy,now=performance.now()/100
  // Distribute one shared pool in proportion to missing health. More summons
  // never multiply the return or the existing healing budget.
  for(const pet of injured)pet.hp=Math.min(pet.maxHp,pet.hp+shared*(pet.maxHp-pet.hp)/missing);
- const healed=Math.max(0,Math.min(budget-shared,max-p.hp));p.hp+=healed;s.available-=healed+shared;if(healed+shared>0)s.lastHealAt=now;return healed;
+ const healed=Math.max(0,Math.min(vampireOutsideHealing(p,budget-shared),max-p.hp));p.hp+=healed;s.available-=healed+shared;if(healed+shared>0)s.lastHealAt=now;return healed;
 }

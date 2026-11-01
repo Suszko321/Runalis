@@ -1,3 +1,4 @@
+import {grantWorldItem} from './lootSystem.js';
 import {TILE,ITEMS} from './data.js';
 import {ECOLOGIES,ecologyAt,hashWorld,openTile} from './worldAuthorship.js';
 import {addQuestText} from './floatingText.js';
@@ -122,7 +123,7 @@ export function investigateSecret(game,o) {
   const m=worldMemory((game.hostGame||game).player);
   if(m.secrets[o.id]||m.secrets[worldEntityMemoryId(o)]){game.log?.('The offering recess is empty.');return;}
   if((o.requires||[]).some(id=>!m.inscriptions[id])){game.log?.('Three bells are carved into the sealed stone. Their notes must sound across the courtyard.');return;}
-  const qty=o.rewardQty||2;m.secrets[o.id]=true;o.claimed=true;addItem(game.player,o.reward,qty);
+  const qty=o.rewardQty||2;m.secrets[o.id]=true;o.claimed=true;grantWorldItem(game.player,game.world,o.reward,qty);
   game.log?.(`${o.lore} Found ${ITEMS[o.reward]?.name||o.reward} ×${qty}.`);addQuestText(game.player,'Hidden offering recovered',{color:'#a9e1de',ttl:2});(game.hostGame||game).save?.(false);
 }
 export function soundWorldRelic(game,o){

@@ -1,3 +1,6 @@
+import {vampireOutsideHealing} from './vampireRules.js';
+import {onVampireMelee} from './vampireSystem.js';
+import {vampireMeleeSpeed,vampireMeleeReach,royalActive} from './vampireRules.js';
 import {prepareVeyreignTransformation} from './veyreignTransformation.js';
 import {mitigateEliteHit} from './eliteEncounterSystem.js';
 import {getOathVisualFamily} from './oathbladeProfiles.js';
@@ -9,6 +12,9 @@ import {applyMythicalMeleeModifiers} from './mythicalEquipmentSystem.js';
 import {getEquipmentTierBonus} from './equipmentProgressionSystem.js';
 import { progressionPower, attributeHandling, equipmentDamageMultiplier } from './combatPower.js';
 import { weaponProficiency } from './progressionProfiles.js';
+import {FOCUS_PROJECTILE_STYLES} from './focusProjectileData.js';
+import {equippedGearItem} from './gearItemization.js';
+import {instanceGearItem} from './gearRarity.js';
 import { getMeleeLightCombo } from './meleeLightCombos.js';
 // combatMoves.js
 // Runalis weapon moves, combos, aim direction, melee hitboxes, bow projectiles,
@@ -1156,6 +1162,8 @@ function applyWeaponMoveModifiers(player, move, weapon, weaponType) {
   const bonuses = getSkillTreeBonuses(player);
   const traits = Array.isArray(weapon?.traits) ? weapon.traits.map(trait => String(trait).toLowerCase()) : [];
   const modified = { ...move };
+  modified.focusItemId=weapon?.id;
+  if(FOCUS_PROJECTILE_STYLES[weapon?.id])modified.color=FOCUS_PROJECTILE_STYLES[weapon.id].color;
 
   const damagePct =
     Math.max(0, Number(bonuses.focusBoltDamagePct || 0)) +
@@ -1362,6 +1370,7 @@ function enemyInHitbox(player, enemy, move, state) {
   const dy = enemy.y - player.y;
   const distance = Math.hypot(dx, dy);
   const enemyRadius = enemy.radius || enemy.r || 14;
+  move={...move,range:(move.range||46)*vampireMeleeReach(player)};
 
   if (move.kind === 'circle') {
     const radius = move.radius || move.range || 40;
@@ -1437,12 +1446,13 @@ function maybeFireProjectile(player, move, state, world) {
 
   const projectileKind = move.projectileKind || (move.comboType === 'heavy' ? 'powerArrow' : 'arrow');
   const visualProfile = move.visualProfile || projectileKind;
-  const projectileColor = move.color || getMoveEffectColor(move);
+  const projectileColor = FOCUS_PROJECTILE_STYLES[move.focusItemId]?.color || move.color || getMoveEffectColor(move);
 
   state.projectiles.push({
     id: `${projectileKind}-${state.attackId}-${Date.now()}`,
     kind: projectileKind,
     visualProfile,
+    ...(move.focusItemId?{focusItemId:move.focusItemId}:{}),
     x: player.x + state.attackDirX * spawnOffset,
     y: player.y + state.attackDirY * spawnOffset - 9,
     startX: player.x,
@@ -1591,7 +1601,8 @@ function calculateMoveDamage(player, move) {
   const treeBonuses = getSkillTreeBonuses(player);
   const critMultiplier = (move.comboType === 'heavy' ? 1.65 : 1.45) + (treeBonuses.critDamagePct || 0) / 100;
 
-  let damage = Math.round(base * multiplier);
+  const royalMelee=royalActive(player)&&move.kind!=='projectile'?(player.vampireForm.morph==='sovereignBlood'?.85:player.vampireForm.morph==='elderPredator'?1.15:1):1;
+  let damage = Math.round(base * multiplier * royalMelee);
 
   if (crit) {
     damage = Math.round(damage * critMultiplier);
@@ -1611,6 +1622,7 @@ function calculateMoveDamage(player, move) {
 }
 
 export function calculateWeaponDamage(player, weapon, fallbackWeaponType = 'unarmed') {
+  weapon=instanceGearItem(weapon,weapon?.id===player?.equipment?.weapon?player?.equippedGear?.weapon:null);
   if (!weapon) {
     const blade = getSkillLevel(player, 'blade');
     return Math.floor(3.15*progressionPower(player,'blade'));
@@ -1763,6 +1775,7 @@ function applyEnemyDamage(player, world, enemy, damagePacket, move, state, log) 
     size: adjustedPacket.crit ? 18 : move.comboType === 'heavy' ? 16 : 12
   });
 
+  if(move.kind!=='projectile')onVampireMelee(player,world,enemy,contributionDamage,performance.now()/1000);
   applyMoveSpecials(player, enemy, adjustedPacket, move,contributionDamage);
 
   spawnHitEffect(world, enemy, move, state, adjustedPacket,player);
@@ -1821,7 +1834,7 @@ function applyMoveSpecials(player, enemy, damagePacket, move,actualDamage) {
     const ratio = Number(move.lifedrainRatio || 0.035);
     const heal = Math.max(1, Math.floor(damagePacket.amount * ratio));
 
-    player.hp = Math.min(player.maxHp, player.hp + heal);
+    player.hp = Math.min(player.maxHp, player.hp + vampireOutsideHealing(player,heal));
 
     // Visible because this is an active hit effect, not the Thornbeast passive.
     addFloatingText(player, `+${heal}`, {
@@ -1837,7 +1850,7 @@ function applyMoveSpecials(player, enemy, damagePacket, move,actualDamage) {
 
   if (treeLifesteal > 0) {
     const heal = Math.max(1, Math.floor(damagePacket.amount * treeLifesteal / 100));
-    player.hp = Math.min(player.maxHp, player.hp + heal);
+    player.hp = Math.min(player.maxHp, player.hp + vampireOutsideHealing(player,heal));
 
     addFloatingText(player, `+${heal}`, {
       preset: 'heal',
@@ -1873,7 +1886,7 @@ function getCritChance(player, weapon, move) {
 
 function getAttackSpeedMultiplier(player) {
   const bonuses = getSkillTreeBonuses(player);
-  return 1 + Math.max(0, Math.min(35, bonuses.attackSpeedPct || 0)) / 100 + .12 * attributeHandling(player,'dexterity');
+  return (1 + Math.max(0, Math.min(35, bonuses.attackSpeedPct || 0)) / 100 + .12 * attributeHandling(player,'dexterity'))*vampireMeleeSpeed(player,performance.now()/1000);
 }
 
 function scaleMoveTiming(move, speedMultiplier) {
@@ -2116,7 +2129,7 @@ export function getAimDirection(player, input) {
 
 function getEquippedWeapon(player) {
   const weaponId = player?.equipment?.weapon;
-  return weaponId ? ITEMS[weaponId] : null;
+  return weaponId ? equippedGearItem(player,'weapon') : null;
 }
 
 function getWeaponType(weapon) {

@@ -44,7 +44,7 @@ function updateShapes(e,w,p,a){
 }
 function impact(e,w,p,a,now,game){
  const scale={cleave:.52,charge:.72,decree:.58,brand:.6,rupture:.65,signature:.7}[a.key];
- damageNearbyParty(e,p,w,2000,e.damage*scale,member=>a.shapes.some(shape=>malakarShapeHits(shape,member)),MALAKAR_MOVES[a.key].name,now);
+ damageNearbyParty(e,p,w,2000,e.damage*scale,member=>a.shapes.some(shape=>malakarShapeHits(shape,member)),MALAKAR_MOVES[a.key].name,now,['decree','brand','rupture','signature'].includes(a.key)?'fire':null);
  playSfx(a.key==='cleave'?'hit':a.key==='brand'?'fire':'bossSlam',{volume:.55});game?.shake?.(a.key==='signature'?4:2,.12);
  releaseEnemyAttackPresentation(e,now);e.enemyState='recovering';a.released=true;a.flash=.18;
 }

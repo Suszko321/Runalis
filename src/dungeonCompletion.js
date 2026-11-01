@@ -33,6 +33,7 @@ export function syncDungeonCompletion(world){
   }
   for(const object of world.objects||[]){
     if(object.kind==='dungeonExit'){
+      if(world.dungeonState?.ironMire&&object.id==='ironMireSurface'){object.locked=false;continue;}
       if(object.bossVictoryPortal)continue;
       object.locked=!state.cleared;
       if(state.cleared)object.name=object.returnPortal?'Return to Entrance':'Return to Surface';

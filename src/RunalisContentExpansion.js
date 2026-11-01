@@ -296,7 +296,7 @@ function rebuildAshenOrchard(objects, enemies) {
   });
   const evidence = (id, name, x, y, message, extra = {}) => makeObject('poiInvestigation', id, name, x, y, {
     poiId: 'ashenOrchard', clueId: id, r: 17, message, labelPriority: 8,
-    startsQuest: 'ashenOrchardLastHarvest', ...extra
+    ...extra
   });
   const covenantNpc = (id, name, x, y, talk, extra = {}) => makeObject('npc', id, name, x, y, {
     npcId: id, factionId: 'covenantOfLight', disposition: 'friendly',
@@ -429,7 +429,7 @@ function rebuildAshenOrchard(objects, enemies) {
 
   const purificationSlate = objects.find(object => object.id === 'act1OrchardPurificationRecord');
   if (purificationSlate) Object.assign(purificationSlate, {
-    poiId: 'ashenOrchard', clueId: 'purificationSlate', startsQuest: 'ashenOrchardLastHarvest',
+    poiId: 'ashenOrchard', clueId: 'purificationSlate',
     clueCategory: 'relief',
     message: 'The field slate records correct incense, clean water, full prayer cadence, and a successful outer burn. The inner failure began only when the braziers aligned over the buried floor.',
     identityInsights: [{ classAny: ['oathkeeper'], message: 'Every oath response is present and properly witnessed. This was not a failure of discipline or faith.' }],

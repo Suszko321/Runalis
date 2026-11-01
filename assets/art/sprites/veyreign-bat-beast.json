@@ -1,5 +1,5 @@
 {
-  "width": 60,
+  "width": 96,
   "height": 80,
   "frames": 16,
   "fps": 12,
@@ -11,5 +11,6 @@
     "hit",
     "death"
   ],
-  "style": "dark fantasy pixel art"
+  "style": "dark fantasy pixel art",
+  "authoredPosesPerState": 4
 }

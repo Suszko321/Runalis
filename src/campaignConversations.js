@@ -1,4 +1,5 @@
 import {veyreignConversation} from './veyreignRules.js';
+import {ironMireConversation} from './ironMireData.js';
 import {CAMPAIGN_ID,ACT1_ROUTES,CAMPAIGN_DIALOGUES,CAMPAIGN_STAGES} from './act1CampaignData.js';
 import {getStoryFlag} from './storyProgress.js';
 import {GROVE_DIALOGUES,GROVE_QUEST} from './blightedGroveData.js';
@@ -7,6 +8,7 @@ import {fieldConversation,campaignFollowup} from './campaignFieldConversations.j
 
 export function getCampaignConversation(npc,p,world){
  if(!p)return null;
+ const ironMire=ironMireConversation(npc,p);if(ironMire)return ironMire;
  const veyreign=veyreignConversation(npc,p,world);if(veyreign)return veyreign;
  const progress=p.questOwner||p,id=npc.npcId,mercy=progress.quests?.active?.mercy_in_orrakai?.currentStageId;
  const select=key=>CAMPAIGN_DIALOGUES[key];

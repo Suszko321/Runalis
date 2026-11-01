@@ -1,3 +1,6 @@
+import {vampireOutsideHealing} from './vampireRules.js';
+import {equippedGearItem} from './gearItemization.js';
+import {GEAR_RARITIES,canonicalGearRarity} from './gearRarity.js';
 import {prepareVeyreignTransformation} from './veyreignTransformation.js';
 import {regionalLegendaryPool} from './regionalLootSystem.js';
 // legendarySystem.js
@@ -145,9 +148,9 @@ export function rollLegendaryBossDrop(enemy, rng = Math.random) {
 export function getEquippedLegendaryItems(player) {
   const equipment = player?.equipment || {};
 
-  return Object.values(equipment)
-    .map(itemId => ITEMS[itemId])
-    .filter(item => item?.rarity === 'legendary' && item.legendaryPassive);
+  return Object.keys(equipment)
+    .map(slot => equippedGearItem(player,slot))
+    .filter(item => item&&GEAR_RARITIES[canonicalGearRarity(item.rarity)].rank>=3&&item.legendaryPassive);
 }
 
 export function applyLegendaryIncomingDamage(player, incomingDamage, attacker = null, world = null, log = null, now = performance.now() / 1000) {
@@ -279,9 +282,9 @@ export function applyLegendaryOutgoingDamage(player, target, baseDamage, context
       damage = Math.ceil(damage * (1 + Number(passive.bonusPct || 0) / 100));
       // Gravecaller heals once, after mitigation and remaining target HP are
       // known. The coordinator includes this gear bonus on eligible attacks.
-      if(isGravecallerSustain(player))continue;
+      if(isGravecallerSustain(player)||context.noLifesteal)continue;
       const heal = Math.max(1, Math.floor(damage * Number(passive.lifestealPct || 0) / 100));
-      player.hp = Math.min(player.maxHp || player.hp || 1, (player.hp || 0) + heal);
+      player.hp = Math.min(player.maxHp || player.hp || 1, (player.hp || 0) + vampireOutsideHealing(player,heal));
       addFloatingText(player, `+${heal}`, {
         preset: 'heal',
         color: '#b68cff',
@@ -335,7 +338,7 @@ export function onLegendaryEnemyKilled(player, enemy, world = null, log = null, 
       const hp = Math.max(0, Number(passive.hp || 0));
       const spirit = Math.max(0, Number(passive.spirit || 0));
       if(isGravecallerSustain(player))restoreGravecallerHealth(player,hp,{now,source:'gear'});
-      else player.hp = Math.min(player.maxHp || player.hp || 1, (player.hp || 0) + hp);
+      else player.hp = Math.min(player.maxHp || player.hp || 1, (player.hp || 0) + vampireOutsideHealing(player,hp));
 
       if (player.spiritAwakened) {
         player.spirit = Math.min(player.maxSpirit || player.spirit || 0, (player.spirit || 0) + spirit);
@@ -369,9 +372,10 @@ export function updateLegendarySummons(player, now = performance.now() / 1000) {
   }
 }
 
-export function announceLegendaryPickup(player, itemName) {
-  addLootText(player, `LEGENDARY: ${itemName}`, {
-    color: '#ffcc66',
+export function announceLegendaryPickup(player, itemName, rarity='legendary') {
+  const grade=GEAR_RARITIES[canonicalGearRarity(rarity)];
+  addLootText(player, `${grade.name.toUpperCase()}: ${itemName}`, {
+    color: grade.color,
     ttl: 2.35,
     size: 24,
     offsetY: -112,
@@ -382,8 +386,8 @@ export function announceLegendaryPickup(player, itemName) {
     scaleEnd: 1.05
   });
 
-  addStatusText(player, 'Legendary Item Acquired', {
-    color: '#ffefb0',
+  addStatusText(player, `${grade.name} Item Acquired`, {
+    color: grade.color,
     ttl: 1.8,
     size: 16,
     offsetY: -84,

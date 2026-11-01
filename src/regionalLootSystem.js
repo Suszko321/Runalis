@@ -15,8 +15,8 @@ export function regionalSetPool(source={},world={}) {
  if(!ids.length&&/hearthmere|frontier/.test(text))ids.push('beastSovereign','blightedStar');
  return [...new Set(ids)].flatMap(id=>MYTHICAL_SETS[id].pieces);
 }
-export function rollRegionalMythical(source,world={},random=Math.random,context='enemy') {
- if(context==='enemy'&&source?.encounterStatsVersion&&Number(source.combatLevel)<25)return null;
+export function rollRegionalMythical(source,world={},random=Math.random,context='enemy',owner=null) {
+ if(Number(owner?.combatLevel??source?.combatLevel??world.combatLevel??1)<50)return null;
  const pool=regionalSetPool(source,world);if(!pool.length)return null;
  const boss=Boolean(source?.isBoss||source?.worldBoss||source?.bossType||source?.chestType==='boss');
  const elite=Boolean(source?.elite||source?.eliteModifier||source?.namedExteriorElite);

@@ -1,5 +1,27 @@
 # Runalis - Original Land Expanded
 
+## Narrative and world assessment — October 31, 2026
+
+The [World & Narrative Bible](docs/RUNALIS_WORLD_BIBLE.md) preserves the existing
+cosmology foundation and distinguishes confirmed canon, provisional material,
+proposals and unresolved decisions. See the [current assessment](docs/RUNALIS_NARRATIVE_AUDIT.md),
+[prioritized backlog](docs/RUNALIS_NARRATIVE_BACKLOG.md), [quest/NPC/location inventory](docs/narrative-audit/INVENTORY.md)
+and [validation record](docs/narrative-audit/VALIDATION.md). Regenerate the read-only
+inventory with `node tools/audit-narrative-foundation.mjs`.
+
+## Art direction and visual assessment — October 31, 2026
+
+The [RUNALIS Art Bible](docs/RUNALIS_ART_BIBLE.md) governs future visual work.
+The [living audit and prioritized register](docs/RUNALIS_VISUAL_AUDIT.md) records
+the current architecture, measured asset inventory, confirmed issues and review
+limits. The approved player remains unchanged: the requested 60 × 80 reference
+and the current 64 × 80 player export contract are explicitly distinguished.
+See [review evidence and validation commands](docs/art-audit/REVIEW.md).
+
+Run `python tools/verify-art-foundation.py --report docs/art-audit` with Pillow
+installed for current sheet contracts, unexpected empty cells, source rectangles,
+player preservation hashes and contextual edge/alpha/duplicate warnings.
+
 ## Play remotely and publish updates
 
 Play: **https://Suszko321.github.io/Runalis/**  

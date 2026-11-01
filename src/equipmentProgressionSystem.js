@@ -1,5 +1,6 @@
 import { ITEMS } from './data.js';
 import {workshopAccessStatus} from './workshopAccess.js';
+import {canCarryGear} from './gearItemization.js';
 
 export const MAX_UPGRADE_TIER = 20;
 export const EQUIPMENT_SLOTS = Object.freeze(['weapon','helm','chest','legs','trinket']);
@@ -124,5 +125,6 @@ export function equipGearEntry(player,bagIndex) {
 export function unequipGearEntry(player,slot) {
   normalizeEquipmentProgression(player);
   const entry=player.equippedGear?.[slot];if(!entry)return false;
+  if(!canCarryGear(player,entry.id))return false;
   player.inventory.push(entry);delete player.equippedGear[slot];player.equipment[slot]=null;player.gearUpgrades[slot]=0;return true;
 }

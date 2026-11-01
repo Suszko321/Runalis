@@ -23,6 +23,7 @@ export function stopAbilityChannel(player, reason = 'cancelled', onEnd = null) {
   const channel = player?.activeChannel;
   if (!channel) return false;
   player.activeChannel = null;
+  if(channel.endCooldown){player.cooldowns||={};player.cooldowns[channel.abilityId]=performance.now()/1000;}
   if (player.lightbringer?.dawncarverChannel === channel) player.lightbringer.dawncarverChannel = null;
   if (player.visualAction?.abilityId === channel.abilityId) player.visualAction = null;
   onEnd?.(channel,reason);
@@ -45,8 +46,8 @@ export function updateAbilityChannel(player,input,dt,now,{onTick,onEnd,payResour
   while (now >= c.nextResourceAt && payments++ < 64) {
     c.nextResourceAt += c.resourceInterval;
     const amount = c.costPerSecond * c.resourceInterval;
-    const health = c.healthPerSecond * c.resourceInterval;
-    if (player.hp <= health || (amount > 0 && !(payResource ? payResource(c.costType,amount) : defaultPay(player,c.costType,amount)))) {
+    const health = (c.healthPerSecond + (c.healthPercentPerSecond||0)*(Number(player.maxHp)||0)/100) * c.resourceInterval;
+    if ((c.healthPercentPerSecond?player.hp-health<1:player.hp<=health) || (amount > 0 && !(payResource ? payResource(c.costType,amount) : defaultPay(player,c.costType,amount)))) {
       stopAbilityChannel(player,'depleted',onEnd); return false;
     }
     player.hp -= health;

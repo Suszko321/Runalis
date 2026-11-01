@@ -1,4 +1,7 @@
 import {equipmentPurpose,equipmentScaling,abilitySummary} from './uiInformation.js';
+import {gearAcquisitionReason,gearBagCount} from './gearItemization.js';
+import {makeGearSaleQuote,commitGearSale} from './gearServices.js';
+import {GEAR_RARITIES} from './gearRarity.js';
 import {calculateDisplayWeaponDamage} from './panelInventory.js';
 import {MYTHICAL_SETS} from './mythicalEquipmentData.js';
 import { SKILL_SCROLL_OFFERS, purchaseSkillScroll } from './skillScrollSystem.js';
@@ -172,6 +175,11 @@ export function handleMarketShopControllerInput(input) {
 
   const direction=menuDirection(input);
   if(direction){
+    const sales=[...overlay.querySelectorAll('[data-market-gear-sell]')],saleIndex=sales.indexOf(document.activeElement);
+    if(saleIndex>=0&&['up','down'].includes(direction)){
+      const next=sales[saleIndex+(direction==='down'?1:-1)];
+      if(next){next.focus({preventScroll:true});next.scrollIntoView({block:'nearest',inline:'nearest'});return true;}
+    }
     const items=getMarketShopFocusableElements(overlay).filter(menuSheetItemVisible);
     const current=items.includes(document.activeElement)?document.activeElement:overlay.querySelector('.market-offer-row.selected');
     const next=directionalMenuItem(items,current,direction);
@@ -220,7 +228,7 @@ function marketOfferCardLegacy(player, offer) {
   const owned = countItem(player, offer.id);
   const canBuy = (player.gold || 0) >= offer.price;
   const duplicateTool = (item?.type === 'tool' && !item.stack && owned > 0) || (item?.type === 'scroll' && (owned > 0 || player.knownAbilities?.includes(item.learnsAbility)));
-  const disabled = !canBuy || duplicateTool;
+  const disabled = !canBuy || duplicateTool || !!gearAcquisitionReason(player,offer.id,offer.qty);
 
   return `
     <button type="button" class="market-offer-card" data-market-buy="${offer.id}" ${disabled ? 'disabled' : ''}>
@@ -266,8 +274,11 @@ function createMarketShopHtml(player, state = null) {
       <div class="market-shop-actions">
         <button type="button" data-market-sell>Sell Salvage</button>
         <span class="market-shop-hint">D-pad select  A buy  X sell salvage  LB/RB category</span>
+        <span>Gear bag: ${gearBagCount(player)} / 20</span>
         <button type="button" data-market-close>Leave</button>
       </div>
+      <section aria-label="Sell carried gear" style="max-height:180px;overflow:auto;padding:12px"><h3>Sell carried gear</h3>
+      ${(player.inventory||[]).map(entry=>{const q=makeGearSaleQuote(player,entry.instanceId);return q?`<button type="button" data-market-gear-sell="${escapeHtml(q.instanceId)}" style="display:block;width:100%;text-align:left;color:${GEAR_RARITIES[q.rarity].color}">${safeState.pendingGearSale?.instanceId===q.instanceId?'Confirm sale:':'Sell'} ${escapeHtml(GEAR_RARITIES[q.rarity].name+' '+ITEMS[q.itemId].name)} · Tier ${q.tier} · ${q.gold} Ash Coins</button>`:'';}).join('')||'<p>No unequipped gear to sell.</p>'}</section>
     </div>
   `);
 }
@@ -287,7 +298,7 @@ function marketOfferRow(player, offer, index, selected) {
   const owned = countItem(player, offer.id);
   const canBuy = (player.gold || 0) >= offer.price;
   const duplicateTool = (item?.type === 'tool' && !item.stack && owned > 0) || (item?.type === 'scroll' && (owned > 0 || player.knownAbilities?.includes(item.learnsAbility)));
-  const disabled = !canBuy || duplicateTool;
+  const disabled = !canBuy || duplicateTool || !!gearAcquisitionReason(player,offer.id,offer.qty);
   const meta = getMarketOfferMeta(offer);
 
   return `
@@ -308,7 +319,7 @@ function marketOfferDetail(player, offer) {
   const owned = countItem(player, offer.id);
   const canBuy = (player.gold || 0) >= offer.price;
   const duplicateTool = (item?.type === 'tool' && !item.stack && owned > 0) || (item?.type === 'scroll' && (owned > 0 || player.knownAbilities?.includes(item.learnsAbility)));
-  const disabled = !canBuy || duplicateTool;
+  const disabled = !canBuy || duplicateTool || !!gearAcquisitionReason(player,offer.id,offer.qty);
   const statBits = [
     item?.type==='weapon'?`Strike power ${calculateDisplayWeaponDamage(player,item,{id:item.id,upgradeTier:1})}`:null,
     item?.type==='weapon'?`Scales with ${equipmentScaling(item)}`:null,
@@ -329,6 +340,7 @@ function marketOfferDetail(player, offer) {
         ${statBits.map(bit => `<span>${escapeHtml(bit)}</span>`).join('')}
       </div>
       ${MYTHICAL_SETS[item?.setId]?`<p><b>${escapeHtml(MYTHICAL_SETS[item.setId].name)} · Tier 1 commission.</b> Collect three matching pieces to complete the set. ${escapeHtml(MYTHICAL_SETS[item.setId].effects[3])}</p>`:''}
+      ${gearAcquisitionReason(player,offer.id,offer.qty)?`<p role="status">${escapeHtml(gearAcquisitionReason(player,offer.id,offer.qty))}</p>`:''}
       <button type="button" class="market-buy-button" data-market-buy="${offer.id}" ${disabled ? 'disabled' : ''}>
         ${duplicateTool ? 'Already Owned' : canBuy ? `Buy - ${offer.price} Gold` : `Need ${Math.max(0, offer.price - (player.gold || 0))} More Gold`}
       </button>
@@ -337,6 +349,15 @@ function marketOfferDetail(player, offer) {
 }
 
 function bindMarketShopEvents(game, overlay) {
+  overlay.querySelectorAll('[data-market-gear-sell]').forEach(button=>button.onclick=()=>{
+    const state=getMarketShopState(game,overlay),quote=makeGearSaleQuote(game.player,button.dataset.marketGearSell);
+    if(!quote)return;
+    if(JSON.stringify(state.pendingGearSale)===JSON.stringify(quote)){
+      if(commitGearSale(game.player,quote))game.log?.(`Sold ${ITEMS[quote.itemId].name} for ${quote.gold} Ash Coins.`);
+      state.pendingGearSale=null;
+    }else state.pendingGearSale=quote;
+    refreshMarketShop(game,overlay);
+  });
   overlay.querySelectorAll('[data-market-category]').forEach(button => {
     button.addEventListener('click', () => {
       const state = getMarketShopState(game, overlay);
@@ -398,6 +419,8 @@ function buyMarketOffer(game, itemId) {
 
   const player = game.player;
   const item = ITEMS[itemId];
+  const acquisition=gearAcquisitionReason(player,itemId,offer.qty||1);
+  if(acquisition){game.log?.(acquisition);return false;}
   const state = getMarketShopState(game, document.getElementById('marketShopOverlay'));
   const now = performance.now();
 
@@ -559,7 +582,7 @@ function closeMarketShop(game) {
 }
 
 function getMarketShopFocusableElements(overlay) {
-  return Array.from(overlay.querySelectorAll('.market-offer-row, .market-buy-button, .market-category-button, .market-shop-actions button')).filter(element => {
+  return Array.from(overlay.querySelectorAll('.market-offer-row, .market-buy-button, .market-category-button, .market-shop-actions button, [data-market-gear-sell]')).filter(element => {
     if (!element || element.disabled) return false;
     const rect = element.getBoundingClientRect();
     return rect.width > 0 && rect.height > 0;

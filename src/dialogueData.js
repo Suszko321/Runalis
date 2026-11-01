@@ -255,9 +255,8 @@ export const STORY_DIALOGUE_TRIGGERS = {
       'Welcome to the Root & Retort. I’m the apothecary’s daughter; I help with the remedies and anyone who needs them. Survival needs more than medicine, though. Roots split stone and keep growing. You can learn that stubbornness too.',
     options: [
       { id: 'train', label: 'Teach me Thornbinder survival.', response: 'Healing needs teeth. Vines, thorns, poison, roots. Learn all of it, then decide when mercy should bite back.', flagsSet: ['trainer.mara.introduced'] },
-      { id: 'quest', label: 'How can I help Orrakai heal?', response: 'Bring living medicine. The Covenant tents have bandages and discipline; I can help them learn what the forest is changing underneath us.', startsQuest: 'maraRootsInAsh' },
       { id: 'wound', label: 'What is wrong with Echoryn?', response: 'The soil flinches near Divine Age stone. Blighted flesh is a symptom. Something beneath us keeps teaching the Rot where to return.', flagsSet: ['story.maraNamedHearthmereWound'] },
-      { id: 'covenant', label: 'What do you think of the Covenant?', response: 'They kept you alive and keep Rot outside Orrakai. Their rites fail above certain old foundations, so I want roots from those sites before anyone wastes more medicine treating the wrong cause.', flagsSet: ['story.maraPurificationWarning'], requiresQuestStageAtLeast: { questId: 'act1HearthmereAshes', stageId: 'theCovenantBlessing' } },
+      { id: 'covenant', label: 'What do you think of the Covenant?', response: 'They kept you alive and keep Rot outside Orrakai. Their rites fail above certain old foundations. We need to understand that before treating every outbreak as the same illness.', flagsSet: ['story.maraPurificationWarning'], requiresQuestStageAtLeast: { questId: 'act1HearthmereAshes', stageId: 'theCovenantBlessing' } },
       { id: 'awakenedBlood', label: 'What do awakened bloodlines cost?', response: 'They cost the future version of you that might have chosen differently. Nephilim, Cambion, Vampire: each can be survived. None can be undone. Choose only when the loss feels as real as the power.' },
       { id: 'leave', label: 'Leave.', close: true }
     ],
@@ -271,7 +270,6 @@ export const STORY_DIALOGUE_TRIGGERS = {
       'I still get scared before every fight. That is the secret nobody writes on a training dummy. You move anyway.',
     options: [
       { id: 'train', label: 'Teach me practical combat.', response: 'Watch stamina. Keep your feet. If one arrow is good, a volley is better, but only if you live long enough to loose it.', flagsSet: ['trainer.bram.introduced'] },
-      { id: 'quest', label: 'Can the village defend itself?', response: 'Not yet. But we can teach hands to stop shaking after the first swing.', startsQuest: 'bramLanternDrill' },
       { id: 'roadLesson', label: 'Teach me how to survive the old road.', response: 'Do not spend every breath attacking. Block what you understand, dodge what you do not, and leave enough stamina to run when the road answers back.', flagsSet: ['story.bramRoadLesson'] },
       { id: 'lantern', label: 'Why keep the lantern?', response: 'Because it is small. That sounds stupid, but small lights are the ones people can carry.' },
       { id: 'leave', label: 'Leave.', close: true }
@@ -286,9 +284,7 @@ export const STORY_DIALOGUE_TRIGGERS = {
       'If you came for forbidden power, listen first. Death is not evil. Using the dead like tools because you are lonely is.',
     options: [
       { id: 'train', label: 'Teach me death magic.', response: 'Names before bones. Consent before command. Lifesteal only teaches hunger unless you learn restraint.', flagsSet: ['trainer.dusk.introduced'] },
-      { id: 'quest', label: 'What did purification take?', response: 'Names. Mine was nearly one of them. Help me recover the ones that have no mouths left.', startsQuest: 'duskNamesForTheDead' },
       { id: 'survivor', label: 'Why did I survive?', response: 'I cannot answer that. Mael found you and Mara kept you alive. Survival does not make you chosen. What you do next is your responsibility.' },
-      { id: 'pactless', label: 'Can infernal blood exist without a pact?', response: 'Yes. Fire does not require worship. But power enjoys being mistaken for freedom. If you take it, make certain every chain is broken before it reaches your blood.', requiresQuestActive: 'cambionAshenPact' },
       { id: 'deathless', label: 'Can hunger be mastered?', response: 'For a while. Perhaps for a lifetime. The danger is not that a vampire must feed. It is that one day feeding may feel more honest than restraint.', requiresQuestActive: 'vampireRedChalice' },
       { id: 'leave', label: 'Leave.', close: true }
     ],
@@ -302,10 +298,8 @@ export const STORY_DIALOGUE_TRIGGERS = {
       'A shield is a promise made visible. The Covenant gave me mine; the people behind it give that promise meaning.',
     options: [
       { id: 'train', label: 'Teach me the Oathkeeper path.', response: 'Guard first. Strike second. Faith that cannot protect a frightened stranger is decoration, not an oath.', flagsSet: ['trainer.elian.introduced'] },
-      { id: 'quest', label: 'How can I serve?', response: 'The quarantine lanes need calm hands more than glorious ones. Learn who is afraid, then stand where their fear would otherwise spread.', startsQuest: 'elianTheOathAndTheChain' },
       { id: 'purification', label: 'Why does the Covenant purify?', response: 'Because the Rot spreads through soil, water, flesh, and memory. White fire, clean water, and careful records have saved thousands. At ancient foundations, we need to learn why those measures sometimes fail.', flagsSet: ['story.covenantBlessingWitnessed'], requiresQuestStageAtLeast: { questId: 'act1HearthmereAshes', stageId: 'theCovenantBlessing' } },
       { id: 'covenant', label: 'What is the Covenant?', response: 'Physicians, teachers, historians, peacekeepers, priests—ordinary hands sharing one promise: civilization should outlive this darkness.' },
-      { id: 'brokenHalo', label: 'What would a broken halo demand?', response: 'Judgment. Protection. Obedience, if you let it. A Nephilim must carry the light without becoming the hand of whatever first cast it.', requiresQuestActive: 'nephilimBrokenHalo' },
       { id: 'leave', label: 'Leave.', close: true }
     ],
     flagsSet: ['trainer.elian.introduced']

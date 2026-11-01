@@ -1,5 +1,6 @@
 import {encounterRng} from './encounterData.js';
-import {rollRegionalMythical} from './regionalLootSystem.js';
+import {rollUniversalGear,gearAcquisitionReason} from './gearItemization.js';
+import {instanceGearItem,isGear,canonicalGearRarity,GEAR_RARITIES} from './gearRarity.js';
 import {rollGameplayEnemyLoot,announceLootDiscovery,lootDiscoveryProfile} from './gameplayDiscoveries.js';
 import {isTieredEquipment} from './equipmentProgressionSystem.js';
 // lootSystem.js
@@ -12,11 +13,26 @@ import { addLootText } from './floatingText.js';
 import { findNearestActorPassablePoint, isActorPositionPassable, isPassable } from './world.js';
 import { markPartyCollectObjective } from './dialogueSystem.js';
 import {
-  announceLegendaryPickup,
-  rollLegendaryBossDrop
+  announceLegendaryPickup
 } from './legendarySystem.js';
 
 const PICKUP_RADIUS = 34;
+// Chest/tower rewards use the same capacity-safe delivery path. A full bag
+// leaves the actual copy in the current world, never a hidden extra inventory.
+export function grantWorldItem(player,world,id,qty=1){
+ const base=ITEMS[id];if(!base)return false;
+ let metadata={};
+ if(isGear(base)){
+  let rarity=canonicalGearRarity(base.rarity);
+  if(Number(player.combatLevel||1)<50&&GEAR_RARITIES[rarity].rank>=4)rarity='legendary';
+  metadata={gearRarity:rarity,rarityRollVersion:1,itemLevel:player.combatLevel||1};
+ }
+ if(addItem(player,id,qty,metadata))return true;
+ if(!world||!isGear(base))return false;
+ world.drops ||= [];
+ for(let n=0;n<qty;n++)world.drops.push({id:`reward-gear-${Date.now()}-${world.drops.length}`,itemId:id,item:id,qty:1,quantity:1,...metadata,upgradeTier:1,rarity:metadata.gearRarity,name:base.name,playerSpecific:true,ownerSlot:player.slot||player.playerNumber||1,ownerLabel:`P${player.slot||player.playerNumber||1}`,x:player.x,y:player.y,age:0,ttl:0,collected:false});
+ addLootText(player,'Gear bag full — reward left on the ground',{color:'#ffffff'});return false;
+}
 
 export function createEnemyLootDrops(enemy, partyLeader, world) {
   if (!enemy || !world || enemy.rewardSuppressed || enemy.summonedBy || enemy.summonedByBoss) return [];
@@ -29,9 +45,6 @@ export function createEnemyLootDrops(enemy, partyLeader, world) {
   const rng=enemy.rewardSeed?encounterRng(enemy.rewardSeed):Math.random;
   const drops = rollEnemyLootSafe(enemy, world,rng).filter(drop=>!enemy.orchardCustodian||drop.item!=='orrakaiFoundersSignet');
   drops.push(...rollPoiLoot(enemy,rng));
-  const legendaryDrop = rollLegendaryBossDrop(enemy,rng);
-  if (legendaryDrop) drops.push(legendaryDrop);
-  const mythical=rollRegionalMythical(enemy,world,rng);if(mythical)drops.push(mythical);
   const collectible=rollEnemyCollectible(enemy,world,rng);
   if(collectible&&!drops.some(drop=>drop.item===collectible.item))drops.push(collectible);
   for(const extra of rollGameplayEnemyLoot(enemy,owner,world,enemy.rewardSeed?encounterRng(`${enemy.rewardSeed}:discoveries`):rng))
@@ -39,8 +52,10 @@ export function createEnemyLootDrops(enemy, partyLeader, world) {
 
   world.drops = Array.isArray(world.drops) ? world.drops : [];
 
-  const created = drops.map((drop, index) => {
-    const item = ITEMS[drop.item];
+  const finalDrops=drops.filter(drop=>!isTieredEquipment(ITEMS[drop.item]));
+  const gear=rollUniversalGear(enemy,owner,rng);if(gear)finalDrops.push(gear);
+  const created = finalDrops.map((drop, index) => {
+    const item = instanceGearItem(ITEMS[drop.item],drop);
     const angle = (index / Math.max(1, drops.length)) * Math.PI * 2;
     const distance = 14 + index * 5;
     const point = findReachableDropPoint(world, owner, enemy, angle, distance);
@@ -53,6 +68,7 @@ export function createEnemyLootDrops(enemy, partyLeader, world) {
       quantity: Math.max(1, Number(drop.qty || 1)),
       name: item?.name || drop.item,
       rarity: item?.rarity || 'common',
+      ...(drop.rarityRollVersion===1?{gearRarity:drop.gearRarity,itemLevel:drop.itemLevel,rarityRollVersion:1}:{}),
       discoveryType:lootDiscoveryProfile(drop.item)?.kind||null,
       ...(isTieredEquipment(item)?{upgradeTier:1}:{}),
       legendary: Boolean(drop.legendary || item?.rarity === 'legendary'),
@@ -62,7 +78,7 @@ export function createEnemyLootDrops(enemy, partyLeader, world) {
       x: point.x,
       y: point.y,
       age: 0,
-      ttl: 90,
+      ttl: isTieredEquipment(item)?0:90,
       collected: false
     };
   });
@@ -124,7 +140,10 @@ export function updateWorldLootPickups(world, partyLeader, dt, log) {
 
     const itemId = drop.itemId || drop.item;
     const qty = drop.qty || drop.quantity || 1;
-    addItem(owner, itemId, qty);
+    if(!addItem(owner,itemId,qty,drop)){
+      if(!drop.gearBagNotified){addLootText(owner,gearAcquisitionReason(owner,itemId,qty,drop)||'Cannot carry item',{color:'#ffffff'});drop.gearBagNotified=true;}
+      continue;
+    }
     markPartyCollectObjective(owner, itemId, qty);
     announceLootDiscovery(owner,itemId,world,log);
     drop.collected = true;
@@ -136,15 +155,15 @@ export function updateWorldLootPickups(world, partyLeader, dt, log) {
 
     addLootText(owner, itemName, {
       color: rarity?.color || '#d9ad4f',
-      ttl: drop.rarity === 'rare' || drop.rarity === 'occult' || drop.rarity === 'epic' || drop.rarity === 'relic' || drop.rarity === 'legendary' || drop.rarity === 'mythic' || drop.rarity === 'ancient'
+      ttl: drop.rarity === 'rare' || drop.rarity === 'occult' || drop.rarity === 'epic' || drop.rarity === 'relic' || drop.rarity === 'legendary' || drop.rarity === 'mythic' || (drop.rarity === 'ancient'||drop.rarity === 'primordial')
         ? 1.45
         : 1.05,
-      important: drop.rarity === 'epic' || drop.rarity === 'relic' || drop.rarity === 'legendary' || drop.rarity === 'mythic' || drop.rarity === 'ancient'
+      important: drop.rarity === 'epic' || drop.rarity === 'relic' || drop.rarity === 'legendary' || drop.rarity === 'mythic' || (drop.rarity === 'ancient'||drop.rarity === 'primordial')
     });
 
-    if (drop.legendary || drop.rarity === 'legendary' || drop.rarity === 'mythic' || drop.rarity === 'ancient') {
-      announceLegendaryPickup(owner, itemName);
-      log?.(`LEGENDARY ACQUIRED: ${owner.name || drop.ownerLabel || 'Player'} obtained ${itemName}.`);
+    if (drop.legendary || drop.rarity === 'legendary' || drop.rarity === 'mythic' || (drop.rarity === 'ancient'||drop.rarity === 'primordial')) {
+      announceLegendaryPickup(owner,itemName,drop.rarity);
+      log?.(`${rarity?.name?.toUpperCase()||'VALUABLE'} ACQUIRED: ${owner.name || drop.ownerLabel || 'Player'} obtained ${itemName}.`);
     }
   }
 

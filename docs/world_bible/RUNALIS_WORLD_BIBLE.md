@@ -4,6 +4,8 @@ Canonical foundation, version 1.0
 Established: 2026-07-21  
 Authority: this document supersedes contradictory cosmology and ancient-history material elsewhere in the project.
 
+Department navigation (31 October 2026): the [operational World & Narrative Bible](../RUNALIS_WORLD_BIBLE.md) preserves this foundation and records current director instructions, playable quest chronology, implementation gaps and unresolved decisions. Its Three Seraphs direction supersedes the older Act II outline; no cosmology rewrite is made here.
+
 ## Contents
 
 - [Part 1 – Cosmology](#part-1--cosmology)

@@ -1,3 +1,4 @@
+import {describeTankTaunt} from './tankTaunt.js';
 import {FELLHUNTER_BASE_INFO} from './fellhunterSkills.js';
 // Preserve the existing coordinator's live balance overrides in HUDs and mastery.
 export function getBalancedAbility(ability) {
@@ -7,5 +8,5 @@ export function getBalancedAbility(ability) {
   }
   if(ability.id==='graveSpark')return {...ability,cost:12,cd:.4,range:600};
   if(ability.id==='thornbinderThornLash')return {...ability,cost:7,cd:.55,range:250};
-  return ability;
+  return describeTankTaunt(ability);
 }

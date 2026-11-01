@@ -1,3 +1,5 @@
+import {rollUniversalGear} from '../src/gearItemization.js';
+import {canonicalGearRarity,GEAR_RARITIES} from '../src/gearRarity.js';
 import assert from 'node:assert/strict';
 import {workshopFixture} from './workshop-fixtures.mjs';
 import fs from 'node:fs';
@@ -30,7 +32,7 @@ const actor=(classId='classless')=>{const p=createPlayer('Loot '+classId);choose
 const world=()=>({mode:'dungeon',name:'Briar Crypt',width:30,height:22,tiles:Array.from({length:22},()=>Array.from({length:30},()=>({biome:'grass',passable:true}))),enemies:[],objects:[],effects:[],drops:[]});
 const foe=(id='test',x=295,y=320)=>({id,name:'Test enemy',kind:'rat',x,y,hp:100000,maxHp:100000,xp:80,level:1,r:12,radius:12,aggro:3,attackCooldown:100});
 const aim={combatAimX:1,combatAimY:0,hasAim:true,ability0Held:true},time=()=>performance.now()/1000+30;
-const equip=(p,id)=>{addItem(p,id);assert.ok(equipGearEntry(p,p.inventory.findLastIndex(i=>i.id===id)));};
+const equip=(p,id)=>{if(GEAR_RARITIES[canonicalGearRarity(ITEMS[id]?.rarity)].rank>=4){p.skillState.combat.level=Math.max(50,p.skillState.combat.level);p.combatLevel=p.skillState.combat.level;}assert.ok(addItem(p,id));assert.ok(equipGearEntry(p,p.inventory.findLastIndex(i=>i.id===id)));};
 const set=(p,id,n=3)=>{for(const item of MYTHICAL_SETS[id].pieces.slice(0,n))equip(p,item);};
 const funds=(p)=>{p.gold=1e6;for(const id of ['ironScrap','arcaneDust','sturdyHardwood','amberResin','fieldstone','blackironOre','thornsilkFiber','graveSilver','spiritwoodSplinter','lumenQuartz','tideglassCrystal','oathsteelShard','towerFragment'])addItem(p,id,1000);workshopFixture(p);};
 const total=(p,id)=>p.inventory.filter(i=>i.id===id).reduce((n,i)=>n+i.qty,0);
@@ -130,7 +132,7 @@ test('set equipment never grants another class skill or permanent transformation
  const p=actor();set(p,'drownedConvergence');p.knownAbilities.push('hydromancerWaterTorrent');assert.equal(getAbilityAvailability(p,'hydromancerWaterTorrent').usable,false);assert.equal(useAbility('hydromancerWaterTorrent',p,world(),()=>{},time(),aim),false);
 });
 test('regional pools and rare chest rolls retain identity and tier-one rewards',()=>{
- assert.deepEqual(new Set(regionalSetPool({name:'Drowned River King'})),new Set(MYTHICAL_SETS.drownedConvergence.pieces));assert.equal(rollRegionalMythical({kind:'rat'},world(),()=>0),null);const drop=rollRegionalMythical({name:'Briar Titan',isBoss:true},{},()=>0);assert.ok(MYTHICAL_SETS.beastSovereign.pieces.includes(drop.item));assert.equal(drop.upgradeTier,1);assert.equal(filterChestEquipment([['oldKnife',1],['ironScrap',4]],{},()=>.9).length,1);assert.equal(filterChestEquipment([['oldKnife',1],['ironScrap',4]],{questReward:true},()=>.9).length,2);
+ assert.deepEqual(new Set(regionalSetPool({name:'Drowned River King'})),new Set(MYTHICAL_SETS.drownedConvergence.pieces));assert.equal(rollRegionalMythical({kind:'rat'},world(),()=>0),null);const drop=rollRegionalMythical({name:'Briar Titan',isBoss:true,combatLevel:50},{},()=>0);assert.ok(MYTHICAL_SETS.beastSovereign.pieces.includes(drop.item));assert.equal(drop.upgradeTier,1);assert.equal(filterChestEquipment([['oldKnife',1],['ironScrap',4]],{},()=>.9).length,1);assert.equal(filterChestEquipment([['oldKnife',1],['ironScrap',4]],{questReward:true},()=>.9).length,2);
 });
 test('world loot has one authoritative payout, player ownership, and tier-one pickup',()=>{
  const p=actor(),ally=actor(),w=world();p.slot=1;p.x=500;ally.slot=2;ally.x=290;p.coop={players:[ally]};const enemy={...foe(),kind:'demonCultist',name:'Last Dawn Cultist',isBoss:true};const old=Math.random;Math.random=()=>0;let drops;try{drops=createEnemyLootDrops(enemy,p,w);assert.equal(createEnemyLootDrops(enemy,p,w).length,0);}finally{Math.random=old;}
@@ -141,10 +143,10 @@ test('tower materials and currency support upgrades without double claiming',()=
 });
 
 let seed=0x2072026;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
-test('seeded large-sample loot confirms rare equipment and rarer exceptional gear',()=>{
- const previous=Math.random;Math.random=random;
- try{for(const rank of ['ordinary','elite','boss']){const metrics={kills:50000,gear:0,legendary:0,mythical:0,materials:0,factionGear:0};for(let i=0;i<metrics.kills;i++){const e={kind:'demonCultist',name:'Last Dawn Cultist',id:'drop'+i,...(rank==='boss'?{isBoss:true,bossType:'redSealExecutioner'}:rank==='elite'?{eliteModifier:'armoured'}:{})};const drops=rollEnemyLoot(e);const unique=rollLegendaryBossDrop(e,random);if(unique)drops.push(unique);const myth=rollRegionalMythical(e,{},random);if(myth)drops.push(myth);const collectible=rollEnemyCollectible(e,{},random);if(collectible){drops.push(collectible);if(isTieredEquipment(ITEMS[collectible.item]))metrics.factionGear++;}if(drops.some(d=>isTieredEquipment(ITEMS[d.item])))metrics.gear++;if(drops.some(d=>isTieredEquipment(ITEMS[d.item])&&ITEMS[d.item]?.rarity==='legendary'))metrics.legendary++;if(drops.some(d=>isTieredEquipment(ITEMS[d.item])&&ITEMS[d.item]?.rarity==='mythic'))metrics.mythical++;if(drops.some(d=>!isTieredEquipment(ITEMS[d.item])))metrics.materials++;}report.loot[rank]=metrics;}
- }finally{Math.random=previous;}
- console.log('Loot sampling',JSON.stringify(report.loot));assert.ok(report.loot.ordinary.gear/50000<.035);assert.ok(report.loot.ordinary.factionGear/50000<.005);assert.ok(report.loot.boss.legendary/50000<.05);assert.ok(report.loot.boss.mythical/50000<.025);assert.ok(report.loot.boss.gear>report.loot.ordinary.gear);assert.ok(report.loot.ordinary.materials>report.loot.ordinary.gear*5);
+test('seeded universal gear samples follow rank rates and level50 rarity gates',()=>{
+ let seed=9137;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+ for(const rank of ['ordinary','elite','boss']){const metrics={kills:50000,gear:0,legendary:0,mythical:0,primordial:0};for(let i=0;i<metrics.kills;i++){const e={kind:'rat',...(rank==='boss'?{isBoss:true}:rank==='elite'?{elite:true}:{})},drop=rollUniversalGear(e,{combatLevel:50},random);if(!drop)continue;metrics.gear++;if(drop.gearRarity==='legendary')metrics.legendary++;if(drop.gearRarity==='mythic')metrics.mythical++;if(drop.gearRarity==='primordial')metrics.primordial++;}report.loot[rank]=metrics;const expected={ordinary:.015,elite:.06,boss:.30}[rank];assert.ok(Math.abs(metrics.gear/50000-expected)<.008);assert.ok(metrics.legendary<metrics.gear*.04);assert.ok(metrics.mythical<metrics.legendary);}
+ for(let i=0;i<10000;i++){const drop=rollUniversalGear({isBoss:true},{combatLevel:49},random);if(drop)assert.ok(!['mythic','primordial'].includes(drop.gearRarity));}
+ console.log('Universal loot sampling',JSON.stringify(report.loot));
 });
 fs.mkdirSync('docs/loot-overhaul',{recursive:true});fs.writeFileSync('docs/loot-overhaul/model-verification.json',JSON.stringify(report,null,2));console.log(`Passed ${report.checks.length} loot checks.`,JSON.stringify(report.loot));

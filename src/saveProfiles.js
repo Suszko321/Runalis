@@ -6,6 +6,7 @@
 // without throwing or destroying usable data.
 
 import { createPlayer, migratePlayer } from './player.js';
+import { retireRemovedQuestState } from './questRoster.js';
 import { rebaseCooldownMap } from './cooldownClock.js';
 import { migrateLastDawnDisplayText } from './humanoidEnemies.js';
 import { ACT1_OVERWORLD_DISPLAY_NAME, normalizePlayerFacingWorldName } from './worldNames.js';
@@ -82,6 +83,7 @@ export function normalizeProfileSave(profile, options = {}) {
 
   player.quests = normalizeQuestLog(player.quests);
   player.questState = normalizeQuestState(player.questState);
+  retireRemovedQuestState(player);
   player.questProgress = player.questProgress && typeof player.questProgress === 'object'
     ? player.questProgress
     : {};
@@ -98,6 +100,11 @@ export function normalizeProfileSave(profile, options = {}) {
   player.sideZones = normalizeRecordMap(player.sideZones);
   player.crafting = normalizeCrafting(player.crafting);
   player.flags = player.flags && typeof player.flags === 'object' ? player.flags : {};
+  player.cooldowns={...player.cooldowns};
+  const endedAt=profile?.cooldownClockSeconds??performance.now()/1000;
+  if(profile?.vampireForm?.active)player.cooldowns.royalBatBeast=endedAt;
+  if(profile?.activeChannel?.profile==='vampire')player.cooldowns.sanguineLance=endedAt;
+  if(profile?.summons?.some(s=>s.kind==='vampireBat'))player.cooldowns.callBatBeast=endedAt;
   const cooldownClock=performance.now()/1000;
   player.cooldowns = rebaseCooldownMap(player.cooldowns,profile?.cooldownClockSeconds,cooldownClock);
   // Runtime recharge timestamps use the active session clock. Skill-tree
@@ -130,6 +137,8 @@ export function normalizeProfileSave(profile, options = {}) {
   delete migrated.visualHitUntil;
   delete migrated.combatAim;
   delete migrated.activeChannel;
+  delete migrated.vampireForm;delete migrated.vampireFrenzyUntil;delete migrated.vampireInstinct;
+  migrated.summons=(migrated.summons||[]).filter(s=>s.kind!=='vampireBat');
   delete migrated.subclassHasteUntil;
   if(migrated.lightbringer)migrated.lightbringer.dawncarverChannel=null;
   delete migrated.abilityMasteryVersion;

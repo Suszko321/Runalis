@@ -11,6 +11,7 @@ const {drawHumanActor}=await import('../src/humanRenderer.js');
 const {ITEMS}=await import('../src/data.js');
 const {getGearVisualProfile}=await import('../src/gearVisualStyle.js');
 const {armorMotionFamily}=await import('../src/armorMotionArt.js');
+const {humanArmorImage}=await import('../src/humanEquipmentSprites.js');
 for(const name of ['human-male','human-female','armor-motion-plate','armor-motion-leather','armor-motion-cloth'])asset(name);
 for(let i=0;i<100&&spriteArtStatus().some(a=>!a.ready&&!a.failed);i++)await new Promise(r=>setTimeout(r,10));
 assert(!spriteArtStatus().some(a=>a.failed));
@@ -55,5 +56,22 @@ for(const bodyType of ['male','female'])for(const dirX of [-1,1])for(const sprin
   }
  }
 }
+// The conservative waist backing may only add pixels inside its 12x3 join.
+// All existing opaque leg pixels, their colors and the original gait stay exact.
+let waistRepairs=0;
+for(const bodyType of ['male','female'])for(const facing of ['left','right'])for(const family of [null,'leather','plate','cloth'])for(let key=0;key<4;key++){
+ const armor=!!family,id=armor&&Object.keys(ITEMS).find(id=>ITEMS[id].slot==='legs'&&armorMotionFamily(getGearVisualProfile(id,ITEMS[id]),'legs')===family);
+ const image=armor?humanArmorImage(getGearVisualProfile(id,ITEMS[id]),family,bodyType):asset(`human-${bodyType}`).image;
+ const render=repair=>{ctx.clearRect(0,0,96,96);ctx.save();ctx.translate(48,50);drawSideLegArt(ctx,image,{bodyType,state:'walk',gaitKey:key,sideLocomotionArms:repair},facing,0,armor);ctx.restore();return ctx.getImageData(0,0,96,96).data;};
+ const before=render(false),after=render(true),colors=new Set();
+ for(let i=0;i<before.length;i+=4)if(before[i+3])colors.add([...before.slice(i,i+4)].join(','));
+ for(let i=0;i<before.length;i+=4){
+  const same=before.slice(i,i+4).every((v,k)=>v===after[i+k]);
+  if(before[i+3]===255)assert(same,'Waist repair repainted an existing leg pixel');
+  if(!same){const x=i/4%96,y=Math.floor(i/4/96);assert(x>=42&&x<54&&y>=47&&y<50,'Waist repair escaped the join');assert(colors.has([...after.slice(i,i+4)].join(',')),'Waist repair introduced a new color');waistRepairs++;}
+ }
+ for(let y=47;y<50;y++)for(let x=42;x<54;x++)assert.equal(after[(y*96+x)*4+3],255,`${bodyType}/${facing}/${family}/${key}: waist backing has a hole`);
+}
+assert(waistRepairs>0,'Waist repair fixture did not exercise missing pixels');report.waistRepairPixels=waistRepairs;
 fs.writeFileSync('docs/visual-production/leg-gait-results.json',JSON.stringify(report,null,2)+'\n');
 console.log(`PASS: ${report.cases} native-size leg renders and ${report.composedCases} composed actor cases; original pixel coverage, mirrored silhouettes and held atlas frames.`);

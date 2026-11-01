@@ -1,9 +1,17 @@
+import {synchronizeBatBeastEvolution} from './batBeastEvolution.js';
+import {synchronizeSummonEvolution} from './summonEvolution.js';
+import {instanceGearItem} from './gearRarity.js';
+import {vampireActionCommitted,prepareVampireCombat,executeVampireAbility,updateVampire,endVampireForm,onVampireBatHit,vampireKill} from './vampireSystem.js';
+import {vampireHealthCost,vampireAbilityMultiplier,royalActive,vampirePerk,vampireOutsideHealing} from './vampireRules.js';
+import {getLivingPartyMembers} from './partySupport.js';
+import {applyTankTaunt,getTauntTarget} from './tankTaunt.js';
 import {prepareVeyreignTransformation} from './veyreignTransformation.js';
 import {updateVeyreignCombat} from './veyreignCombat.js';
 import {veyreignVictory} from './veyreignDungeon.js';
 import {updateMalakarCombat} from './malakarCombat.js';
 import {updateGroveCombat} from './blightedGroveCombat.js';
 import {updateOrchardCombat} from './ashenOrchardCombat.js';
+import {updateIronMireCombat} from './ironMireCombat.js';
 import {getAbilityEffectiveness} from './skillExpertiseSystem.js';
 import {mitigateRoseMantle,roseMantleThorns} from './roseMantleSystem.js';
 import {isGravecallerSustain,gravecallerSkillLifesteal,restoreGravecallerLifesteal,restoreGravecallerHealth,GRAVECALLER_SUSTAIN} from './gravecallerSustain.js';
@@ -305,6 +313,7 @@ export function attack(player, world, log, now, input = null) {
 }
 
 export function updateCombat(player, world, input, dt, now, log) {
+  prepareVampireCombat(player,world);
   ensureCombatPlayer(player);
   ensureActionState(player);
   ensureCombatState(player);
@@ -319,6 +328,7 @@ export function updateCombat(player, world, input, dt, now, log) {
   }
 
   if (isActorControlLockedByRevive(player)) {
+    endVampireForm(player,now);
     clearSunkenPressure(player);
     clearSubclassCombatState(player,'controlLocked');
     cancelHeavyAttackCharge(player, world);
@@ -328,12 +338,13 @@ export function updateCombat(player, world, input, dt, now, log) {
 
   const safeInput = input || buildFallbackInputFromPlayer(player);
 
+  updateVampire(player,world,safeInput,dt,now,combatTechniqueHooks(player,world,log,now,safeInput));
   updateOutOfCombatRecovery(player,world,safeInput,dt,now);
   updateUniversalPlayerHeal(player, dt);
   updateStaminaActions(player, safeInput, dt, now, log);
   updateClassMovement(player,world,dt,now);
 
-  const abilityInput = player.activeChannel ? {...safeInput,attackPressed:false,attackHeld:false} : safeInput;
+  const abilityInput = player.activeChannel || vampireActionCommitted(player) ? {...safeInput,attackPressed:false,attackHeld:false} : safeInput;
   updateBasicAttackInput(player, world, abilityInput, dt, now, log);
 
   updateWeaponCombat(player, world, safeInput, dt, now, log);
@@ -369,7 +380,7 @@ function updateUniversalPlayerHeal(player, dt) {
 
   const missingHp = Math.max(0, maxHp - currentHp);
   const heal = Math.min(missingHp, ticks * UNIVERSAL_PLAYER_HEAL_AMOUNT);
-  player.hp = Math.min(maxHp, currentHp + heal);
+  player.hp = Math.min(maxHp, currentHp + vampireOutsideHealing(player,heal));
 
   if (player.hp >= maxHp) {
     player.universalHealTimer = 0;
@@ -977,7 +988,8 @@ export function updateAbilityInput(player, world, input, dt, now, log) {
     if (!ability) return useAbility(slot, player, world, log, now, input);
 
     if (canChargeAbility(ability)) {
-      if (!canUseAbility(player, ability, log, now)) {
+      prepareVampireCombat(player,world);
+  if (!canUseAbility(player, ability, log, now)) {
         addFloatingText(player, 'Not ready', {
           color: '#9facbf',
           ttl: 0.42,
@@ -1046,7 +1058,8 @@ export function updateEnemies(dt, player, world, log, now = performance.now() / 
     if (!enemy) continue;
 
     ensureEnemyState(enemy);
-    if((enemy.groveMother||enemy.orchardCustodian||enemy.veyreignLord||enemy.batBeast)&&enemy.hp>0){updateEnemyTimers(enemy,dt);updateFloatingTexts(enemy,dt);}
+    if((enemy.groveMother||enemy.orchardCustodian||enemy.veyreignLord||enemy.batBeast||enemy.ironMireForeman)&&enemy.hp>0){updateEnemyTimers(enemy,dt);updateFloatingTexts(enemy,dt);}
+    if(enemy.ironMireForeman&&updateIronMireCombat(enemy,world,player,dt,now,game))continue;
     if(enemy.groveMother&&updateGroveCombat(enemy,world,player,dt,now,game))continue;
     if(enemy.orchardCustodian&&updateOrchardCombat(enemy,world,player,dt,now,game))continue;
     if((enemy.veyreignLord||enemy.batBeast)&&updateVeyreignCombat(enemy,world,player,dt,now,game))continue;
@@ -1139,7 +1152,7 @@ export function useAbility(index, player, world, log, now = performance.now() / 
     return false;
   }
 
-  if ((ability.subclassId || ability.effectProfile || ['summonWolf','summonDemon'].includes(ability.id)) && world?.mode === 'pvpArena') { log?.('This technique is not yet available in the arena.'); return false; }
+  if ((ability.vampire || ability.subclassId || ability.effectProfile || ['summonWolf','summonDemon'].includes(ability.id)) && world?.mode === 'pvpArena') { log?.('This technique is not yet available in the arena.'); return false; }
   // Block is a held stamina action, not a timed ward or paid spell.
   if(ability.heldBlock){recordAbilitySuccessfulUse(player,ability.id);return true;}
   let used = false;
@@ -1147,9 +1160,12 @@ export function useAbility(index, player, world, log, now = performance.now() / 
 
   const beforeUse = {x:player.x,y:player.y,hp:player.hp};
   const controls=(world.enemies||[]).filter(e=>e.hp>0&&!e.trainingDummy&&!e.friendly).map(e=>({e,root:Math.max(e.rootUntil||0,e.rootTimer||0),slow:e.slowTimer||0,exposed:e.fellhunterExposedUntil||0}));
-  const partyHealth = [player,...(player.coop?.players || [])].map(actor=>({actor,hp:actor.hp,buffs:{...actor.buffs}}));
+  const partyHealth = getLivingPartyMembers(player).map(actor=>({actor,hp:actor.hp,buffs:{...actor.buffs}}));
   const effectStart=world.effects?.length||0;
-  if(ability.oathBlades){
+  if(ability.vampire){
+    used=executeVampireAbility(player,world,ability,index,combatTechniqueHooks(player,world,log,now,input,ability));
+    visualKind=ability.channelProfile?'channel':ability.summonType?'summon':'cast';
+  } else if(ability.oathBlades){
     used=executeCombatTechnique(player,world,ability,index,combatTechniqueHooks(player,world,log,now,input,ability));
     visualKind='cast';
   } else if (ability.subclassId && !ability.sunkenBase && !ability.summonType) {
@@ -1167,12 +1183,13 @@ export function useAbility(index, player, world, log, now = performance.now() / 
   } else if (ability.damageReduction || ability.id === 'guard') {
     visualKind = 'guard';
     used = useDefensiveAbility(player, ability, log, now);
-    if(used&&ability._mythGuard){for(const ally of (player.coop?.players||[]).filter(p=>p.hp>0&&Math.hypot(p.x-player.x,p.y-player.y)<=120))ally.buffs={...ally.buffs,defense:{...player.buffs.defense,reduction:player.buffs.defense.reduction*.75}};spawnWorldEffect(world,{kind:'combatTechnique',profile:'litany',x:player.x,y:player.y,colors:['#dfd3a1','#fff2ca','#606658'],radius:120,ttl:.5});}
+    if(used&&ability._mythGuard){for(const ally of getLivingPartyMembers(player).filter(p=>p!==player&&Math.hypot(p.x-player.x,p.y-player.y)<=120))ally.buffs={...ally.buffs,defense:{...player.buffs.defense,reduction:player.buffs.defense.reduction*.75}};spawnWorldEffect(world,{kind:'combatTechnique',profile:'litany',x:player.x,y:player.y,colors:['#dfd3a1','#fff2ca','#606658'],radius:120,ttl:.5});}
   } else {
     used = useDamageAbility(player, world, ability, log, now, input);
   }
 
   if (used) {
+    applyTankTaunt(player,world,ability,now);
     if(ability.sunkenBase)for(const fx of (world.effects||[]).slice(effectStart)){
       if(['waterTorrent','bubbleWard','mendingCurrent','tidalCut','riptideStep','drowningPressure','wellspring','delugeCrown','combatTechnique'].includes(fx.kind)){
         fx.profile=fx.profile||fx.kind;fx.kind='sunkenSkill';fx.subclassId='sunken';fx.abilityId=ability.id;fx.colors=ability.colors;
@@ -1202,7 +1219,7 @@ export function useAbility(index, player, world, log, now = performance.now() / 
     if (!ability.mobilityProfile) rewardMobilityMastery(player,world,ability.id,Math.hypot(player.x-beforeUse.x,player.y-beforeUse.y),now,log);
     // Class drains already scale through actual damage, and the Acolyte rite
     // handles mastery inside its explicit percentage cap. Do not boost twice.
-    if(!ability.oathMorph&&!ability.roseMantle&&!(isGravecallerSustain(player)&&(ability.classId==='gravecaller'||ability.bloodline==='vampire')))
+    if(!ability.vampire&&!ability.oathMorph&&!ability.roseMantle&&!(isGravecallerSustain(player)&&(ability.classId==='gravecaller'||ability.bloodline==='vampire')))
     for(const entry of partyHealth)if(entry.actor.hp>0) {
       const healing=Math.max(0,entry.actor.hp-entry.hp);
       entry.actor.hp=Math.min(entry.actor.maxHp,entry.actor.hp+Math.floor(healing*((ability._mastery?.damage||1)*progressionPower(player,'warding','defence')*(ability.subclassId&&!ability.sunkenBase?1:getAbilityEffectiveness(player,ability))-1)));
@@ -1218,7 +1235,7 @@ export function useAbility(index, player, world, log, now = performance.now() / 
     if (visualKind === 'cast' || visualKind === 'summon' || visualKind === 'channel') {
       playSfx(SOUND_EVENT_KEYS.SPELL_RELEASE, { volume: visualKind === 'summon' ? 0.72 : 0.54, throttle: 0.06 });
     }
-    if(!ability.subclassId)applyChargedClassPayoff(player, ability, now);
+    if(!ability.vampire&&!ability.subclassId)applyChargedClassPayoff(player, ability, now);
     if (ability._charge?.level > 0) {
       spawnWorldEffect(world, {
         kind: 'chargedRelease',
@@ -1270,7 +1287,7 @@ function applyChargedClassPayoff(player, ability, now) {
   }
 
   if (player.classId === 'thornbinder') {
-    player.hp = Math.min(player.maxHp || player.hp || 1, (player.hp || 0) + 4);
+    player.hp = Math.min(player.maxHp || player.hp || 1, (player.hp || 0) + vampireOutsideHealing(player,4));
     return;
   }
 
@@ -1295,6 +1312,8 @@ function resolveAbilityId(index, player) {
 }
 
 function canUseAbility(player, ability, log, now) {
+  if(ability.vampireMode==='form'&&player.vampireForm?.active)return true;
+  if(vampireActionCommitted(player)){log?.('Finish the execution windup first.');return false;}
   if (player.activeChannel) { log?.('Finish or release your channel first.'); return false; }
   if (ability.effectProfile && player.currentZone === 'PvP Arena') { log?.('New techniques are not yet available in the arena.'); return false; }
   const skillLevel = getSkillLevel(player, ability.skill);
@@ -1346,6 +1365,7 @@ function canUseAbility(player, ability, log, now) {
 
   player.cooldowns = player.cooldowns || {};
 
+  if(ability.channelEndCooldown&&now-(player.cooldowns[ability.id]??-Infinity)<ability.cd){log?.('The blood beam is recovering.');return false;}
   const useChargeState = getAbilityUseChargeState(player, ability, now);
 
   if (useChargeState.maxCharges > 1) {
@@ -1366,6 +1386,7 @@ function canUseAbility(player, ability, log, now) {
 
   const cost = getEffectiveAbilityCost(ability);
   const costType = getEffectiveAbilityCostType(ability);
+  if(ability.vampire){if(player.hp-vampireHealthCost(player,ability)<1){log?.('Not enough health for the blood price.');return false;}return true;}
 
   if (costType === 'spirit') {
     ensureClassSpiritAvailable(player, ability);
@@ -1388,6 +1409,13 @@ function canUseAbility(player, ability, log, now) {
 }
 
 function payAbilityCost(player, ability) {
+  if(ability.vampire){
+    const price=vampireHealthCost(player,ability);
+    if(player.hp-price<1)return false;
+    player.hp-=price;
+    addFloatingText(player,`−${Number(price.toFixed(1))} HP`,{color:'#ec8494',ttl:.7,size:11});
+    return true;
+  }
   const cost = getEffectiveAbilityCost(ability);
   const costType = getEffectiveAbilityCostType(ability);
 
@@ -1726,9 +1754,7 @@ function useDamageAbility(player, world, ability, log, now, input = null) {
     return useSeraphicAegis(player, world, ability, log, now);
   }
 
-  if (ability.id === 'crimsonFeast') {
-    return useCrimsonFeast(player, world, ability, log, now, input);
-  }
+
 
   if (isNecroticBoltAbility(ability)) {
     return useNecroticBoltProjectile(player, world, ability, log, now, input);
@@ -2183,7 +2209,7 @@ function useOathkeeperLastRite(player, world, ability, log, now) {
     22,
     Math.ceil(Math.min(player.maxHp || 100, 30 + getPlayerCombatLevel(player) * 0.55 + missing * 0.34) * convictionScalar)
   );
-  player.hp = Math.min(player.maxHp || 100, (player.hp || 0) + heal);
+  player.hp = Math.min(player.maxHp || 100, (player.hp || 0) + vampireOutsideHealing(player,heal));
   player.buffs = player.buffs || {};
   player.buffs.defense = {
     sourceAbilityId: ability.id,
@@ -4603,63 +4629,6 @@ function useSeraphicAegis(player, world, ability, log, now) {
   return true;
 }
 
-function useCrimsonFeast(player, world, ability, log, now, input = null) {
-  if (!payAbilityCost(player, ability)) {
-    log?.('Not enough stamina.');
-    return false;
-  }
-
-  startAbilityCooldown(player, ability, now);
-
-  const aim = getSafeAimDirection(player, input);
-  const bonuses = getSkillTreeBonuses(player);
-  const range = ability.range || 74;
-  const targets = findEnemiesInCone(player, world, aim, range, 62, 2);
-
-  spawnWorldEffect(world, {
-    kind: 'bloodLance',
-    layer: 'front',
-    x: player.x,
-    y: player.y - 8,
-    targetX: player.x + aim.x * range,
-    targetY: player.y + aim.y * range - 8,
-    color: '#c44762',
-    ttl: 0.28
-  });
-
-  if (!targets.length) {
-    addFloatingText(player, 'Hungry', { color: '#c44762', ttl: 0.58, size: 12 });
-
-    return true;
-  }
-
-  let totalDamage = 0;
-  for (const info of targets) {
-    const damage = Math.ceil(calculateAbilityDamage(player, ability) * (targets.indexOf(info) === 0 ? 1 : 0.62));
-    const before = info.enemy.hp || 0;
-
-    damageEnemyDirect(player, world, info.enemy, damage, 'blade', log, {
-    sourceAbilityId: ability.id,
-      sourceName: 'Crimson Feast',
-      color: '#c44762',
-      xpMultiplier: 0.42,
-      singleTarget: targets.length === 1,
-      lifestealBonusPct: 22 + Math.max(0, bonuses.bloodlineLifestealPct || 0)
-    });
-
-    totalDamage += Math.max(0, before - (info.enemy.hp || 0));
-  }
-
-  const feastHeal = isGravecallerSustain(player)?restoreGravecallerHealth(player,totalDamage*.18,{source:'spell',now}):modifyBloodlineHealing(player, Math.ceil(totalDamage * 0.18), { source: 'lifesteal' });
-  if (feastHeal > 0) {
-    if(!isGravecallerSustain(player))player.hp = Math.min(player.maxHp || player.hp || 1, (player.hp || 0) + feastHeal);
-    addFloatingText(player, `+${feastHeal}`, { color: '#c44762', ttl: 0.72, size: 13 });
-  }
-
-  log?.(`Crimson Feast drew blood from ${targets.length} target${targets.length === 1 ? '' : 's'}.`);
-  return true;
-}
-
 // -----------------------------------------------------------------------------
 // NECROTIC BOLT
 // -----------------------------------------------------------------------------
@@ -4810,7 +4779,7 @@ function updateNecroticBoltCollision(player, world, projectile, log) {
   // Gravecaller lifesteal is already resolved from actual damage by the hit
   // coordinator. Retain the legacy projectile behaviour for other actors.
   const heal = isGravecallerSustain(player)?0:Math.max(2, Math.ceil(damage * 0.16));
-  if(heal)player.hp = Math.min(player.maxHp, player.hp + heal);
+  if(heal)player.hp = Math.min(player.maxHp, player.hp + vampireOutsideHealing(player,heal));
 
   if(heal)addFloatingText(player, `+${heal}`, {
     color: '#b68cff',
@@ -5221,6 +5190,7 @@ function useSummonAbility(player, world, ability, log, now) {
     summon.sourceAbilityId = ability.id;
     if(ability.faeSummon){summon.summonMorph='fae';summon.displayName=`Fae ${summon.displayName}`;}
     summon.ownerId = player.profileId || player.id || player.slot || 1;
+    synchronizeSummonEvolution(summon,player);
     summon.cooldownStarted = false;
     player.summons.push(summon);
     summoned.push(summon);
@@ -5376,6 +5346,8 @@ function updateEnemyBehavior(enemy, player, world, dt, now, log) {
 }
 
 function chooseEnemyTarget(enemy, player, world=null) {
+  const challenged=getTauntTarget(enemy,world);
+  if(challenged)return {target:challenged,kind:"player",distance:Math.hypot(enemy.x-challenged.x,enemy.y-challenged.y)};
   if (!enemy || !player) return null;
 
   const candidates = [];
@@ -5514,7 +5486,7 @@ function enemyAttackPlayer(enemy, player, world, log) {
 
   const armour = Math.max(0, getArmour(player) || 0);
   hpDamage = Math.max(1, Math.ceil(hpDamage - armour * 0.18));
-  hpDamage = modifyBloodlineIncomingDamage(player, hpDamage);
+  hpDamage = modifyBloodlineIncomingDamage(player, hpDamage, enemy.element||enemy.damageType);
   hpDamage = applyLegendaryIncomingDamage(player, hpDamage, enemy, null, log);
 
   const bubbleWard = getActiveBubbleWard(player, now);
@@ -5718,13 +5690,15 @@ function handleEnemyDeath(enemy, player, world, log) {
 
   enemy.deathHandled = true;
   player = resolveEnemyKillActor(enemy, player);
+  vampireKill(player,enemy,world,performance.now()/1000);
   if(enemy.veyreignLord)enemy.veyreignAttack=null;
+  if(enemy.ironMireForeman){enemy.ironMireAttack=null;enemy.ironMireRecovery=0;}
   cancelEnemyAttackPresentation(enemy);enemy.telegraph=null;enemy.bossTell=null;
   if(enemy.boss)enemy.boss.pendingSpecial=null;
   recordRepeatableEnemyDeath(world,player,enemy);
   enemy.dead = true;
   enemy.hp = 0;
-  enemy.removeTimer = enemy.veyreignFeral?1.4:enemy.groveMother||enemy.orchardCustodian||enemy.batBeast?1.05:0.35;
+  enemy.removeTimer = enemy.veyreignFeral||enemy.ironMireForeman?1.4:enemy.groveMother||enemy.orchardCustodian||enemy.batBeast?1.05:0.35;
   recordEnemyDeathVisual(enemy, {
     classId: player?.classId,
     skill: enemy.pendingWeaponSkillId || player?.classSkill,
@@ -5881,7 +5855,7 @@ function createSummon(player, kind, rules = null, index = 0) {
 
 function calculateSummonBaseDamage(player,kind,rules){
   const tree=getSkillTreeBonuses(player),equipment=getEquipmentStatBonuses(player);
-  const base=({greaterLich:8.3,wolf:7,miniDemon:15,lich:6,eldritchHorror:7,thornbeast:4})[kind]||4;
+  const base=({vampireBat:12,greaterLich:8.3,wolf:7,miniDemon:15,lich:6,eldritchHorror:7,thornbeast:4})[kind]||4;
   const gear=summonEquipmentPower(player)*(kind==='miniDemon'?.22:.15);
   return Math.max(2,Math.floor((base+gear)*progressionPower(player,'summoning')*
     (1+Math.max(0,tree.summonDamagePct||0)/100)*(1+Math.max(0,equipment.summonDamage||0))*(rules.maxCount>1?.64:1)));
@@ -6009,9 +5983,10 @@ function getGravecallerSkeletonGearBonuses(player, index = 0) {
   const summary = [];
 
   for (const itemId of ids) {
-    const item = ITEMS[itemId];
+    const entry=Object.values(slot.equippedGear || {}).find(e=>e.id===itemId);
+    const item = instanceGearItem(ITEMS[itemId],entry);
     if (!item) continue;
-    const entry=Object.values(slot.equippedGear || {}).find(e=>e.id===itemId),bonus=getTierStatBonus(item,entry?.upgradeTier);
+    const bonus=getTierStatBonus(item,entry?.upgradeTier);
     damage+=item.type==='weapon'?bonus*.55:item.type==='trinket'?bonus*.2:0;
     if(item.type!=='weapon'){armour+=bonus*.55;maxHp+=bonus*2.2;}
     const weaponPower = Number(item.baseDamage || item.damage || item.power || 0);
@@ -6176,6 +6151,8 @@ export function updateSummons(dt, player, world, log, now = performance.now() / 
     return;
   }
   updateLegendarySummons(player, now);
+  for(const summon of player.summons)synchronizeBatBeastEvolution(summon,player);
+  for(const summon of player.summons)synchronizeSummonEvolution(summon,player);
   refreshSummonOffence(player);
   assignCompanionFormation(player,now);
 
@@ -6303,7 +6280,7 @@ function applyThornbeastPassiveHeal(summon, player, world, dt, now, log) {
   const heal = Math.max(1, Math.floor((1 + warding * 0.08) * pathScalar))*getAbilityEffectiveness(player,summonAbility);
 
   const before=player.hp;
-  player.hp = Math.min(player.maxHp, player.hp + heal);
+  player.hp = Math.min(player.maxHp, player.hp + vampireOutsideHealing(player,heal));
   if(player.hp>before && player.loadout?.abilitySlots?.includes(summon.summonAbilityId)) rewardCombatPurpose(player,world,summon.summonAbilityId,(player.hp-before)*.12,now,log);
 
   // Two small motes at the owner's feet, with no number, ring or healing sound.
@@ -6446,10 +6423,14 @@ function summonFightTarget(summon, target, player, world, dt, log, now) {
 }
 
 function attackSummonTarget(summon, target, player, world, log, now = performance.now()/1000) {
-  if(target.veyreignTransform!=null)return;
+  if(target.veyreignTransform!=null||summon.kind==='vampireBat'&&(target.invulnerable||target.invulnerableUntil>now))return;
   if (summon.attackCooldown > 0 || Math.hypot(target.x-summon.x,target.y-summon.y) > (summon.attackRange || 34) + (target.radius || 0)) return;
   if (!hasLineOfSight(world,summon.x,summon.y,target.x,target.y)) return;
 
+  if(summon.kind==='vampireBat'){
+    const dx=target.x-summon.x,dy=target.y-summon.y,d=Math.hypot(dx,dy)||1;
+    moveActorWithCollision(summon,world,dx/d*Math.min(18,Math.max(0,d-22)),dy/d*Math.min(18,Math.max(0,d-22)));
+  }
   const empowered = Number(summon.chargedEmpoweredUntil || 0) > performance.now() / 1000;
   const elderDevour = summon.kind === 'thornbeast' &&
     summon.summonPath === 'evolved' &&
@@ -6460,12 +6441,14 @@ function attackSummonTarget(summon, target, player, world, log, now = performanc
   const procPower=damage;
   damage=Math.ceil(damage*equipmentDamageMultiplier(player,target,
     ['greaterLich','lich'].includes(summon.kind)?'necrotic':summon.kind==='thornbeast'?'nature':null));
+  damage=Math.ceil(damage*vampireAbilityMultiplier(player,summonAbility,world)*(summon.vampireMorph==='dreadwing'?.85:1));
   damage=mitigateEliteHit(target,summon,damage);
   const summonSkill = 'summoning';
 
   const actualDamage = Math.min(target.hp,damage);
   target.hp = Math.max(0, target.hp - damage);
-  if(isGravecallerSustain(player)){
+  if(summon.kind==='vampireBat')onVampireBatHit(player,world,summon,target,actualDamage,now);
+  else if(isGravecallerSustain(player)){
     const rate=summon.summonMorph==='acolyte'?GRAVECALLER_SUSTAIN.specter:GRAVECALLER_SUSTAIN.summon;
     const modifiers=getBloodlineCombatModifiers(player);
     restoreGravecallerLifesteal(player,actualDamage,rate,{source:'summon',now,
@@ -6693,10 +6676,7 @@ function findEnemiesInRadius(world, x, y, radius, maxHits = 10) {
 }
 
 function healPartyNear(player, amount, radius) {
-  const members = [
-    player,
-    ...(player?.coop?.players || []).filter(ally => ally && ally.active !== false)
-  ];
+  const members = getLivingPartyMembers(player);
 
   for (const member of members) {
     const distance = Math.hypot((member.x || 0) - player.x, (member.y || 0) - player.y);
@@ -6717,10 +6697,7 @@ function healPartyNear(player, amount, radius) {
 }
 
 function forPartyNear(player, radius, callback) {
-  const members = [
-    player,
-    ...(player?.coop?.players || []).filter(ally => ally && ally.active !== false)
-  ];
+  const members = getLivingPartyMembers(player);
 
   for (const member of members) {
     const distance = Math.hypot((member.x || 0) - player.x, (member.y || 0) - player.y);
@@ -6758,6 +6735,9 @@ function isEnemySoaked(enemy, now = performance.now() / 1000) {
 function damageEnemyDirect(player, world, enemy, damage, skill, log, options = {}) {
   options.sourceAbilityId = options.sourceAbilityId || resolveAbilitySourceName(options.sourceName);
   if (!enemy || enemy.dead || enemy.hp <= 0 || enemy.remove || enemy.veyreignTransform!=null) return false;
+  const vampireSource=getAbilityById(options.sourceAbilityId);
+  if(vampireSource?.vampire&&(enemy.invulnerable||enemy.invulnerableUntil>(options.now??performance.now()/1000)))return 0;
+  if(!options.bleedSnapshot)damage*=vampireAbilityMultiplier(player,vampireSource,world);
   const sunken=isSunkenDamage(player,options),sunkenNow=options.now??performance.now()/1000,sunkenPower=damage;
   if(options.sourceAbilityId&&!options.dot&&!options.proc&&!options.sunkenBurn&&!options.oathBlade&&options.source!=='summon'){
     const sourceAbility=resolveAbilityMorph(player,getAbilityById(options.sourceAbilityId),options.sourceMorph||options.subclassId||getSelectedAbilityMorph(player,options.sourceAbilityId));
@@ -6766,8 +6746,9 @@ function damageEnemyDirect(player, world, enemy, damage, skill, log, options = {
   if(sunken)damage*=sunkenDirectMultiplier(player,world,enemy,sunkenNow);
 
   const treeBonuses = getSkillTreeBonuses(player);
-  let finalDamage = Math.max(1, Math.floor(damage || 1));
+  let finalDamage = options.bleedSnapshot?Math.max(0,Number(damage)||0):Math.max(1, Math.floor(damage || 1));
 
+  if(!options.bleedSnapshot){
   if (options.singleTarget) {
     finalDamage = Math.ceil(finalDamage * (1 + Math.max(0, treeBonuses.singleTargetDamagePct || 0) / 100));
   }
@@ -6855,6 +6836,7 @@ function damageEnemyDirect(player, world, enemy, damage, skill, log, options = {
   finalDamage = applyLegendaryOutgoingDamage(player, enemy, finalDamage, {
     skill,
     sourceName: options.sourceName,
+    noLifesteal:!!vampireSource?.vampire,
     ranged: options.ranged,
     projectile: options.projectile,
     aoe: options.aoe,
@@ -6863,6 +6845,7 @@ function damageEnemyDirect(player, world, enemy, damage, skill, log, options = {
 
   if(!options.equipmentScaled)finalDamage=Math.ceil(finalDamage*equipmentDamageMultiplier(player,enemy,
     options.element||(skill==='spirit'?'necrotic':skill==='warding'?'nature':null)));
+  }
   finalDamage=mitigateEliteHit(enemy,player,finalDamage,options);
   if(finalDamage<=0)return 0;
   const actualDamage = Math.min(enemy.hp,finalDamage);
@@ -6933,7 +6916,9 @@ function damageEnemyDirect(player, world, enemy, damage, skill, log, options = {
     (options.lifestealBonusPct || 0)
   );
 
-  if(isGravecallerSustain(player)){
+  if(vampireSource?.vampire){
+    // Recovery is resolved once by the Vampire handler from effective health loss.
+  }else if(isGravecallerSustain(player)){
     const source=getAbilityById(options.sourceAbilityId);
     const rate=gravecallerSkillLifesteal(source,options.subclassId||options.sourceMorph)||
       (source?.bloodline||!source?.classId?Math.max(0,options.lifestealBonusPct||0):0);
@@ -7279,7 +7264,7 @@ export function getCombatProjectiles(player) {
 }
 
 export function getPlayerMovementMultiplier(player) {
-  return getMovementSpeedMultiplier(player) * getChannelMovementMultiplier(player) * getSubclassMovementMultiplier(player) * getEliteControlMultiplier(player) * (player.slowTimer>0&&!player.eliteFrost?.7:1);
+  return (royalActive(player)?1.1+(vampirePerk(player,'elder_wings')?.1:0):1)*(player.vampireInstinct?1.08:1)*getMovementSpeedMultiplier(player) * getChannelMovementMultiplier(player) * getSubclassMovementMultiplier(player) * getEliteControlMultiplier(player) * (player.slowTimer>0&&!player.eliteFrost?.7:1);
 }
 
 export function getPlayerDashVelocity(player) {
@@ -7304,6 +7289,13 @@ function combatTechniqueHooks(player,world,log,now,input=null,ability=null) {
       if(ability?.sunkenBase||fx.abilityId&&getSelectedAbilityMorph(player,fx.abilityId)==='sunken')fx={...fx,kind:'sunkenSkill',subclassId:'sunken'};
       spawnWorldEffect(world,fx);
     },audio:(event,a)=>playAbilityAudioEvent(event,a),
+    vampireSummon:(a,now)=>{
+      const summon=createSummon(player,'vampireBat',{maxCount:1,path:'vampire',stage:'batBeast'},0);
+      Object.assign(summon,{sourceAbilityId:a.id,summonAbilityId:a.id,summonMorph:'base',vampireMorph:a.vampireMorph,ownerId:player.profileId||player.id||player.slot||1,expiresAt:now+30,displayName:a.vampireMorph==='dreadwing'?'Dreadwing':a.vampireMorph==='bloodstalker'?'Bloodstalker':'Bat Beast',attackRange:48,attackRate:.9/(vampirePerk(player,'brood')?1.1:1)/(a.vampireMorph==='bloodstalker'?1.2:1),speed:220});
+      summon.maxHp=Math.ceil(summon.maxHp*(vampirePerk(player,'brood')?1.15:1)*(a.vampireMorph==='bloodstalker'?.85:a.vampireMorph==='dreadwing'?1.3:1));summon.hp=summon.maxHp;
+      synchronizeBatBeastEvolution(summon,player);
+      player.summons.push(summon);
+    },
     summonMoveSpeed:speed=>getSummonMovementSpeed({speed},player),
     damage:(enemy,damage,skill,options)=>damageEnemyDirect(player,world,enemy,damage,skill,log,{now,sourceMorph:ability?.subclassId??getSelectedAbilityMorph(player,options?.sourceAbilityId)??'base',...options}),
     wound:(enemy,id,damage)=>applyVerdantWound(player,enemy,world,now,1,{sourceAbilityId:id,tickDamage:damage}),

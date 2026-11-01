@@ -1,3 +1,4 @@
+import {vampireOutsideHealing} from './vampireRules.js';
 import {getPlayerSubclass} from './subclassSystem.js';
 import {fellhunterTrainingLevel} from './fellhunterWeapons.js';
 import {onSubclassKill,onSubclassDamaged,onSubclassBlocked,subclassWeaponDamage,getSubclassResourceLabel} from './subclassCombat.js';
@@ -483,7 +484,7 @@ function triggerLivingBulwark(player, attacker = null, world = null, log = null,
   const heal = Math.max(2, Math.ceil(2 + wardingLevel * 0.06 + (treeBonuses.healingPower || 0) * 0.25));
   const thornDamage = Math.max(2, Math.ceil(3 + wardingLevel * 0.12 + (treeBonuses.thornsPct || 0) * 0.18));
 
-  player.hp = Math.min(player.maxHp || 100, (player.hp || 0) + heal);
+  player.hp = Math.min(player.maxHp || 100, (player.hp || 0) + vampireOutsideHealing(player,heal));
 
   state.livingBulwarkUntil = now + PASSIVE_TIMERS.thornbinderBulwarkDuration;
   state.livingBulwarkCooldown = PASSIVE_TIMERS.thornbinderBulwarkCooldown;

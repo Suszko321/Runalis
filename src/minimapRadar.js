@@ -1,5 +1,6 @@
 // Lightweight radar with authored road lines and cached local dungeon contours.
-import {getQuestsForNpc} from './worldContent.js';
+import {npcHasQuestInteraction} from './dialogueSystem.js';
+import {isQuestEnabled} from './questRoster.js';
 import {isQuestObjectVisible} from './questInteractables.js';
 import {drawMinimapLineArt} from './minimapLineArt.js';
 import {WORKSHOP_MARKERS,drawWorkshopIcon} from './workshopArt.js';
@@ -18,7 +19,7 @@ export function buildRadarQuestTargets(player,objects=[]){
  const done=id=>states.some(s=>s.completed?.[id]||s.failed?.[id]);
  const add=o=>{for(const key of ID_FIELDS)if(typeof o?.[key]==='string')ids.add(o[key]);};
  for(const state of states)for(const [id,q] of Object.entries(state.active||{})){
-  if(!q||done(id))continue;questIds.add(id);
+  if(!q||!isQuestEnabled(id)||done(id))continue;questIds.add(id);
   if(q.giverNpcId)ids.add(q.giverNpcId);
   const stage=q.stages?.[q.currentStageIndex||0];
   for(const objective of stage?.objectives||q.objectives||[]){
@@ -27,7 +28,7 @@ export function buildRadarQuestTargets(player,objects=[]){
   }
  }
  for(const object of objects)if(object?.kind==='npc'&&object.npcId){
-  if(getQuestsForNpc(object.npcId).some(q=>!done(q.id)))ids.add(object.npcId);
+  if(npcHasQuestInteraction(player,object))ids.add(object.npcId);
  }
  return {ids,questIds,completed,player};
 }
@@ -46,9 +47,10 @@ export function classifyRadarMarker(entity,group,targets={ids:new Set(),questIds
  if(group==='enemy')return {color:friendly?RADAR_COLORS.friendly:RADAR_COLORS.enemy,shape:friendly?'dot':radarRank(entity)||'dot'};
  if(group==='player')return {color:RADAR_COLORS.friendly,shape:'arrow'};
  if(group==='friendly')return {color:RADAR_COLORS.friendly,shape:'dot'};
- const refs=[entity.questId,entity.sideQuestId,...(Array.isArray(entity.questIds)?entity.questIds:[])].filter(id=>typeof id==='string');
+ const allRefs=[entity.questId,entity.sideQuestId,...(Array.isArray(entity.questIds)?entity.questIds:[])].filter(id=>typeof id==='string');
+ const refs=allRefs.filter(isQuestEnabled);
  const openQuest=refs.some(id=>!targets.completed?.has(id));
- if(((entity.questRelated||entity.isQuestObjective||entity.isQuestGiver)&&(!refs.length||openQuest))||openQuest||targets.questIds.has(entity.questId)||ID_FIELDS.some(key=>targets.ids.has(entity[key])))return {color:RADAR_COLORS.quest,shape:'dot'};
+ if(((entity.questRelated||entity.isQuestObjective||entity.isQuestGiver)&&(!allRefs.length||openQuest))||openQuest||targets.questIds.has(entity.questId)||ID_FIELDS.some(key=>targets.ids.has(entity[key])))return {color:RADAR_COLORS.quest,shape:'dot'};
  if(ENTRANCES.has(entity.kind)||entity.echorynEntrance)return {color:RADAR_COLORS.entrance,shape:'dot'};
  if(entity.kind==='npc'||friendly)return {color:RADAR_COLORS.friendly,shape:'dot'};
  return null;

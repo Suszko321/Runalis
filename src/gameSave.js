@@ -40,6 +40,7 @@ import { createWorld,isActorPositionPassable } from './world.js';
 import { createRegionWorld, createTravelRouteWorld } from './regionWorlds.js';
 import { createProceduralSideZoneWorld } from './sideZoneSystem.js';
 import {installOrchardDungeon} from './ashenOrchardDungeon.js';
+import {installIronMire} from './ironMireDungeon.js';
 import { createCapitalHubWorld } from './hubSystem.js';
 import { createCaravanOpeningWorld, createMaraHouseWorld } from './act1OpeningSystem.js';
 import { createPlayer, migratePlayer } from './player.js';
@@ -122,10 +123,8 @@ export function readProfiles() {
 
     if (Object.keys(current).length) {
       const migration = migrateLegacyCouchCoopProfilesInto(current);
-      if (migration.changed) {
-        writeProfiles(current);
-      }
-      if (migration.found) {
+      const saved = !migration.changed || writeProfiles(current);
+      if (migration.found && saved) {
         clearLegacyCouchCoopProfileStorage();
         console.info(
           `Runalis co-op profile migration: migrated ${migration.migrated}, skipped ${migration.skipped}.`
@@ -141,30 +140,27 @@ export function readProfiles() {
       if (Object.keys(oldProfiles).length) {
         const slimProfiles = slimProfileCollection(oldProfiles);
         const migration = migrateLegacyCouchCoopProfilesInto(slimProfiles);
-        if (migration.found) {
+        const saved = writeProfiles(slimProfiles);
+        if (migration.found && saved) {
           clearLegacyCouchCoopProfileStorage();
           console.info(
             `Runalis co-op profile migration: migrated ${migration.migrated}, skipped ${migration.skipped}.`
           );
         }
-        writeProfiles(slimProfiles);
         return alignProfileNames(slimProfiles);
       }
     }
 
     const migration = migrateLegacyCouchCoopProfilesInto(current);
-    if (migration.changed) {
-      writeProfiles(current);
-    }
-    if (migration.found) {
+    const saved = !migration.changed || writeProfiles(current);
+    if (migration.found && saved) {
       clearLegacyCouchCoopProfileStorage();
       console.info(
         `Runalis co-op profile migration: migrated ${migration.migrated}, skipped ${migration.skipped}.`
       );
-      return alignProfileNames(current);
     }
 
-    return {};
+    return alignProfileNames(current);
   } catch (err) {
     console.warn('Failed to read profiles:', err);
     return {};
@@ -183,24 +179,25 @@ function alignProfileNames(profiles) {
 
 export function writeProfiles(profiles) {
   try {
-    clearLegacyProfileStorage();
     localStorage.setItem(PROFILE_KEY, JSON.stringify(profiles));
+    // Keep recovery sources until the replacement collection is durable.
+    clearLegacyProfileStorage();
     return true;
   } catch (err) {
     console.error('Failed to save profiles:', err);
 
     try {
-      clearLegacyProfileStorage();
       const slimProfiles = slimProfileCollection(profiles);
       localStorage.setItem(PROFILE_KEY, JSON.stringify(slimProfiles));
+      clearLegacyProfileStorage();
       return true;
     } catch (secondErr) {
       console.error('Failed to save even after slimming profiles:', secondErr);
 
       try {
-        clearLegacyProfileStorage();
         const emergencyProfiles = emergencySlimProfileCollection(profiles);
         localStorage.setItem(PROFILE_KEY, JSON.stringify(emergencyProfiles));
+        clearLegacyProfileStorage();
         return true;
       } catch (thirdErr) {
         console.error('Failed to save emergency slim profiles:', thirdErr);
@@ -372,8 +369,8 @@ export function slimProfileCollection(profiles) {
 
 export function emergencySlimProfileCollection(profiles) {
   const entries = Object.entries(slimProfileCollection(profiles))
-    .sort((a, b) => (b[1]?.updated || 0) - (a[1]?.updated || 0))
-    .slice(0, 6);
+    .sort((a, b) => (b[1]?.updated || 0) - (a[1]?.updated || 0));
+  // Storage pressure may shrink runtime world data, never delete characters.
 
   const emergencyProfiles = {};
 
@@ -486,10 +483,11 @@ function migrateLegacyCouchCoopProfilesInto(profiles) {
       if (!raw) continue;
 
       const parsed = JSON.parse(raw);
-      legacyProfiles = Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+      if (!Array.isArray(parsed)) continue;
+      legacyProfiles = parsed.filter(Boolean);
       result.found = true;
     } catch (err) {
-      result.found = true;
+      console.warn('Unable to migrate legacy co-op profiles; preserving recovery data:', err);
       continue;
     }
 
@@ -583,16 +581,23 @@ function isMeaningfulLegacyCouchProfile(profile) {
 }
 
 export function sanitizeForSave(value) {
-  return JSON.parse(JSON.stringify(value, (key, val) => {
+  return JSON.parse(JSON.stringify(value, function(key, val) {
+    if(key==='cooldowns'){
+      const clocks={...val},stamp=this.cooldownClockSeconds??performance.now()/1000;
+      if(this.vampireForm?.active)clocks.royalBatBeast=stamp;
+      if(this.activeChannel?.profile==='vampire')clocks.sanguineLance=stamp;
+      if((this.summons||[]).some(s=>s.kind==='vampireBat'))clocks.callBatBeast=stamp;
+      return clocks;
+    }
     if (key === 'floatingTexts') return [];
     if (['eliteFrost','eliteFrozenUntil','eliteFrostRecoveryUntil','eliteGuardActive','eliteGuardX','eliteGuardY','eliteHealing','eliteAttackPauseTimer','eliteTelegraph'].includes(key)) return undefined;
     if (key === 'combatEffects') return [];
     if (key === 'effects') return [];
-    if (key === 'summons' && Array.isArray(val)) return val.filter(summon=>!summon?.techniqueTemporary);
+    if (key === 'summons' && Array.isArray(val)) return val.filter(summon=>!summon?.techniqueTemporary&&summon?.kind!=='vampireBat');
     if (key === 'supportOwner' || key === 'subclassControlOwner' || key.startsWith('subclass') && key.endsWith('Until')) return undefined;
     if (key === 'downedState' || key === 'reviveAction') return undefined;
     if (key === 'lifeState' && ['downed', 'beingRevived', 'dead', 'respawning'].includes(String(val))) return 'alive';
-    if (['activeChannel','dawncarverChannel','combatContributors','techniqueMarks','verdantWound','masteryMilestoneEvent','abilityProjectiles','abilityCharge'].includes(key)) return undefined;
+    if (['vampireForm','vampireFrenzyUntil','vampireInstinct','activeChannel','dawncarverChannel','combatContributors','techniqueMarks','verdantWound','masteryMilestoneEvent','abilityProjectiles','abilityCharge'].includes(key)) return undefined;
     if (key === 'visualAction' || key === 'visualHitUntil') return undefined;
     if (['telegraph','bossTell','pendingSpecial','visualReaction','visualDeath'].includes(key)) return undefined;
     if (key === 'combatState' || key === 'actionState') return undefined;
@@ -1402,6 +1407,9 @@ export function applySaveToGame(game, saveState) {
   restoreContinentalState(game);
   installMalakarSanctum(game.world);
   installVeyreign(game.world);
+  installIronMire(game.world);
+  if(game.world.ironMireLayoutMigrated){for(const [i,a]of [game.player,...(game.player.coop?.players||[])].entries())Object.assign(a,{x:game.world.spawn.x+(i%2)*32,y:game.world.spawn.y+Math.floor(i/2)*32});delete game.world.ironMireLayoutMigrated;}
+  if(game.world.dungeonState?.ironMire)initializeDungeonArena(game.world);
   if(game.world.veyreignLayoutMigrated){for(const [i,a]of [game.player,...(game.player.coop?.players||[])].entries())Object.assign(a,{x:game.world.spawn.x+(i%2)*32,y:game.world.spawn.y+Math.floor(i/2)*32});delete game.world.veyreignLayoutMigrated;}
   if(game.world.dungeonState?.veyreign)initializeDungeonArena(game.world);
   syncDungeonCompletion(game.world);

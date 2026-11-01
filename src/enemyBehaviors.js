@@ -1,3 +1,4 @@
+import {getTauntTarget} from './tankTaunt.js';
 import { getArmour } from './player.js';
 import { rewardAbilitySupport } from './abilityMasterySystem.js';
 import { mitigateTechniqueDamage } from './combatExpansion.js';
@@ -701,6 +702,8 @@ function isSourceCenteredTelegraph(kind) {
 }
 
 function chooseEnemyTarget(enemy, player, world=null) {
+  const challenged=getTauntTarget(enemy,world);
+  if(challenged){enemy.combatTargetId=getEnemyTargetId(challenged);enemy.combatTargetKind="player";return {target:challenged,kind:"player",distance:Math.hypot(enemy.x-challenged.x,enemy.y-challenged.y)};}
   const candidates = [];
 
   for (const member of getEnemyTargetablePlayers(player)) {
@@ -1034,7 +1037,7 @@ export function applyTargetDamage(enemy, target, damage, world, log, options = {
     hpDamage=Math.max(1,Math.ceil(hpDamage-getArmour(target)*.18));
   }
   if (!targetIsSummon) {
-    hpDamage = modifyBloodlineIncomingDamage(target, hpDamage);
+    hpDamage = modifyBloodlineIncomingDamage(target, hpDamage, options.element||enemy.element||enemy.damageType);
     hpDamage = applyLegendaryIncomingDamage(target, hpDamage, damageSource, world, log, now);
   }
   const bubbleWard = !targetIsSummon ? getActiveBubbleWard(target, now) : null;

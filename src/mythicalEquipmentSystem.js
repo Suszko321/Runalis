@@ -1,10 +1,11 @@
 import { ITEMS } from './data.js';
 import { MYTHICAL_SETS } from './mythicalEquipmentData.js';
 import { EQUIPMENT_SLOTS } from './equipmentProgressionSystem.js';
+import {equippedGearItem} from './gearItemization.js';
 
 export function getMythicalSetCounts(player) {
  const counts={},seen=new Set();
- for(const slot of EQUIPMENT_SLOTS){const id=player?.equipment?.[slot],item=ITEMS[id];if(!item||item.slot!==slot||seen.has(id)||!MYTHICAL_SETS[item.setId])continue;seen.add(id);counts[item.setId]=(counts[item.setId]||0)+1;}
+ for(const slot of EQUIPMENT_SLOTS){const id=player?.equipment?.[slot],item=equippedGearItem(player,slot);if(!item||item.slot!==slot||seen.has(id)||!MYTHICAL_SETS[item.setId])continue;seen.add(id);counts[item.setId]=(counts[item.setId]||0)+1;}
  return counts;
 }
 export function applyMythicalAbilityModifiers(player,ability) {

@@ -5,11 +5,13 @@ import {isQuestObjectVisible} from './questInteractables.js';
 import {drawQuestEvidence} from './questObjectArt.js';
 import {lootDiscoveryProfile} from './gameplayDiscoveries.js';
 import {ITEMS} from './data.js';
+import {GEAR_RARITIES,canonicalGearRarity,isGear} from './gearRarity.js';
 import {drawContinentalObject} from './continentArt.js';
 import {drawActionStateVisuals,drawCombatProjectiles} from './combatVisualsRenderer.js';
 import {drawOrrakaiFixture} from './orrakaiRenderer.js';
 import {drawForestKit,drawEchorynMajorPiece,drawEchorynLandmark} from './echorynRenderer.js';
 import {objectInInteractionRange} from './interactionRange.js';
+import {drawIronMireObject} from './ironMireArt.js';
 // objectRenderer.js
 // Runalis object renderer.
 //
@@ -170,6 +172,7 @@ function drawObject(ctx, object, camera, questActor = null) {
 
 function drawObjectUnrotated(ctx, object, camera, questActor = null) {
   if (!object || object.depleted) return;
+  if(drawIronMireObject(ctx,object,camera))return;
   if(isDungeonNpc(object)&&drawDungeonNpc(ctx,object,camera)){
     if(objectInInteractionRange(questActor,object))drawDialogueReadyIndicator(ctx,object.x-camera.x,object.y-camera.y-(object.groveSkull?60:87));return;
   }
@@ -4244,7 +4247,7 @@ function drawDrop(ctx, drop, x, y) {
   const dropTime = drop.age || performance.now() / 1000;
   const bob = steppedSine(dropTime, 4, 2, 8, drop.bobTimer || 0);
   const discovery=lootDiscoveryProfile(drop.itemId||drop.item);
-  const color = discovery?.color||rarityColor(drop.rarity);
+  const color = isGear(ITEMS[drop.itemId||drop.item])?rarityColor(drop.rarity):discovery?.color||rarityColor(drop.rarity);
   const important = isImportantDrop(drop);
   const t = performance.now() / 1000;
 
@@ -4742,21 +4745,11 @@ function classShortName(classId) {
 }
 
 function rarityColor(rarity) {
-  if (rarity === 'common') return '#d9ad4f';
-  if (rarity === 'uncommon') return '#73d18a';
-  if (rarity === 'rare') return '#6fa8ef';
-  if (rarity === 'occult') return '#b68cff';
-  if (rarity === 'relic') return '#ffcc66';
-  if (rarity === 'legendary') return '#ffcc66';
-  if (rarity === 'epic') return '#b68cff';
-  if (rarity === 'mythic') return '#ff7ac8';
-  if (rarity === 'ancient') return '#66f0ff';
-
-  return '#e8edf5';
+  return GEAR_RARITIES[canonicalGearRarity(rarity)].color;
 }
 
 function isImportantDrop(drop) {
-  return ['rare', 'occult', 'epic', 'relic', 'legendary', 'mythic', 'ancient'].includes(drop?.rarity);
+  return GEAR_RARITIES[canonicalGearRarity(drop?.rarity)].rank>=2;
 }
 
 function importantDropLabel(drop) {

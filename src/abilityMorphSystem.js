@@ -1,3 +1,4 @@
+import {VAMPIRE_MORPHS,VAMPIRE_MORPH_NAMES} from './vampireData.js';
 import {getAbilityById,normalizeAbilityId} from './data.js';
 import {SUBCLASSES,CLASS_SUBCLASSES,normalizeSubclassClassId} from './subclassData.js';
 import {SUBCLASS_SKILL_PLANS,resolveAbilityMorph} from './subclassVariants.js';
@@ -12,6 +13,7 @@ export function getMorphMasteryLevel(player,id){
 }
 function families(player,id){
   const a=getAbilityById(id),classId=normalizeSubclassClassId(player?.classId);
+  if(a?.vampire&&(player?.bloodline?.id||player?.raceId)==='vampire')return VAMPIRE_MORPHS[id]||[];
   return a&&SUBCLASS_SKILL_PLANS[id]&&normalizeSubclassClassId(a.classId)===classId?CLASS_SUBCLASSES[classId]||[]:[];
 }
 export function getSelectedAbilityMorph(player,abilityId){
@@ -48,7 +50,7 @@ export function getAbilityMorphOptions(player,abilityId){
   if(!a)return [];
   const selected=getSelectedAbilityMorph(player,id);
   return [{id:'base',name:'Original',requiredMastery:1,unlocked:true,selected:!selected,ability:a},
-    ...families(player,id).map((family,index)=>({id:family,name:SUBCLASSES[family].name,requiredMastery:MORPH_MASTERY_LEVELS[index],
+    ...families(player,id).map((family,index)=>({id:family,name:VAMPIRE_MORPH_NAMES[family]||SUBCLASSES[family]?.name,requiredMastery:MORPH_MASTERY_LEVELS[index],
       unlocked:unlocked(player,id,family,index),selected:selected===family,ability:resolveAbilityMorph(player,a,family)}))];
 }
 export function selectAbilityMorph(player,abilityId,morphId='base',now=performance.now()/1000){
@@ -59,6 +61,7 @@ export function selectAbilityMorph(player,abilityId,morphId='base',now=performan
   if(!option.unlocked)return {ok:false,reason:`Reach Mastery ${option.requiredMastery} with this skill to unlock ${option.name}.`};
   if(option.selected)return {ok:true,changed:false,reason:`${a.name} already uses ${option.name}.`};
   if(!(player.hp>0))return {ok:false,reason:'You must be alive to change a skill morph.'};
+  if(a.vampire&&(player.vampireForm?.active||(player.summons||[]).some(s=>s.sourceAbilityId===id&&s.alive!==false)))return {ok:false,reason:'End this Vampire form or summon before changing its morph.'};
   if(player.activeChannel||player.abilityCharge)return {ok:false,reason:'Finish channeling or charging before changing a morph.'};
   const current=resolveAbilityMorph(player,a,getSelectedAbilityMorph(player,id));
   const last=player.cooldowns?.[id];

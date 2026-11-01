@@ -38,14 +38,15 @@ export function humanArmorImage(profile,family,bodyType='male'){
   const sourceCol=col<4?col:0;
   for(let y=33;y<80;y++){
    // Starter gloves overlap the hip cells; only retain the actual trousers.
+   // The gloves end at row 56. Trimming below that cuts valid thigh pixels.
    let left=64,right=-1;
-   if(y>=50&&y<63)for(let scan=y;scan<=Math.min(62,y+2)&&right<0;scan++)for(let x=16;x<49;x++){
+   if(y>=50&&y<57)for(let scan=y;scan<=Math.min(62,y+2)&&right<0;scan++)for(let x=16;x<49;x++){
     const i=((row*80+scan)*source.image.width+sourceCol*64+x)*4,r=data[i],g=data[i+1],b=data[i+2];
     if(data[i+3]&&Math.max(r,g,b)-Math.min(r,g,b)<27&&r+g+b>90){left=Math.min(left,x);right=Math.max(right,x);}
    }
    for(let x=0;x<64;x++){
     const i=((row*80+y)*source.image.width+sourceCol*64+x)*4,r=data[i],g=data[i+1],b=data[i+2];
-    if(data[i+3]<128||(y>=50&&y<63&&right>=0&&(x<left-1||x>right+1)))continue;
+    if(data[i+3]<128||(y>=50&&y<57&&right>=0&&(x<left-1||x>right+1)))continue;
     let color=shade(ramp,r,g,b);
     // Cloth trousers stay darker than boots; retain the base sprite's belt.
     if(y>=51&&y<63&&family==='leather')color=shade(trouserRamp,r,g,b);

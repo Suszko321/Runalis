@@ -1,6 +1,7 @@
 // One read-only visibility rule for rendering, radar and interaction. Never
 // mutate depleted/collected: those fields belong to persistent world state.
 import {getStoryFlag} from './storyProgress.js';
+import {isQuestEnabled} from './questRoster.js';
 
 const MAIN='act1HearthmereAshes',MERCY='mercy_in_orrakai';
 const RULES={
@@ -33,9 +34,7 @@ export function isQuestObjectVisible(object,player){
  const owner=player.questOwner||player;
  // Shared campaign objects follow the host, including in split-screen play.
  const p=owner,id=object.id;
- if(id==='greyhavenLedger')return getStoryFlag(p,'order.founded')||[4,5,6,7,8,9].some(n=>at(p,`yourOrder${n}`));
- if(object.campaignAction==='cistern')return at(p,'yourOrder3')&&!getStoryFlag(p,'order.cistern');
- if(object.campaignAction==='archive')return at(p,'yourOrder6')&&p.yourOrder?.operation==='recovery'&&!p.yourOrder?.operations?.recovery;
+ if(id==='greyhavenLedger'||['cistern','archive'].includes(object.campaignAction))return false;
  if(id==='act1Regulator'&&getStoryFlag(p,'act1.machineAligned'))return false;
  if(id==='malakarRelic'&&getStoryFlag(p,'act1.relicSecured'))return false;
  if(object.poiId==='oldWellRitualSite')return at(p,MERCY,'investigateOldWell')&&(id!=='oldWellBrokenLantern'||!getStoryFlag(p,'mercy.brokenLanternAcquired'));
@@ -43,7 +42,8 @@ export function isQuestObjectVisible(object,player){
  const rules=object.questVisibility||RULES[id];
  if(rules)return rules.some(([quest,stage])=>at(p,quest,stage));
  for(const source of owner===player?[player]:[owner,player]){
-  for(const q of Object.values(source.quests?.active||{})){
+  for(const [questId,q] of Object.entries(source.quests?.active||{})){
+   if(!isQuestEnabled(questId))continue;
    const objectives=q.objectives||q.stages?.[q.currentStageIndex||0]?.objectives||[];
    if(objectives.some(o=>objectiveMatches(o,object)))return true;
   }

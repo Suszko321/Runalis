@@ -11,7 +11,7 @@ const legacyMobility=new Set(['oathkeeperDivineLeap','hydromancerRiptideStep','f
 const agileMobility=new Set(['gravecallerGhostwalk','hydromancerRiptideStep','lightbringerDawnstep','fellhunterVaultingShot']);
 
 export function isDirectAttack(ability) {
-  if(!ability||!(ability.damage>0)||ability.summonType||ability.oathBlades||ability.petalStorm||ability.roseMantle||
+  if(!ability||ability.vampire||!(ability.damage>0)||ability.summonType||ability.oathBlades||ability.petalStorm||ability.roseMantle||
     ability.faeFlowerField||ability.soulSiphonField||ability.spectralUrn||ability.spectralHost||ability.hunterSupport)return false;
   // A morph can turn a persistent original into a direct attack, or vice versa.
   if(ability.subclassId&&!ability.sunkenBase)return directModes.has(ability.subclassMode);

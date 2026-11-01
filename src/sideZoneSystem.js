@@ -1,3 +1,4 @@
+import {grantWorldItem} from './lootSystem.js';
 // sideZoneSystem.js
 // Lightweight optional procedural zones. Only the active zone exists in memory;
 // persistent state is limited to small visit/clear records on the host player.
@@ -157,7 +158,7 @@ export function updateSideZoneState(game) {
 
   gainXp(player, 'renown', 25 + Number(world.tier || 1) * 8, game.log);
   if (!state.firstClearRewardClaimed) {
-    addItem(player, definition.reward[0], definition.reward[1]);
+    grantWorldItem(player,world,definition.reward[0],definition.reward[1]);
     state.firstClearRewardClaimed = true;
     addLootText(player, `${definition.reward[0]} x${definition.reward[1]}`, { color: '#d9ad4f' });
   }

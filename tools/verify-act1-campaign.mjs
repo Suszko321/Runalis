@@ -89,22 +89,6 @@ for(const classId of ['oathkeeper','fellhunter','gravecaller','lightbringer','th
   choose(g,'malakarWitness','warning');setStoryFlag(g.player,'act1.relicSecured');tick(g);choose(g,'wardenMael','record');choose(g,'maraVell','record');
   assert(g.player.quests.completed.act1HearthmereAshes);assert(getStoryFlag(g.player,'story.act1Complete'));assert(!getStoryFlag(g.player,'order.founded'));
 });
-check('Order founding requires resources, real kills, consent, assignments and work',()=>{
-  const g=game();g.world=world;g.player.quests.completed.mercy_in_orrakai={id:'mercy_in_orrakai'};tick(g);
-  choose(g,'tavinHolt','help');choose(g,'ionaVey','listen');choose(g,'pellRusk','listen');g.world=createCapitalHubWorld();choose(g,'wardenMael','protection');g.world=world;
-  assert(!getStoryFlag(g.player,'order.materials'));applyOrderChoice(g.player,{type:'materials',cost:[['ashCoin',80]],quality:'usable',trust:5});assert(!getStoryFlag(g.player,'order.materials'));
-  addItem(g.player,'ashCoin',100);addItem(g.player,'fieldRations',20);choose(g,'tavinHolt','pay');choose(g,'ionaVey','shared');choose(g,'ionaVey','food');handleCampaignInteraction(g,{campaignAction:'cistern'});tick(g);assert(!getStoryFlag(g.player,'order.restored'));
-  for(const id of ['greyhavenBeastA','greyhavenBeastB'])markKillObjective(g.player,{id,questEncounter:'greyhaven'});tick(g);assert(getStoryFlag(g.player,'order.restored'));
-  // The DOM founding form calls this same persisted state, covered in browser test.
-  const o=ensureOrder(g.player);Object.assign(o,{name:'Test Fellowship',banner:'tree',color:'green'});setStoryFlag(g.player,'order.founded');tick(g);
-  for(const id of ['tavinHolt','ionaVey','pellRusk'])choose(g,id,'recruitOrder');assert.equal(Object.keys(o.members).length,3);assert(!getStoryFlag(g.player,'order.staffed'));
-  for(const m of Object.values(o.members))m.assigned=true;tick(g);assert(getStoryFlag(g.player,'order.staffed'));
-  choose(g,'greyhavenLedger','trade');addItem(g.player,'emberleaf',4);choose(g,'greyhavenMerchant','trade');choose(g,'greyhavenLedger','report');choose(g,'corvenDask','controlled');setStoryFlag(g.player,'order.doctrine');tick(g);
-  choose(g,'derrenHale','examine');choose(g,'greyhavenAttendant','choice');assert.equal(o.shelterOutcome,'covenant');choose(g,'greyhavenMael','thanks');choose(g,'greyhavenLedger','service');tick(g,12);
-  for(let i=1;i<=9;i++)assert(g.player.quests.completed[`yourOrder${i}`],`quest ${i}`);
-  const saved=createSaveState(g),restored=migrateSaveState(JSON.parse(JSON.stringify(saved)),world,createPlayer('Fallback')).player;
-  assert.equal(restored.yourOrder.name,'Test Fellowship');assert.equal(Object.keys(restored.yourOrder.members).length,3);assert(getStoryFlag(restored,'order.recognized'));assert(restored.campaignKills.greyhavenBeastA);
-});
 check('transient contextual dialogue survives save and restore',()=>{const g=game();setStage(g,'act1HearthmereAshes','handsThatStillWork');openDialogue(g.dialogue,{id:'act1ReliefScout',npcId:'act1ReliefScout',name:'Scout Hessa'},g.player,g.world);const snapshot=JSON.parse(JSON.stringify(serializeDialogueState(g.dialogue))),d=createDialogueState();assert(restoreDialogueState(d,snapshot,g.player,g.world));assert(d.options.some(o=>o.id==='record'));});
 check('custody cannot be duplicated by legacy evidence recovery',()=>{
  const g=game();g.world=world;setStage(g,'mercy_in_orrakai','returnOldWellEvidence');setStoryFlag(g.player,'mercy.evidenceReported');setStoryFlag(g.player,'mercy.lanternWithMael');updateOldWellQuest(g);assert(!getStoryFlag(g.player,'mercy.brokenLanternHeld'));
@@ -115,23 +99,6 @@ check('lantern is guaranteed at the defeated beast and cannot be collected twice
  const lantern=g.world.objects.find(o=>o.id==='oldWellBrokenLantern');assert(!lantern.interactable);
  Object.assign(beast,{x:54*32,y:67*32});markKillObjective(g.player,beast);updateOldWellQuest(g);assert(lantern.interactable);assert.equal(lantern.x,beast.x);assert.equal(lantern.y,beast.y);
  setStoryFlag(g.player,'mercy.brokenLanternAcquired');updateOldWellQuest(g);assert(!lantern.interactable);
-});
-for(const operation of ['relief','security','recovery','trade'])check(`Order undertaking ${operation}`,()=>{
- const g=game();g.world=world;setStoryFlag(g.player,'order.founded');setStoryFlag(g.player,'order.staffed');const o=ensureOrder(g.player);o.members.pellRusk={id:'pellRusk',name:'Pell',consented:true,assigned:true,role:'scouting'};tick(g);
- choose(g,'greyhavenLedger',operation);
- if(operation==='relief'){addItem(g.player,'fieldRations',6);choose(g,'greyhavenFamily','deliver');assert.equal(countItem(g.player,'fieldRations'),0);}
- if(operation==='security'){for(const id of ['greyhavenRoadBeastA','greyhavenRoadBeastB'])markKillObjective(g.player,{id,questEncounter:'greyhaven'});tick(g);}
- if(operation==='recovery'){startQuest(g.player,'yourOrder6');handleCampaignInteraction(g,{campaignAction:'archive'});}
- if(operation==='trade'){addItem(g.player,'emberleaf',4);choose(g,'greyhavenMerchant','trade');}
- assert(o.operationReady);choose(g,'greyhavenLedger','report');assert(getStoryFlag(g.player,'order.operation'));
-});
-for(const [decision,medical,outcome]of [['transfer',false,'covenant'],['choice',true,'sheltered'],['onsite',false,'covenant'],['refuse',false,'negligence']])check(`shelter ${decision}, stocked=${medical}`,()=>{
- const g=game(),o=ensureOrder(g.player);o.facilities.medicine=medical;o.food=6;setStoryFlag(g.player,'order.doctrine');choose(g,'derrenHale','examine');choose(g,'greyhavenAttendant',decision);assert.equal(o.shelterOutcome,outcome);
- if(outcome==='covenant'){tick(g);assert(g.world.objects.some(a=>a.npcId==='lysaHale'));}
- if(outcome==='negligence'){o.facilities.medicine=true;tick(g);assert.equal(o.shelterOutcome,'sheltered');assert.equal(o.food,4);}
-});
-check('hostile recruitment is refused, supplies can repair trust, duties remain',()=>{
- const g=game();setStoryFlag(g.player,'order.founded');const o=ensureOrder(g.player);o.relationships.tavinHolt=-10;choose(g,'tavinHolt','recruitOrder');assert(!o.members.tavinHolt);addItem(g.player,'fieldRations',4);choose(g,'greyhavenLedger','donate');choose(g,'tavinHolt','recruitOrder');assert(o.members.tavinHolt);choose(g,'wardenMael','recruitOrder');assert(!o.members.wardenMael);
 });
 check('unrelated demon boss cannot trigger Malakar story',()=>{
  const g=game();applyBossStoryProgress({id:'ordinaryDemon',bossId:'malakarSolgateDemonLord',isBoss:true,isDungeonMainBoss:true},g.player,{dungeonId:'randomDemonCave'});assert(!getStoryFlag(g.player,'story.malakarDefeated'));

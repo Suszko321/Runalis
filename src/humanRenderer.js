@@ -1,3 +1,4 @@
+import {drawRoyalVampire} from './vampireArt.js';
 // humanRenderer.js
 // Runalis code-drawn humanoid renderer.
 //
@@ -72,6 +73,7 @@ const APPEARANCE_EYE_COLORS = {
 };
 
 export function drawHumanActor(ctx, actor, camera, options = {}) {
+  if(drawRoyalVampire(ctx,actor,camera))return;
   const scale = options.scale ?? actor.scale ?? 1;
 
   const x = actor.x - camera.x;

@@ -1,3 +1,4 @@
+import {vampireOutsideHealing} from './vampireRules.js';
 import {getAbilityEffectiveness} from './skillExpertiseSystem.js';
 import {progressionPower} from './combatPower.js';
 import {hasLineOfSight} from './world.js';
@@ -29,14 +30,14 @@ export function beginRoseMantle(p,w,a,now,bonuses={}){
  endRoseMantle(p);const profile=roseMantleProfile(p,a,bonuses);
  const members=[p,...new Set(p.summons||[])].filter(actor=>living(actor,now)&&(actor===p||Math.hypot(actor.x-p.x,actor.y-p.y)<=a.subclassRadius&&(!w.tiles?.length||hasLineOfSight(w,p.x,p.y,actor.x,actor.y,{startSkip:0,endSkip:0}))));
  const m={owner:p,world:w,a,profile,members,active:true,startedAt:now,until:now+profile.duration,lastUpdateAt:now,elapsed:0,lastHealAt:now};owners.set(p,m);registerAbilitySupport(m,p,a.id);
- let healed=0;for(const actor of members){recipients.set(actor,m);const before=actor.hp;actor.hp=Math.min(actor.maxHp,actor.hp+actor.maxHp*profile.burst);healed+=actor.hp-before;}
+ let healed=0;for(const actor of members){recipients.set(actor,m);const before=actor.hp;actor.hp=Math.min(actor.maxHp,actor.hp+vampireOutsideHealing(actor,actor.maxHp*profile.burst));healed+=actor.hp-before;}
  if(healed>0)rewardCombatPurpose(p,w,a.id,healed*.12,now);return m;
 }
 export function updateRoseMantle(p,w,now){
  const m=owners.get(p);if(!m)return null;
  if(!ready(m,now,w)){endRoseMantle(p);return null;}
  const delta=Math.max(0,Math.min(now,m.until)-m.lastUpdateAt);m.lastUpdateAt=Math.max(m.lastUpdateAt,Math.min(now,m.until));m.elapsed=Math.max(0,now-m.startedAt);
- let healed=0;for(const actor of m.members)if(living(actor,now)&&(actor===p||p.summons?.includes(actor))){const before=actor.hp;actor.hp=Math.min(actor.maxHp,actor.hp+actor.maxHp*m.profile.regen*delta);healed+=actor.hp-before;}
+ let healed=0;for(const actor of m.members)if(living(actor,now)&&(actor===p||p.summons?.includes(actor))){const before=actor.hp;actor.hp=Math.min(actor.maxHp,actor.hp+vampireOutsideHealing(actor,actor.maxHp*m.profile.regen*delta));healed+=actor.hp-before;}
  if(healed>0){m.lastHealAt=now;rewardCombatPurpose(p,w,m.a.id,healed*.12,now);}
  if(now>=m.until){endRoseMantle(p);return null;}return m;
 }

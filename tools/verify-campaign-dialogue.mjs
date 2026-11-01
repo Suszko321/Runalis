@@ -32,8 +32,8 @@ check('a host asking optional questions does not erase an unread guest’s respo
 check('a second chapel visit acknowledges an existing account while other objectives are unfinished',()=>{
  const c=setup('theBrokenChapel','chapelHermit');c.p.quests.active[CAMPAIGN_ID].objectives.find(o=>o.npcId==='chapelHermit').current=1;c.open();assert.equal(c.d.fullText,FIELD_CONVERSATIONS.theBrokenChapel.chapelHermit.reported);assert(!c.d.options.some(o=>o.id==='record'));
 });
-check('Bram keeps training and work choices; Mara retains access to Thornbinding',()=>{
- const c=setup('aLanternInTheMud','bram');assert.equal(getCampaignConversation(c.npc,c.p,c.w),null);c.open();assert(c.d.options.some(o=>o.id==='train'));assert(c.d.options.some(o=>o.id==='quest'));
+check('Bram keeps training without retired errands; Mara retains access to Thornbinding',()=>{
+ const c=setup('aLanternInTheMud','bram');assert.equal(getCampaignConversation(c.npc,c.p,c.w),null);c.open();assert(c.d.options.some(o=>o.id==='train'));assert(!c.d.options.some(o=>o.id==='quest'||o.startsQuest==='bramLanternDrill'));
  const m=setup('failedPurificationSite','maraVell');m.open();assert(m.d.options.some(o=>o.id==='training'));m.choose('training');m.reply();assert.equal(m.d.currentNodeId,'maraTrainerDialogue');
 });
 check('the marked patient and completed campaign do not replay earlier introductions',()=>{

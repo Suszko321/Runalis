@@ -1,3 +1,7 @@
+import {vampireOutsideHealing} from './vampireRules.js';
+import {instanceGearItem} from './gearRarity.js';
+import {gearBagCount,canCarryGear} from './gearItemization.js';
+import {isGearInstanceEquipped} from './gearServices.js';
 ﻿import {equipmentPurpose,equipmentScaling,abilitySummary,abilityRequirements} from './uiInformation.js';
 import {equipGearEntry,unequipGearEntry,getTierStatBonus,getEquipmentTier} from './equipmentProgressionSystem.js';
 import {synchronizeEquipmentBoundSkills,dismissCoterieForEquipmentChange} from './equipmentBoundSkills.js';
@@ -107,6 +111,7 @@ export function renderInventory(player, game) {
       <button class="subtab ${subtab === 'bag' ? 'active' : ''}" data-inventory-subtab="bag">Bag</button>
     </div>
 
+    <p class="gear-bag-capacity">Gear bag: ${gearBagCount(player)} / 20 · Materials and consumables do not use gear slots. Mythical and Primordial drops unlock at Combat Level 50.</p>
     ${subtab === 'equipment' ? renderInventoryEquipment(player, game) : ''}
     ${subtab === 'coterie' ? renderInventoryCoterie(player, game) : ''}
     ${subtab === 'bag' ? renderInventoryBag(player, game) : ''}
@@ -187,7 +192,7 @@ export function performInventoryPrimaryAction(player, row, game, rerender) {
 
   const bagIndex = Number(row.dataset?.inventoryItemIndex);
   const entry = player.inventory?.[bagIndex];
-  const item = entry ? ITEMS[entry.id] : null;
+  const item = entry ? instanceGearItem(ITEMS[entry.id],entry) : null;
 
   if (!entry || !item) return false;
 
@@ -208,10 +213,10 @@ export function performInventoryPrimaryAction(player, row, game, rerender) {
 export function performInventorySalvageAction(player, row, game, rerender) {
   const bagIndex = Number(row?.dataset?.inventoryItemIndex);
   const entry = player?.inventory?.[bagIndex];
-  const item = entry ? ITEMS[entry.id] : null;
+  const item = entry ? instanceGearItem(ITEMS[entry.id],entry) : null;
   const coterieOwner = getCoterieGearOwnerLabel(player, item?.id);
 
-  if (!entry || !item || !isSalvageable(item) || isItemEquipped(player, item.id)) {
+  if (!entry || !item || !isSalvageable(item) || isGearInstanceEquipped(player,entry)) {
     game?.log?.(coterieOwner
       ? `${item.name} is ${coterieOwner.toLowerCase()} and cannot be salvaged.`
       : item
@@ -333,7 +338,7 @@ function renderInventoryCoterie(player, game) {
   const paged = inventoryList(gearItems);
   const selectedInventory = resolveSelectedInventoryItem(game, 'coterie', paged.items);
   const previewEntry = placement?.entry || selectedInventory?.entry || null;
-  const previewItem = previewEntry ? ITEMS[previewEntry.id] : null;
+  const previewItem = previewEntry ? instanceGearItem(ITEMS[previewEntry.id],previewEntry) : null;
   const detailMarkup = previewEntry
     ? coterieInventoryItemDetail(player, previewEntry, selectedSkeletonIndex, selectedSlot, { placing: !!placement })
     : inventoryEmptyDetail('No skeleton-compatible gear in your bag.');
@@ -440,7 +445,7 @@ function inventoryBrowser(player, game, subtab, title, paged, options = {}) {
 }
 
 function inventoryItemRow(player, entry, index, subtab, selected) {
-  const item = ITEMS[entry.id];
+  const item = instanceGearItem(ITEMS[entry.id],entry);
   const rarity = RARITY?.[item?.rarity];
   const rarityColor = rarity?.color || '#b8c0cc';
   const coterieOwner = getCoterieGearOwnerLabel(player, item?.id);
@@ -483,7 +488,7 @@ function inventoryItemRow(player, entry, index, subtab, selected) {
 }
 
 function inventoryItemDetail(player, entry, options = {}) {
-  const item = ITEMS[entry.id];
+  const item = instanceGearItem(ITEMS[entry.id],entry);
 
   if (!item) {
     return inventoryEmptyDetail(`Unknown item: ${entry.id}`);
@@ -496,7 +501,7 @@ function inventoryItemDetail(player, entry, options = {}) {
   const coterieOwner = getCoterieGearOwnerLabel(player, item.id,entry);
   const equipped = playerEquipped || !!coterieOwner;
   const primaryHint = item.slot ? 'A Equip' : item.type==='scroll' ? 'A Read · double-click to learn' : isUsable(item) ? 'A Use' : '';
-  const salvageHint = isSalvageable(item) && !equipped ? 'Hold X Salvage' : '';
+  const salvageHint = isSalvageable(item) && !equipped ? 'Blacksmith: Deconstruct' : '';
   const bagIndex = findInventoryEntryIndex(player, entry);
 
   return `
@@ -596,7 +601,7 @@ function resolveSelectedEquipmentSlot(game) {
 
 function equipmentSlotButton(player, slot, label, selected) {
   const itemId = player.equipment?.[slot];
-  const item = itemId ? ITEMS[itemId] : null;
+  const item = itemId ? instanceGearItem(ITEMS[itemId],Object.values(player.equippedGear||{}).find(e=>e.id===itemId)) : null;
   const rarity = RARITY?.[item?.rarity];
   const rarityColor = rarity?.color || '#b8c0cc';
   const upgradeLevel = item ? getGearUpgradeLevel(player, slot) : 0;
@@ -627,7 +632,7 @@ function equipmentSlotButton(player, slot, label, selected) {
 function equipmentSlotDetail(player, slot) {
   const label = slotLabel(slot);
   const itemId = player.equipment?.[slot];
-  const item = itemId ? ITEMS[itemId] : null;
+  const item = itemId ? instanceGearItem(ITEMS[itemId],Object.values(player.equippedGear||{}).find(e=>e.id===itemId)) : null;
 
   if (!item) {
     return `
@@ -686,7 +691,7 @@ function coterieSkeletonCard(player, skeleton, skeletonIndex, selectedSkeletonIn
         <div class="coterie-slot-list">
           ${COTERIE_SLOT_ORDER.map(([slot, label]) => {
             const itemId = skeleton?.equipment?.[slot] || null;
-            const item = itemId ? ITEMS[itemId] : null;
+            const item = itemId ? instanceGearItem(ITEMS[itemId],skeleton.equippedGear?.[slot]) : null;
             const rarity = RARITY?.[item?.rarity];
             const rarityColor = rarity?.color || '#b8c0cc';
             const active = selectedSkeletonIndex === skeletonIndex && selectedSlot === slot;
@@ -720,9 +725,9 @@ function coterieSkeletonCard(player, skeleton, skeletonIndex, selectedSkeletonIn
 
 function coterieSkeletonVisual(player, skeleton) {
   const equipment = skeleton?.equipment || {};
-  const weapon = equipment.weapon ? ITEMS[equipment.weapon] : null;
-  const armour = equipment.armour ? ITEMS[equipment.armour] : null;
-  const charm = equipment.charm ? ITEMS[equipment.charm] : null;
+  const weapon = equipment.weapon ? instanceGearItem(ITEMS[equipment.weapon],skeleton.equippedGear?.weapon) : null;
+  const armour = equipment.armour ? instanceGearItem(ITEMS[equipment.armour],skeleton.equippedGear?.armour) : null;
+  const charm = equipment.charm ? instanceGearItem(ITEMS[equipment.charm],skeleton.equippedGear?.charm) : null;
   const weaponRarity = RARITY?.[weapon?.rarity]?.color || '#b8c0cc';
   const armourRarity = RARITY?.[armour?.rarity]?.color || '#6f7480';
   const charmRarity = RARITY?.[charm?.rarity]?.color || '#b68cff';
@@ -753,7 +758,7 @@ function coterieSkeletonVisual(player, skeleton) {
 }
 
 function coterieInventoryItemRow(player, entry, index, selected, placing) {
-  const item = ITEMS[entry.id];
+  const item = instanceGearItem(ITEMS[entry.id],entry);
   const rarity = RARITY?.[item?.rarity];
   const rarityColor = rarity?.color || '#b8c0cc';
   const slot = firstCompatibleCoterieSlot(item);
@@ -785,7 +790,7 @@ function coterieInventoryItemRow(player, entry, index, selected, placing) {
 function coterieSlotDetail(player, skeletonIndex, slot, pendingItem = null, pendingBagIndex = null) {
   const skeleton = getCoterieSkeletons(player)[skeletonIndex] || getCoterieSkeletons(player)[0];
   const itemId = skeleton?.equipment?.[slot] || null;
-  const item = itemId ? ITEMS[itemId] : null;
+  const item = itemId ? instanceGearItem(ITEMS[itemId],skeleton.equippedGear?.[slot]) : null;
   const role = skeleton?.role || `Skeleton ${skeletonIndex + 1}`;
   const label = coterieSlotLabel(slot);
   const canPlace = pendingItem && isItemCompatibleWithCoterieSlot(pendingItem, slot);
@@ -851,7 +856,7 @@ function coterieSlotDetail(player, skeletonIndex, slot, pendingItem = null, pend
 }
 
 function coterieInventoryItemDetail(player, entry, skeletonIndex, slot, options = {}) {
-  const item = ITEMS[entry.id];
+  const item = instanceGearItem(ITEMS[entry.id],entry);
 
   if (!item) {
     return inventoryEmptyDetail(`Unknown item: ${entry.id}`);
@@ -1122,7 +1127,7 @@ function updateEquipmentFocusRegionDom(game) {
 
 export function equipmentSlotCard(player, slot, label, itemId, options = {}) {
   const compact = !!options.compact;
-  const item = itemId ? ITEMS[itemId] : null;
+  const item = itemId ? instanceGearItem(ITEMS[itemId],Object.values(player.equippedGear||{}).find(e=>e.id===itemId)) : null;
 
   if (!item) {
     return `
@@ -1169,6 +1174,7 @@ export function equipmentSlotCard(player, slot, label, itemId, options = {}) {
 
 export function itemStatBlock(player, item, entry = null) {
   entry ||= player.equipment?.[item.slot]===item.id?player.equippedGear?.[item.slot]:null;
+  item=instanceGearItem(item,entry);
   const upgradeBonus=entry?getTierStatBonus(item,entry.upgradeTier):0;
   const rows = [];
 
@@ -1274,7 +1280,7 @@ function equipmentActionButtons({ bagIndex = null, slot = null, item = null, equ
 
 
   if (bagIndex !== null && item && isSalvageable(item) && !equipped) {
-    actions.push(`<button data-equipment-action="salvage" data-inventory-item-index="${bagIndex}">Salvage</button>`);
+    actions.push(`<button data-equipment-action="salvage" data-inventory-item-index="${bagIndex}">Deconstruct (Blacksmith)</button>`);
   } else if (slot && item && isSalvageable(item)) {
     actions.push(`<button data-equipment-action="salvage-equipped" data-equipment-slot="${escapeHtml(slot)}">Protected Salvage</button>`);
   }
@@ -1443,7 +1449,7 @@ function resolveCoteriePlacement(player, game) {
 
   const bagIndex = Number(rawIndex);
   const entry = Number.isInteger(bagIndex) ? player?.inventory?.[bagIndex] : null;
-  const item = entry ? ITEMS[entry.id] : null;
+  const item = entry ? instanceGearItem(ITEMS[entry.id],entry) : null;
 
   if (!entry || !item || !firstCompatibleCoterieSlot(item)) {
     if (game?.uiState) game.uiState.coteriePlacementBagIndex = null;
@@ -1661,7 +1667,7 @@ export function performEquipmentSlotUpgradeAction(player, slot, game, rerender) 
 export function performInventoryUpgradeAction(player, row, game, rerender) {
   const bagIndex = Number(row?.dataset?.inventoryItemIndex);
   const entry = player?.inventory?.[bagIndex];
-  const item = entry ? ITEMS[entry.id] : null;
+  const item = entry ? instanceGearItem(ITEMS[entry.id],entry) : null;
   const slot = normalizeEquipmentSlot(item?.slot);
 
   if (!item || !slot) return false;
@@ -1677,7 +1683,7 @@ function equipBagItem(player, bagIndex, game, rerender) {
   const entry = player.inventory?.[bagIndex];
   if (!entry) return false;
 
-  const item = ITEMS[entry.id];
+  const item = instanceGearItem(ITEMS[entry.id],entry);
   if (!item?.slot) return false;
 
   const slot = item.slot === 'jewelry' ? 'trinket' : item.slot;
@@ -1700,7 +1706,7 @@ function beginCoteriePlacement(player, bagIndex, game, rerender) {
   }
 
   const entry = player.inventory?.[bagIndex];
-  const item = entry ? ITEMS[entry.id] : null;
+  const item = entry ? instanceGearItem(ITEMS[entry.id],entry) : null;
   const firstSlot = firstCompatibleCoterieSlot(item);
 
   if (!entry || !item || !firstSlot) {
@@ -1737,7 +1743,7 @@ function equipCoterieBagItem(player, bagIndex, skeletonIndex, slot, game, rerend
   const safeIndex = Math.max(0, Math.min(skeletons.length - 1, Number(skeletonIndex || 0)));
   const skeleton = skeletons[safeIndex];
   const entry = player.inventory?.[bagIndex];
-  const item = entry ? ITEMS[entry.id] : null;
+  const item = entry ? instanceGearItem(ITEMS[entry.id],entry) : null;
 
   if (!skeleton || !safeSlot || !entry || !item) return false;
 
@@ -1792,6 +1798,7 @@ function unequipCoterieSlot(player, skeletonIndex, slot, game, rerender) {
   }
 
   const item = ITEMS[itemId];
+  if(!canCarryGear(player,itemId)){game?.log?.('Gear bag full. Sell or deconstruct gear before retrieving equipment.');return false;}
   skeleton.equipment[safeSlot]=null;
   if(skeleton.equippedGear?.[safeSlot]){player.inventory.push(skeleton.equippedGear[safeSlot]);delete skeleton.equippedGear[safeSlot];}else addItem(player,itemId,1);
   dismissCoterieForEquipmentChange(player);
@@ -1833,7 +1840,7 @@ function useBagItem(player, bagIndex, game, rerender) {
   const entry = player.inventory?.[bagIndex];
   if (!entry) return;
 
-  const item = ITEMS[entry.id];
+  const item = instanceGearItem(ITEMS[entry.id],entry);
   if (!item) return;
 
   if (item.type === 'scroll') {
@@ -1848,7 +1855,7 @@ function useBagItem(player, bagIndex, game, rerender) {
     used = useRationFromBag(player, entry, item, game);
   } else if (item.heal) {
     const before = player.hp;
-    player.hp = Math.min(player.maxHp, player.hp + item.heal);
+    player.hp = Math.min(player.maxHp, player.hp + vampireOutsideHealing(player,item.heal));
     used = player.hp > before;
   }
 
@@ -1891,14 +1898,14 @@ export function calculateDisplayWeaponDamage(player, weapon, entry=null) {
 
 export function calculateInventoryValue(player) {
   return (player.inventory || []).reduce((total, entry) => {
-    const item = ITEMS[entry.id];
+    const item = instanceGearItem(ITEMS[entry.id],entry);
     return total + (item?.value || 0) * (entry.qty || 1);
   }, 0);
 }
 
 export function calculateEquippedValue(player) {
   return Object.values(player.equipment || {}).reduce((total, itemId) => {
-    const item = itemId ? ITEMS[itemId] : null;
+    const item = itemId ? instanceGearItem(ITEMS[itemId],Object.values(player.equippedGear||{}).find(e=>e.id===itemId)) : null;
     return total + (item?.value || 0);
   }, 0);
 }
@@ -1979,7 +1986,7 @@ function isUsable(item) {
 }
 
 function salvageNeedsConfirmation(item) {
-  const protectedRarities = new Set(['rare', 'occult', 'epic', 'relic', 'legendary', 'mythic', 'ancient']);
+  const protectedRarities = new Set(['rare', 'occult', 'epic', 'relic', 'legendary', 'mythic', 'ancient', 'primordial']);
   return protectedRarities.has(item?.rarity) || Number(item?.value || 0) >= 100;
 }
 

@@ -1,3 +1,4 @@
+import {endVampireForm} from './vampireSystem.js';
 import {placeAtNavStone} from './navStoneNetwork.js';
 import {
   addFloatingText,
@@ -80,6 +81,7 @@ export function sanitizeActorReviveStateForSave(actor) {
 }
 
 export function handleActorZeroHpForCoop(game, actor, now = performance.now() / 1000) {
+  if(actor?.hp<=0){endVampireForm(actor,now);actor.vampireFrenzyUntil=0;}
   if (!game || !actor) return false;
   if (isActorDowned(actor) || isActorDeadForCoop(actor)) return true;
 

@@ -1,3 +1,4 @@
+import {endVampireForm} from './vampireSystem.js';
 import {frameVeyreignCamera} from './veyreignTransformation.js';
 import {updateMalakarEncounter,handleMalakarInput,handleMalakarKeyboard} from './malakarEncounter.js';
 import {renderMobileDialogue} from './mobileText.js';
@@ -249,7 +250,6 @@ import {
 } from './act1OpeningSystem.js';
 import { updateOldWellQuest } from './oldWellSystem.js';
 import { updateAct1Campaign } from './act1CampaignRuntime.js';
-import { openOrderLedger } from './yourOrder.js';
 
 import {
   createAudioSystem,
@@ -1858,7 +1858,7 @@ class RunalisGame {
       openWorkshopService(this.setUiOwner(actor),serviceNpc,action.type==='workshopWeapons'?'weapons':action.type==='workshopArmour'?'armour':'craft');return true;
     }
 
-    if(action.type==='foundOrder'||action.type==='orderLedger') { openOrderLedger(this,action.type==='foundOrder'); return true; }
+    if(action.type==='foundOrder'||action.type==='orderLedger') return false;
 
     if (action.type === 'shop') {
       openMarketShop(this.setUiOwner(actor));
@@ -2177,6 +2177,7 @@ class RunalisGame {
   }
 
   handlePlayerDefeated() {
+    endVampireForm(this.player,performance.now()/1000);this.player.vampireFrenzyUntil=0;
     if(this.deathScreen?.active)return;
     cancelPartyEntry(this,'',false);
     closeDialogue(this.dialogue,{immediate:true});

@@ -1,3 +1,6 @@
+import {registerBleedPool} from './bleedingSystem.js';
+import {vampireOutsideHealing} from './vampireRules.js';
+import {getLivingPartyMembers} from './partySupport.js';
 import {mythicalChannelGeometry} from './mythicalEquipmentSystem.js';
 import {attackProjectileSpeed} from './combatTempo.js';
 import {getSubclassPassiveBonuses} from './subclassSystem.js';
@@ -30,7 +33,7 @@ const boss=e=>!!(e.isBoss||e.worldBoss||e.massive||e.bossType);
 const elite=e=>!!(e.elite||e.isElite||e.eliteModifier);
 const supportParties=new WeakMap();
 export function setSubclassSupportParty(p,party){supportParties.set(p,party||[]);}
-const validParty=p=>[...new Set([p,...(p.coop?.players||[]),...(supportParties.get(p)||[])])].filter(a=>a&&a.hp>0&&a.active!==false);
+const validParty=p=>getLivingPartyMembers(p,supportParties.get(p)||[]);
 export function getSubclassCombatState(p){return p?.networkPresentation?p.networkPresentation.subclassState:states.get(p)||null;}
 export function clearSubclassCombatState(p,reason='cancelled'){
   if(reason!=='worldChanged')clearSunkenPressure(p);
@@ -58,7 +61,8 @@ export function clearAbilityMorphCombatState(p,id){
   for(const key of ['retaliation','empower','roseGuard'])if(s[key]?.a?.id===id)s[key]=null;
   for(const [e,bundle] of s.afflictions){
     for(const [family,entry] of bundle.effects){
-      if(entry.bloodhoundAilments){if(!removeBloodhoundSource(entry,id))bundle.effects.delete(family);}
+      if(entry.bloodhoundAilments){
+        registerBleedPool(e,entry,entry);if(!removeBloodhoundSource(entry,id))bundle.effects.delete(family);}
       else if(entry.ability?.id===id)bundle.effects.delete(family);
     }
     if(!bundle.effects.size){s.afflictions.delete(e);if(e.subclassControlOwner===p){delete e.subclassControlOwner;delete e.subclassFrozenUntil;delete e.subclassSilencedUntil;}}
@@ -122,7 +126,7 @@ function heal(p,w,a,amount,x,y,r,h,healingBonusMultiplier=1){
   let total=0;
   for(const ally of a.oathMorph?[p]:validParty(p))if(Math.hypot(ally.x-x,ally.y-y)<=r&&sight(w,x,y,ally)){
     const value=Math.max(1,Math.round((amount+(bonuses.healingPower||0)*healingBonusMultiplier)*scalar*getAbilityEffectiveness(p,a))),before=ally.hp;
-    ally.hp=Math.min(ally.maxHp,ally.hp+value);
+    ally.hp=Math.min(ally.maxHp,ally.hp+vampireOutsideHealing(ally,value));
     total+=ally.hp-before;
     if(a.subclassId==='acolyte'){ally.poisonTimer=0;ally.burnTimer=0;ally.slowTimer=0;clearEliteFrost(ally,h.now);}
   }

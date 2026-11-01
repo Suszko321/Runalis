@@ -192,7 +192,7 @@ export function updateCombatTechniques(p,w,input,dt,now,h) {
   if(p.hp<=0 || (p.lifeState && p.lifeState!=='alive')) {s.effects.length=0;s.swarm.length=0;s.projectiles.length=0;s.events.length=0;s.marks.length=0;s.statuses={};stopAbilityChannel(p,'death');return;}
   s.marks=s.marks.filter(item=>valid(item.enemy)&&item.mark.until>now&&!item.mark.triggered);
   updateOathBlades(p,w,s,dt,now,h);
-  if(p.activeChannel && !p.activeChannel.subclassId && p.activeChannel.abilityId!=='lightbringerDawncarver') {
+  if(p.activeChannel && p.activeChannel.profile!=='vampire' && !p.activeChannel.subclassId && p.activeChannel.abilityId!=='lightbringerDawncarver') {
     updateAbilityChannel(p,input,dt,now,{payResource:(type,amount)=>h.payResource(type,amount),
       onEnd:c=>h.audio?.('channelEnd',getAbilityById(c.abilityId)),
       onTick:c=>channelTick(p,w,s,c,h)});

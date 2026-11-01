@@ -1,3 +1,5 @@
+import {VAMPIRE_NODES} from './vampireData.js';
+import {endVampireForm} from './vampireSystem.js';
 import { COMBAT_EXPANSION_ABILITIES } from './combatExpansionData.js';
 import {getSubclassPassiveBonuses} from './subclassSystem.js';
 import {getClassDefinition,isGravecallerClassId} from './classData.js';
@@ -737,102 +739,7 @@ export const SKILL_TREE_NODES = {
     bonuses: { holyDamagePct: 12, bloodlineShieldPct: 14, supportHealingPct: 8 }
   },
 
-  vampire_root: {
-    id: 'vampire_root',
-    tree: 'vampire',
-    role: 'Blood Core',
-    name: 'First Hunger',
-    desc: '+5% lifesteal and +3 power. The chalice taught hunger; you kept the name.',
-    cost: 1,
-    requires: [],
-    bonuses: { lifestealPct: 5, power: 3 }
-  },
-  vampire_stalker: {
-    id: 'vampire_stalker',
-    tree: 'vampire',
-    role: 'Duelist',
-    name: 'Red Step',
-    desc: '+5% movement speed and +8% crit damage for predatory skirmishing.',
-    cost: 1,
-    requires: ['vampire_root'],
-    choiceGroup: 'vampire_first_choice',
-    bonuses: { moveSpeedPct: 5, critDamagePct: 8 }
-  },
-  vampire_grave_patience: {
-    id: 'vampire_grave_patience',
-    tree: 'vampire',
-    role: 'Restraint',
-    name: 'Grave Patience',
-    desc: 'Hold the first hunger still, hardening body and will before the hunt begins.',
-    cost: 1,
-    requires: ['vampire_root'],
-    choiceGroup: 'vampire_first_choice',
-    bonuses: { armour: 4, maxHpPct: 5 }
-  },
-  vampire_feast: {
-    id: 'vampire_feast',
-    tree: 'vampire',
-    role: 'Sustain',
-    name: 'Deep Drink',
-    desc: 'Crimson Feast heals harder and single-target strikes bite deeper.',
-    cost: 2,
-    requires: ['vampire_stalker', 'vampire_grave_patience'],
-    requirementMode: 'any',
-    bonuses: { bloodlineLifestealPct: 14, singleTargetDamagePct: 6 }
-  },
-  vampire_night: {
-    id: 'vampire_night',
-    tree: 'vampire',
-    role: 'Execution',
-    name: 'Night Sovereign',
-    desc: '+12% wounded enemy damage and +6% crit chance. Finish fights before the hunger does.',
-    cost: 2,
-    requires: ['vampire_feast'],
-    bonuses: { woundedDamagePct: 12, critChancePct: 6 }
-  },
-  vampire_restraint: {
-    id: 'vampire_restraint',
-    tree: 'vampire',
-    role: 'Restraint',
-    choiceGroup: 'vampire_second_choice',
-    name: 'The Held Hunger',
-    desc: 'Restraint hardens the body and makes stolen life last longer.',
-    cost: 2,
-    requires: ['vampire_night'],
-    bonuses: { armour: 5, bloodlineLifestealPct: 10 }
-  },
-  vampire_predation: {
-    id: 'vampire_predation',
-    tree: 'vampire',
-    role: 'Predation',
-    choiceGroup: 'vampire_second_choice',
-    name: 'The Open Thirst',
-    desc: 'Embrace speed and execution without surrendering your name.',
-    cost: 2,
-    requires: ['vampire_night'],
-    bonuses: { moveSpeedPct: 5, woundedDamagePct: 10 }
-  },
-  vampire_old_oath: {
-    id: 'vampire_old_oath',
-    tree: 'vampire',
-    role: 'Deathless',
-    name: 'Old Blood Oath',
-    desc: 'Either answer to hunger deepens your deathless endurance.',
-    cost: 2,
-    requires: ['vampire_restraint', 'vampire_predation'],
-    requirementMode: 'any',
-    bonuses: { maxHpPct: 8, lifestealPct: 4 }
-  },
-  vampire_night_without_end: {
-    id: 'vampire_night_without_end',
-    tree: 'vampire',
-    role: 'Capstone',
-    name: 'Night Without End',
-    desc: 'Capstone: become a relentless duelist sustained by every decisive strike.',
-    cost: 3,
-    requires: ['vampire_old_oath'],
-    bonuses: { critDamagePct: 12, bloodlineLifestealPct: 14, singleTargetDamagePct: 8 }
-  },
+  ...VAMPIRE_NODES,
 
   hydromancy_root: {
     id: 'hydromancy_root',
@@ -1344,7 +1251,7 @@ for (const tree of ['blade','archery','spirit','warding','hydromancy','lightbrin
 
 // Either early melee doctrine may unlock the swords; no subclass commitment.
 Object.assign(SKILL_TREE_NODES.technique_oathkeeperHallowedBlades,{cost:2,requires:['blade_combo','blade_bastion'],requirementMode:'any'});
-Object.assign(SKILL_TREE_NODES, createDisciplinePassives(describeSkillTreeBonuses));
+Object.assign(SKILL_TREE_NODES, Object.fromEntries(Object.entries(createDisciplinePassives(describeSkillTreeBonuses)).filter(([,n])=>n.tree!=='vampire')));
 Object.assign(SKILL_TREE_NODES, createExpertiseNodes(SKILL_TREE_NODES));
 
 // Preserve the first-match behavior of the legacy migration without scanning
@@ -1473,6 +1380,11 @@ export function normalizeSkillTreeState(player) {
       }
     }
     state.bluntMasteryVersion=1;
+  }
+  if(!state.vampireOverhaulVersion){
+    const retired=id=>id.startsWith('vampire_')&&!VAMPIRE_NODES[id];
+    player.unlockedPassives=(player.unlockedPassives||[]).filter(id=>!retired(id));
+    state.vampireOverhaulVersion=1;
   }
   normalizeExpertisePurchases(state.spent);
   player.skillTree = state;
@@ -1705,6 +1617,8 @@ export function respecSkillTree(player) {
   player.loadout.abilitySlots=player.loadout.abilitySlots.map(id=>revoked.has(id)?null:id);
   // Clear both aliases atomically. Otherwise legacy unlock migration re-buys
   // refunded active nodes at the next render or load.
+  endVampireForm(player,performance.now()/1000);
+  player.vampireFrenzyUntil=0;
   state.spent={};state.migratedAbilityUnlocks={};state.respecVersion=1;
   player.skillTreeProgress=state.spent;player.gold-=1;
   player.abilityUseCharges={};player.traps=[];player.combatEffects=[];

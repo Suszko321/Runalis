@@ -1348,12 +1348,9 @@ function serializeCoopPlayerForProfile(ally) {
 function loadUnifiedProfilesWithLegacyMigration() {
   const profiles = loadUnifiedProfiles();
   const migration = migrateLegacyCouchCoopProfiles(profiles);
+  const saved = !migration.changed || saveUnifiedProfiles(profiles);
 
-  if (migration.changed) {
-    saveUnifiedProfiles(profiles);
-  }
-
-  if (migration.found) {
+  if (migration.found && saved) {
     removeLegacyCouchCoopProfiles();
     console.info(
       `Runalis co-op profile migration: migrated ${migration.migrated}, skipped ${migration.skipped}.`
@@ -1417,9 +1414,10 @@ function migrateLegacyCouchCoopProfiles(profiles) {
     if (!raw) return result;
 
     const parsed = JSON.parse(raw);
-    legacyProfiles = Array.isArray(parsed) ? parsed.filter(Boolean) : [];
-  } catch {
-    result.found = true;
+    if (!Array.isArray(parsed)) return result;
+    legacyProfiles = parsed.filter(Boolean);
+  } catch (err) {
+    console.warn('Unable to migrate legacy co-op profiles; preserving recovery data:', err);
     return result;
   }
 

@@ -1,4 +1,5 @@
 import {getMythicalVisualStyle} from './mythicalEquipmentData.js';
+import {BOSS_ARMORY_ART} from './bossArmoryArtData.js';
 import {subclassSkillIcon} from './subclassArt.js';
 import { techniqueIconMarkup } from './combatTechniqueIcons.js';
 import { getAbilityById } from './data.js';
@@ -21,6 +22,8 @@ export function sheetIconMarkup(name,index,rows=4,extraClass=''){
   return `<span class="runalis-art-icon ${extraClass}" aria-hidden="true" style="background-image:url('assets/art/sprites/${name}.png');background-size:400% ${rows*100}%;background-position:${index%4*100/3}% ${Math.floor(index/4)*100/(rows-1)}%"></span>`;
 }
 export function equipmentIconMarkup(item,profile){
+  const bossArt=BOSS_ARMORY_ART[item?.id||profile.itemId];
+  if(bossArt)return `<span class="runalis-art-icon inventory-art-icon" aria-hidden="true" style="background-image:url('assets/art/sprites/${bossArt.sheet}.png');background-size:contain;background-position:center;background-repeat:no-repeat"></span>`;
   if(profile.faction)return factionItemIcon(profile);
   const text=String(profile.itemId||item?.id||item?.name||'');
   if(text==='tideglassRapier')return `<span class="runalis-art-icon inventory-art-icon" aria-hidden="true" style="background-image:url('assets/art/sprites/tideglass-rapier.png');background-size:contain;background-position:center;background-repeat:no-repeat"></span>`;

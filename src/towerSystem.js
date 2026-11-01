@@ -1,4 +1,5 @@
 import {rememberRepeatableInstance,restoreRepeatableInstance} from './instanceEncounterMemory.js';
+import {grantWorldItem} from './lootSystem.js';
 import {requestPartyEntry} from './partyEntrySystem.js';
 import {syncBossReturnPortals} from './bossReturnPortals.js';
 import {configureEncounterEnemy} from './encounterData.js';
@@ -174,12 +175,12 @@ export function claimTowerReward(game, chest) {
   const regionId = game.world?.infiniteDungeonRegionId || 'hearthmereFrontier';
   const reward = getRegionFloorReward(regionId, floor);
 
-  addItem(game.player, reward[0], reward[1]);
+  grantWorldItem(game.player,game.world,reward[0],reward[1]);
   // Repeatable floors supply the existing currency and upgrade materials.
   game.player.gold+=Math.min(150,18+floor*3);
   if(floor>=11)addItem(game.player,'arcaneDust',2+Math.min(8,Math.floor(floor/10)));
   if(floor>=16&&floor%5===0)addItem(game.player,'towerFragment',1+Math.floor(floor/25));
-  if(floor%5===0){const mythical=rollRegionalMythical({chestType:'boss',name:game.world?.name},game.world,Math.random,'chest');if(mythical)addItem(game.player,mythical.item,1);}
+  if(floor%5===0){const mythical=rollRegionalMythical({chestType:'boss',name:game.world?.name},game.world,Math.random,'chest',game.player);if(mythical)grantWorldItem(game.player,game.world,mythical.item,1);}
   chest.claimed = true;
   chest.depleted = true;
   playSfx('chest', { volume: 0.9, throttle: 0.08 });

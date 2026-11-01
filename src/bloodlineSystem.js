@@ -1,3 +1,4 @@
+import {vampireOutsideHealing,vampireIncoming} from './vampireRules.js';
 // bloodlineSystem.js
 // Mutually exclusive hidden Act 1 bloodline transformations.
 
@@ -66,15 +67,13 @@ export const BLOODLINE_DEFINITIONS = {
     title: 'Blood-Cursed',
     tree: 'vampire',
     abilityId: 'crimsonFeast',
-    theme: 'Lifesteal, speed, predatory dueling, and dangerous hunger.',
+    theme: 'Sacrifice life for blood sorcery, predatory beasts and royal transformation; recover through deliberate violence.',
     confirmationText:
       'To become Vampire is to step beyond ordinary life and carry a hunger that will never truly sleep.',
-    positives: ['+8% lifesteal', '+5% movement from bloodline nodes', '+2 bloodline skill points'],
-    negatives: ['-12% healing received from non-blood sources', '+7% incoming damage'],
+    positives: ['HP-powered blood sorcery and beasts', '15% stronger at night or in hostile dungeons', '+2 bloodline skill points'],
+    negatives: ['-10% outside healing', '+10% fire and holy damage taken', 'Daylight blood damage -15%'],
     modifiers: {
-      lifestealPct: 8,
-      healingReceivedPct: -12,
-      incomingDamageTakenPct: 7
+      healingReceivedPct: 0
     },
     flags: ['bloodline.chosen', 'bloodline.vampire', 'unbound.redChaliceAccepted']
   }
@@ -231,13 +230,15 @@ export function modifyBloodlineHealing(player, amount, options = {}) {
     finalAmount *= 1 + Number(modifiers.healingReceivedPct || 0) / 100;
   }
 
-  return Math.max(0, Math.ceil(finalAmount));
+  if(options.source!=='vampire')finalAmount=vampireOutsideHealing(player,finalAmount);
+  return Math.max(0, isVampireHealing(player)?finalAmount:Math.ceil(finalAmount));
 }
 
-export function modifyBloodlineIncomingDamage(player, amount) {
+const isVampireHealing=p=>(p?.bloodline?.id||p?.raceId)==='vampire';
+export function modifyBloodlineIncomingDamage(player, amount, element = null) {
   const modifiers = getBloodlineCombatModifiers(player);
   const scalar = 1 + Number(modifiers.incomingDamageTakenPct || 0) / 100;
-  return Math.max(0, Math.ceil(Math.max(0, Number(amount || 0)) * scalar));
+  return Math.max(0, Math.ceil(Math.max(0, Number(amount || 0)) * scalar * vampireIncoming(player,1,element)-1e-9));
 }
 
 function unlockBloodlineAbility(player, abilityId) {

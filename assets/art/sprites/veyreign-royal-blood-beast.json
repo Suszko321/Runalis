@@ -1,5 +1,5 @@
 {
-  "width": 60,
+  "width": 112,
   "height": 80,
   "frames": 48,
   "states": [
@@ -13,5 +13,11 @@
   ],
   "fps": 12,
   "transformSeconds": 4,
-  "palette": "ash violet, royal crimson, antique gold, ivory"
+  "palette": "obsidian fur, crimson membranes, antique gold regalia; allied runtime palette variant",
+  "authoredPosesPerState": 4,
+  "pivot": [
+    56,
+    74
+  ],
+  "artRevision": "royal-bat-mastery-2026-10-31"
 }

@@ -1,8 +1,10 @@
+import {vampireIncoming} from './vampireRules.js';
 import {encounterRng} from './encounterData.js';
 import { rewardAbilitySupport } from './abilityMasterySystem.js';
 import { applyDefensiveDamage } from './combatActions.js';
 import { mitigateTechniqueDamage } from './combatExpansion.js';
 import {mitigateSubclassDamage,onSubclassDamaged} from './subclassCombat.js';
+import {grantWorldItem} from './lootSystem.js';
 // bossSystem.js
 // Reusable boss phase/death reward helpers.
 
@@ -90,7 +92,7 @@ export function applyBossDefeatRewards(enemy, player, world, log) {
     if (!item) continue;
 
     const qty = Math.max(1, Math.floor(Number(reward.qty || 1)));
-    addItem(player, reward.itemId, qty);
+    if(!grantWorldItem(player,world,reward.itemId,qty))continue;
 
     const label = reward.name || item.name || reward.itemId;
     addLootText(player, qty > 1 ? `${label} x${qty}` : label, {
@@ -575,7 +577,7 @@ function telegraphRoots(enemy, world, radius) {
   });
 }
 
-export function damageNearbyParty(enemy, player, world, radius, damage, hitTest = null, label = 'Shockwave', combatNow = performance.now()/1000) {
+export function damageNearbyParty(enemy, player, world, radius, damage, hitTest = null, label = 'Shockwave', combatNow = performance.now()/1000, element = enemy.element || (enemy.boss?.type==='seraphel'?'holy':null)) {
   const scaledDamage = applyGlobalEnemyDamageMultiplier(damage);
   const players = getEnemyTargetablePlayers(player);
   const members = getBossCombatTargets(player);
@@ -589,7 +591,7 @@ export function damageNearbyParty(enemy, player, world, radius, damage, hitTest 
     if (world && !hasLineOfSight(world, enemy.x, enemy.y, member.x, member.y, { startSkip: 1, endSkip: 1 })) continue;
 
     if(!players.includes(member)){
-      applyTargetDamage(enemy,member,scaledDamage,world,null,{label,now:combatNow,arenaImpact:true,rootPlayer:player});
+      applyTargetDamage(enemy,member,scaledDamage,world,null,{label,now:combatNow,arenaImpact:true,rootPlayer:player,element});
       continue;
     }
 
@@ -621,6 +623,7 @@ export function damageNearbyParty(enemy, player, world, radius, damage, hitTest 
       rewardAbilitySupport(bubble,world,prevented,now);
     }
     incoming=Math.max(0,incoming-getArmour(member)*.18);
+    incoming=vampireIncoming(member,incoming,element);
     const applied=mitigateSubclassDamage(member,enemy,mitigateTechniqueDamage(member,enemy,incoming,now,world),now);
     member.hp = Math.max(0, (member.hp || 0) - applied);
     if(applied>0)onSubclassDamaged(member,applied,enemy,world,now);

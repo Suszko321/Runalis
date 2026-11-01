@@ -1,3 +1,4 @@
+import {vampireOutsideHealing} from './vampireRules.js';
 import {hasHostileTarget} from './weaponStance.js';
 import {getEliteHazards,getEliteHazardGeometry} from './eliteEncounterSystem.js';
 import {telegraphContainsPoint} from './enemyTelegraphGeometry.js';
@@ -29,7 +30,7 @@ export function updateOutOfCombatRecovery(actor,world,input,dt,now){
   if(resting){
     // Only the portion of this update after the cooldown expires may heal.
     const healSeconds=Math.max(0,seconds-(previous?.remaining||0));
-    actor.hp=Math.min(actor.maxHp,actor.hp+actor.maxHp*HEALTH_RECOVERY_RATE*healSeconds);
+    actor.hp=Math.min(actor.maxHp,actor.hp+vampireOutsideHealing(actor,actor.maxHp*HEALTH_RECOVERY_RATE*healSeconds));
     // The same rest window covers every companion. Recover one third of the
     // player's percentage rate; native healing remains additive in summon combat.
     for(const summon of summons)if(Number.isFinite(summon.maxHp)&&summon.maxHp>0){

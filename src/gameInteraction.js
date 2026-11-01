@@ -1,8 +1,12 @@
+import {equipGearEntry} from './equipmentProgressionSystem.js';
+import {vampireOutsideHealing} from './vampireRules.js';
+import {grantWorldItem} from './lootSystem.js';
 import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
 import {returnToZoneEntrance} from './bossReturnPortals.js';
 import {handleGroveInteraction} from './blightedGrove.js';
 import {handleVeyreignInteraction} from './veyreignDungeon.js';
 import {handleOrchardInteraction} from './ashenOrchardDungeon.js';
+import {handleIronMireInteraction} from './ironMireDungeon.js';
 import {isQuestObjectVisible} from './questInteractables.js';
 import {handleCampaignInteraction} from './act1CampaignRuntime.js';
 import {CAMPFIRE_RECIPES} from './workshopAccess.js';
@@ -58,7 +62,7 @@ import {
   addSpiritText
 } from './floatingText.js';
 
-import { renderUI, getFirstOathStage } from './ui.js';
+import { renderUI } from './ui.js';
 
 import {
   enterDungeon as enterDungeonSystem,
@@ -234,7 +238,7 @@ export function interact(game) {
     return;
   }
 
-  if (handleVeyreignInteraction(game,nearest)||handleOrchardInteraction(game,nearest)||handleGroveInteraction(game,nearest)||handleCampaignInteraction(game,nearest)) return;
+  if (handleIronMireInteraction(game,nearest)||handleVeyreignInteraction(game,nearest)||handleOrchardInteraction(game,nearest)||handleGroveInteraction(game,nearest)||handleCampaignInteraction(game,nearest)) return;
 
   switch (nearest.kind) {
     case 'worldRelic':
@@ -567,7 +571,7 @@ export function talk(game, npc) {
       }
     }
 
-    game.log(`${npc.name || 'Trainer'}: Class paths are chosen when a character is created. I can still teach, quest, and explain the road ahead.`);
+    game.log(`${npc.name || 'Trainer'}: Class paths are chosen when a character is created. I can still teach and explain the road ahead.`);
     return;
   }
 
@@ -594,47 +598,9 @@ export function talk(game, npc) {
 }
 
 export function talkWarden(game) {
-  const player = game.player;
-
-  if (player.quest.firstOath === 0) {
-    player.quest.firstOath = 1;
-
-    game.log('Quest started: First Oath of Runalis.');
-    game.log('Warden Mael: "No one is born ready here. Prove you can gather, endure, and fight if needed."');
-
-    addQuestText(player, 'Quest Started', {
-      ttl: 1.3,
-      size: 15
-    });
-
-    return;
-  }
-
-  const stage = getFirstOathStage(player);
-
-  if (stage.stage === 3) {
-    removeItem(player, 'emberleaf', 3);
-    removeItem(player, 'ironOre', 2);
-
-    player.quest.firstOath = 3;
-    player.gold += 18;
-
-    gainXp(player, 'renown', 45, game.log);
-
-    game.log('Quest complete: First Oath of Runalis.');
-    game.log('Warden Mael: "Good. You are not ready, but you are less likely to die uselessly."');
-
-    safeShake(game, 5, 0.14);
-
-    addQuestText(player, 'Quest Complete', {
-      ttl: 1.5,
-      size: 16
-    });
-
-    return;
-  }
-
-  game.log(stage.text);
+  const warden=(game.world?.objects||[]).find(o=>o.npcId==='wardenMael'||o.id==='warden');
+  if(warden)openDialogue(game.dialogue,warden,game.player,game.world);
+  else game.log('Warden Mael: "Bring what you witnessed to the infirmary. I will compare it with the patrol reports."');
 }
 
 export function talkSmith(game) {
@@ -708,7 +674,7 @@ export function claimWorldCache(game, cache) {
   // claimed flag still prevent any second inventory payout.
   cache.depleted = !(cache.discoveryId&&cache.discoveryJournal);
   const tunedCacheRewards=filterChestEquipment(rewards,cache);
-  const rareGear=rollRegionalMythical(cache,game.world,Math.random,'cache');if(rareGear)tunedCacheRewards.push([rareGear.item,1]);
+  const rareGear=rollRegionalMythical(cache,game.world,Math.random,'cache',game.player);if(rareGear)tunedCacheRewards.push([rareGear.item,1]);
   recordPoiCacheClaim(getQuestOwner(game.player) || game.player, cache);
 
   for (const reward of tunedCacheRewards) {
@@ -716,7 +682,7 @@ export function claimWorldCache(game, cache) {
     const qty = Math.max(1, Number(Array.isArray(reward) ? reward[1] : reward?.qty || 1));
     if (!itemId) continue;
 
-    addItem(game.player, itemId, qty);
+    if(!grantWorldItem(game.player,game.world,itemId,qty))continue;
     announceLootDiscovery(game.player,itemId,game.world,game.log);
     markPartyCollectObjective(game.player, itemId, qty);
     addLootText(game.player, `${ITEMS[itemId]?.name || itemId} x${qty}`, {
@@ -773,7 +739,7 @@ function claimDungeonChest(game, chest) {
   chest.claimed = true;
   chest.depleted = true;
   const tunedRewards=filterChestEquipment(rewards,chest);
-  const mythical=rollRegionalMythical(chest,game.world,Math.random,'chest');if(mythical)tunedRewards.push([mythical.item,1]);
+  const mythical=rollRegionalMythical(chest,game.world,Math.random,'chest',game.player);if(mythical)tunedRewards.push([mythical.item,1]);
 
   if (dungeonState) {
     dungeonState.openedChests = dungeonState.openedChests || {};
@@ -785,7 +751,7 @@ function claimDungeonChest(game, chest) {
     const qty = Math.max(1, Number(Array.isArray(reward) ? reward[1] : reward?.qty || 1));
     if (!itemId || !ITEMS[itemId]) continue;
 
-    addItem(game.player, itemId, qty);
+    if(!grantWorldItem(game.player,game.world,itemId,qty))continue;
     markPartyCollectObjective(game.player, itemId, qty);
     addLootText(game.player, `${ITEMS[itemId]?.name || itemId} x${qty}`, {
       color: chest.chestType === 'boss' ? '#ffcc66' : chest.chestType === 'locked' ? '#b68cff' : '#d9ad4f',
@@ -1026,7 +992,7 @@ function grantEvidenceRewards(game, evidence) {
   for (const reward of evidence.discoveryRewards?.items || []) {
     const [itemId, amount = 1] = Array.isArray(reward) ? reward : [reward.itemId, reward.qty || 1];
     if (!itemId) continue;
-    addItem(game.player, itemId, amount);
+    if(!grantWorldItem(game.player,game.world,itemId,amount))continue;
     markPartyCollectObjective(game.player, itemId, amount);
     addLootText(game.player, `${ITEMS[itemId]?.name || itemId} x${amount}`, {
       color: evidence.color || '#d9ad4f'
@@ -1378,10 +1344,8 @@ export function grantClassStarterGear(game, classId) {
       continue;
     }
 
-    addItem(player, itemId, 1);
-
-    player.equipment = player.equipment || {};
-    player.equipment[equipSlot === 'armor' ? 'armour' : equipSlot] = itemId;
+    if(!addItem(player,itemId,1)){game.log?.('Make room in the gear bag before collecting class equipment.');continue;}
+    equipGearEntry(player,player.inventory.findLastIndex(e=>e.id===itemId));
 
     equipped.push(item.name || itemId);
   }
@@ -1591,7 +1555,7 @@ export function campfire(game, object = null) {
   const beforeHp = Number(player.hp || 0);
   const beforeStamina = Number(player.stamina || 0);
 
-  player.hp = Math.min(player.maxHp, player.hp + 35);
+  player.hp = Math.min(player.maxHp, player.hp + vampireOutsideHealing(player,35));
   player.stamina = Math.min(player.maxStamina, player.stamina + 45);
 
   if (player.spiritAwakened) {

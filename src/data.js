@@ -1,3 +1,6 @@
+import {VAMPIRE_ABILITIES} from './vampireData.js';
+import {BOSS_ARMORY_ITEMS} from './bossArmoryData.js';
+import {GEAR_RARITIES} from './gearRarity.js';
 import {MYTHICAL_ITEMS} from './mythicalEquipmentData.js';
 import { abilityProgressionCategories } from './progressionProfiles.js';
 import { COMBAT_EXPANSION_ABILITIES } from './combatExpansionData.js';
@@ -99,49 +102,50 @@ export const SKILLS = {
 };
 
 export const RARITY = {
+  ...GEAR_RARITIES,
   common: {
     name: 'Common',
-    color: '#b8c0cc'
+    color: '#ffffff'
   },
 
   uncommon: {
     name: 'Uncommon',
-    color: '#73d18a'
+    color: '#63d17b'
   },
 
   rare: {
     name: 'Rare',
-    color: '#6fa8ef'
+    color: '#619dff'
   },
 
   occult: {
-    name: 'Occult',
-    color: '#b68cff'
+    name: 'Rare',
+    color: '#619dff'
   },
 
   epic: {
-    name: 'Epic',
-    color: '#b68cff'
+    name: 'Legendary',
+    color: '#ffda52'
   },
 
   relic: {
-    name: 'Relic',
-    color: '#d9ad4f'
+    name: 'Legendary',
+    color: '#ffda52'
   },
 
   legendary: {
     name: 'Legendary',
-    color: '#ffcc66'
+    color: '#ffda52'
   },
 
   mythic: {
     name: 'Mythical',
-    color: '#ff7ac8'
+    color: '#ad69f0'
   },
 
   ancient: {
-    name: 'Ancient',
-    color: '#66f0ff'
+    name: 'Primordial',
+    color: '#dc264b'
   }
 };
 
@@ -296,6 +300,7 @@ export const WEAPON_XP_PROFILES = {
 // -----------------------------------------------------------------------------
 
 export const ITEMS = {
+  ...BOSS_ARMORY_ITEMS,
   ...ENEMY_EQUIPMENT_ITEMS,
   ...MYTHICAL_ITEMS,
   // ---------------------------------------------------------------------------
@@ -3690,7 +3695,7 @@ export const ABILITIES = [
     damage: 0,
     damageReduction: 0.5,
     range: 0,
-    desc: 'Raise a radiant shield that greatly improves block and reduces incoming damage for a short time.'
+    desc: 'Raise a radiant shield that greatly improves block and reduces incoming damage for a short time. Taunts visible nearby non-boss enemies within 180 pixels for 4 seconds. Committed attacks still finish; leaving range or falling ends the challenge.'
   },
 
   {
@@ -4671,24 +4676,7 @@ export const ABILITIES = [
     desc: 'Raise an unowned halo: gain a short defensive ward and pulse holy damage around you.'
   },
 
-  {
-    ...MELEE_CHARGE,
-    id: 'crimsonFeast',
-    key: null,
-    name: 'Crimson Feast',
-    bloodline: 'vampire',
-    classSlot: 'X',
-    skill: 'blade',
-    tree: 'vampire',
-    unlockLevel: 1,
-    cd: 7.5,
-    costType: 'stamina',
-    cost: 15,
-    damage: 20,
-    damageMultiplier: 1.4,
-    range: 74,
-    desc: 'A predatory blood strike that heavily heals from the damage dealt. Strong in duels, risky in prolonged fights.'
-  }
+  ...VAMPIRE_ABILITIES
 ];
 
 for (const ability of ABILITIES) ability.progressionCategories = abilityProgressionCategories(ability);
@@ -5979,107 +5967,8 @@ function isBossLootEnemy(enemy) {
 // The real expanded quest database now lives in worldContent.js.
 // This export remains for older UI helpers that still import QUESTS from data.js.
 
-export const QUESTS = {
-  firstOath: {
-    title: 'First Oath of Runalis',
-    stages: [
-      'Speak with Warden Mael at the outpost.',
-      'Gather 3 Emberleaf and 2 Black Iron Ore.',
-      'Defeat 3 Blighted Corpses near the deadwood.',
-      'Return to Warden Mael.'
-    ]
-  },
-
-  hungryShrine: {
-    title: 'The Hungry Shrine',
-    stages: [
-      'Find the shrine north-east of camp.',
-      'Offer 2 Gravecap and 1 Bone Shard.',
-      'Survive what answers.'
-    ]
-  },
-
-  humanBeginning: {
-    title: 'Human Beginning',
-    stages: [
-      'You entered Echoryn Forest with no class, no oath, and no chosen path.',
-      'Use skills to shape what you become.',
-      'At level 50, only two combat skills may break past human limits.'
-    ]
-  },
-
-  roadsGoneQuiet: {
-    title: 'The Roads Went Quiet',
-    stages: [
-      'Push east along the Blighted Road.',
-      'Clear Blighted Corpses from the road.',
-      'Investigate the Ashen Orchard.'
-    ]
-  },
-
-  embersOnTheRoad: {
-    title: 'Embers on the Road',
-    stages: [
-      'Gather Emberleaf along the old road.',
-      'Defeat Blighted Corpses between the outpost and orchard.',
-      'Find the Ashen Orchard campfire.'
-    ]
-  },
-
-  buriedName: {
-    title: 'The Buried Name',
-    stages: [
-      'Find the Ashen Orchard Cellar.',
-      'Defeat the Orchard Keeper.',
-      'Return to the Blighted Pilgrim.'
-    ]
-  },
-
-  wrongByMorning: {
-    title: 'Wrong by Morning',
-    stages: [
-      'Discover Pilgrim Bridge.',
-      'Discover Castle Veyreign.',
-      'Discover Mirror Grove.'
-    ]
-  },
-
-  silverInTheRiver: {
-    title: 'Silver in the River',
-    stages: [
-      'Collect River Reed.',
-      'Catch Silverfin.',
-      'Return to Fenrick Salt.'
-    ]
-  },
-
-  facesInTheWater: {
-    title: 'Faces in the Water',
-    stages: [
-      'Collect Bone Shards and Pale Essence.',
-      'Defeat Gravebound in the Lantern Marsh.',
-      'Return to the Mire Widow.'
-    ]
-  },
-
-  lanternsInTheMire: {
-    title: 'Lanterns in the Mire',
-    stages: [
-      'Discover Lantern Marsh.',
-      'Defeat Gravebound in the Iron Mire.',
-      'Return to Lumen Sable.'
-    ]
-  },
-
-  theRidgeLooksBack: {
-    title: 'The Ridge Looks Back',
-    stages: [
-      'Discover Watcher Ridge.',
-      'Defeat the Watcher Above the Road.',
-      'Return to Watcher Ivo.'
-    ]
-  }
-};
+// Compatibility export only. The current roster lives in questData.js.
+export const QUESTS = {};
 
 // -----------------------------------------------------------------------------
 // BIOMES

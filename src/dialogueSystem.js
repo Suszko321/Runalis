@@ -40,8 +40,10 @@ import {
   removeItem
 } from './player.js';
 import { ITEMS } from './data.js';
+import {gearRewardReason} from './gearItemization.js';
+import {addStatusText} from './floatingText.js';
 import { ACT1_ROUTES } from './act1CampaignData.js';
-import { getOrderDialogue, orderRecruitmentOptions, applyOrderChoice } from './yourOrder.js';
+import { QUEST_ROSTER_VERSION, isQuestEnabled, retireRemovedQuestState, dialogueReferencesRemovedQuest } from './questRoster.js';
 import { getCampaignConversation } from './campaignConversations.js';
 import { applyEnemyStrengthScaling } from './enemyScaling.js';
 import { playSfx } from './audioSystem.js';
@@ -81,8 +83,6 @@ const ACT1_LEGACY_STAGE_ORDER = [
   'redSealDescent'
 ];
 const BLOODLINE_QUEST_IDS = [
-  'cambionAshenPact',
-  'nephilimBrokenHalo',
   'vampireRedChalice'
 ];
 
@@ -122,7 +122,7 @@ export function openDialogue(dialogueState, npcObject, player, world) {
     null;
 
   const campaign = getCampaignConversation(npcObject,player,world);
-  const contextual = campaign && !campaign.ambientCampaign ? campaign : getOrderDialogue(npcObject,player,world) || campaign;
+  const contextual = campaign;
   const dialogueId = contextual?.id ||
     npcObject.dialogueId ||
     npcDefinition?.dialogueId ||
@@ -232,7 +232,7 @@ export function chooseDialogueOption(dialogueState, player, world, requestedInde
   clampDialogueSelection(dialogueState);
   const option = dialogueState.options?.[dialogueState.selectedIndex];
 
-  if (!option || option.disabled) {
+  if (!option || option.disabled || dialogueReferencesRemovedQuest(option.__confirmedOption || option)) {
     dialogueState.selectedIndex = 0;
     return false;
   }
@@ -265,7 +265,8 @@ export function getDialogueState(dialogueState) {
 }
 
 export function serializeDialogueState(dialogueState) {
-  return serializeDialogueRuntime(dialogueState);
+  const snapshot=serializeDialogueRuntime(dialogueState);
+  return snapshot ? {...snapshot, questRosterVersion: QUEST_ROSTER_VERSION} : null;
 }
 
 export function restoreDialogueState(dialogueState, snapshot, player, world) {
@@ -290,6 +291,13 @@ export function restoreDialogueState(dialogueState, snapshot, player, world) {
   const legacyCampaign=String(dialogueState.dialogueId).startsWith('campaign:')&&
     (String(dialogueState.dialogueId).startsWith('campaign:guide:')||savedOptions.some(o=>o.id==='record')&&!savedOptions.some(o=>String(o.id).startsWith('topic-')));
   const savedNpc=(world?.continentRuntime?.allObjects||world?.objects||[]).find(o=>o.id===dialogueState.npcObjectId);
+  // Old snapshots can embed deleted errands, offers and replies. Reopen today's
+  // authored conversation instead of restoring those private transient nodes.
+  if(snapshot.questRosterVersion !== QUEST_ROSTER_VERSION){
+    dialogueState.history=[];
+    if(savedNpc)return openDialogue(dialogueState,savedNpc,player,world);
+    finalizeDialogueClose(dialogueState);return false;
+  }
   if(legacyCampaign&&savedNpc)return openDialogue(dialogueState,savedNpc,player,world);
 
   const nodeId = snapshot.currentNodeId || snapshot.dialogueId;
@@ -428,6 +436,8 @@ function refreshConditionalDialogueChoices(dialogueState, player) {
 }
 
 function executeDialogueChoice(dialogueState, option, player, world, options = {}) {
+  const gearReason=gearRewardReason(player,option?.rewardItems||[]);
+  if(gearReason){addStatusText(player,gearReason,{color:'#ffffff'});return false;}
   if (!dialogueState?.active || !option) return false;
 
   const originNodeId = options.originNodeId || dialogueState.currentNode?.choiceContextNodeId || dialogueState.currentNodeId || dialogueState.dialogueId;
@@ -667,7 +677,8 @@ function npcHasActiveTalkObjective(player, npcId) {
       ? (questSource === player ? 'personal' : 'shared')
       : 'all';
 
-    for (const questState of Object.values(activeQuests)) {
+    for (const [questId, questState] of Object.entries(activeQuests)) {
+      if (!isQuestEnabled(questId)) continue;
       if (!questMatchesProgressScope(questState, scope)) continue;
 
       for (const objective of questState?.objectives || []) {
@@ -686,10 +697,6 @@ function npcHasActiveTalkObjective(player, npcId) {
 }
 
 function npcHasReadyQuestTurnIn(player, npcId) {
-  if (npcId === 'wardenMael' && legacyFirstOathIsReady(player)) {
-    return true;
-  }
-
   for (const questSource of getQuestStateSources(player)) {
     const activeQuests = questSource?.quests?.active || {};
 
@@ -731,23 +738,6 @@ function getQuestStateSources(player) {
   return owner && owner !== player ? [player, owner] : [player];
 }
 
-function legacyFirstOathIsReady(player) {
-  if (!player || player.quests?.active?.firstOath || player.quests?.completed?.firstOath) {
-    return false;
-  }
-
-  const legacyState = Number(player.quest?.firstOath || 0);
-  const hollowlings = Number(player.quest?.hollowlings || 0);
-
-  return (
-    legacyState > 0 &&
-    legacyState < 3 &&
-    countItem(player, 'emberleaf') >= 3 &&
-    countItem(player, 'ironOre') >= 2 &&
-    hollowlings >= 3
-  );
-}
-
 export function findNearbyDialogueNpc(player, world, maxDistance = 48) {
   if (!player || !world?.objects) return null;
 
@@ -785,9 +775,6 @@ function applyDialogueNode(dialogueState, dialogueNode, player = null, nodeId = 
   let rawChoices = Array.isArray(dialogueNode.runtimeChoices)
     ? dialogueNode.runtimeChoices.map(option => ({ ...option }))
     : (dialogueNode.choices || dialogueNode.options || []);
-  if(resolvedNodeId===dialogueState.dialogueId && !resolvedNodeId.startsWith('orderDialogue:')) {
-    rawChoices=[...rawChoices,...orderRecruitmentOptions({npcId:dialogueState.npcId,name:speakerName},player)];
-  }
   const isRuntimeNode = Array.isArray(dialogueNode.runtimeChoices);
   const appendNpcQuests = !isRuntimeNode && dialogueNode.appendNpcQuestOptions !== false &&
     resolvedNodeId === dialogueState.dialogueId && !(dialogueNode.nextNodeId || dialogueNode.next);
@@ -913,10 +900,6 @@ function appendNpcQuestOptions(dialogueState, options, player) {
 }
 
 function appendReadyQuestTurnInOptions(options, dialogueState, player) {
-  if (dialogueState?.npcId === 'wardenMael') {
-    migrateReadyLegacyFirstOath(player);
-  }
-
   const owner = getQuestOwner(player);
   const questSources = owner && owner !== player ? [player, owner] : [player];
 
@@ -950,53 +933,10 @@ function appendReadyQuestTurnInOptions(options, dialogueState, player) {
   }
 }
 
-function migrateReadyLegacyFirstOath(player) {
-  if (!player || player.quests?.active?.firstOath || player.quests?.completed?.firstOath) return false;
-
-  const legacyState = Number(player.quest?.firstOath || 0);
-  const hollowlings = Number(player.quest?.hollowlings || 0);
-
-  if (
-    legacyState <= 0 ||
-    legacyState >= 3 ||
-    countItem(player, 'emberleaf') < 3 ||
-    countItem(player, 'ironOre') < 2 ||
-    hollowlings < 3
-  ) {
-    return false;
-  }
-
-  const quest = getQuest('firstOath');
-  if (!quest) return false;
-
-  const finalStageIndex = Math.max(0, Number(quest.stages?.length || 1) - 1);
-  const finalStage = quest.stages?.[finalStageIndex] || null;
-
-  ensureQuestLog(player);
-  player.quests.active.firstOath = {
-    id: 'firstOath',
-    title: quest.title,
-    type: quest.type || 'starter',
-    description: quest.summary || '',
-    startedAt: performance.now(),
-    stageIndex: finalStageIndex,
-    currentStageId: finalStage?.id || null,
-    objectives: createObjectiveProgress(finalStage?.objectives || [], player).map(objective => ({
-      ...objective,
-      current: objective.required
-    })),
-    complete: true,
-    readyToTurnIn: true
-  };
-  syncQuestStateStarted(player, 'firstOath', quest, player.quests.active.firstOath);
-
-  return true;
-}
-
 function normalizeDialogueOptions(options) {
   const normalized = Array.isArray(options)
     ? options
-      .filter(option => option && option.close !== true && option.id !== 'leave')
+      .filter(option => option && option.id !== 'leave' && (option.close !== true || isQuestEnabled(option.startsQuest)))
       .map(option => ({
         ...option,
         label: option.label || option.text || '...',
@@ -1020,6 +960,7 @@ function filterDialogueOptionsForPlayer(options, player) {
   const resolved = [];
   for (const option of options) {
     if (!option || option.hidden) continue;
+    if (dialogueReferencesRemovedQuest(option)) continue;
     const available = dialogueOptionIsAvailable(option, player);
     if (available) {
       resolved.push({ ...option, disabled: false });
@@ -1044,6 +985,7 @@ function dialogueOptionIsAvailable(option, player) {
 
   if (option.startsQuest) {
     const quest = getQuest(option.startsQuest);
+    if (!quest) return false;
     const state = getQuestStateSnapshot(player, option.startsQuest);
     const questPlayer = getQuestProgressOwner(player, quest || option.startsQuest);
 
@@ -1183,17 +1125,14 @@ function getQuestStateSnapshot(player, questId) {
     questPlayer?.questState?.failed?.[questId] ||
     null;
 
-  const legacyState = Number(questPlayer?.quest?.[questId] || 0);
-  const legacyActive = questId === 'firstOath' && legacyState > 0 && legacyState < 3;
-  const legacyCompleted = questId === 'firstOath' && legacyState >= 3;
   const stageIndex = Math.max(
     0,
     Number(activeRecord?.stageIndex ?? activeRecord?.currentStageIndex ?? 0)
   );
 
   return {
-    active: !!activeRecord || legacyActive,
-    completed: !!completedRecord || legacyCompleted,
+    active: !!activeRecord,
+    completed: !!completedRecord,
     failed: !!failedRecord,
     ready: !!(
       activeRecord?.readyToTurnIn ||
@@ -1231,7 +1170,6 @@ function conditionValues(value) {
 function applyDialogueOptionEffects(dialogueState, option, player, world, originNodeId = null) {
   if (!option) return;
   if(option.veyreignFate&&!chooseVeyreignFate(player,world,option.veyreignFate)){dialogueState.effectReplyText='This offer is no longer available. No change has been made to your bloodline.';return;}
-  if(option.orderAction) applyOrderChoice(player,option.orderAction);
   const campaignOwner=getQuestOwner(player);
   if(Number.isInteger(option.regulatorStep)&&!getStoryFlag(campaignOwner,'act1.machineAligned')) {
     campaignOwner.act1RegulatorStep=option.regulatorStep===(campaignOwner.act1RegulatorStep||0)?option.regulatorStep+1:0;
@@ -1405,12 +1343,7 @@ function completeQuestFromDialogue(dialogueState, player, questId, options = {})
     return false;
   }
 
-  if (questId === 'firstOath') {
-    player.quest = player.quest || {};
-    player.quest.firstOath = 3;
-    dialogueState.effectReplyText =
-      'Good. You are not ready, but you are less likely to die uselessly. That is enough for a first oath.';
-  } else if (quest.rewards?.bloodline) {
+  if (quest.rewards?.bloodline) {
     const definition = BLOODLINE_DEFINITIONS[quest.rewards.bloodline];
     dialogueState.effectReplyText =
       `The rite answers. You rise as ${definition?.name || 'something changed'}. ` +
@@ -1469,11 +1402,6 @@ function startQuestFromDialogue(player, questId, dialogueState) {
     complete: false,
     readyToTurnIn: false
   };
-
-  if (questId === 'firstOath') {
-    questPlayer.quest = questPlayer.quest || {};
-    questPlayer.quest.firstOath = Math.max(1, Number(questPlayer.quest.firstOath || 0));
-  }
 
   syncQuestStateStarted(questPlayer, questId, quest, questPlayer.quests.active[questId]);
 
@@ -1890,6 +1818,8 @@ export function updateQuestStageCompletion(player, questId) {
 
   if (!complete) return false;
 
+  const stageGearReason=gearRewardReason(player,quest.stages?.[questState.stageIndex]?.rewards?.items||[]);
+  if(stageGearReason){addStatusText(player,stageGearReason,{color:'#ffffff'});return false;}
   grantStageRewardsOnce(player, questState, quest.stages?.[questState.stageIndex] || null);
 
   const nextStageIndex = questState.stageIndex + 1;
@@ -1934,6 +1864,8 @@ function finishQuest(player, questId, requireReady = false, options = {}) {
   if (requireReady && !questState.complete && !questState.readyToTurnIn) return false;
   if (quest.rewards?.bloodline && !options.confirmBloodline) return false;
   if (quest.rewards?.bloodline && !canChooseBloodline(player, quest.rewards.bloodline).ok) return false;
+  const gearReason=gearRewardReason(player,quest.rewards?.items||[]);
+  if(gearReason){addStatusText(player,gearReason,{color:'#ffffff'});return false;}
 
   delete player.quests.active[questId];
 
@@ -2011,6 +1943,7 @@ function areObjectivesComplete(objectives) {
 
 function grantStageRewardsOnce(player, questState, stage) {
   if (!player || !questState || !stage?.id) return false;
+  if(gearRewardReason(player,stage.rewards?.items||[]))return false;
 
   questState.rewardedStages = questState.rewardedStages && typeof questState.rewardedStages === 'object'
     ? questState.rewardedStages
@@ -2041,12 +1974,7 @@ function applyQuestRewards(player, quest) {
     player.inventory = player.inventory || [];
 
     for (const [itemId, amount] of rewards.items) {
-      player.inventory.push({
-        id: itemId,
-        itemId,
-        qty: amount || 1,
-        source: 'questReward'
-      });
+      addItem(player,itemId,amount||1);
     }
   }
 
@@ -2133,17 +2061,7 @@ function ensureQuestLog(player) {
 
   if (!player.quests.active) player.quests.active = {};
   if (!player.quests.completed) player.quests.completed = {};
-  // Keep stable smith/quest IDs for old saves while refreshing Aren's visible
-  // identity. Inventory, objective progress and reward claims stay untouched.
-  const smithDefinition=getQuest('ironForMara');
-  for(const collection of [player.quests.active,player.quests.completed]){
-    const saved=collection.ironForMara;if(!saved||typeof saved!=='object')continue;
-    saved.title=smithDefinition.title;saved.summary=smithDefinition.summary;
-    if(collection===player.quests.active){
-      const stage=smithDefinition.stages.find(s=>s.id===saved.currentStageId)||smithDefinition.stages[saved.stageIndex||0];
-      if(stage){saved.currentStageTitle=stage.title||stage.text||'';saved.currentStageText=stage.text||'';}
-    }
-  }
+  retireRemovedQuestState(player);
   reconcileMercyAidObjectives(player);
   reconcileAct1QuestDefinition(player);
   reconcileBloodlineQuestDefinitions(player);

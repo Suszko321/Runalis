@@ -2,7 +2,8 @@
   "name": "runalis",
   "private": true,
   "scripts": {
-    "build": "node tools/prepare-pages.mjs"
+    "build": "node tools/prepare-pages.mjs",
+    "check:engineering": "node tools/verify-engineering-foundation.mjs"
   },
   "devDependencies": {
     "esbuild": "0.28.2"

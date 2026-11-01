@@ -8,8 +8,8 @@ try{
  await page.reload();await page.locator('[data-load="malakarReview"]').click();await page.waitForFunction(()=>!!window.getCampaignReviewGame?.());
  await page.evaluate(async()=>{const g=getCampaignReviewGame(),{createDungeonWorld}=await import('/src/dungeonSystem.js');g.world=createDungeonWorld({dungeonId:'demonCultLair',theme:'demon',tier:5,depth:3,seed:'malakar-climax',floor:3});g.world.enemies=[];const stair=g.world.objects.find(o=>o.malakarEntrance);Object.assign(g.player,{x:stair.x,y:stair.y+30});g.camera.x=g.player.x-640;g.camera.y=g.player.y-400;});
  await page.waitForTimeout(500);await page.screenshot({path:'docs/malakar-climax/approach.png'});
- await page.keyboard.press('e');await page.waitForSelector('#malakarEncounterPanel');assert.equal(await page.evaluate(()=>getCampaignReviewGame().world.floor),3);await page.screenshot({path:'docs/malakar-climax/readiness.png'});
- await page.getByRole('button',{name:'Player 1: Yes',exact:true}).click();await page.waitForFunction(()=>getCampaignReviewGame().world.floor===4);
+ await page.keyboard.press('e');await page.waitForSelector('#partyEntryPanel');assert.equal(await page.evaluate(()=>getCampaignReviewGame().world.floor),3);await page.screenshot({path:'docs/malakar-climax/readiness.png'});
+ await page.locator('#partyEntryPanel [data-entry-vote="0:true"]').click();await page.waitForFunction(()=>getCampaignReviewGame().world.floor===4);
  await page.waitForTimeout(10000);await page.screenshot({path:'docs/malakar-climax/sacrifice.png'});
  await page.keyboard.press('Escape');await page.waitForFunction(()=>getCampaignReviewGame().world.dungeonState.malakar.mode==='introduction');await page.screenshot({path:'docs/malakar-climax/introduction.png'});
  await page.getByRole('button',{name:'What was in the caravan?',exact:true}).click();await page.waitForFunction(()=>getCampaignReviewGame().world.dungeonState.malakar.mode==='active');
