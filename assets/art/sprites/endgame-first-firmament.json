@@ -1,0 +1,21 @@
+{
+  "width": 64,
+  "height": 80,
+  "frames": 4,
+  "states": [
+    "maleHelm",
+    "maleChest",
+    "maleLegs",
+    "maleMantle",
+    "femaleHelm",
+    "femaleChest",
+    "femaleLegs",
+    "femaleMantle"
+  ],
+  "directions": [
+    "down",
+    "right",
+    "up",
+    "left"
+  ]
+}

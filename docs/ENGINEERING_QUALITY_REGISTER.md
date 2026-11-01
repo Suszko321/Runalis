@@ -333,3 +333,31 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - New exports add808 inspected cells beyond E28 with no new audit errors and all
   eight approved player-sheet hashes intact. Aggregate audit retains the identical
   24 pre-existing format/coverage errors. [Full scope, prompts, review and limits](wearable-catalogue/README.md).
+
+### E30 · Endgame high-fantasy equipment · IMPLEMENTED, verified
+
+- Added twelve four-piece ensembles (48 new persistent item IDs), covering Mage,
+  Knight, Archer and Battlemage at exact Legendary/Mythical/Primordial grades.
+  Both wearer and encounter levels must meet 50/65/80; only existing elite/boss
+  classifications qualify. Existing drop chances, grade weights and three-call
+  RNG order remain. Eligible high-grade selections retain a 40% legacy pool.
+- Acquisition/equip/reward boundaries reject forbidden grades and insufficient
+  levels. Existing instance upgrades, bag recovery, ownership and save contracts
+  remain authoritative. Added functional two/three/four-piece set bonuses using
+  existing consumed stat keys. No new skill or transformation engine.
+- Authored 192 directional drawings and 48 icons, registered to both base bodies.
+  Approved body geometry, alpha, arm/weapon anchors and gait remain unchanged.
+  Compact head fittings and existing cloak layers supply the ornate silhouettes.
+- Passing contracts: all48 selections, 240 forbidden-grade cases, 192 four-piece
+  loadouts across classes/owners, seeded real deaths at all three grades, full-bag
+  recovery and save/load. Art: 40,296 renders/9,984 silhouette comparisons; browser
+  equips all48 pieces, verifies live bonuses and captures twelve directional sets.
+  Existing affected gear/loot/armour/head/gait/melee/stance/Gravecaller suites pass.
+- Reproduced existing P3/P4 ground-drop labels incorrectly showing P1; labels now
+  reflect all four owner slots. All-owner nearest-recipient and foreign-pickup
+  rejection contracts pass; pickup authority is unchanged.
+- Engineering11/11, build and all168 wearable coverage contracts pass. New art
+  adds432 cells with no new structural errors; eight approved player hashes stay
+  intact. Aggregate audit retains the same24 pre-existing errors. Balance/grind
+  duration remains a human playtest limitation, separate from passing contracts.
+  [Content, prompts, visual evidence and verification](endgame-equipment/README.md).

@@ -1,6 +1,6 @@
 import {vampireOutsideHealing} from './vampireRules.js';
 import {instanceGearItem} from './gearRarity.js';
-import {gearBagCount,canCarryGear} from './gearItemization.js';
+import {gearBagCount,canCarryGear,gearEquipReason} from './gearItemization.js';
 import {isGearInstanceEquipped} from './gearServices.js';
 ﻿import {equipmentPurpose,equipmentScaling,abilitySummary,abilityRequirements} from './uiInformation.js';
 import {equipGearEntry,unequipGearEntry,getTierStatBonus,getEquipmentTier} from './equipmentProgressionSystem.js';
@@ -1688,6 +1688,7 @@ function equipBagItem(player, bagIndex, game, rerender) {
 
   const slot = item.slot === 'jewelry' ? 'trinket' : item.slot;
 
+  const reason=gearEquipReason(player,entry.id,entry);if(reason){game?.log?.(reason);return false;}
   if(!equipGearEntry(player,bagIndex))return false;
   synchronizeEquipmentBoundSkills(player);
   if(game?.uiState)game.uiState.pendingGearUpgrade=null;

@@ -1,5 +1,6 @@
 import {humanHeadLayout} from './humanHeadLayout.js';
 import {WEARABLE_CATALOGUE_ART} from './playerWearableCatalogue.js';
+import {ENDGAME_WEARABLE_ART} from './endgameEquipmentData.js';
 const fittings={
  patchedRoadLeathers:{sheet:'player-wearables-first-pass',row:1,part:1,color:'#775337'},
  graveboundGreaves:{sheet:'player-wearables-first-pass',row:2,part:2},
@@ -10,6 +11,7 @@ for(const faction of ['Covenant','LastDawn'])for(const [row,part]of ['Helm','Che
   color:part==='ScoutChest'?'#66503b':faction==='Covenant'?'#b8b8ae':'#49373c'};
 }
 Object.assign(fittings,WEARABLE_CATALOGUE_ART);
+Object.assign(fittings,ENDGAME_WEARABLE_ART);
 for(const fit of Object.values(fittings))fit.iconColumns??=fit.rows||3;
 export const fittedWearable=id=>fittings[id];
 export const fittedChest=id=>fittings[id]?.part===1;

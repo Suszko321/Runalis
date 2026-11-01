@@ -23,8 +23,9 @@ export function grantWorldItem(player,world,id,qty=1){
  const base=ITEMS[id];if(!base)return false;
  let metadata={};
  if(isGear(base)){
+  if(base.endgameExclusive&&Number(player.combatLevel||1)<base.minCombatLevel)return false;
   let rarity=canonicalGearRarity(base.rarity);
-  if(Number(player.combatLevel||1)<50&&GEAR_RARITIES[rarity].rank>=4)rarity='legendary';
+  if(!base.endgameExclusive&&Number(player.combatLevel||1)<50&&GEAR_RARITIES[rarity].rank>=4)rarity='legendary';
   metadata={gearRarity:rarity,rarityRollVersion:1,itemLevel:player.combatLevel||1};
  }
  if(addItem(player,id,qty,metadata))return true;
@@ -41,7 +42,7 @@ export function createEnemyLootDrops(enemy, partyLeader, world) {
 
   const owner = chooseLootOwner(enemy, partyLeader);
   const ownerSlot = owner?.slot || owner?.playerNumber || 1;
-  const ownerLabel = ownerSlot === 2 ? 'P2' : 'P1';
+  const ownerLabel = `P${ownerSlot}`;
   const rng=enemy.rewardSeed?encounterRng(enemy.rewardSeed):Math.random;
   const drops = rollEnemyLootSafe(enemy, world,rng).filter(drop=>!enemy.orchardCustodian||drop.item!=='orrakaiFoundersSignet');
   drops.push(...rollPoiLoot(enemy,rng));

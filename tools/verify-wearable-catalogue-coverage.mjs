@@ -10,7 +10,7 @@ for(const item of items){
  const prefix='assets/art/sprites/'+fit.sheet;
  for(const suffix of ['.png','.json','-icons.png','-icons.json'])assert(fs.existsSync(prefix+suffix),item.id+' missing '+suffix);
  const meta=JSON.parse(fs.readFileSync(prefix+'.json')),icons=JSON.parse(fs.readFileSync(prefix+'-icons.json'));
- assert.equal(meta.frames,4);assert.equal(meta.states.length,(fit.rows||3)*(fit.part===3?1:2));
+ assert.equal(meta.frames,4);assert.equal(meta.states.length,(fit.rows||3)*(fit.bodies??(fit.part===3?1:2)));
  assert(fit.row>=0&&fit.row<(fit.rows||3));assert.equal(icons.frames,fit.iconColumns);assert.equal(icons.states.length,1);
  if(item.slot==='trinket')assert(['ring','charm','lantern','shield','cloak'].includes(fit.kind));
 }

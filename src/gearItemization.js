@@ -1,10 +1,18 @@
 import {ITEMS} from './data.js';
-import {isGear,GEAR_BAG_CAPACITY,GEAR_RARITIES,canonicalGearRarity,instanceGearItem,gearDropChance,rollGearRarity} from './gearRarity.js';
+import {isGear,GEAR_BAG_CAPACITY,GEAR_RARITIES,canonicalGearRarity,instanceGearItem,gearDropChance,rollGearRarity,gearGradeAllowed} from './gearRarity.js';
+import {endgameLootPool,ENDGAME_LOOT_SHARE} from './endgameEquipmentData.js';
 export function gearBagCount(player){return (player?.inventory||[]).reduce((n,e)=>n+(isGear(ITEMS[e.id])?Math.max(1,Number(e.qty)||1):0),0);}
 export function canCarryGear(player,id,qty=1){return !isGear(ITEMS[id])||gearBagCount(player)+Math.max(1,Number(qty)||1)<=GEAR_BAG_CAPACITY;}
+export function gearEquipReason(player,id,metadata={}){
+ const item=ITEMS[id];if(!item?.endgameExclusive)return '';
+ if(Number(player?.combatLevel||1)<item.minCombatLevel)return `Combat Level ${item.minCombatLevel} is required for ${item.name}.`;
+ if(!gearGradeAllowed(item,metadata.gearRarity||item.rarity))return `${item.name} exists only at ${GEAR_RARITIES[item.rarity].name} quality.`;
+ return '';
+}
 export function gearAcquisitionReason(player,id,qty=1,metadata={}){
  if(!isGear(ITEMS[id]))return '';
  if(!canCarryGear(player,id,qty))return 'Gear bag full (20 slots). Sell gear or visit a blacksmith to deconstruct it.';
+ const restricted=gearEquipReason(player,id,metadata);if(restricted)return restricted;
  if(GEAR_RARITIES[canonicalGearRarity(metadata.gearRarity||ITEMS[id].rarity)].rank>=4&&Number(player?.combatLevel||1)<50)return 'Combat Level 50 is required to obtain Mythical or Primordial gear.';
  return '';
 }
@@ -20,8 +28,13 @@ export function gearRewardReason(player,rewards=[]){
 export function randomGearPool(){return Object.values(ITEMS).filter(item=>isGear(item)&&!item.questItem&&!item.noRandomDrop);}
 export function rollUniversalGear(enemy,owner,rng=Math.random){
  if(rng()>=gearDropChance(enemy))return null;
- const pool=randomGearPool();if(!pool.length)return null;
- const item=pool[Math.min(pool.length-1,Math.floor(Math.max(0,rng())*pool.length))];
+ // Keep the existing chance/base/rarity RNG consumption order for old seeded loot.
+ let selection=Math.max(0,Math.min(.999999999,rng()));
  const rawLevel=Number(owner?.combatLevel??owner?.skillState?.combat?.level??owner?.level),level=Number.isFinite(rawLevel)?Math.max(1,Math.floor(rawLevel)):1;
- return {item:item.id,qty:1,upgradeTier:1,gearRarity:rollGearRarity(level,rng),itemLevel:level,rarityRollVersion:1};
+ const rarity=rollGearRarity(level,rng),exclusive=endgameLootPool(rarity,level,enemy);
+ let pool=randomGearPool();
+ if(exclusive.length){if(selection<ENDGAME_LOOT_SHARE){pool=exclusive;selection/=ENDGAME_LOOT_SHARE;}else selection=(selection-ENDGAME_LOOT_SHARE)/(1-ENDGAME_LOOT_SHARE);}
+ if(!pool.length)return null;
+ const item=pool[Math.min(pool.length-1,Math.floor(selection*pool.length))];
+ return {item:item.id,qty:1,upgradeTier:1,gearRarity:rarity,itemLevel:level,rarityRollVersion:1};
 }

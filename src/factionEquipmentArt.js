@@ -98,6 +98,8 @@ export function drawFactionHelm(ctx,profile,facing,x,y,bob=0,pose={}){
  ctx.restore();return true;
 }
 export function drawFactionCloak(ctx,actor,facing,bob=0,pose={},front=false){
+ const id=refId(actor.equipment?.trinket);
+ if(fittedWearable(id)?.kind==='cloak'&&(facing==='up')===front&&drawCatalogueAccessory(ctx,id,facing,0,0,bob))return;
  const item=ENEMY_EQUIPMENT_ITEMS[refId(actor.equipment?.trinket)];
  if(!item||item.visualPart!=='trinket'||(facing==='up')!==front)return;
  if(drawCatalogueAccessory(ctx,item.id,facing,0,0,bob))return;

@@ -1,6 +1,6 @@
 import { ITEMS } from './data.js';
 import {workshopAccessStatus} from './workshopAccess.js';
-import {canCarryGear} from './gearItemization.js';
+import {canCarryGear,gearEquipReason} from './gearItemization.js';
 
 export const MAX_UPGRADE_TIER = 20;
 export const EQUIPMENT_SLOTS = Object.freeze(['weapon','helm','chest','legs','trinket']);
@@ -8,6 +8,8 @@ const GOLD = [0,0,20,28,36,44,150,220,320,460,660,800,1050,1400,1750,2100,2450,2
 export const isTieredEquipment = item => ['weapon','armour','trinket'].includes(item?.type);
 const tier = value => Math.min(MAX_UPGRADE_TIER,Math.max(1,Math.floor(Number(value)||1)));
 function instance(player,id,metadata={}) {
+  const item=ITEMS[id];
+  if(item?.endgameExclusive)metadata={...metadata,gearRarity:item.rarity,rarityRollVersion:1,itemLevel:Math.max(item.minCombatLevel,Math.floor(Number(metadata.itemLevel||player?.combatLevel)||1))};
   const sequence=Number(player.gearInstanceSequence);
   player.gearInstanceSequence=(Number.isSafeInteger(sequence)&&sequence>=0?sequence:0)+1;
   return {...metadata,id,qty:1,instanceId:metadata.instanceId || `${player.profileId || player.name || 'player'}:gear:${player.gearInstanceSequence}`,upgradeTier:tier(metadata.upgradeTier)};
@@ -115,6 +117,7 @@ export function equipGearEntry(player,bagIndex) {
   normalizeEquipmentProgression(player);
   const entry=player.inventory[bagIndex],item=ITEMS[entry?.id],slot=item?.slot==='jewelry'?'trinket':item?.slot;
   if(!EQUIPMENT_SLOTS.includes(slot)||!isTieredEquipment(item))return false;
+  if(gearEquipReason(player,entry.id,entry))return false;
   const previous=player.equippedGear[slot];
   player.inventory.splice(bagIndex,1);
   if(previous)player.inventory.push(previous);

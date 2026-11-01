@@ -16,7 +16,8 @@ const {drawWearableArt,drawLegwearArt}=await import('../src/equipmentArt.js');
 const {getHumanAnimationPose}=await import('../src/playerAnimationController.js');
 const {drawFactionGuard,isFactionGuard}=await import('../src/factionEquipmentArt.js');
 const {sampleArmoredArms}=await import('../src/meleeArmArt.js');
-const items=Object.values(ITEMS).filter(i=>['helm','chest','legs','trinket'].includes(i.slot));
+// Endgame ensembles have their own loot/equip/pose suite; retain this original catalogue contract.
+const items=Object.values(ITEMS).filter(i=>!i.endgameExclusive&&['helm','chest','legs','trinket'].includes(i.slot));
 assert.equal(items.length,120,'Catalogue changed: update authored manifest and coverage');
 for(const item of items){const fit=fittedWearable(item.id);assert(fit,'Missing authored art: '+item.id);asset(fit.sheet);asset(fit.sheet+'-icons');assert(itemIconMarkup(item).includes(fit.sheet+'-icons.png'));}
 for(const n of ['human-male','human-female','human-male-attack','human-female-attack','human-male-cast','human-female-cast','heads-custom','armor-motion-leather','armor-motion-plate','armor-motion-cloth'])asset(n);

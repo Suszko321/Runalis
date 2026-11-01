@@ -8,7 +8,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
   await require('./browser-game-smoke.cjs')(page,base);await page.waitForFunction(()=>wearableReviewGame()?.started);
   const result=await page.evaluate(async()=>{
    const {ITEMS}=await import('/src/data.js'),{createPlayer,addItem}=await import('/src/player.js'),{equipGearEntry}=await import('/src/equipmentProgressionSystem.js'),{asset,spriteArtStatus}=await import('/src/spriteArt.js'),{fittedWearable}=await import('/src/playerWearableArt.js'),{drawHumanActor}=await import('/src/humanRenderer.js'),{itemIconMarkup}=await import('/src/gearVisualStyle.js');
-   const items=Object.values(ITEMS).filter(i=>['helm','chest','legs','trinket'].includes(i.slot)),actors=[];
+   const items=Object.values(ITEMS).filter(i=>!i.endgameExclusive&&['helm','chest','legs','trinket'].includes(i.slot)),actors=[];
    for(const item of items){
     const actor=createPlayer('Wearable review');actor.equipment={weapon:'veyrRapier'};actor.equippedGear={};
     if(!addItem(actor,item.id,1,{gearRarity:'common',itemLevel:1}))throw Error('Add failed '+item.id);

@@ -1,4 +1,5 @@
 import {MYTHICAL_SETS} from './mythicalEquipmentData.js';
+import {ENDGAME_ENSEMBLES} from './endgameEquipmentData.js';
 import {equippedGearItem} from './gearItemization.js';
 import {EQUIPMENT_SLOTS} from './equipmentProgressionSystem.js';
 // setBonusSystem.js
@@ -8,6 +9,7 @@ import { ITEMS } from './data.js';
 
 export const ARMOUR_SETS = {
   ...MYTHICAL_SETS,
+  ...ENDGAME_ENSEMBLES,
   graveborn: {
     id: 'graveborn',
     name: 'Graveborn Set',

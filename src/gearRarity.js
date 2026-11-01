@@ -10,7 +10,8 @@ export const GEAR_RARITIES=Object.freeze({
 });
 export function canonicalGearRarity(value){return ({occult:'rare',epic:'legendary',relic:'legendary',ancient:'primordial',mythical:'mythic'})[value]||(GEAR_RARITIES[value]?value:'common');}
 export const isGear=item=>['weapon','armour','trinket'].includes(item?.type);
-export function gearRarity(base,entry){return canonicalGearRarity(entry?.gearRarity||base?.rarity);}
+export function gearGradeAllowed(base,rarity){return !base?.allowedGearRarities||base.allowedGearRarities.includes(canonicalGearRarity(rarity));}
+export function gearRarity(base,entry){const grade=canonicalGearRarity(entry?.gearRarity||base?.rarity);return gearGradeAllowed(base,grade)?grade:canonicalGearRarity(base.rarity);}
 export function instanceGearItem(base,entry){
  if(!base||!isGear(base))return base;
  if(base.gearInstanceResolved)return base;

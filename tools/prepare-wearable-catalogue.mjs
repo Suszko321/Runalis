@@ -21,14 +21,14 @@ for(const faction of factions){
   const id=`enemy${faction}${part}`,p=getGearVisualProfile(id,ITEMS[id]);manifest.body.push({id,sheet,row,rows:6,part:ITEMS[id].slot==='helm'?0:ITEMS[id].slot==='chest'?1:2,color:p.base,iconColumns:6});
  }
 }
-const core=Object.values(ITEMS).filter(i=>['helm','chest','legs'].includes(i.slot)&&!i.enemyCollectible&&!['graveboundHelm','patchedRoadLeathers','graveboundGreaves'].includes(i.id));
+const core=Object.values(ITEMS).filter(i=>['helm','chest','legs'].includes(i.slot)&&!i.endgameExclusive&&!i.enemyCollectible&&!['graveboundHelm','patchedRoadLeathers','graveboundGreaves'].includes(i.id));
 for(const [n,item]of core.entries()){
  if(!designs[item.id])throw Error('Missing art direction '+item.id);
  const group=Math.floor(n/8),p=getGearVisualProfile(item.id,item),ornament=['crown','halo'].includes(p.silhouette);
  manifest.body.push({id:item.id,sheet:`player-wearables-collection-${group+1}`,row:n%8,rows:8,part:{helm:0,chest:1,legs:2}[item.slot],color:p.base,iconColumns:8,
   ...(ornament?{headOffset:p.silhouette==='halo'?-10:-5,rects:[[20,8,24,p.silhouette==='halo'?7:12],[21,9,22,p.silhouette==='halo'?7:11]]}:{}),design:designs[item.id]});
 }
-const accessories=Object.values(ITEMS).filter(i=>i.slot==='trinket');
+const accessories=Object.values(ITEMS).filter(i=>i.slot==='trinket'&&!i.endgameExclusive);
 for(const [n,item]of accessories.entries()){
  const p=getGearVisualProfile(item.id,item),kind=item.visualPart==='trinket'?'cloak':item.visualPart==='guard'||/shield|aegis|bulwark/i.test(item.id)?'shield':/ring|signet/i.test(item.id)?'ring':item.id==='runalisLantern'?'lantern':'charm';
  const details={crackedVowShield:'cracked dark iron kite shield with faded ivory vow cross',ironwoodShield:'round iron-banded brown wooden shield',dawnwardAegis:'silver and brass kite shield, small sun insignia',oathboundBulwark:'heavy dark silver tower shield, antique gold oath emblem',runalisLantern:'small weathered brass lantern with warm pale glass, no surrounding glow',zephyrglassAmulet:'silver pendant with blue grey faceted glass',seraphsBrokenWing:'small ivory broken feather wing relic with gold binding',thornCharm:'thornwood knot charm with one dull red bead',paleRune:'bone rune pendant on dark cord',ironOathRing:'dark steel signet ring with tiny brass oath inset',redSealRing:'dark silver ring with red wax-like stone',watcherGlassCharm:'slate blue glass eye pendant with silver edging',waterSaintCharm:'weathered silver water drop medallion',tideglassHeart:'faceted turquoise glass heart in dark silver prongs',orrakaiFoundersSignet:'antique brass signet ring, dark inset and tiny founder crest',preservedNameCharm:'worn brown cord and small engraved iron name tag',neutralMemorialSeal:'restrained aged silver memorial seal with small open circle inscription'};

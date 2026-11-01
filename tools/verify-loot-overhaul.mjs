@@ -32,7 +32,7 @@ const actor=(classId='classless')=>{const p=createPlayer('Loot '+classId);choose
 const world=()=>({mode:'dungeon',name:'Briar Crypt',width:30,height:22,tiles:Array.from({length:22},()=>Array.from({length:30},()=>({biome:'grass',passable:true}))),enemies:[],objects:[],effects:[],drops:[]});
 const foe=(id='test',x=295,y=320)=>({id,name:'Test enemy',kind:'rat',x,y,hp:100000,maxHp:100000,xp:80,level:1,r:12,radius:12,aggro:3,attackCooldown:100});
 const aim={combatAimX:1,combatAimY:0,hasAim:true,ability0Held:true},time=()=>performance.now()/1000+30;
-const equip=(p,id)=>{if(GEAR_RARITIES[canonicalGearRarity(ITEMS[id]?.rarity)].rank>=4){p.skillState.combat.level=Math.max(50,p.skillState.combat.level);p.combatLevel=p.skillState.combat.level;}assert.ok(addItem(p,id));assert.ok(equipGearEntry(p,p.inventory.findLastIndex(i=>i.id===id)));};
+const equip=(p,id)=>{const required=Math.max(ITEMS[id]?.minCombatLevel||1,GEAR_RARITIES[canonicalGearRarity(ITEMS[id]?.rarity)].rank>=4?50:1);if(required>1){p.skillState.combat.level=Math.max(required,p.skillState.combat.level);p.combatLevel=p.skillState.combat.level;}assert.ok(addItem(p,id));assert.ok(equipGearEntry(p,p.inventory.findLastIndex(i=>i.id===id)));};
 const set=(p,id,n=3)=>{for(const item of MYTHICAL_SETS[id].pieces.slice(0,n))equip(p,item);};
 const funds=(p)=>{p.gold=1e6;for(const id of ['ironScrap','arcaneDust','sturdyHardwood','amberResin','fieldstone','blackironOre','thornsilkFiber','graveSilver','spiritwoodSplinter','lumenQuartz','tideglassCrystal','oathsteelShard','towerFragment'])addItem(p,id,1000);workshopFixture(p);};
 const total=(p,id)=>p.inventory.filter(i=>i.id===id).reduce((n,i)=>n+i.qty,0);
@@ -43,7 +43,7 @@ test('all new acquisitions, duplicate copies and swaps retain individual tiers',
  const old=p.inventory.findIndex(i=>i.instanceId===original);assert.equal(p.inventory[old].upgradeTier,5);equipGearEntry(p,old);assert.equal(getEquipmentTier(p,'weapon'),5);unequipGearEntry(p,'weapon');assert.equal(p.inventory.find(i=>i.instanceId===original).upgradeTier,5);
 });
 test('every rarity shares twenty tiers, fixed acquisition stats and one cap',()=>{
- for(const rarity of ['common','uncommon','rare','occult','epic','relic','legendary','mythic','ancient']){
+ for(const rarity of ['common','uncommon','rare','occult','epic','relic','legendary','mythic','primordial','ancient']){
   const item=Object.values(ITEMS).find(i=>i.rarity===rarity&&isTieredEquipment(i)) || {...ITEMS.oldKnife,id:'verify-'+rarity,rarity};const synthetic=!ITEMS[item.id];if(synthetic)ITEMS[item.id]=item;const p=actor();equip(p,item.id);assert.equal(getEquipmentTier(p,item.slot),1);funds(p);
   for(let n=2;n<=20;n++){assert.ok(commitGearUpgrade(p,makeUpgradeQuote(p,item.slot)).ok);assert.equal(getEquipmentTier(p,item.slot),n);}
   assert.equal(makeUpgradeQuote(p,item.slot),null);assert.equal(getTierUpgradeCost(item,21),null);if(synthetic)delete ITEMS[item.id];
