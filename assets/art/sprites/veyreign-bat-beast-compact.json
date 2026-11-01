@@ -1,0 +1,14 @@
+{
+  "source": "assets/art/sprites/veyreign-bat-beast.png",
+  "width": 96,
+  "height": 80,
+  "columns": 4,
+  "rows": 6,
+  "timeSlots": 16,
+  "fps": 12,
+  "pivot": [
+    48,
+    74
+  ],
+  "pixelIdenticalToSource": true
+}

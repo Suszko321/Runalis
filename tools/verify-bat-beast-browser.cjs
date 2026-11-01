@@ -9,10 +9,11 @@ const fs=require('node:fs');
   const result=await page.evaluate(async()=>{
    const {drawVeyreignBat}=await import('/src/veyreignArt.js');
    const {asset}=await import('/src/spriteArt.js');
+   const {BAT_ATLASES,batAtlasColumn}=await import('/src/batAtlas.js');
    const {beginEnemyAttackPresentation}=await import('/src/enemyAttackPresentation.js');
-   const bat=asset('veyreign-bat-beast');
+   const bat=asset(BAT_ATLASES.bat);
    if(!bat.ready)await new Promise((resolve,reject)=>{bat.image.addEventListener('load',resolve,{once:true});bat.image.addEventListener('error',reject,{once:true});});
-   if(bat.image.width!==1536||bat.image.height!==480)throw Error('Atlas size mismatch');
+   if(bat.image.width!==384||bat.image.height!==480)throw Error('Atlas size mismatch');
    const canvas=document.createElement('canvas');canvas.width=560;canvas.height=780;
    document.body.replaceChildren(canvas);document.body.style.cssText='margin:0;background:#28232a';
    const c=canvas.getContext('2d');c.fillStyle='#28232a';c.fillRect(0,0,560,780);
@@ -31,7 +32,7 @@ const fs=require('node:fs');
       const visible=col%4===0;
       if(!drawVeyreignBat(c,e,visible?70+(col/4)*135:-1000,row*130+112))throw Error('Bat did not render');
       c.drawImage=draw;
-      if(args[1]!==col*96||args[2]!==row*80||args[3]!==96||args[4]!==80)throw Error(`Wrong crop ${row}/${col}: ${args.slice(1,5)}`);
+      if(args[1]!==batAtlasColumn('bat',row,col)*96||args[2]!==row*80||args[3]!==96||args[4]!==80)throw Error(`Wrong crop ${row}/${col}: ${args.slice(1,5)}`);
       calls++;
      }
     }

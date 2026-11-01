@@ -33,7 +33,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
  await page.setViewportSize({width:1200,height:720});
  await page.evaluate(async()=>{
   const {drawRoyalVampire,drawVampireBat,drawVampireEffect}=await import('/src/vampireArt.js'),{asset}=await import('/src/spriteArt.js');
-  for(const name of ['veyreign-bat-beast','veyreign-royal-blood-beast']){const a=asset(name);if(!a.ready)await new Promise((resolve,reject)=>{a.image.addEventListener('load',resolve,{once:true});a.image.addEventListener('error',reject,{once:true});});}
+  for(const name of ['veyreign-bat-beast-compact','veyreign-royal-blood-beast-compact','veyreign-royal-blood-beast-allied-compact']){const a=asset(name);if(!a.ready)await new Promise((resolve,reject)=>{a.image.addEventListener('load',resolve,{once:true});a.image.addEventListener('error',reject,{once:true});});}
   const c=document.createElement('canvas');c.width=1200;c.height=720;document.body.replaceChildren(c);document.body.style.cssText='margin:0;background:#18141d';const ctx=c.getContext('2d'),now=performance.now()/1000;
   ctx.fillStyle='#241d29';ctx.fillRect(0,0,1200,720);ctx.font='24px Georgia';ctx.fillStyle='#efc4ca';ctx.fillText('RUNALIS · Vampire bloodline',34,42);
   for(const [i,label]of ['Transformation','Royal claws','Jaw beam','Bat Beast'].entries()){

@@ -29,7 +29,12 @@ the boss encounter, transformation timing and boss size remain unchanged.
 The royal export preserves 112 × 80 cells, 48 timing slots per row, seven states,
 28 distinct authored poses, a shared 32-color palette and the existing feet pivot.
 The summon selects royal idle/attack/hit rows, not the old ordinary-bat crops.
-Its palette variant is built once and reused; alpha and source artwork are preserved.
+Its palette variant is exported ahead of time; alpha and source artwork are preserved.
+
+The November 1 mobile repair packs the same authored poses into four-column runtime
+atlases and retains the original animation timing through source-column mapping.
+The runtime royal/allied sheets are 448 × 560, avoiding the former 5,376-wide
+canvas recolour. See [mobile repair and verification](../mobile-bats/README.md).
 
 Major files: `src/batBeastEvolution.js`, `src/vampireArt.js`, summon synchronization
 in `src/combat.js`, the Call Bat Beast tooltip in `src/vampireData.js`, and

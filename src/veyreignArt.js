@@ -1,25 +1,26 @@
+import {BAT_ATLASES,batAtlasColumn} from './batAtlas.js';
 import {VEYREIGN_FERAL_MOVES} from './veyreignFeralCombat.js';
 import {VEYREIGN_TRANSFORM_SECONDS} from './veyreignTransformation.js';
 import {sampleEnemyAttackPresentation} from './enemyAttackPresentation.js';
 import {asset} from './spriteArt.js';
 import {VEYREIGN_MOVES} from './veyreignCombat.js';
-const bat=asset('veyreign-bat-beast'),royal=asset('veyreign-royal-blood-beast'),deaths=new WeakMap();
-export const royalBeastScale=height=>Math.max(3,Math.min(4,Math.floor((height-150)/80)));
+const bat=asset(BAT_ATLASES.bat),royal=asset(BAT_ATLASES.royal),deaths=new WeakMap();
+export const royalBeastScale=(height,width=Infinity)=>Math.min(Math.max(3,Math.min(4,Math.floor((height-150)/80))),Math.max(1,Math.floor((width-32)/112)));
 export function drawVeyreignBat(c,e,x,y){
  if(e.veyreignFeral){
   if(!royal?.ready)return false;const now=performance.now()/1000,trans=e.veyreignTransform,dead=e.dead||e.hp<=0,p=sampleEnemyAttackPresentation(e);
   if(trans!=null&&trans<.7)return false;
   if(dead&&!deaths.has(e))deaths.set(e,now);const row=trans!=null?0:dead?6:e.hitFlash>0?5:p?.phase==='execution'?3:p?.phase==='recovery'?4:p?2:1;
-  const col=trans!=null?Math.min(47,Math.floor(trans/VEYREIGN_TRANSFORM_SECONDS*48)):dead?Math.min(47,Math.floor((now-deaths.get(e))/1.3*48)):Math.floor(now*12)%48;const maximum=royalBeastScale(c.canvas.height),scale=trans!=null?Math.min(maximum,1+Math.floor(trans/VEYREIGN_TRANSFORM_SECONDS*maximum)):maximum;
+  const col=trans!=null?Math.min(47,Math.floor(trans/VEYREIGN_TRANSFORM_SECONDS*48)):dead?Math.min(47,Math.floor((now-deaths.get(e))/1.3*48)):Math.floor(now*12)%48;const maximum=royalBeastScale(c.canvas.height,c.canvas.width),scale=trans!=null?Math.min(maximum,1+Math.floor(trans/VEYREIGN_TRANSFORM_SECONDS*maximum)):maximum;
   c.save();c.imageSmoothingEnabled=false;c.fillStyle='rgba(12,3,14,.5)';c.beginPath();c.ellipse(x,y+8,90,23,0,0,Math.PI*2);c.fill();
   // Wider authored beast silhouette, with the original boss height/ground origin.
-  c.translate(Math.round(x),Math.round(y-76*scale));if(e.dirX<0)c.scale(-1,1);c.drawImage(royal.image,col*112,row*80,112,80,-56*scale,0,112*scale,80*scale);c.restore();return true;
+  c.translate(Math.round(x),Math.round(y-76*scale));if(e.dirX<0)c.scale(-1,1);c.drawImage(royal.image,batAtlasColumn('royal',row,col)*112,row*80,112,80,-56*scale,0,112*scale,80*scale);c.restore();return true;
  }
  if(!e.batBeast||!bat?.ready)return false;
  const now=performance.now()/1000,dead=e.hp<=0||e.dead,p=sampleEnemyAttackPresentation(e),row=dead?5:e.hitFlash>0?4:p?.phase==='execution'?2:p?.phase==='recovery'?3:p?1:0;
  if(dead&&!deaths.has(e))deaths.set(e,now);const col=dead?Math.min(15,Math.floor((now-deaths.get(e))/.9*16)):Math.floor(now*12)%16;
  // Wider art cells contain the authored wings/tail; retain vertical scale and ground origin.
- c.save();c.imageSmoothingEnabled=false;c.translate(Math.round(x),Math.round(y-82));if(e.dirX<0)c.scale(-1,1);c.drawImage(bat.image,col*96,row*80,96,80,-58,0,115.2,96);c.restore();return true;
+ c.save();c.imageSmoothingEnabled=false;c.translate(Math.round(x),Math.round(y-82));if(e.dirX<0)c.scale(-1,1);c.drawImage(bat.image,batAtlasColumn('bat',row,col)*96,row*80,96,80,-58,0,115.2,96);c.restore();return true;
 }
 export function drawVeyreignGround(c,w,cam){
  if(!w.dungeonState?.veyreign)return;c.save();

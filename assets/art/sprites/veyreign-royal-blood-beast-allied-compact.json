@@ -1,0 +1,15 @@
+{
+  "source": "assets/art/sprites/veyreign-royal-blood-beast.png",
+  "width": 112,
+  "height": 80,
+  "columns": 4,
+  "rows": 7,
+  "timeSlots": 48,
+  "fps": 12,
+  "pivot": [
+    56,
+    74
+  ],
+  "pixelIdenticalToSource": true,
+  "palette": "Original runtime allied silver-blue ramp; alpha unchanged"
+}
