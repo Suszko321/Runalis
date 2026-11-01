@@ -1,0 +1,29 @@
+{
+  "width": 64,
+  "height": 80,
+  "frames": 4,
+  "states": [
+    "maleironGreaves",
+    "malewatcherGreaves",
+    "malescavengedIronHelm",
+    "maleroadwardenCoat",
+    "malegraveclothGreaves",
+    "malebrigandMask",
+    "maleveyrSilkMantle",
+    "maleblackbriarCrown",
+    "femaleironGreaves",
+    "femalewatcherGreaves",
+    "femalescavengedIronHelm",
+    "femaleroadwardenCoat",
+    "femalegraveclothGreaves",
+    "femalebrigandMask",
+    "femaleveyrSilkMantle",
+    "femaleblackbriarCrown"
+  ],
+  "directions": [
+    "down",
+    "right",
+    "up",
+    "left"
+  ]
+}

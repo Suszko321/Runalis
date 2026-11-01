@@ -68,7 +68,8 @@ export function drawMeleeArms(ctx,actor,pose,facing,bob=0,layer='arms',selection
   const ref=actor.equipment?.chest,id=typeof ref==='string'?ref:ref?.id;
   const gearProfile=getGearVisualProfile(id,ITEMS[id]||{});
   const family=armorMotionFamily(gearProfile,'chest');
-  const row=family==='plate'?1:family==='cloth'?2:0;
+  // Fitted garments retain the base arm, including its authored pixel contour.
+  const row=!armored?0:family==='plate'?1:family==='cloth'?2:0;
   const female=(actor.bodyType||actor.appearance?.bodyType)==='female';
   const original=armImage(actor.skin,!armored?(actor.shirt||'#f2a51f'):null,female);
   const image=armored?humanArmMaterialImage(original,gearProfile,family,actor.skin):original,rig=sampleArmoredArms(actor,pose,facing,bob);

@@ -1,6 +1,20 @@
 import {humanHeadLayout} from './humanHeadLayout.js';
-export const fittedChest=id=>id==='patchedRoadLeathers';
-export const fittedLegs=id=>id==='graveboundGreaves';
+import {WEARABLE_CATALOGUE_ART} from './playerWearableCatalogue.js';
+const fittings={
+ patchedRoadLeathers:{sheet:'player-wearables-first-pass',row:1,part:1,color:'#775337'},
+ graveboundGreaves:{sheet:'player-wearables-first-pass',row:2,part:2},
+ graveboundHelm:{sheet:'player-wearables-first-pass',row:0,part:0}
+};
+for(const faction of ['Covenant','LastDawn'])for(const [row,part]of ['Helm','Chest','Legs','Robe','ScoutHelm','ScoutChest'].entries()){
+ fittings[`enemy${faction}${part}`]={sheet:`player-wearables-${faction==='Covenant'?'covenant':'last-dawn'}`,row,part:part.includes('Helm')?0:part==='Legs'?2:1,rows:6,
+  color:part==='ScoutChest'?'#66503b':faction==='Covenant'?'#b8b8ae':'#49373c'};
+}
+Object.assign(fittings,WEARABLE_CATALOGUE_ART);
+for(const fit of Object.values(fittings))fit.iconColumns??=fit.rows||3;
+export const fittedWearable=id=>fittings[id];
+export const fittedChest=id=>fittings[id]?.part===1;
+export const fittedLegs=id=>fittings[id]?.part===2;
+export const fittedShirt=id=>fittings[id]?.color||'#775337';
 export const wearableId=ref=>typeof ref==='string'?ref:ref?.id;
 const pixels=new WeakMap();
 const rects=[[[20,8,24,22],[23,33,18,18],[19,48,26,30]],[[21,9,22,21],[24,33,16,18],[20,48,24,30]]];
@@ -12,9 +26,9 @@ function sourcePixels(image){
 }
 // Material transfer changes RGB only. Source alpha, limb positions, outlines,
 // frame choice and the existing body/weapon animation remain authoritative.
-export function applyFittedPlayerGarments(frame,original,bodyType,equipment,image){
- const chest=fittedChest(wearableId(equipment?.chest)),legs=fittedLegs(wearableId(equipment?.legs));if(!chest&&!legs||!image)return;
- const source=sourcePixels(image),body=bodyType==='female'?1:0,width=frame.width,data=frame.data;
+export function applyFittedPlayerGarments(frame,original,bodyType,equipment,images){
+ const chest=fittedChest(wearableId(equipment?.chest)),legs=fittedLegs(wearableId(equipment?.legs));if(!chest&&!legs)return;
+ const body=bodyType==='female'?1:0,width=frame.width,data=frame.data;
  for(let row=0;row<4;row++)for(let col=0;col<width/64;col++){
   const legBounds=[{left:64,right:0,top:80,bottom:0},{left:64,right:0,top:80,bottom:0}];
   if(legs)for(let y=54;y<80;y++)for(let x=12;x<53;x++){
@@ -34,19 +48,21 @@ export function applyFittedPlayerGarments(frame,original,bodyType,equipment,imag
     v=clamp((y-51)/Math.max(1,box.bottom-51),0,1);
    }
    if(part<0)continue;
+   const slot=part===1?'chest':'legs',fit=fittedWearable(wearableId(equipment?.[slot])),image=images[slot];if(!image)continue;
+   const source=sourcePixels(image);
    const [rx,ry,rw,rh]=rects[body][part],tx=clamp(Math.round(u*(rw-1)),0,rw-1),ty=clamp(Math.round(v*(rh-1)),0,rh-1);
-   const n=(((body*3+part)*80+ry+ty)*image.width+row*64+rx+tx)*4;
+   const n=(((body*(fit.rows||3)+fit.row)*80+ry+ty)*image.width+row*64+rx+tx)*4;
    if(source[n+3]<128)continue;
    const light=part===1?clamp(.8+(r+g+b)/1075,.85,1.08):clamp(.8+(r+g+b)/1200,.82,1.03);
    for(let k=0;k<3;k++)data[i+k]=Math.round(source[n+k]*light);
   }
  }
 }
-export function drawFittedPlayerHelm(ctx,image,facing,x,y,bob,pose){
+export function drawFittedPlayerHelm(ctx,image,facing,x,y,bob,pose,fit={row:0,rows:3}){
  if(!image)return false;
  const body=pose.bodyType==='female'?1:0,col={down:0,right:1,up:2,left:3}[facing]??0;
- const [rx,ry,w,h]=rects[body][0],head=humanHeadLayout({...pose,facing,bob}),eye=head.at(24,head.eyeY);
- const top=Math.round(y+eye.y-(body?16:17));
+ const [rx,ry,w,h]=fit.rects?.[body]||rects[body][0],head=humanHeadLayout({...pose,facing,bob}),eye=head.at(24,head.eyeY);
+ const top=Math.round(y+eye.y-(body?16:17)+(fit.headOffset||0));
  ctx.save();ctx.imageSmoothingEnabled=false;
- ctx.drawImage(image,col*64+rx,body*3*80+ry,w,h,Math.round(x-w/2+head.originX),top,w,h);ctx.restore();return true;
+ ctx.drawImage(image,col*64+rx,(body*(fit.rows||3)+fit.row)*80+ry,w,h,Math.round(x-w/2+head.originX),top,w,h);ctx.restore();return true;
 }

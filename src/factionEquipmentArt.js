@@ -4,6 +4,8 @@ import {FACTION_STYLES} from './enemyVisualProfiles.js';
 import {ENEMY_EQUIPMENT_ITEMS} from './enemyEquipmentData.js';
 import {asset} from './spriteArt.js';
 import {humanoidGearRamp} from './humanEquipmentSprites.js';
+import {drawCatalogueAccessory} from './catalogueAccessoryArt.js';
+import {fittedWearable} from './playerWearableArt.js';
 const tinted=new Map();
 const infectedUniforms=new Map();
 const refId=ref=>typeof ref==='string'?ref:ref?.id||ref?.itemId;
@@ -98,6 +100,7 @@ export function drawFactionHelm(ctx,profile,facing,x,y,bob=0,pose={}){
 export function drawFactionCloak(ctx,actor,facing,bob=0,pose={},front=false){
  const item=ENEMY_EQUIPMENT_ITEMS[refId(actor.equipment?.trinket)];
  if(!item||item.visualPart!=='trinket'||(facing==='up')!==front)return;
+ if(drawCatalogueAccessory(ctx,item.id,facing,0,0,bob))return;
  const s=FACTION_STYLES[item.visualFactionId],side=facing==='left'||facing==='right',sway=Math.round(Number(pose.cloakSway||0));
  ctx.save();ctx.translate(0,Math.round(bob));if(side)ctx.scale(facing==='left'?-1:1,1);
  const points=side?[[-9,-27],[-1,-24],[-4,4],[-12+sway,11],[-17+sway,8]]:[[-8,-26],[8,-26],[12+sway,9],[4+sway,13],[-12+sway,10]];
@@ -146,6 +149,7 @@ export function drawFactionWeapon(ctx,id,profile,x,y,side=1){
  ctx.restore();return true;
 }
 function drawGuardPixels(ctx,item,facing){
+ if(drawCatalogueAccessory(ctx,item.id,facing,0,0,0))return;
  const s=FACTION_STYLES[item.visualFactionId],source=asset('weapons-equipped');
  if(!source?.ready)return;
  const image=factionArmorImage(source.image,{...s,faction:item.visualFactionId,slot:'trinket',silhouette:'shield'});
@@ -155,9 +159,13 @@ function drawGuardPixels(ctx,item,facing){
  const scale=.42;ctx.drawImage(image,80,224,80,112,-39*scale,-72*scale,80*scale,112*scale);
  emblem(ctx,s,0,-8);ctx.restore();
 }
-export function isFactionGuard(actor){return ENEMY_EQUIPMENT_ITEMS[refId(actor.equipment?.trinket)]?.visualPart==='guard';}
+export function isFactionGuard(actor){const id=refId(actor.equipment?.trinket);return fittedWearable(id)?.kind==='shield'||ENEMY_EQUIPMENT_ITEMS[id]?.visualPart==='guard';}
 export function drawFactionGuard(ctx,actor,facing,hand){
- const item=ENEMY_EQUIPMENT_ITEMS[refId(actor.equipment?.trinket)];if(item?.visualPart!=='guard')return;
+ const id=refId(actor.equipment?.trinket),item=ENEMY_EQUIPMENT_ITEMS[id];
+ if(fittedWearable(id)?.kind==='shield'){
+  if(drawCatalogueAccessory(ctx,id,facing,hand[0],hand[1]-3,0))return;
+ }
+ if(item?.visualPart!=='guard')return;
  ctx.save();ctx.translate(Math.round(hand[0]),Math.round(hand[1])-3);drawGuardPixels(ctx,item,facing);ctx.restore();
 }
 

@@ -2,7 +2,7 @@
 import {usesMeleeRig} from './meleeRig.js';
 import {usesSideLocomotion,sampleLocomotionArms,locomotionArtFrame} from './humanLocomotionRig.js';
 import {drawSideLegArt} from './sideLegArt.js';
-import {applyFittedPlayerGarments,fittedChest,fittedLegs,wearableId} from './playerWearableArt.js';
+import {applyFittedPlayerGarments,fittedChest,fittedLegs,fittedWearable,wearableId} from './playerWearableArt.js';
 import {getEnemyVisualProfile} from './enemyVisualProfiles.js';
 import {sampleEnemyAttackPresentation} from './enemyAttackPresentation.js';
 import {blightedUniformArt} from './factionEquipmentArt.js';
@@ -43,15 +43,16 @@ function humanVariant(bodyType, colors, attack=false) {
   const a = asset(name);
   if (!a?.ready) return null;
   const chest=wearableId(colors.wearables?.chest),legs=wearableId(colors.wearables?.legs);
-  const fitted=fittedChest(chest)||fittedLegs(legs)?asset('player-wearables-first-pass'):null;
-  const key = `${name}|${colors.skin}|${colors.hair}|${colors.shirt}|${colors.pants}|${colors.boots}|${fittedChest(chest)?chest:''}|${fittedLegs(legs)?legs:''}|${!!fitted?.ready}`;
+  const fitted=Object.fromEntries([['chest',chest],['legs',legs]].map(([slot,id])=>[slot,fittedWearable(id)?asset(fittedWearable(id).sheet):null]));
+  const fittingReady=Object.values(fitted).some(a=>a?.ready);
+  const key = `${name}|${colors.skin}|${colors.hair}|${colors.shirt}|${colors.pants}|${colors.boots}|${fittedChest(chest)?chest:''}|${fittedLegs(legs)?legs:''}|${!!fitted.chest?.ready}|${!!fitted.legs?.ready}`;
   if (variants.has(key)) return variants.get(key);
   const canvas = document.createElement('canvas');
   canvas.width = a.image.width; canvas.height = a.image.height;
   const c = canvas.getContext('2d', { willReadFrequently: true });
   c.drawImage(a.image,0,0);
   const frame = c.getImageData(0,0,canvas.width,canvas.height);
-  const original=fitted?.ready?new Uint8ClampedArray(frame.data):null;
+  const original=fittingReady?new Uint8ClampedArray(frame.data):null;
   const ramps = {
     skin: rgb(colors.skin,[241,183,122]), hair: rgb(colors.hair,[100,60,29]),
     shirt: rgb(colors.shirt,[104,71,39]), pants: rgb(colors.pants,[61,58,60]), boots: rgb(colors.boots,[102,63,31])
@@ -71,7 +72,7 @@ function humanVariant(bodyType, colors, attack=false) {
     const target=ramps[region];
     for(let k=0;k<3;k++) d[i+k]=Math.min(255,Math.round(target[k]*Math.max(.35,Math.min(1.65,level))));
   }
-  if(original)applyFittedPlayerGarments(frame,original,bodyType,colors.wearables,fitted.image);
+  if(original)applyFittedPlayerGarments(frame,original,bodyType,colors.wearables,Object.fromEntries(Object.entries(fitted).map(([slot,a])=>[slot,a?.ready?a.image:null])));
   c.putImageData(frame,0,0);
   if(variants.size>=MAX_VARIANTS) variants.delete(variants.keys().next().value);
   variants.set(key,canvas);

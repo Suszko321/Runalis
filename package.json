@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "build": "node tools/prepare-pages.mjs",
-    "check:engineering": "node tools/verify-engineering-foundation.mjs"
+    "check:engineering": "node tools/verify-engineering-foundation.mjs",
+    "check:wearables": "node tools/verify-wearable-catalogue-coverage.mjs"
   },
   "devDependencies": {
     "esbuild": "0.28.2"

@@ -1,0 +1,25 @@
+{
+  "width": 64,
+  "height": 80,
+  "frames": 4,
+  "states": [
+    "maleenemyEmberVeilHelm",
+    "maleenemyEmberVeilChest",
+    "maleenemyEmberVeilLegs",
+    "maleenemyEmberVeilRobe",
+    "maleenemyEmberVeilScoutHelm",
+    "maleenemyEmberVeilScoutChest",
+    "femaleenemyEmberVeilHelm",
+    "femaleenemyEmberVeilChest",
+    "femaleenemyEmberVeilLegs",
+    "femaleenemyEmberVeilRobe",
+    "femaleenemyEmberVeilScoutHelm",
+    "femaleenemyEmberVeilScoutChest"
+  ],
+  "directions": [
+    "down",
+    "right",
+    "up",
+    "left"
+  ]
+}

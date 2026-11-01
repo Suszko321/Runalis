@@ -1,8 +1,9 @@
 import {asset} from './spriteArt.js';
 import {drawArmorMotionArt} from './armorMotionArt.js';
-import {fittedChest,fittedLegs,drawFittedPlayerHelm} from './playerWearableArt.js';
+import {fittedChest,fittedLegs,fittedWearable,drawFittedPlayerHelm} from './playerWearableArt.js';
 import {TIDEGLASS_RAPIER_ART,drawTideglassRapierModel} from './tideglassRapierArt.js';
 import {isHandTrinket} from './handTrinketArt.js';
+import {drawCatalogueAccessory} from './catalogueAccessoryArt.js';
 import {drawFactionHelm,drawFactionTrinket,drawFactionWeapon,drawFactionGarmentDetail} from './factionEquipmentArt.js';
 import {bowSourceSide} from './bowOrientation.js';
 import {BOSS_ARMORY_ART} from './bossArmoryArtData.js';
@@ -68,9 +69,9 @@ export function drawEquippedArt(ctx,id,profile,x,y,side=1) {
 export function drawWearableArt(ctx,profile,facing,x,y,bob=0,pose={}) {
   if(!profile)return false;
   if(pose.fittedPlayerWearables&&profile.slot==='chest'&&fittedChest(profile.itemId))return true;
-  if(pose.fittedPlayerWearables&&profile.slot==='helm'&&profile.itemId==='graveboundHelm'){
-    const a=asset('player-wearables-first-pass');
-    return !!a?.ready&&drawFittedPlayerHelm(ctx,a.image,facing,x,y,bob,pose);
+  if(pose.fittedPlayerWearables&&profile.slot==='helm'&&fittedWearable(profile.itemId)?.part===0){
+    const fit=fittedWearable(profile.itemId),a=asset(fit.sheet);
+    return !!a?.ready&&drawFittedPlayerHelm(ctx,a.image,facing,x,y,bob,pose,fit);
   }
   if(drawFactionHelm(ctx,profile,facing,x,y,bob,pose))return true;
   if(profile.slot==='chest'&&drawArmorMotionArt(ctx,profile,'chest',facing,x,y,bob,pose)){drawFactionGarmentDetail(ctx,profile,facing,x,y,bob);return true;}
@@ -115,6 +116,9 @@ export function drawLegwearArt(ctx,profile,facing,x,y,bob=0,step=0,pose={}){
 }
 
 export function drawTrinketArt(ctx,id,facing,x,y,bob=0){
+  const fit=fittedWearable(id);
+  if(fit?.kind==='cloak')return true; // Drawn by the existing rear/front cloak layer.
+  if(fit?.part===3&&fit.kind!=='ring'&&drawCatalogueAccessory(ctx,id,facing,x,y,bob))return true;
   if(drawFactionTrinket(ctx,id,facing,x,y,bob))return true;
   if(isHandTrinket(id))return true;
   const a=asset('accessories-equipped');if(!a?.ready)return false;

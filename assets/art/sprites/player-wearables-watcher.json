@@ -1,0 +1,25 @@
+{
+  "width": 64,
+  "height": 80,
+  "frames": 4,
+  "states": [
+    "maleenemyWatcherHelm",
+    "maleenemyWatcherChest",
+    "maleenemyWatcherLegs",
+    "maleenemyWatcherRobe",
+    "maleenemyWatcherScoutHelm",
+    "maleenemyWatcherScoutChest",
+    "femaleenemyWatcherHelm",
+    "femaleenemyWatcherChest",
+    "femaleenemyWatcherLegs",
+    "femaleenemyWatcherRobe",
+    "femaleenemyWatcherScoutHelm",
+    "femaleenemyWatcherScoutChest"
+  ],
+  "directions": [
+    "down",
+    "right",
+    "up",
+    "left"
+  ]
+}

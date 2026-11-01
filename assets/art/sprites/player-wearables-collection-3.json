@@ -1,0 +1,29 @@
+{
+  "width": 64,
+  "height": 80,
+  "frames": 4,
+  "states": [
+    "malecrackedIronCap",
+    "maleknightHelm",
+    "malenecromancerHood",
+    "malewatcherHood",
+    "malepatchedTunic",
+    "maleleatherVest",
+    "malewardedChest",
+    "malegraveboundChest",
+    "femalecrackedIronCap",
+    "femaleknightHelm",
+    "femalenecromancerHood",
+    "femalewatcherHood",
+    "femalepatchedTunic",
+    "femaleleatherVest",
+    "femalewardedChest",
+    "femalegraveboundChest"
+  ],
+  "directions": [
+    "down",
+    "right",
+    "up",
+    "left"
+  ]
+}

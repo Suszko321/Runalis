@@ -16,6 +16,7 @@ const {sampleSideLocomotionArms}=await import('../src/humanLocomotionRig.js');
 const {sampleLocomotionArms}=await import('../src/humanLocomotionRig.js');
 const {getHumanAnimationPose}=await import('../src/playerAnimationController.js');
 const {restingWeaponGrip}=await import('../src/spriteArt.js');
+const {fittedWearable}=await import('../src/playerWearableArt.js');
 const items=Object.entries(ITEMS).filter(([,item])=>item.rarity==='legendary'&&item.slot);
 const directions=[['south',0,1],['east',1,0],['north',0,-1],['west',-1,0]];
 const ctx=createCanvas(160,160).getContext('2d');
@@ -88,7 +89,10 @@ for(const facing of ['left','right','up','down'])for(let gaitPhase=0;gaitPhase<4
 }
 for(const [id] of items.filter(([,item])=>item.slot==='trinket'))for(const facing of ['down','left','right']){
   ctx.clearRect(0,0,160,160);drawTrinketArt(ctx,id,facing,80,100);
-  const b=bounds(ctx);assert(b.width<=10&&b.height<=13,`${id}: oversized pendant`);
+  const b=bounds(ctx);
+  // Aegis/Bulwark are now authored shields on the free-hand layer, not pendants.
+  if(fittedWearable(id)?.kind==='shield')assert(b.width>10&&b.width<=24&&b.height>13&&b.height<=32,`${id}: shield source bounds`);
+  else assert(b.width<=10&&b.height<=13,`${id}: oversized pendant`);
 }
 for(const bodyType of ['male','female'])for(const facing of ['up','down']){
   const heights=[];

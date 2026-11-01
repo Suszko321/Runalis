@@ -285,3 +285,51 @@ memory, security or gameplay readiness claim follows solely from a green build.
   Reproduced identical errors from an isolated clean HEAD archive; this sheet adds
   24 inspected cells and zero errors. Eight approved player-sheet hashes remain.
   [Comparison, exact scope, prompts and limits](player-wearables-first-pass/README.md).
+
+### E28 · Covenant / Last Dawn fitted wearables · IMPLEMENTED, verified
+
+- Extended the anatomy-preserving garment path to twelve existing faction items:
+  helm, plate chest, greaves, ceremonial robe, scout hood and scout leathers for
+  each order. Added 48 authored directional designs, 96 native body registrations
+  and twelve matching raster icons. Covenant ivory/brass and Last Dawn oxblood/
+  blackened steel retain their distinct identity. Existing item IDs/stats remain.
+- Reproduced attack silhouette drift from the unarmoured arm path selecting a
+  plate/cloth source row. Base arms now retain their original source geometry;
+  rig math, weapon anchors, movement and approved body files remain unchanged.
+- Passing 9,984 silhouette comparisons including mixed factions and all thirteen
+  pose samples; original first-pass 4,992 comparisons and affected armour/head/
+  gait/melee/stance/Gravecaller suites. Browser compares 48 previous/64 fitted
+  production renders and real equip operations for all twelve items, no page errors.
+  Engineering11/11/build pass; 108 new art cells add zero structural audit errors.
+  The aggregate art audit retains its 24 documented pre-existing format errors.
+- [Scope, visual evidence, exact prompts and limits](faction-wearables/README.md).
+  Robes retain the existing fitted torso silhouette. Non-human standalone fittings,
+  separate authored enemy/boss bodies and faction weapons/cloaks/shields are outside
+  this wearable pass; this is not a claim that every catalogue item is corrected.
+
+### E29 · Complete player wearable catalogue · IMPLEMENTED, verified
+
+- All 85 body wearables and 35 accessories now have explicit authored directional
+  registrations and matching raster icons. Seventy additional body items cover
+  remaining factions, regular/class clothing, legendary and mythical pieces;
+  35 accessories include compact jewellery, seven cloaks and eleven hand shields.
+  Crown/halo native rectangles and offsets are separate from full helmets.
+- Retained the approved base anatomy, original body alpha, gait and arm/weapon
+  anchors. Native equipment consumers use fitted garment materials; standalone
+  non-human fittings retain their existing geometry. Item/save/progression rules
+  and weapon art remain unchanged. Portable `check:wearables` catches any future
+  non-weapon ID lacking authored art, slot registration or icon contracts.
+- Visual review reproduced fixed-grid export importing neighbour fragments and
+  clipping small ornaments; measured gutters/item clusters now isolate complete
+  items. Rejected and regenerated one crowded seal master. Shield grip height
+  corrected within the existing free-hand layer. Iron/red rings keep ring-sized
+  geometry and now use material-appropriate colours.
+- Verification fixture observation: prior short walkTime samples stayed in held
+  key0. Corrected all three fitting fixtures, asserting actual gait keys0/1/2/3;
+  no runtime gait/clock change. Passing79,057 renders/24,032 silhouette comparisons,
+  120 browser equip operations/960 renders/120 decoded icons, 96 gait previews,
+  four in-game mixed outfits, shield-grip and affected gear/armour/head/gait/melee/
+  legendary/stance/Gravecaller regressions. Engineering11/11, build and coverage pass.
+- New exports add808 inspected cells beyond E28 with no new audit errors and all
+  eight approved player-sheet hashes intact. Aggregate audit retains the identical
+  24 pre-existing format/coverage errors. [Full scope, prompts, review and limits](wearable-catalogue/README.md).

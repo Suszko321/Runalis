@@ -1,0 +1,25 @@
+{
+  "width": 64,
+  "height": 80,
+  "frames": 4,
+  "states": [
+    "maleenemyRoadlessHelm",
+    "maleenemyRoadlessChest",
+    "maleenemyRoadlessLegs",
+    "maleenemyRoadlessRobe",
+    "maleenemyRoadlessScoutHelm",
+    "maleenemyRoadlessScoutChest",
+    "femaleenemyRoadlessHelm",
+    "femaleenemyRoadlessChest",
+    "femaleenemyRoadlessLegs",
+    "femaleenemyRoadlessRobe",
+    "femaleenemyRoadlessScoutHelm",
+    "femaleenemyRoadlessScoutChest"
+  ],
+  "directions": [
+    "down",
+    "right",
+    "up",
+    "left"
+  ]
+}

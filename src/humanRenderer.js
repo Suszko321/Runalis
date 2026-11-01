@@ -16,7 +16,7 @@ import { drawCreatorAccessoryArt,drawCreatorCloakArt } from './creatorAccessoryA
 import { drawFaceDetailArt } from './faceDetailArt.js';
 import {meleeArmReady,drawMeleeArms,sampleArmoredArms} from './meleeArmArt.js';
 import {armorReplacement} from './armorMotionArt.js';
-import {fittedChest,fittedLegs,wearableId} from './playerWearableArt.js';
+import {fittedChest,fittedLegs,fittedShirt,wearableId} from './playerWearableArt.js';
 import {sampleMeleeRig} from './meleeRig.js';
 import {weaponShoulderSide,weaponBehindBody,shieldBehindBody,shieldGrip} from './handedness.js';
 import {drawSheathedWeapon} from './sheathedWeaponArt.js';
@@ -109,7 +109,7 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
 
   const skin = options.skin || actor.skin || '#ffd1bd';
   const hair = options.hair || actor.hair || '#111111';
-  const shirt = fittedChest(wearableId(actor.equipment?.chest))?'#775337':options.shirt || actor.shirt || '#f2a51f';
+  const shirt = fittedChest(wearableId(actor.equipment?.chest))?fittedShirt(wearableId(actor.equipment?.chest)):options.shirt || actor.shirt || '#f2a51f';
   const pants = fittedLegs(wearableId(actor.equipment?.legs))?'#39373d':options.pants || actor.pants || '#293fba';
   const boots = fittedLegs(wearableId(actor.equipment?.legs))?'#4b3629':options.boots || actor.boots || '#3a2a22';
   const bodyType = options.bodyType || actor.bodyType || actor.appearance?.bodyType || 'male';

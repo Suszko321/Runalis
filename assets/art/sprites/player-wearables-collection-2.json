@@ -1,0 +1,29 @@
+{
+  "width": 64,
+  "height": 80,
+  "frames": 4,
+  "states": [
+    "malepilgrimVigilLegs",
+    "malecrownOfTheEndless",
+    "maleoathplateOfTheLastDawn",
+    "maleashboundMantle",
+    "malesunforgedHalo",
+    "malebriarCovenantGreaves",
+    "maleblackstarGreaves",
+    "maleclothHood",
+    "femalepilgrimVigilLegs",
+    "femalecrownOfTheEndless",
+    "femaleoathplateOfTheLastDawn",
+    "femaleashboundMantle",
+    "femalesunforgedHalo",
+    "femalebriarCovenantGreaves",
+    "femaleblackstarGreaves",
+    "femaleclothHood"
+  ],
+  "directions": [
+    "down",
+    "right",
+    "up",
+    "left"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "width": 64,
+  "height": 80,
+  "frames": 4,
+  "states": [
+    "enemyRoadlessTrinket",
+    "enemyRoadlessGuard",
+    "enemyLastDawnTrinket",
+    "enemyLastDawnGuard",
+    "enemyCovenantTrinket",
+    "enemyCovenantGuard",
+    "enemyEmberVeilTrinket"
+  ],
+  "directions": [
+    "down",
+    "right",
+    "up",
+    "left"
+  ]
+}

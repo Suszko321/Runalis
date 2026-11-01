@@ -1,0 +1,25 @@
+{
+  "width": 64,
+  "height": 80,
+  "frames": 4,
+  "states": [
+    "maleenemyGraveCultHelm",
+    "maleenemyGraveCultChest",
+    "maleenemyGraveCultLegs",
+    "maleenemyGraveCultRobe",
+    "maleenemyGraveCultScoutHelm",
+    "maleenemyGraveCultScoutChest",
+    "femaleenemyGraveCultHelm",
+    "femaleenemyGraveCultChest",
+    "femaleenemyGraveCultLegs",
+    "femaleenemyGraveCultRobe",
+    "femaleenemyGraveCultScoutHelm",
+    "femaleenemyGraveCultScoutChest"
+  ],
+  "directions": [
+    "down",
+    "right",
+    "up",
+    "left"
+  ]
+}
