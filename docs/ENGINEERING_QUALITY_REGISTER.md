@@ -267,3 +267,21 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - Reproduced the old royal summon renderer throwing on a 5,376 × 560 recolour canvas under a controlled 4,096-side limit. Older iOS has this restriction; modern WebKit has raised the limit. Physical user-device diagnosis remains unconfirmed.
 - Losslessly packed ordinary/royal sheets into four columns and exported the allied palette ahead of time. All 432 source timing slots match original pixels; runtime sheets are at most 448 × 560, with no palette readback. New asset names avoid old sprite cache entries. Narrow-view boss scale and HP/nameplate offsets agree.
 - Four touch/mobile browser profiles pass across Chromium/WebKit and portrait/landscape, including all five mastery sizes, crop bounds, intended sheets, no oversized canvases or wide requests, and no page errors. Existing animation, mastery/four-owner save-load, Vampire gameplay/browser, real Veyreign encounter/browser, engineering11/11 and build pass. [Reproduction, repair and limits](mobile-bats/README.md).
+
+### E27 · Selected player wearable anatomy and art · FIRST PASS IMPLEMENTED
+
+- User-selected Gravebound Helm, Patched Road Leathers and Gravebound Greaves now
+  use native authored directional surfaces registered to both approved bodies.
+  Chest/legs no longer force replacement limbs or stance; original body alpha,
+  gait, arm geometry and weapon anchors remain. Helm has an open face and restrained
+  iron shading. Other item families and non-human equipment fitting remain separate.
+- Passing 4,992 end-to-end silhouette comparisons across two bodies/four heads/
+  four facings/thirteen pose samples/four weapon families, plus per-copy refs,
+  underlying-color isolation, non-human overlay coverage and render non-mutation.
+  Browser checks compare original/current production rendering and actual inventory
+  equip operations for the full screenshot outfit. Engineering11/11, build and
+  armour/head/gait/melee/stance/Gravecaller regression suites pass.
+- Full art audit remains red on 24 pre-existing metadata-format/coverage errors.
+  Reproduced identical errors from an isolated clean HEAD archive; this sheet adds
+  24 inspected cells and zero errors. Eight approved player-sheet hashes remain.
+  [Comparison, exact scope, prompts and limits](player-wearables-first-pass/README.md).

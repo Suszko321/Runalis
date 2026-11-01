@@ -16,6 +16,7 @@ import { drawCreatorAccessoryArt,drawCreatorCloakArt } from './creatorAccessoryA
 import { drawFaceDetailArt } from './faceDetailArt.js';
 import {meleeArmReady,drawMeleeArms,sampleArmoredArms} from './meleeArmArt.js';
 import {armorReplacement} from './armorMotionArt.js';
+import {fittedChest,fittedLegs,wearableId} from './playerWearableArt.js';
 import {sampleMeleeRig} from './meleeRig.js';
 import {weaponShoulderSide,weaponBehindBody,shieldBehindBody,shieldGrip} from './handedness.js';
 import {drawSheathedWeapon} from './sheathedWeaponArt.js';
@@ -108,9 +109,9 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
 
   const skin = options.skin || actor.skin || '#ffd1bd';
   const hair = options.hair || actor.hair || '#111111';
-  const shirt = options.shirt || actor.shirt || '#f2a51f';
-  const pants = options.pants || actor.pants || '#293fba';
-  const boots = options.boots || actor.boots || '#3a2a22';
+  const shirt = fittedChest(wearableId(actor.equipment?.chest))?'#775337':options.shirt || actor.shirt || '#f2a51f';
+  const pants = fittedLegs(wearableId(actor.equipment?.legs))?'#39373d':options.pants || actor.pants || '#293fba';
+  const boots = fittedLegs(wearableId(actor.equipment?.legs))?'#4b3629':options.boots || actor.boots || '#3a2a22';
   const bodyType = options.bodyType || actor.bodyType || actor.appearance?.bodyType || 'male';
   const selectedHairStyle = options.hairStyle || actor.hairStyle || actor.appearance?.hairStyle || 'short';
   const hairStyle=selectedHairStyle==='tied'?'ponytail':selectedHairStyle;
@@ -145,6 +146,7 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
   applyHumanVisualProfile(ctx, visualProfile);
 
   const useSprite = humanSpriteReady(bodyType);
+  animationPose.fittedPlayerWearables = useSprite;
   animationPose.bodyType = bodyType;
   animationPose.hairStyle = hairStyle;
   if (useSprite && usesSideLocomotion(animationPose, facing)) {
@@ -170,7 +172,7 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
   const drawGuard=()=>drawFactionGuard(ctx,actor,facing,sampleArmoredArms(armActor,animationPose,facing,bob).support.hand);
   const drawArms=(layer,selection)=>drawMeleeArms(ctx,armActor,animationPose,facing,bob,layer,selection,armoredArms);
   const drawLegwearGloves=selection=>drawMeleeArms(ctx,armActor,animationPose,facing,bob,'hands',selection,true);
-  const handParts={bodyType,hairStyle,skin,hair,shirt,pants,boots,facing,bob,animationPose};
+  const handParts={bodyType,hairStyle,skin,hair,shirt,pants,boots,facing,bob,animationPose,wearables:actor.equipment};
   // The left arm is the far arm facing east, and the near arm facing west.
   if(options.weaponSheathed&&facing!=='up')drawSheathedWeapon(ctx,actor,facing,bob);
   if(modularArms&&rearArm){drawArms('arms',rearArm);drawArms('hands',rearArm);}
@@ -237,7 +239,7 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
       ctx.beginPath();ctx.rect(-100,-150,200,144+Math.round(bob));
       ctx.clip();
     }
-    drawHumanSprite(ctx, { bodyType, hairStyle, skin, hair, shirt, pants, boots, facing, bob, hideLegs:replacementLegs, animationPose:articulatedArms&&!armoredArms?{...animationPose,state:'idle',attacking:false,weaponType:'unarmed'}:animationPose, bodyOnly: spriteUsesClassicHead });
+    drawHumanSprite(ctx, { bodyType, hairStyle, skin, hair, shirt, pants, boots, facing, bob, hideLegs:replacementLegs, animationPose:articulatedArms&&!armoredArms?{...animationPose,state:'idle',attacking:false,weaponType:'unarmed'}:animationPose, bodyOnly: spriteUsesClassicHead, wearables:actor.equipment });
     ctx.restore();
     if (spriteUsesClassicHead) {
       if(customHeadReady())drawCustomHead(ctx,{bodyType,hairStyle,facing,bob,skin,hair,eyeColor:appearanceCosmetics?.eyeColor});

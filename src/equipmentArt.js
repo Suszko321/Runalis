@@ -1,5 +1,6 @@
 import {asset} from './spriteArt.js';
 import {drawArmorMotionArt} from './armorMotionArt.js';
+import {fittedChest,fittedLegs,drawFittedPlayerHelm} from './playerWearableArt.js';
 import {TIDEGLASS_RAPIER_ART,drawTideglassRapierModel} from './tideglassRapierArt.js';
 import {isHandTrinket} from './handTrinketArt.js';
 import {drawFactionHelm,drawFactionTrinket,drawFactionWeapon,drawFactionGarmentDetail} from './factionEquipmentArt.js';
@@ -66,6 +67,11 @@ export function drawEquippedArt(ctx,id,profile,x,y,side=1) {
 
 export function drawWearableArt(ctx,profile,facing,x,y,bob=0,pose={}) {
   if(!profile)return false;
+  if(pose.fittedPlayerWearables&&profile.slot==='chest'&&fittedChest(profile.itemId))return true;
+  if(pose.fittedPlayerWearables&&profile.slot==='helm'&&profile.itemId==='graveboundHelm'){
+    const a=asset('player-wearables-first-pass');
+    return !!a?.ready&&drawFittedPlayerHelm(ctx,a.image,facing,x,y,bob,pose);
+  }
   if(drawFactionHelm(ctx,profile,facing,x,y,bob,pose))return true;
   if(profile.slot==='chest'&&drawArmorMotionArt(ctx,profile,'chest',facing,x,y,bob,pose)){drawFactionGarmentDetail(ctx,profile,facing,x,y,bob);return true;}
   const head=profile.slot==='helm';
@@ -93,6 +99,7 @@ export function drawWearableArt(ctx,profile,facing,x,y,bob=0,pose={}) {
 }
 
 export function drawLegwearArt(ctx,profile,facing,x,y,bob=0,step=0,pose={}){
+  if(pose.fittedPlayerWearables&&profile&&fittedLegs(profile.itemId))return true;
   if(profile&&drawArmorMotionArt(ctx,profile,'legs',facing,x,y,bob,pose))return true;
   const a=asset('accessories-equipped');if(!profile || !a?.ready)return false;
   const col={down:0,right:1,up:2,left:3}[facing]??0;

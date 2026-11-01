@@ -5,9 +5,11 @@ import {usesSideLocomotion} from './humanLocomotionRig.js';
 import {drawSideLegArt} from './sideLegArt.js';
 import {factionArmorImage} from './factionEquipmentArt.js';
 import {humanArmorImage} from './humanEquipmentSprites.js';
+import {fittedChest,fittedLegs} from './playerWearableArt.js';
 export function armorReplacement(actor,part){
   const ref=actor.equipment?.[part],id=typeof ref==='string'?ref:ref?.id;
   if(!id)return false;
+  if(part==='chest'&&fittedChest(id)||part==='legs'&&fittedLegs(id))return false;
   const family=armorMotionFamily(getGearVisualProfile(id,ITEMS[id]||{}),part);
   return !!asset(`armor-motion-${family}`)?.ready;
 }
