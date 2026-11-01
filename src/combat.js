@@ -5746,7 +5746,7 @@ function handleEnemyDeath(enemy, player, world, log) {
   gainXp(player, 'renown', xp, log);
   grantSharedCombatKillXp(player, enemy, xp, log);
 
-  const drops = createEnemyLootDrops(enemy, player, world);
+  const drops = createEnemyLootDrops(enemy, player, world, log);
   playSfx(enemy.isBoss ? 'boss' : 'enemyDeath', {
     volume: enemy.isBoss ? 1 : 0.65,
     throttle: 0.06

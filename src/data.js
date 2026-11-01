@@ -5816,7 +5816,9 @@ export function rollEnemyLoot(enemyOrKind, context = {}) {
     }
   }
 
-  const trimmed=trimLootDrops(drops,enemy),gear=trimmed.filter(d=>['weapon','armour','trinket'].includes(ITEMS[d.item]?.type));
+  // Enemy delivery rolls gear separately. Do not let rejected legacy equipment
+  // or the old physical-drop cap erase successfully rolled resource rewards.
+  const trimmed=context.autoCollectResources?drops.filter(d=>!['weapon','armour','trinket'].includes(ITEMS[d.item]?.type)):trimLootDrops(drops,enemy),gear=trimmed.filter(d=>['weapon','armour','trinket'].includes(ITEMS[d.item]?.type));
   const best=gear.sort((a,b)=>(LOOT_RARITY_PRIORITY[ITEMS[b.item]?.rarity]||0)-(LOOT_RARITY_PRIORITY[ITEMS[a.item]?.rarity]||0))[0];
   return trimmed.filter(d=>!['weapon','armour','trinket'].includes(ITEMS[d.item]?.type)||d===best).map(d=>['weapon','armour','trinket'].includes(ITEMS[d.item]?.type)?{...d,qty:1,upgradeTier:1}:d);
 }

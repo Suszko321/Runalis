@@ -1,6 +1,7 @@
 import {ITEMS} from './data.js';
-import {isGear,GEAR_BAG_CAPACITY,GEAR_RARITIES,canonicalGearRarity,instanceGearItem,gearDropChance,rollGearRarity,gearGradeAllowed} from './gearRarity.js';
+import {isGear,GEAR_BAG_CAPACITY,GEAR_RARITIES,canonicalGearRarity,instanceGearItem,gearDropChance,gearGradeAllowed} from './gearRarity.js';
 import {endgameLootPool,ENDGAME_LOOT_SHARE} from './endgameEquipmentData.js';
+import {dungeonLootTier,isDungeonFinalLootBoss,rollEnemyGearRarity} from './dungeonLootPolicy.js';
 export function gearBagCount(player){return (player?.inventory||[]).reduce((n,e)=>n+(isGear(ITEMS[e.id])?Math.max(1,Number(e.qty)||1):0),0);}
 export function canCarryGear(player,id,qty=1){return !isGear(ITEMS[id])||gearBagCount(player)+Math.max(1,Number(qty)||1)<=GEAR_BAG_CAPACITY;}
 export function gearEquipReason(player,id,metadata={}){
@@ -26,13 +27,15 @@ export function gearRewardReason(player,rewards=[]){
  return gearBagCount(player)+reserved>GEAR_BAG_CAPACITY?'Make room in the 20-slot gear bag before claiming these rewards.':'';
 }
 export function randomGearPool(){return Object.values(ITEMS).filter(item=>isGear(item)&&!item.questItem&&!item.noRandomDrop);}
-export function rollUniversalGear(enemy,owner,rng=Math.random){
- if(rng()>=gearDropChance(enemy))return null;
+export function rollUniversalGear(enemy,owner,rng=Math.random,world={}){
+ const finalBoss=dungeonLootTier(world)==='legendary'&&isDungeonFinalLootBoss(enemy);
+ const chance=gearDropChance(enemy);
+ if(rng()>=(chance>0&&finalBoss?1:chance))return null;
  // Keep the existing chance/base/rarity RNG consumption order for old seeded loot.
  let selection=Math.max(0,Math.min(.999999999,rng()));
  const rawLevel=Number(owner?.combatLevel??owner?.skillState?.combat?.level??owner?.level),level=Number.isFinite(rawLevel)?Math.max(1,Math.floor(rawLevel)):1;
- const rarity=rollGearRarity(level,rng),exclusive=endgameLootPool(rarity,level,enemy);
- let pool=randomGearPool();
+ const rarity=rollEnemyGearRarity(level,enemy,world,rng),exclusive=endgameLootPool(rarity,level,enemy);
+ let pool=randomGearPool().filter(item=>gearGradeAllowed(item,rarity));
  if(exclusive.length){if(selection<ENDGAME_LOOT_SHARE){pool=exclusive;selection/=ENDGAME_LOOT_SHARE;}else selection=(selection-ENDGAME_LOOT_SHARE)/(1-ENDGAME_LOOT_SHARE);}
  if(!pool.length)return null;
  const item=pool[Math.min(pool.length-1,Math.floor(selection*pool.length))];

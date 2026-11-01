@@ -1,4 +1,5 @@
 import {drawAuthoredObject} from './worldAtmosphereRenderer.js';
+import {drawGroundLootAura} from './groundLootArt.js';
 import {drawDungeonNpc,isDungeonNpc} from './dungeonCharacterSprites.js';
 import {drawWorkshopFixture,drawWorkshopWorker} from './workshopArt.js';
 import {isQuestObjectVisible} from './questInteractables.js';
@@ -144,7 +145,7 @@ export function drawWorldDrops(ctx, world, camera) {
     if (!drop || drop.collected) continue;
 
     const p = screen(drop, camera);
-    if (!isOnScreen(ctx, p.x, p.y, 80)) continue;
+    if (!isOnScreen(ctx, p.x, p.y, 220)) continue;
 
     drawDrop(ctx, drop, p.x, p.y);
   }
@@ -4244,7 +4245,7 @@ function drawMissingModel(ctx, object, x, y, visualStatus) {
 // -----------------------------------------------------------------------------
 
 function drawDrop(ctx, drop, x, y) {
-  const dropTime = drop.age || performance.now() / 1000;
+  const dropTime = drop.age ?? performance.now() / 1000;
   const bob = steppedSine(dropTime, 4, 2, 8, drop.bobTimer || 0);
   const discovery=lootDiscoveryProfile(drop.itemId||drop.item);
   const color = isGear(ITEMS[drop.itemId||drop.item])?rarityColor(drop.rarity):discovery?.color||rarityColor(drop.rarity);
@@ -4252,10 +4253,12 @@ function drawDrop(ctx, drop, x, y) {
   const t = performance.now() / 1000;
 
   drawShadow(ctx, x, y + 7, 8, 3);
+  const groundStyle=drawGroundLootAura(ctx,drop,x,y);
+  y-=groundStyle.lift;
 
   ctx.save();
 
-  if (important) {
+  if (important && !groundStyle.gear) {
     ctx.globalAlpha = 0.14 + Math.sin(t * 4) * 0.03;
     ctx.fillStyle = color;
     rect(ctx, x - 2, y - 44 + bob, 4, 42);

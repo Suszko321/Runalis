@@ -1,5 +1,10 @@
 # Gear itemization · November 1, 2026
 
+Follow-up: [enemy delivery and dungeon quality](../enemy-loot-delivery/README.md)
+now governs dungeon rarity and final-boss odds. Non-gear enemy rewards are credited
+immediately with a white collection feed. The level formula below remains the
+outside-dungeon policy; gear bag, per-copy stats and upgrade contracts remain.
+
 Implemented a universal, deliberately scarce combat-gear system. Every eligible enemy can drop any of the **202 current weapon, armour and trinket bases**. Base selection is uniform across the shared pool, independent of class, zone and boss identity. New eligible gear definitions automatically join that pool. Quest-only/no-random-drop definitions are excluded when explicitly marked.
 
 The earlier exclusive boss armory rolls and regional random-gear additions no longer supply enemy gear. Their gear results are filtered from the old material/discovery tables; one universal roll supplies at most one random gear copy per enemy. Materials, scrolls, currency and authored first-clear/quest rewards retain their existing paths. Reward-suppressed enemies and enemy summons do not roll gear.

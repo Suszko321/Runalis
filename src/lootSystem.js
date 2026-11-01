@@ -1,4 +1,6 @@
 import {encounterRng} from './encounterData.js';
+import {recordLootCollection} from './lootCollectionFeed.js';
+import {groundLootStyle} from './groundLootArt.js';
 import {rollUniversalGear,gearAcquisitionReason} from './gearItemization.js';
 import {instanceGearItem,isGear,canonicalGearRarity,GEAR_RARITIES} from './gearRarity.js';
 import {rollGameplayEnemyLoot,announceLootDiscovery,lootDiscoveryProfile} from './gameplayDiscoveries.js';
@@ -35,7 +37,7 @@ export function grantWorldItem(player,world,id,qty=1){
  addLootText(player,'Gear bag full — reward left on the ground',{color:'#ffffff'});return false;
 }
 
-export function createEnemyLootDrops(enemy, partyLeader, world) {
+export function createEnemyLootDrops(enemy, partyLeader, world, log) {
   if (!enemy || !world || enemy.rewardSuppressed || enemy.summonedBy || enemy.summonedByBoss) return [];
   if(enemy.enemyWorldLootGenerated)return [];
   enemy.enemyWorldLootGenerated=true;
@@ -53,8 +55,18 @@ export function createEnemyLootDrops(enemy, partyLeader, world) {
 
   world.drops = Array.isArray(world.drops) ? world.drops : [];
 
-  const finalDrops=drops.filter(drop=>!isTieredEquipment(ITEMS[drop.item]));
-  const gear=rollUniversalGear(enemy,owner,rng);if(gear)finalDrops.push(gear);
+  const finalDrops=[];
+  for(const drop of drops){
+    const item=ITEMS[drop.item];if(!item||isTieredEquipment(item))continue;
+    if(isGear(item)||item.learnsAbility){finalDrops.push(drop);continue;}
+    const qty=Math.max(1,Math.floor(Number(drop.qty)||1));
+    if(addItem(owner,drop.item,qty)){
+      markPartyCollectObjective(owner,drop.item,qty);
+      announceLootDiscovery(owner,drop.item,world,log);
+      recordLootCollection(owner,drop.item,drop.item==='ashCoin'?'Gold':item.name,qty);
+    }
+  }
+  const gear=rollUniversalGear(enemy,owner,rng,world);if(gear)finalDrops.push(gear);
   const created = finalDrops.map((drop, index) => {
     const item = instanceGearItem(ITEMS[drop.item],drop);
     const angle = (index / Math.max(1, drops.length)) * Math.PI * 2;
@@ -136,10 +148,12 @@ export function updateWorldLootPickups(world, partyLeader, dt, log) {
 
     if (!owner) continue;
 
-    const distance = Math.hypot((owner.x || 0) - drop.x, (owner.y || 0) - drop.y);
-    if (distance > PICKUP_RADIUS) continue;
-
     const itemId = drop.itemId || drop.item;
+    const automatic=ITEMS[itemId]&&!isGear(ITEMS[itemId])&&!ITEMS[itemId].learnsAbility;
+    const distance = Math.hypot((owner.x || 0) - drop.x, (owner.y || 0) - drop.y);
+    if (!automatic&&distance > PICKUP_RADIUS) continue;
+    if(groundLootStyle(drop).exalted&&drop.age<.8)continue;
+
     const qty = drop.qty || drop.quantity || 1;
     if(!addItem(owner,itemId,qty,drop)){
       if(!drop.gearBagNotified){addLootText(owner,gearAcquisitionReason(owner,itemId,qty,drop)||'Cannot carry item',{color:'#ffffff'});drop.gearBagNotified=true;}
@@ -148,6 +162,7 @@ export function updateWorldLootPickups(world, partyLeader, dt, log) {
     markPartyCollectObjective(owner, itemId, qty);
     announceLootDiscovery(owner,itemId,world,log);
     drop.collected = true;
+    if(automatic){recordLootCollection(owner,itemId,itemId==='ashCoin'?'Gold':ITEMS[itemId].name,qty);continue;}
 
     const rarity = RARITY[drop.rarity];
     const itemName = drop.name || ITEMS[drop.itemId || drop.item]?.name || drop.itemId || drop.item;
@@ -202,7 +217,7 @@ function getPartyMembers(player) {
 
 function rollEnemyLootSafe(enemy, world,rng=Math.random) {
   try {
-    return rollEnemyLoot(enemy, { world,rng }) || [];
+    return rollEnemyLoot(enemy, { world,rng,autoCollectResources:true }) || [];
   } catch {
     return [];
   }

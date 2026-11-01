@@ -125,6 +125,7 @@ export function normalizeProfileSave(profile, options = {}) {
   player.traps = Array.isArray(player.traps) ? player.traps : [];
   player.combatEffects = Array.isArray(player.combatEffects) ? player.combatEffects : [];
   player.floatingTexts = Array.isArray(player.floatingTexts) ? player.floatingTexts : [];
+  player.lootCollections = [];
 
   player.appearance = player.appearance && typeof player.appearance === 'object'
     ? player.appearance

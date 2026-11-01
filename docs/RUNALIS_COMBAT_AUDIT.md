@@ -142,3 +142,9 @@ Verified all202 bases from an ordinary enemy, exact rarity/rank distributions, l
 ## November 1 — mobile Bat Beast rendering repair
 
 Reproduced the previous royal summon palette canvas failing under a legacy mobile canvas limit. Compact ordinary/royal atlases and a pre-exported allied variant preserve all 432 timing-slot pixels, five mastery sizes and combat behavior. Royal boss presentation now fits narrow viewports with matching plate offsets. Chromium and WebKit touch/mobile profiles pass in portrait and landscape; existing Vampire, Bat and actual Veyreign encounter checks, engineering11/11 and publication build pass. [Evidence and physical-device limitations](mobile-bats/README.md).
+
+## November 1 — enemy loot delivery and dungeon rarity audit
+
+Implemented physical gear/scroll-only enemy drops, immediate other rewards to the assigned owner, all successful resource rolls retained, white aggregated/fading receipts in shared/split view and legacy material sweep. Dungeon quality is geographic, with common-only first areas, green/blue later pools and legendary mob eligibility plus40% final-boss legendary odds in Malakar/Veyreign. Added colour glows, runic spires and timed Legendary+ launch without changing stats or bag capacity.
+
+Verified exact distributions, all eligible bases,10,000 final-boss rolls, all four owners with full bags, scroll pickup, exactly-once rewards, overflow recovery, both save paths, legacy resources and launch timing. Six Chromium/WebKit desktop/mobile profiles pass with no page errors; existing loot, itemization, endgame gear, workshop, quests, Malakar and actual Veyreign checks pass. Engineering11/11/build pass. [Evidence, formula and hardware/economy limits](enemy-loot-delivery/README.md).

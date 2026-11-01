@@ -84,6 +84,7 @@ import {
 
 import { draw } from './render.js';
 import { drawSplitScreenHud } from './splitScreenHud.js';
+import {drawLootCollectionFeed} from './lootCollectionFeed.js';
 
 import {
   initUI,
@@ -1908,6 +1909,7 @@ class RunalisGame {
         { x: 0, y: 0, width: this.canvas.width, height: this.canvas.height }
       );
       if (sharedPartyHud) this.drawSharedPartyHud(members);
+      drawLootCollectionFeed(this.ctx,members,{x:0,y:0,width:this.canvas.width,height:this.canvas.height});
       return;
     }
 
@@ -1991,6 +1993,7 @@ class RunalisGame {
         game: this
       });
       drawPlayerMinimap(this.ctx, this, member, viewport, camera);
+      drawLootCollectionFeed(this.ctx,member,viewport);
     }
 
     if (members.length === 3 && viewports[3]) {

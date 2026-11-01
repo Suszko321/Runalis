@@ -589,7 +589,7 @@ export function sanitizeForSave(value) {
       if((this.summons||[]).some(s=>s.kind==='vampireBat'))clocks.callBatBeast=stamp;
       return clocks;
     }
-    if (key === 'floatingTexts') return [];
+    if (key === 'floatingTexts' || key === 'lootCollections') return [];
     if (['eliteFrost','eliteFrozenUntil','eliteFrostRecoveryUntil','eliteGuardActive','eliteGuardX','eliteGuardY','eliteHealing','eliteAttackPauseTimer','eliteTelegraph'].includes(key)) return undefined;
     if (key === 'combatEffects') return [];
     if (key === 'effects') return [];

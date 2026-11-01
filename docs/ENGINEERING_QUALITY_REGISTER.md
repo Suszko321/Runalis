@@ -361,3 +361,9 @@ memory, security or gameplay readiness claim follows solely from a green build.
   intact. Aggregate audit retains the same24 pre-existing errors. Balance/grind
   duration remains a human playtest limitation, separate from passing contracts.
   [Content, prompts, visual evidence and verification](endgame-equipment/README.md).
+
+### E31 · Enemy auto-collection and dungeon loot quality · IMPLEMENTED, verified
+
+- Enemy ground rewards now contain only combat gear and learnable scrolls. Other successful rolls credit the assigned nearest owner immediately, preserving materials/quest/discovery hooks and eliminating obsolete ground-cap resource loss. Old resource drops sweep safely; full gear bags do not block resources. Shared/split white receipts aggregate, expire and clear on both profile/game saves.
+- Geographic common/green/blue pools override visiting level; Malakar/Veyreign allow legendary mobs and guarantee one final-boss gear copy with40% legendary probability per kill. Full eligible base pool and exact-grade endgame gates remain. Rarity glows and Legendary+ pixel-spire launch preserve identity and delay collection only through the0.8-second launch.
+- Exact distribution/all-base/10,000-boss-roll contracts, four-owner/full-bag/exactly-once/legacy/save checks, six Chromium/WebKit viewport profiles, existing gear/loot/endgame/workshop/quest/boss suites pass. Engineering11/11/build pass. [Evidence and limitations](enemy-loot-delivery/README.md); no physical-device or human economy pacing claim.
