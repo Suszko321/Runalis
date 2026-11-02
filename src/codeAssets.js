@@ -786,6 +786,7 @@ function drawCodeGearLayer(ctx, actor, x, y, equipment, options) {
   if (layer === 'all' || layer === 'outfit') {
     drawOutfitOverlay(ctx, actor, x, y, equipment, options);
   }
+  if(layer==='headgear')drawOutfitOverlay(ctx,actor,x,y,{helm:equipment.helm},options);
 
   if (layer === 'all' || layer === 'trinket') {
     drawTrinketAsset(ctx, x, y, equipment.trinket, options);
@@ -798,7 +799,7 @@ function drawCodeGearLayer(ctx, actor, x, y, equipment, options) {
 
 function drawOutfitOverlay(ctx, actor, x, y, equipment, options = {}) {
   let chest = normalizeItemId(equipment.chest);
-  let helm = normalizeItemId(equipment.helm);
+  let helm = options.deferHeadgear?null:normalizeItemId(equipment.helm);
   let legs = normalizeItemId(equipment.legs);
 
   const facing = options.facing || 'down';

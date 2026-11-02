@@ -60,11 +60,39 @@ export function applyFittedPlayerGarments(frame,original,bodyType,equipment,imag
   }
  }
 }
-export function drawFittedPlayerHelm(ctx,image,facing,x,y,bob,pose,fit={row:0,rows:3}){
+export function drawFittedPlayerHelm(ctx,image,facing,x,y,bob,pose,fit={row:0,rows:3},profile={}){
  if(!image)return false;
  const body=pose.bodyType==='female'?1:0,col={down:0,right:1,up:2,left:3}[facing]??0;
  const [rx,ry,w,h]=fit.rects?.[body]||rects[body][0],head=humanHeadLayout({...pose,facing,bob}),eye=head.at(24,head.eyeY);
  const top=Math.round(y+eye.y-(body?16:17)+(fit.headOffset||0));
  ctx.save();ctx.imageSmoothingEnabled=false;
+ if(profile.silhouette==='hood'||fit.neckStyle==='cowl')drawHoodCowl(ctx,image,col*64+rx,(body*(fit.rows||3)+fit.row)*80+ry,w,h,x+head.originX,y,bob,head,body,facing,top);
  ctx.drawImage(image,col*64+rx,(body*(fit.rows||3)+fit.row)*80+ry,w,h,Math.round(x-w/2+head.originX),top,w,h);ctx.restore();return true;
+}
+const cowlPalettes=new WeakMap();
+// Extend cloth with the actual cell's colours, including faction/endgame hues.
+// Do not sample the central face opening or recolour the original head sprite.
+function hoodPalette(image,sx,sy,w,h){
+ let cache=cowlPalettes.get(image);if(!cache){cache=new Map();cowlPalettes.set(image,cache);}const key=`${sx},${sy},${w},${h}`;if(cache.has(key))return cache.get(key);
+ const data=sourcePixels(image),colors=new Map();
+ for(let yy=Math.floor(h/2);yy<h;yy++)for(let xx=0;xx<w;xx++){
+  if(xx>w*.3&&xx<w*.7)continue;const i=((sy+yy)*image.width+sx+xx)*4;if(data[i+3]<128)continue;
+  const rgb=[data[i],data[i+1],data[i+2]],value=rgb.join(','),entry=colors.get(value)||{color:`rgb(${value})`,light:(rgb[0]+rgb[1]+rgb[2])/3,count:0};entry.count++;colors.set(value,entry);
+ }
+ const ramp=[...colors.values()].sort((a,b)=>a.light-b.light),material=ramp.filter(c=>c.light>30&&c.light<185).sort((a,b)=>b.count-a.count),base=material[0]||ramp[Math.floor(ramp.length/2)];
+ if(!base)return null;const palette={base:base.color,ink:ramp[0].color,shadow:(ramp.filter(c=>c.light>20&&c.light<base.light*.8).pop()||ramp[0]).color,light:(ramp.find(c=>c.light>base.light*1.15&&c.light<base.light*1.8)||base).color};cache.set(key,palette);return palette;
+}
+function drawHoodCowl(ctx,image,sx,sy,w,h,x,y,bob,head,body,facing,top){
+ const p=hoodPalette(image,sx,sy,w,h);if(!p)return;
+ const side=facing==='left'||facing==='right',start=Math.round(Math.min(top-y+h-4,head.chin.y-2)),end=Math.round(bob-19),chin=head.chin.y;
+ for(let row=start;row<=end;row++){
+  const t=(row-start)/Math.max(1,end-start),half=Math.round((side?6:8)+t*(side?2:body?3:4));
+  const opening=facing==='up'?0:Math.min(side?2:4,Math.max(0,Math.ceil(chin+1-row)));
+  for(let col=-half;col<=half;col++){
+   const hem=end-Math.floor(Math.abs(col)/(side?4:5));if(row>hem)continue;
+   if(Math.abs(col)<opening)continue;
+   ctx.fillStyle=Math.abs(col)===half||row===hem?p.ink:col===-half+1?p.light:col>half-3||Math.abs(col)===opening?p.shadow:p.base;
+   ctx.fillRect(Math.round(x)+col,Math.round(y)+row,1,1);
+  }
+ }
 }

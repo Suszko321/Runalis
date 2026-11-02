@@ -250,7 +250,7 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
     drawHumanSprite(ctx, { bodyType, hairStyle, skin, hair, shirt, pants, boots, facing, bob, hideLegs:replacementLegs, animationPose:articulatedArms&&!armoredArms?{...animationPose,state:'idle',attacking:false,weaponType:'unarmed'}:animationPose, bodyOnly: spriteUsesClassicHead, wearables:actor.equipment });
     ctx.restore();
     if (spriteUsesClassicHead) {
-      if(customHeadReady())drawCustomHead(ctx,{bodyType,hairStyle,facing,bob,skin,hair,eyeColor:appearanceCosmetics?.eyeColor});
+      if(customHeadReady())drawCustomHead(ctx,{bodyType,hairStyle,facing,bob,skin,hair,headgear,eyeColor:appearanceCosmetics?.eyeColor});
       else {
       const head = { bob, skin, hair, hairStyle, headgear, headLift: visualProfile.headLift || 0, side: facing === 'left' ? -1 : 1 };
       if (facing === 'up') drawBackHead(ctx, head);
@@ -347,6 +347,7 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
     scale,
     classId,
     layer: 'outfit',
+    deferHeadgear:true,
     animationPose,
     isPlayer: !!options.isPlayer
   });
@@ -355,6 +356,7 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
   drawAppearanceBackFacingCloak(ctx,cloakParts);
   drawFactionCloak(ctx,actor,facing,bob,animationPose,true);
   drawAppearanceCloakCollar(ctx,cloakParts);
+  drawCodeGear(ctx,actor,camera,{local:true,facing,bob,step,armSwing,scale,classId,layer:'headgear',animationPose,isPlayer:!!options.isPlayer});
 
   if(!factionGuard)drawCodeGear(ctx, actor, camera, {
     local: true,

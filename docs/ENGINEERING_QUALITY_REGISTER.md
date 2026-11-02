@@ -676,3 +676,25 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - Twelve Foci spend stamina; nine authored Grimoires spend existing Mana/Spirit. Added class-open Grimoire proficiency, encounter XP/scaling, independent twelve-node mastery tree/shot perks and book emblems. Both categories share exactly6 Mana per successful target hit, including heavy attacks. No cross-bar payment; misses refund nothing.
 - Preserved book IDs/art/projectiles/rarity/ascension, weapon handling, service materials and legendary identities. One-time old-book migration retains former Spirit proficiency in the new line without removing/repeatedly copying Spirit. UI distinguishes categories and actual attack costs.
 - Passing168 four-owner hit/payment cases, tree/XP/save/migration coverage, four Chromium/WebKit UI profiles and boss/legendary/practice/Vampire/heavy/ascension regressions; engineering13/13/build pass. Three older aggregate failures reproduced or matched in unchanged1a19edf: Blood Communion fixture, six-vs-seven channel count, eight missing Vampire signature profiles. No broader audit closure. [Detailed evidence and limitations](grimoire-category/README.md).
+
+### E47 — Headgear connects to shoulders and layers with torso/charm gear
+
+- Reproduced Cloth Hood's missing shoulder connection on the Chapel Hermit:
+  fitted head cells stopped above the shoulders. Hood cowls now use the existing
+  cell palette and shared head/body/facing/bob anchors. Endgame mage/archer cloth
+  headpieces declare the same fitting; hard helmets/crowns/halo retain their art.
+- Covered heads restore a short authored neck patch. Headgear now draws after
+  cloak collars and before chest charms/front arms. Charm chains are clipped to
+  the torso, preserving the face. Original sprites, body rig, item IDs/stats,
+  rarity, weapon handling, timing and saves remain unchanged.
+- Passing native contracts: all 40 headgear × 52 chests plus bare torso × two
+  bodies × four head styles × four facings (67,840 pairs); all 47 trinkets against
+  the same head variants (60,160 pairs); 672 shoulder-seam cases and 10,240 mixed
+  action cases. Actor state preserved. Browser baseline 13dc4ea shoulder probe
+  improves zero→46 pixels; inspected 32 actual-NPC/mixed-kit previews, all headgear
+  decoded, no page errors. Existing first-pass/faction/head-fit/endgame suites,
+  168-item registration, engineering 13/13 and build pass.
+- Pair coverage is factored, not exhaustive visual review of every three-item
+  outfit. Physical devices/live transport untested. Initial unbatched native test
+  stopped for cache churn; same pair coverage passes batched by torso, without
+  changing runtime caches. [Evidence and limits](headgear-compatibility/README.md).

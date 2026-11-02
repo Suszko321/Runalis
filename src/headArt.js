@@ -56,11 +56,11 @@ export function drawCustomHead(ctx,parts){
  }
  const {row,col,scale,originX,originY}=humanHeadLayout(parts);
  ctx.save();ctx.imageSmoothingEnabled=false;
- if(col===2){
-  // Arm replacement crops away the body's authored neck. Restore a short
-  // skin sprite behind the back of the head and overlap the armour seam.
+ if(col===2||parts.headgear){
+  // Restore the authored neck where a covered head or rear arm replacement
+  // exposes its seam. Front/profile patches stop at the chest's collar line.
   const width=parts.bodyType==='female'?4:5;
-  ctx.drawImage(image,2*48+22,3*48+30,4,6,-width/2,-28+(parts.bob||0),width,7);
+  ctx.drawImage(image,2*48+22,3*48+30,4,6,-width/2,-28+(parts.bob||0),width,col===2?7:5);
  }
  ctx.drawImage(image,col*48,row*48,48,48,originX-24*scale,originY,48*scale,48*scale);ctx.restore();return true;
 }

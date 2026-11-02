@@ -80,7 +80,7 @@ export function drawWearableArt(ctx,profile,facing,x,y,bob=0,pose={}) {
   if(pose.fittedPlayerWearables&&profile.slot==='chest'&&fittedChest(profile.itemId))return true;
   if(pose.fittedPlayerWearables&&profile.slot==='helm'&&fittedWearable(profile.itemId)?.part===0){
     const fit=fittedWearable(profile.itemId),a=asset(fit.sheet);
-    return !!a?.ready&&drawFittedPlayerHelm(ctx,a.image,facing,x,y,bob,pose,fit);
+    return !!a?.ready&&drawFittedPlayerHelm(ctx,a.image,facing,x,y,bob,pose,fit,profile);
   }
   if(drawFactionHelm(ctx,profile,facing,x,y,bob,pose))return true;
   if(profile.slot==='chest'&&drawArmorMotionArt(ctx,profile,'chest',facing,x,y,bob,pose)){drawFactionGarmentDetail(ctx,profile,facing,x,y,bob);return true;}

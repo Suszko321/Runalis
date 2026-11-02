@@ -9,6 +9,7 @@ export function drawCatalogueAccessory(ctx,id,facing,x,y,bob=0){
  const side=facing==='left'?-1:facing==='right'?1:0;
  const [sx,sy,w,h]=fit.accessoryRect||[16,16,32,48];
  ctx.save();ctx.imageSmoothingEnabled=false;
+ if(fit.kind==='charm'){ctx.beginPath();ctx.rect(x-64,Math.round(y+bob-22),128,128);ctx.clip();}
  ctx.drawImage(a.image,col*64+sx,fit.row*80+sy,w,h,Math.round(x-w/2+(fit.kind==='charm'||fit.kind==='lantern'?side*4:0)),Math.round(y+bob+(fit.anchorY??-(fit.kind==='shield'?16:28))),w,h);
  ctx.restore();return true;
 }
