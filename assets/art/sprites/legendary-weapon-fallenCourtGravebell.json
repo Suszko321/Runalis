@@ -1,0 +1,27 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/legendary-weapons/maces-master.png",
+  "sourceCell": 0,
+  "sourceBounds": [
+    111,
+    60,
+    400,
+    818
+  ],
+  "rect": [
+    29,
+    23,
+    38,
+    100
+  ],
+  "sheet": "legendary-weapon-fallenCourtGravebell",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 100,
+  "scale": 0.58,
+  "iconSheet": "legendary-weapon-fallenCourtGravebell-icon"
+}

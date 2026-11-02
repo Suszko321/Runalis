@@ -1,3 +1,4 @@
+import {LEGENDARY_WEAPON_ITEMS} from './legendaryWeaponData.js';
 // Endgame ensembles use the existing slots, rarity system and set-bonus owners.
 const definitions=[
  ['starweaver','Starweaver','mage','legendary','#252b58','#c9b3ec','Midnight indigo silk, silver lunar filigree and lilac crystals; tall split arcane hood, layered star-embroidered cuirass vest, silver-bound fitted boots, broad crescent-edged indigo mantle.'],
@@ -44,5 +45,5 @@ export function isEndgameLootSource(enemy){
 }
 export function endgameLootPool(rarity,level,enemy){
  const enemyLevel=Number(enemy?.combatLevel??enemy?.level??0);
- return isEndgameLootSource(enemy)?Object.values(ENDGAME_ITEMS).filter(i=>i.rarity===rarity&&level>=i.minCombatLevel&&enemyLevel>=i.dropMinEnemyLevel):[];
+ return isEndgameLootSource(enemy)?[...Object.values(ENDGAME_ITEMS),...Object.values(LEGENDARY_WEAPON_ITEMS)].filter(i=>i.rarity===rarity&&level>=i.minCombatLevel&&enemyLevel>=i.dropMinEnemyLevel):[];
 }

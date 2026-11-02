@@ -1,0 +1,27 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/legendary-weapons/grimoires-master.png",
+  "sourceCell": 1,
+  "sourceBounds": [
+    43,
+    23,
+    519,
+    699
+  ],
+  "rect": [
+    20,
+    44,
+    56,
+    80
+  ],
+  "sheet": "legendary-weapon-crimsonConcord",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 100,
+  "scale": 0.34,
+  "iconSheet": "legendary-weapon-crimsonConcord-icon"
+}

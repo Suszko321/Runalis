@@ -1,6 +1,7 @@
 import {VAMPIRE_ABILITIES} from './vampireData.js';
 import {BOSS_ARMORY_ITEMS} from './bossArmoryData.js';
 import {ENDGAME_ITEMS} from './endgameEquipmentData.js';
+import {LEGENDARY_WEAPON_ITEMS} from './legendaryWeaponData.js';
 import {GEAR_RARITIES} from './gearRarity.js';
 import {MYTHICAL_ITEMS} from './mythicalEquipmentData.js';
 import { abilityProgressionCategories } from './progressionProfiles.js';
@@ -303,6 +304,7 @@ export const WEAPON_XP_PROFILES = {
 export const ITEMS = {
   ...BOSS_ARMORY_ITEMS,
   ...ENDGAME_ITEMS,
+  ...LEGENDARY_WEAPON_ITEMS,
   ...ENEMY_EQUIPMENT_ITEMS,
   ...MYTHICAL_ITEMS,
   // ---------------------------------------------------------------------------

@@ -18,7 +18,7 @@ import {meleeArmReady,drawMeleeArms,sampleArmoredArms} from './meleeArmArt.js';
 import {armorReplacement} from './armorMotionArt.js';
 import {fittedChest,fittedLegs,fittedShirt,wearableId} from './playerWearableArt.js';
 import {sampleMeleeRig} from './meleeRig.js';
-import {weaponShoulderSide,weaponBehindBody,shieldBehindBody,shieldGrip} from './handedness.js';
+import {weaponShoulderSide,weaponBehindBody,shieldBehindBody,shieldGrip,focusAtHip,focusHipBehindBody} from './handedness.js';
 import {drawSheathedWeapon} from './sheathedWeaponArt.js';
 import {drawHandTrinketArt} from './handTrinketArt.js';
 import {drawFacialHairArt} from './facialHairArt.js';
@@ -165,6 +165,9 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
   const replacementGloves=replacementLegs&&!armoredArms&&!!asset('melee-arm-parts')?.ready;
   const modularArms=articulatedArms||armoredArms||animationPose.sideLocomotionArms;
   const rearWeapon=weaponBehindBody(facing);
+  const hipFocus=focusAtHip(animationPose);
+  const rearEquipment=hipFocus?focusHipBehindBody(facing):rearWeapon;
+  const backSheathed=!!options.weaponSheathed&&!hipFocus;
   const rearArm=rearWeapon?'primary':modularArms&&facing==='left'?'support':null;
   const frontArm=rearArm==='primary'?'support':rearArm==='support'?'primary':'all';
   const armActor={...actor,skin,shirt,bodyType};
@@ -174,10 +177,10 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
   const drawLegwearGloves=selection=>drawMeleeArms(ctx,armActor,animationPose,facing,bob,'hands',selection,true);
   const handParts={bodyType,hairStyle,skin,hair,shirt,pants,boots,facing,bob,animationPose,wearables:actor.equipment};
   // The left arm is the far arm facing east, and the near arm facing west.
-  if(options.weaponSheathed&&facing!=='up')drawSheathedWeapon(ctx,actor,facing,bob);
+  if(backSheathed&&facing!=='up')drawSheathedWeapon(ctx,actor,facing,bob);
   if(modularArms&&rearArm){drawArms('arms',rearArm);drawArms('hands',rearArm);}
   if(replacementGloves&&!modularArms&&(rearWeapon||facing==='left'))drawLegwearGloves(rearWeapon?'primary':'support');
-  if (rearWeapon&&!options.weaponSheathed) {
+  if (rearEquipment&&!backSheathed) {
     drawEquippedWeaponLayer(ctx, actor, camera, {
       facing,
       bob,
@@ -190,9 +193,11 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
       debugEquipmentOrientation: !!(options.debugEquipmentOrientation || actor.debugEquipmentOrientation)
     });
 
-    if(modularArms)drawArms('hands','primary');
-    else if(replacementGloves)drawLegwearGloves('primary');
-    else if(useSprite)drawRestingWeaponHand(ctx,handParts);
+    if(!hipFocus){
+      if(modularArms)drawArms('hands','primary');
+      else if(replacementGloves)drawLegwearGloves('primary');
+      else if(useSprite)drawRestingWeaponHand(ctx,handParts);
+    }
   }
   if(blocking&&shieldBehindBody(facing))drawBlockPoseOverlay(ctx,facing,bob,classId);
   if (!useSprite) drawHumanSilhouetteOutline(ctx, {
@@ -361,14 +366,14 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
     isPlayer: !!options.isPlayer
   });
 
-  if(options.weaponSheathed&&facing==='up')drawSheathedWeapon(ctx,actor,facing,bob);
+  if(backSheathed&&facing==='up')drawSheathedWeapon(ctx,actor,facing,bob);
   if(modularArms)drawArms('arms',frontArm);
 
   if (blocking && !shieldBehindBody(facing)) {
     drawBlockPoseOverlay(ctx, facing, bob, classId);
   }
 
-  if (!rearWeapon&&!options.weaponSheathed) {
+  if (!rearEquipment&&!backSheathed) {
     drawEquippedWeaponLayer(ctx, actor, camera, {
       facing,
       bob,
@@ -384,7 +389,7 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
 
   if(modularArms)drawArms('hands',frontArm);
   else if(replacementGloves)drawLegwearGloves(rearWeapon?'support':facing==='left'?'primary':'all');
-  else if(useSprite&&!options.weaponSheathed&&!rearWeapon)drawRestingWeaponHand(ctx,handParts);
+  else if(useSprite&&!backSheathed&&!rearWeapon&&!hipFocus)drawRestingWeaponHand(ctx,handParts);
   drawHandTrinketArt(ctx,armActor,animationPose,facing,bob);
   drawVampireFace(ctx,actor,{bodyType,hairStyle,facing,bob});
   if(factionGuard&&!shieldBehindBody(facing))drawGuard();

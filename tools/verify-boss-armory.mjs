@@ -16,7 +16,7 @@ import {normalizeProfileSave} from '../src/saveProfiles.js';
 const now=performance.now()/1000+30,aim={combatAimX:1,combatAimY:0,hasAim:true};
 const world=()=>({mode:'dungeon',width:30,height:22,tiles:Array.from({length:22},()=>Array.from({length:30},()=>({passable:true,biome:'grass'}))),enemies:[],objects:[],effects:[],drops:[]});
 const actor=(classId='classless',slot=1)=>{const p=createPlayer('Armory '+classId);chooseClass(p,classId);Object.assign(p,{id:'armory-'+slot,slot,x:260,y:320,dirX:1,dirY:0,maxStamina:1000,stamina:1000,maxSpirit:1000,spirit:1000,hp:500,maxHp:500});return p;};
-const equip=(p,id)=>{addItem(p,id,1);assert(equipGearEntry(p,p.inventory.findLastIndex(e=>e.id===id)));};
+const equip=(p,id)=>{const level=ITEMS[id].minCombatLevel||1;p.skillState.combat.level=Math.max(level,p.skillState.combat.level);p.combatLevel=Math.max(level,p.combatLevel||1);addItem(p,id,1);assert(equipGearEntry(p,p.inventory.findLastIndex(e=>e.id===id)));};
 const bosses=[{isBoss:true,bossId:'motherOfBriars',groveMother:true},{isBoss:true,bossId:'alistairVeyreign',veyreignLord:true},{isBoss:true,bossId:'malakarSolgateDemonLord',bossType:'demonLord'},{isBoss:true,bossId:'seraphelTheUncrowned',bossType:'seraphel'}];
 for(const [i,boss]of bosses.entries()){
  const key=['grove','veyreign','malakar','seraphel'][i];assert.equal(bossArmoryPool(boss),key);
@@ -42,7 +42,7 @@ console.log('PASS '+combinations+' class/item combinations equip, attack, damage
  assert(useAbility(0,p,world(),()=>{},now,aim));assert(getPetalStorm(p));assert.equal(p.equipment.weapon,'roseReaper');
 }
 console.log('PASS Petalknight casts its real Petal Storm while wielding Rose Reaper');
-const focuses=Object.values(ITEMS).filter(i=>i.weaponType==='spiritFocus');assert.equal(focuses.length,15);assert.equal(new Set(focuses.map(i=>FOCUS_PROJECTILE_STYLES[i.id]?.index)).size,15);assert(focuses.every(i=>FOCUS_PROJECTILE_STYLES[i.id]));
+const focuses=Object.values(ITEMS).filter(i=>i.weaponType==='spiritFocus');assert.equal(focuses.length,19);assert.equal(new Set(focuses.map(i=>{const s=FOCUS_PROJECTILE_STYLES[i.id];return `${s?.sheet||'focus-projectiles'}:${s?.index}`;})).size,19);assert(focuses.every(i=>FOCUS_PROJECTILE_STYLES[i.id]));
 for(let slot=1;slot<=4;slot++)for(const item of focuses)for(const heavy of [false,true]){
  const p=actor('thornbinder',slot),w=world();equip(p,item.id);assert((heavy?requestHeavyAttack:requestBasicAttack)(p,w,aim,()=>{},now));
  // Equipment may change after windup; the committed shot retains its identity.
@@ -50,7 +50,7 @@ for(let slot=1;slot<=4;slot++)for(const item of focuses)for(const heavy of [fals
  for(let i=1;i<90&&!shot;i++){updateWeaponCombat(p,w,aim,.016,now+i*.016,()=>{});shot=getProjectiles(p).find(s=>s.focusItemId);}
  assert(shot,item.id);assert.equal(shot.focusItemId,item.id);assert.equal(shot.color,FOCUS_PROJECTILE_STYLES[item.id].color);assert(shot.speed>0&&shot.range>0);if(heavy)assert.equal(shot.kind,'focusLance');
 }
-console.log('PASS all 15 focus identities, light/heavy shots, four slots and equipment changes during windup');
+console.log('PASS all 19 focus identities, light/heavy shots, four slots and equipment changes during windup');
 const random=Math.random;try{
  Math.random=()=>.001;for(const seed of bosses){const p=actor(),w=world(),boss={...seed,x:260,y:320,kind:'basicBeast',name:'Boss',hp:0,maxHp:500,level:30};const drops=createEnemyLootDrops(boss,p,w);assert.equal(drops.filter(d=>BOSS_ARMORY_ITEMS[d.itemId]).length,1);const id=drops.find(d=>BOSS_ARMORY_ITEMS[d.itemId]).itemId;assert.deepEqual(createEnemyLootDrops(boss,p,w),[]);for(const d of w.drops){d.x=p.x;d.y=p.y;}updateWorldLootPickups(w,p,.01,()=>{});assert(p.inventory.some(e=>e.id===id));}
 }finally{Math.random=random;}

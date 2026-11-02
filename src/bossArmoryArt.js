@@ -10,10 +10,12 @@ export function drawBossArmoryWeapon(ctx,id,x,y,side=1){
 }
 export function drawFocusProjectile(ctx,projectile,x,y){
  const style=FOCUS_PROJECTILE_STYLES[projectile.focusItemId];if(!style)return false;
- const record=asset('focus-projectiles');if(!record?.ready)return false;
+ const record=asset(style.sheet||'focus-projectiles');if(!record?.ready)return false;
  const heavy=projectile.kind==='focusLance'||projectile.comboType==='heavy',width=heavy?38:28,height=heavy?24:22;
  ctx.save();ctx.imageSmoothingEnabled=false;ctx.translate(Math.round(x),Math.round(y));ctx.rotate(Math.atan2(projectile.dirY??0,projectile.dirX??1));
- ctx.drawImage(record.image,style.index%4*32,Math.floor(style.index/4)*32,32,32,-width/2,-height/2,width,height);ctx.restore();return true;
+ const columns=style.columns||4;
+ ctx.drawImage(record.image,style.index%columns*32,Math.floor(style.index/columns)*32,32,32,-width/2,-height/2,width,height);ctx.restore();return true;
 }
 for(const profile of Object.values(BOSS_ARMORY_ART))asset(profile.sheet);
 asset('focus-projectiles');
+for(const style of Object.values(FOCUS_PROJECTILE_STYLES))if(style.sheet)asset(style.sheet);

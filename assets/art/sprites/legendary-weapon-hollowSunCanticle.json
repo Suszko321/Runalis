@@ -1,0 +1,27 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/legendary-weapons/grimoires-master.png",
+  "sourceCell": 3,
+  "sourceBounds": [
+    37,
+    23,
+    502,
+    704
+  ],
+  "rect": [
+    20,
+    44,
+    55,
+    80
+  ],
+  "sheet": "legendary-weapon-hollowSunCanticle",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 100,
+  "scale": 0.34,
+  "iconSheet": "legendary-weapon-hollowSunCanticle-icon"
+}

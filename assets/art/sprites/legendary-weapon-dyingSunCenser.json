@@ -1,0 +1,27 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/legendary-weapons/staves-master.png",
+  "sourceCell": 2,
+  "sourceBounds": [
+    69,
+    42,
+    306,
+    841
+  ],
+  "rect": [
+    32,
+    4,
+    33,
+    112
+  ],
+  "sheet": "legendary-weapon-dyingSunCenser",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 82,
+  "scale": 0.72,
+  "iconSheet": "legendary-weapon-dyingSunCenser-icon"
+}

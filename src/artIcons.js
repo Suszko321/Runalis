@@ -26,6 +26,7 @@ export function equipmentIconMarkup(item,profile){
   const fit=fittedWearable(item?.id||profile.itemId);
   if(fit)return `<span class="runalis-art-icon inventory-art-icon" aria-hidden="true" style="background-image:url('assets/art/sprites/${fit.sheet}-icons.png');background-size:${fit.iconColumns*100}% 100%;background-position:${fit.row*100/(fit.iconColumns-1)}% 0%"></span>`;
   const bossArt=BOSS_ARMORY_ART[item?.id||profile.itemId];
+  if(bossArt?.iconSheet)return `<span class="runalis-art-icon inventory-art-icon" aria-hidden="true" style="background-image:url('assets/art/sprites/${bossArt.iconSheet}.png');background-size:contain;background-position:center;background-repeat:no-repeat"></span>`;
   if(bossArt)return `<span class="runalis-art-icon inventory-art-icon" aria-hidden="true" style="background-image:url('assets/art/sprites/${bossArt.sheet}.png');background-size:contain;background-position:center;background-repeat:no-repeat"></span>`;
   if(profile.faction)return factionItemIcon(profile);
   const text=String(profile.itemId||item?.id||item?.name||'');

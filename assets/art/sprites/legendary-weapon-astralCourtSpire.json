@@ -1,0 +1,27 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/legendary-weapons/staves-master.png",
+  "sourceCell": 0,
+  "sourceBounds": [
+    196,
+    51,
+    444,
+    834
+  ],
+  "rect": [
+    30,
+    4,
+    35,
+    112
+  ],
+  "sheet": "legendary-weapon-astralCourtSpire",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 82,
+  "scale": 0.72,
+  "iconSheet": "legendary-weapon-astralCourtSpire-icon"
+}

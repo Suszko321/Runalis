@@ -1,6 +1,16 @@
 import {ITEMS} from './data.js';
 import {getGearVisualProfile} from './gearVisualStyle.js';
 import {drawEquippedArt} from './equipmentArt.js';
+import {focusHipTransform} from './handedness.js';
+
+export function drawHipFocus(ctx,actor,facing,bob=0){
+  const ref=actor.equipment?.weapon,id=typeof ref==='string'?ref:ref?.id;
+  if(!id)return;
+  const profile=getGearVisualProfile(id,ITEMS[id]||{});
+  if(profile.weaponType!=='spiritFocus')return;
+  const {x,y,side}=focusHipTransform(actor.bodyType||actor.appearance?.bodyType,facing,bob);
+  drawEquippedArt(ctx,id,profile,x,y,side);
+}
 
 export function drawSheathedWeapon(ctx,actor,facing,bob=0){
   const ref=actor.equipment?.weapon,id=typeof ref==='string'?ref:ref?.id;

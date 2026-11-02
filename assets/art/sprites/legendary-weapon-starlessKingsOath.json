@@ -1,0 +1,27 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/legendary-weapons/swords-master.png",
+  "sourceCell": 2,
+  "sourceBounds": [
+    171,
+    97,
+    354,
+    645
+  ],
+  "rect": [
+    30,
+    15,
+    35,
+    104
+  ],
+  "sheet": "legendary-weapon-starlessKingsOath",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 100,
+  "scale": 0.62,
+  "iconSheet": "legendary-weapon-starlessKingsOath-icon"
+}

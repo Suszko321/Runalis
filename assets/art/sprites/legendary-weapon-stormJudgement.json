@@ -1,0 +1,27 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/legendary-weapons/maces-master.png",
+  "sourceCell": 3,
+  "sourceBounds": [
+    30,
+    60,
+    364,
+    818
+  ],
+  "rect": [
+    26,
+    23,
+    44,
+    100
+  ],
+  "sheet": "legendary-weapon-stormJudgement",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 100,
+  "scale": 0.58,
+  "iconSheet": "legendary-weapon-stormJudgement-icon"
+}

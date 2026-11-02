@@ -41,6 +41,15 @@ export function equippedArtReady(id,profile){
   const index=weaponArtIndex(id,profile);return index!==null && !!asset(index>=16?'arcane-special':'weapons-equipped')?.ready;
 }
 export function drawEquippedArt(ctx,id,profile,x,y,side=1) {
+  // Uniform world-size correction covers every old/new focus and grimoire.
+  // Inventory icons and non-focus weapon registrations retain their native sizes.
+  if(profile?.weaponType==='spiritFocus'){
+    ctx.save();ctx.translate(x,y);ctx.scale(.75,.75);
+    const drawn=drawEquippedArtModel(ctx,id,profile,0,0,side);ctx.restore();return drawn;
+  }
+  return drawEquippedArtModel(ctx,id,profile,x,y,side);
+}
+function drawEquippedArtModel(ctx,id,profile,x,y,side=1) {
   if(drawBossArmoryWeapon(ctx,id,x,y,profile?.weaponType==='bow'?bowSourceSide(side):side))return true;
   if(drawFactionWeapon(ctx,id,profile,x,y,side))return true;
   if(id==='tideglassRapier'){

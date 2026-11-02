@@ -1,0 +1,27 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/legendary-weapons/bows-master.png",
+  "sourceCell": 3,
+  "sourceBounds": [
+    114,
+    29,
+    317,
+    804
+  ],
+  "rect": [
+    27,
+    8,
+    29,
+    112
+  ],
+  "sheet": "legendary-weapon-eclipseSeraphBow",
+  "width": 96,
+  "height": 128,
+  "gripX": 32,
+  "gripY": 64,
+  "scale": 0.65,
+  "iconSheet": "legendary-weapon-eclipseSeraphBow-icon"
+}

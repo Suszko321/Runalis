@@ -1,0 +1,27 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/legendary-weapons/grimoires-master.png",
+  "sourceCell": 2,
+  "sourceBounds": [
+    43,
+    23,
+    500,
+    700
+  ],
+  "rect": [
+    21,
+    44,
+    54,
+    80
+  ],
+  "sheet": "legendary-weapon-wintersUnwrittenLaw",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 100,
+  "scale": 0.34,
+  "iconSheet": "legendary-weapon-wintersUnwrittenLaw-icon"
+}

@@ -1,0 +1,27 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/legendary-weapons/staves-master.png",
+  "sourceCell": 1,
+  "sourceBounds": [
+    73,
+    63,
+    307,
+    837
+  ],
+  "rect": [
+    31,
+    4,
+    34,
+    112
+  ],
+  "sheet": "legendary-weapon-briarheartSovereign",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 82,
+  "scale": 0.72,
+  "iconSheet": "legendary-weapon-briarheartSovereign-icon"
+}

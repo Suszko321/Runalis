@@ -1,0 +1,27 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/legendary-weapons/maces-master.png",
+  "sourceCell": 2,
+  "sourceBounds": [
+    40,
+    65,
+    415,
+    812
+  ],
+  "rect": [
+    23,
+    23,
+    50,
+    100
+  ],
+  "sheet": "legendary-weapon-worldAnvilHeart",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 100,
+  "scale": 0.58,
+  "iconSheet": "legendary-weapon-worldAnvilHeart-icon"
+}

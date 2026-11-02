@@ -373,3 +373,49 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - All owned gear supports +1–+20 cycles and successive rarity ascension, capped at Primordial +20. Retained completed-cycle steps prevent a strength drop at reset. Exact-copy identity/affixes, existing art, combat/display agreement, bag/equipped ownership and save metadata remain intact; owned endgame ensembles may improve above their authored drop quality.
 - Cheap Common starts, rank/tier gold growth, staged ordinary/advanced materials, Boss Cores for Rare+ and Tower Fragments for Legendary+. Live smith quotes bind current rarity/tier/cycle and recalculate costs atomically. Forge previews, promotion confirmation, missing materials and level50 locks are explicit.
 - Four full119-transaction starter paths,234 promotable bases, stat/preview/save/swap/atomicity contracts, four Chromium/WebKit desktop/mobile forge profiles and controller confirmation pass. Existing workshop, loot, itemization, endgame and enemy-delivery suites plus engineering11/11/build pass. [Exact costs and validation limits](gear-ascension/README.md); human economy pacing and physical-device/live-transport tests remain unclaimed.
+
+### E33 · Legendary weapon collection · IMPLEMENTED, verified
+
+- Added twenty persistent weapon IDs: four each of grimoires, swords, staves,
+  maces and bows, with authored held models/icons and four grimoire projectiles.
+  Existing source anatomy, gait, weapon rigs, moves/hitboxes and timing remain.
+  Measured transparent source gutters prevent neighbouring-cell fragments;
+  rejected/regenerated an initial sword master with clipped blade tips.
+- Only found at Legendary quality from qualifying level50+ elites/bosses by a
+  level50+ owner. Joined the existing 60% endgame pool without extra rolls or
+  altered geographic rarity policy; 40% legacy pool remains. Existing owned-copy
+  smith ascension is supported, including exact identity/passive preservation.
+  Twenty named effects use existing effective Legendary types, not new engines.
+- Passing contracts: 100 forbidden-grade acquisitions, all20 deterministic pool
+  selections and passive effects, 320 real light/heavy eight-class combinations,
+  four owners, save/load, 20 smith promotions, 32 latched book shots, real seeded
+  exactly-once death/drop/pickup and full-bag recovery. Native art: 8,960 samples,
+  40 pivot checks; browser: 520 actual-model renders, 20 decoded UI icons, five
+  normal-game captures with no missing resources/page errors.
+- Existing boss-armory model/browser now cover all19 focus identities, with152
+  direction/weight cases. Endgame gear, itemization, loot overhaul, enemy delivery,
+  lifelong ascension, 23,136 melee rig samples, 64 stance weapons and 3,776
+  Legendary locomotion renders pass. Engineering11/11, build and wearable coverage
+  pass. Forty-four new inspected art cells add no errors; eight approved player
+  hashes intact; the same24 pre-existing aggregate art errors remain visible.
+  [Content, prompts, visual evidence and playtest limits](legendary-weapons/README.md).
+
+### E34 · Focus proportions and fixed hip carry · IMPLEMENTED, verified
+
+- Reproduced nineteen focuses/books using raised wrist-rest placement and the
+  weapon hand's east-rear/west-front layering. All now use75% world size and a
+  fixed anatomical-right hip attachment for idle/walk/run. East draws in front;
+  west draws before the body and is mostly occluded. Bob follows the existing
+  root, without per-frame wrist/side switches or duplicate back-sheathed copies.
+- Action poses retain their existing hand attachment with the smaller model.
+  Inventory icons/projectiles, item IDs, gameplay data, original art, arm ownership,
+  gait clock, body geometry and non-focus weapons remain unchanged.
+- Passing native contracts:5,472 hip samples,608 active samples,38 actual pixel
+  exposure comparisons,1,216 full-armour/mantle cases; both bodies/four heads/all
+  facings/held frames, exact size/pivot, depth order, one model and no actor mutation.
+  Browser all19 equip/1,368 samples pass, plus Legendary weapon520-render normal
+  startup and existing boss-armory19-projectile/152-case browser coverage. One
+  earlier fixture profile-load timeout repeated successfully; cause unconfirmed.
+- Engineering11/11/build; affected weapon combat/save/loot/ascension,8,960 weapon
+  art,3,776 locomotion,23,136 melee rig and64 stance cases pass.
+  [Visual review, contracts and limitations](focus-hip/README.md).

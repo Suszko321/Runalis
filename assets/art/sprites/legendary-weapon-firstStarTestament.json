@@ -1,0 +1,27 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/legendary-weapons/grimoires-master.png",
+  "sourceCell": 0,
+  "sourceBounds": [
+    50,
+    25,
+    498,
+    702
+  ],
+  "rect": [
+    22,
+    44,
+    53,
+    80
+  ],
+  "sheet": "legendary-weapon-firstStarTestament",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 100,
+  "scale": 0.34,
+  "iconSheet": "legendary-weapon-firstStarTestament-icon"
+}

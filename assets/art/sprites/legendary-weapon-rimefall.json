@@ -1,0 +1,27 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/legendary-weapons/swords-master.png",
+  "sourceCell": 3,
+  "sourceBounds": [
+    180,
+    97,
+    363,
+    645
+  ],
+  "rect": [
+    30,
+    15,
+    35,
+    104
+  ],
+  "sheet": "legendary-weapon-rimefall",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 100,
+  "scale": 0.62,
+  "iconSheet": "legendary-weapon-rimefall-icon"
+}

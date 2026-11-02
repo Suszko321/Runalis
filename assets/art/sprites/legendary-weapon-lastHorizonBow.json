@@ -1,0 +1,27 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/legendary-weapons/bows-master.png",
+  "sourceCell": 2,
+  "sourceBounds": [
+    104,
+    53,
+    349,
+    782
+  ],
+  "rect": [
+    22,
+    8,
+    38,
+    112
+  ],
+  "sheet": "legendary-weapon-lastHorizonBow",
+  "width": 96,
+  "height": 128,
+  "gripX": 32,
+  "gripY": 64,
+  "scale": 0.65,
+  "iconSheet": "legendary-weapon-lastHorizonBow-icon"
+}

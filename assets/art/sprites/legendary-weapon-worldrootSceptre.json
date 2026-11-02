@@ -1,0 +1,27 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/legendary-weapons/staves-master.png",
+  "sourceCell": 3,
+  "sourceBounds": [
+    80,
+    57,
+    288,
+    843
+  ],
+  "rect": [
+    33,
+    4,
+    30,
+    112
+  ],
+  "sheet": "legendary-weapon-worldrootSceptre",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 82,
+  "scale": 0.72,
+  "iconSheet": "legendary-weapon-worldrootSceptre-icon"
+}

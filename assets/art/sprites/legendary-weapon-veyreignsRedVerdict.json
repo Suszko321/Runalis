@@ -1,0 +1,27 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/legendary-weapons/swords-master.png",
+  "sourceCell": 1,
+  "sourceBounds": [
+    156,
+    96,
+    381,
+    645
+  ],
+  "rect": [
+    26,
+    15,
+    43,
+    104
+  ],
+  "sheet": "legendary-weapon-veyreignsRedVerdict",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 100,
+  "scale": 0.62,
+  "iconSheet": "legendary-weapon-veyreignsRedVerdict-icon"
+}

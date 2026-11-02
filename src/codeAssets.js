@@ -1,4 +1,6 @@
 import {bowAimRotation} from './bowOrientation.js';
+import {focusAtHip} from './handedness.js';
+import {drawHipFocus} from './sheathedWeaponArt.js';
 import {summonEvolutionPresentation} from './summonEvolution.js';
 import {drawSummonEvolutionArt} from './summonEvolutionArt.js';
 import {drawGravecallerEvolutionArt,gravecallerEvolutionFrame} from './gravecallerEvolutionArt.js';
@@ -1763,6 +1765,9 @@ function drawWeaponAsset(ctx, actor, x, y, weaponRef, options = {}) {
   const bob = options.bob || 0;
   const armSwing = options.armSwing || 0;
   const pose = options.animationPose || {};
+  if(focusAtHip({...pose,weaponType:type})){
+    ctx.save();ctx.translate(x,y);drawHipFocus(ctx,actor,facing,bob);ctx.restore();return;
+  }
   const recoil = pose.weaponRecoil || 0;
   const orientation = getEquipmentOrientationTransform(type, facing, { bob, armSwing });
   const raster=equippedArtReady(weaponId,visualProfile);

@@ -1,7 +1,7 @@
 const {chromium}=require(process.env.RUNALIS_PLAYWRIGHT_MODULE||'../tmp/vampire-browser/node_modules/playwright');
 const fs=require('node:fs'),assert=require('node:assert/strict');
 (async()=>{const browser=await chromium.launch({channel:'msedge',headless:true});try{
- const page=await browser.newPage({viewport:{width:1450,height:1250}}),errors=[],missing=[];page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)missing.push(r.url());});
+ const page=await browser.newPage({viewport:{width:1450,height:1320}}),errors=[],missing=[];page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)missing.push(r.url());});
  await page.goto(process.env.RUNALIS_PREVIEW_URL||'http://127.0.0.1:8772/art-lab.html');
  const result=await page.evaluate(async()=>{
   const {asset,spriteArtStatus}=await import('/src/spriteArt.js'),{BOSS_ARMORY_ART}=await import('/src/bossArmoryArtData.js'),{BOSS_ARMORY_ITEMS}=await import('/src/bossArmoryData.js'),{FOCUS_PROJECTILE_STYLES}=await import('/src/focusProjectileData.js'),{drawBossArmoryWeapon,drawFocusProjectile}=await import('/src/bossArmoryArt.js');
@@ -9,7 +9,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
   const {ITEMS}=await import('/src/data.js');
   const names=[...Object.values(BOSS_ARMORY_ART).map(p=>p.sheet),'focus-projectiles','human-male','human-female'];await Promise.all(names.map(n=>{const a=asset(n);return a.ready?Promise.resolve():new Promise((ok,no)=>{a.image.addEventListener('load',ok,{once:true});a.image.addEventListener('error',()=>no(Error(n)),{once:true});});}));
   for(let i=0;i<100&&spriteArtStatus().some(a=>!a.ready&&!a.failed);i++)await new Promise(r=>setTimeout(r,20));
-  const canvas=document.createElement('canvas');canvas.width=1450;canvas.height=1200;for(const child of document.body.children)child.style.display='none';document.body.appendChild(canvas);document.body.style.cssText='margin:0;background:#24232c';const c=canvas.getContext('2d');c.fillStyle='#24232c';c.fillRect(0,0,1450,1200);c.fillStyle='#eee1ca';c.font='25px sans-serif';c.fillText('RUNALIS · boss armory & book focuses',25,38);
+  const canvas=document.createElement('canvas');canvas.width=1450;canvas.height=1280;for(const child of document.body.children)child.style.display='none';document.body.appendChild(canvas);document.body.style.cssText='margin:0;background:#24232c';const c=canvas.getContext('2d');c.fillStyle='#24232c';c.fillRect(0,0,1450,1280);c.fillStyle='#eee1ca';c.font='25px sans-serif';c.fillText('RUNALIS · boss armory & book focuses',25,38);
   const classes=['thornbinder','gravecaller','lightbringer','oathkeeper','fellhunter','waverider','eldritch','classless'],world={mode:'dungeon',width:30,height:22,tiles:Array.from({length:22},()=>Array.from({length:30},()=>({passable:true,biome:'grass'}))),enemies:[],objects:[],effects:[]};
   let gripCases=0,heldCases=0;const report=[];
   Object.entries(BOSS_ARMORY_ITEMS).forEach(([id,item],i)=>{
@@ -23,7 +23,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
     const used=calls.some(args=>args[0]===im);if(!used)throw Error('Held art missing '+id+' '+j);heldCases++;calls.length=0;
     if(!requestBasicAttack(p,world,{combatAimX:dx,combatAimY:dy,hasAim:true},()=>{},performance.now()/1000+30))throw Error('Attack '+id);
     updateWeaponCombat(p,world,{},.08,performance.now()/1000+30.08,()=>{});
-    const attackCanvas=document.createElement('canvas');attackCanvas.width=1450;attackCanvas.height=1200;const attackCtx=attackCanvas.getContext('2d');attackCtx.drawImage=(...args)=>calls.push(args);
+    const attackCanvas=document.createElement('canvas');attackCanvas.width=1450;attackCanvas.height=1280;const attackCtx=attackCanvas.getContext('2d');attackCtx.drawImage=(...args)=>calls.push(args);
     drawHumanActor(attackCtx,p,{x:0,y:0});if(!calls.some(args=>args[0]===im))throw Error('Attack art missing '+id);heldCases++;calls.length=0;
    }
    c.drawImage=original;
@@ -33,15 +33,15 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
    if(pixels<150||colors.size>32)throw Error('Equipment export '+id);report.push({id,pixels,colors:colors.size});
   });
   c.fillStyle='#eee1ca';c.font='23px sans-serif';c.fillText('Every focus has its own projectile',25,720);const masks=new Set(),pixelHashes=new Set();let projectileCases=0;
-  for(const [id,style]of Object.entries(FOCUS_PROJECTILE_STYLES)){
-   const sx=25+style.index%5*285,sy=780+Math.floor(style.index/5)*120;c.fillStyle='#ddd2c5';c.font='14px sans-serif';c.fillText(style.name,sx,sy);c.font='11px sans-serif';c.fillText(ITEMS[id].name,sx,sy+19);
+  for(const [ordinal,[id,style]]of Object.entries(FOCUS_PROJECTILE_STYLES).entries()){
+   const sx=25+ordinal%5*285,sy=780+Math.floor(ordinal/5)*120;c.fillStyle='#ddd2c5';c.font='14px sans-serif';c.fillText(style.name,sx,sy);c.font='11px sans-serif';c.fillText(ITEMS[id].name,sx,sy+19);
    const p={combatState:{projectiles:[{focusItemId:id,kind:'focusBolt',dirX:1,dirY:0,x:sx+65,y:sy+55,alive:true,age:.1}]}};drawCombatProjectiles(c,p,{x:0,y:0});p.combatState.projectiles[0]={...p.combatState.projectiles[0],x:sx+170,kind:'focusLance',comboType:'heavy'};drawCombatProjectiles(c,p,{x:0,y:0});
-   const im=asset('focus-projectiles').image,cv=document.createElement('canvas');cv.width=32;cv.height=32;const cc=cv.getContext('2d');cc.drawImage(im,style.index%4*32,Math.floor(style.index/4)*32,32,32,0,0,32,32);const d=cc.getImageData(0,0,32,32).data;let mask='',hash=0,pixels=0;
+   const im=asset(style.sheet||'focus-projectiles').image,cv=document.createElement('canvas');cv.width=32;cv.height=32;const cc=cv.getContext('2d');cc.drawImage(im,style.index%4*32,Math.floor(style.index/4)*32,32,32,0,0,32,32);const d=cc.getImageData(0,0,32,32).data;let mask='',hash=0,pixels=0;
    for(let y=0;y<32;y++)for(let x=0;x<32;x++){const at=(y*32+x)*4,a=d[at+3];if(a!==0&&a!==255)throw Error('Soft projectile alpha');mask+=a?'1':'0';if(a){pixels++;if(x===0||x===31||y===0||y===31)throw Error('Clipped projectile');}hash=(hash*31+d[at]+d[at+1]*3+d[at+2]*5+a)>>>0;}if(pixels<45)throw Error('Unreadable projectile '+id);masks.add(mask);pixelHashes.add(hash);
    for(const [dx,dy]of [[1,0],[0,1],[-1,0],[0,-1]])for(const kind of ['focusBolt','focusLance']){
     const angles=[],draws=[],target=document.createElement('canvas').getContext('2d');target.rotate=a=>angles.push(a);target.drawImage=(...a)=>draws.push(a);if(!drawFocusProjectile(target,{focusItemId:id,kind,dirX:dx,dirY:dy},0,0))throw Error('Missing focus renderer');if(Math.abs(angles[0]-Math.atan2(dy,dx))>.001||draws[0][1]!==style.index%4*32||draws[0][2]!==Math.floor(style.index/4)*32)throw Error('Wrong projectile direction/crop');projectileCases++;
    }
   }
-  if(masks.size!==15||pixelHashes.size!==15)throw Error('Foci need distinct silhouettes, not only color swaps');return {heldCases,gripCases,projectileCases,uniqueProjectileSilhouettes:masks.size,items:report};
+  if(masks.size!==19||pixelHashes.size!==19)throw Error('Foci need distinct silhouettes, not only color swaps');return {heldCases,gripCases,projectileCases,uniqueProjectileSilhouettes:masks.size,items:report};
  });assert.deepEqual(errors,[]);assert.deepEqual(missing,[]);await page.screenshot({path:'docs/boss-armory/runtime.png'});fs.writeFileSync('docs/boss-armory/browser-verification.json',JSON.stringify({...result,errors,missing},null,2));console.log('PASS '+JSON.stringify(result));
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

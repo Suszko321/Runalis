@@ -49,9 +49,12 @@ Chest/leg material transfer retains the existing silhouette and skin coverage.
   boss rewards for an overlevelled character.
 - The current universal gear chance (1.5% ordinary, 6% elite, 30% boss) and all
   six rarity weights remain unchanged. Only after a qualifying high-grade roll
-  does selection allocate 60% to the matching sixteen-piece endgame pool; 40%
+  does selection allocate 60% to the matching endgame pool; 40%
   remains with the existing 202-base unrestricted pool. Existing RNG consumption
   remains chance/selection/rarity, three calls. No second payout roll was added.
+  The later [Legendary weapon collection](../legendary-weapons/README.md) expands
+  the Legendary pool from sixteen armour pieces to sixteen armour pieces plus
+  twenty weapons. Mythical/Primordial retain sixteen authored armour pieces each.
 - `noRandomDrop` excludes these IDs from the unrestricted pool. No shop offers,
   recipes or quest grants were added. Acquisition and equip checks enforce exact
   quality and minimum wearer level. World rewards cannot downgrade restricted

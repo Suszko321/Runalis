@@ -1,0 +1,8 @@
+{
+  "cellWidth": 32,
+  "cellHeight": 32,
+  "columns": 4,
+  "rows": 1,
+  "direction": "right",
+  "source": "assets/art/source/legendary-weapons/projectiles-master.png"
+}
