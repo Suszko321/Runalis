@@ -251,7 +251,7 @@ export function drawHumanSprite(ctx, parts) {
 export function attackBodyFrame(pose){return pose.phase==='anticipation'?(pose.phaseProgress>.25?1:0):pose.phase==='strike'?2:pose.phase==='followThrough'?2:3;}
 export function hasAttackBody(actor,pose){
   if(usesMeleeRig(pose)&&asset('melee-arm-parts')?.ready)return false;
-  if(['bow','staff','spiritFocus','eldritch','unarmed'].includes(pose?.weaponType))return false;
+  if(['bow','staff','spiritFocus','grimoire','eldritch','unarmed'].includes(pose?.weaponType))return false;
   const female=(actor.bodyType||actor.appearance?.bodyType||'male')==='female',hair=actor.hairStyle||actor.appearance?.hairStyle||'short';
   return pose?.attacking && (female?['tied','ponytail'].includes(hair):hair==='short') && !!asset(female?'human-female-attack':'human-male-attack')?.ready;
 }
@@ -272,7 +272,7 @@ export function castBodyFrame(pose){
 }
 export function hasCastBody(actor,pose){
   if(!['cast','summon','charge','heavyCharge','guard'].includes(pose?.state))return false;
-  if(!['staff','spiritFocus','eldritch','unarmed'].includes(pose.weaponType))return false;
+  if(!['staff','spiritFocus','grimoire','eldritch','unarmed'].includes(pose.weaponType))return false;
   const female=(actor.bodyType||actor.appearance?.bodyType||'male')==='female',hair=actor.hairStyle||actor.appearance?.hairStyle||'short';
   return (female?['tied','ponytail'].includes(hair):hair==='short')&&!!asset(female?'human-female-cast':'human-male-cast')?.ready;
 }

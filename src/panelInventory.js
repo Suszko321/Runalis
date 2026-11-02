@@ -1195,6 +1195,7 @@ export function itemStatBlock(player, item, entry = null) {
   if(item.type==='weapon'){
     rows.push(['Strike power',calculateDisplayWeaponDamage(player,item,entry)]);
     rows.push(['Scales with',equipmentScaling(item)]);
+    if(item.weaponType==='grimoire')rows.push(['First light shot',`${item.spiritCost??8} Mana (Spirit) before bonuses`]);
     if(item.weaponType==='spiritFocus')rows.push(['First light shot',`${item.staminaCost??8} Stamina before bonuses`]);
     if(item.range)rows.push(['Reach',`${Number((item.range/32).toFixed(1))} tiles`]);
   }
@@ -1233,6 +1234,7 @@ export function compactItemStatBlock(player, item) {
   if (item.type === 'weapon') {
     rows.push(['Damage', calculateDisplayWeaponDamage(player, item)]);
     if (item.primarySkill) rows.push(['Scaling', skillLabel(item.primarySkill)]);
+    if(item.weaponType==='grimoire')rows.push(['Attack','Grimoire Shot · restores 6 Mana on enemy hit']);
     if (item.weaponType === 'spiritFocus') rows.push(['Attack', 'Focus Bolt']);
     rows.push(['Heavy', 'Hold Attack']);
   } else {
@@ -2089,7 +2091,8 @@ function weaponTypeLabel(type) {
   if (type === 'crossbow') return 'Crossbow';
   if (type === 'scythe') return 'Scythe';
   if (type === 'staff') return 'Staff';
-  if (type === 'spiritFocus') return 'Spirit Focus';
+  if(type==='grimoire')return 'Grimoires';
+  if (type === 'spiritFocus') return 'Foci';
   if (type === 'eldritch') return 'Eldritch Conduit';
   return type ? String(type) : 'Unknown';
 }

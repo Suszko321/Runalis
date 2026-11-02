@@ -362,13 +362,13 @@ function drawSkeletonCoterieWeapon(ctx, item, x, y, bob) {
   const edge = profile?.light || '#bfc4c8';
   const glow = profile?.accent || '#a86bd6';
 
-  if (weaponType === 'staff' || weaponType === 'spiritFocus') {
+  if (weaponType === 'staff' || ['spiritFocus','grimoire'].includes(weaponType)) {
     stroke(ctx, haft, 4);
     line(ctx, x - 26, y - 13 + bob, x - 35, y + 17 + bob);
     stroke(ctx, edge, 2);
     line(ctx, x - 26, y - 13 + bob, x - 35, y + 17 + bob);
     fill(ctx, glow);
-    circle(ctx, x - 25, y - 16 + bob, weaponType === 'spiritFocus' ? 6 : 4);
+    circle(ctx, x - 25, y - 16 + bob, ['spiritFocus','grimoire'].includes(weaponType) ? 6 : 4);
     fill(ctx, edge);
     circle(ctx, x - 25, y - 16 + bob, 2);
     return;
@@ -1796,7 +1796,7 @@ function drawWeaponAsset(ctx, actor, x, y, weaponRef, options = {}) {
   ctx.translate(-orientation.gripX, -gripY);
 
   if(raster){
-    if(pose.phase==='strike' && pose.phaseProgress<.98 && !['bow','staff','spiritFocus','eldritch'].includes(type)){
+    if(pose.phase==='strike' && pose.phaseProgress<.98 && !['bow','staff','spiritFocus','grimoire','eldritch'].includes(type)){
       const sign=(facing==='left'?-1:1)*(pose.family==='reverseSlash'?-1:1);
       for(let i=2;i>0;i--){ctx.save();ctx.globalAlpha*=i===2?.12:.24;ctx.translate(orientation.gripX,gripY);ctx.rotate(-sign*i*.24);drawEquippedArt(ctx,weaponId,visualProfile,0,0,orientation.side);ctx.restore();}
     }
@@ -1823,7 +1823,7 @@ function drawOrientedWeapon(ctx, gripX, gripY, weaponId, item, type, orientation
     drawScytheFacing(ctx, gripX, gripY, side, weaponId, item, orientation.modelFacing, visualProfile);
   } else if (type === 'bow') {
     drawBow(ctx, gripX, gripY, side, item, orientation.modelFacing, visualProfile);
-  } else if (type === 'spiritFocus') {
+  } else if (['spiritFocus','grimoire'].includes(type)) {
     drawSpiritFocus(ctx, gripX, gripY, side, weaponId, item, visualProfile);
   } else if (type === 'eldritch') {
     drawEldritchConduit(ctx, gripX, gripY, side);

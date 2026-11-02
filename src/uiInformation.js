@@ -97,7 +97,7 @@ export const ABILITY_SUMMARIES = Object.freeze({
  crimsonFeast:'Strike an enemy and recover a large portion of the damage as health. Requires the Vampire bloodline.'
 });
 
-export const informationLabel=id=>RUNALIS_SKILLS[id]?.name || ({spiritFocus:'Spirit Focus',miniDemon:'Demon',classless:'Classless',cambion:'Cambion',nephilim:'Nephilim',vampire:'Vampire'}[id]) || String(id||'').replace(/([a-z])([A-Z])/g,'$1 $2').replace(/^./,c=>c.toUpperCase());
+export const informationLabel=id=>RUNALIS_SKILLS[id]?.name || ({spiritFocus:'Foci',grimoire:'Grimoires',miniDemon:'Demon',classless:'Classless',cambion:'Cambion',nephilim:'Nephilim',vampire:'Vampire'}[id]) || String(id||'').replace(/([a-z])([A-Z])/g,'$1 $2').replace(/^./,c=>c.toUpperCase());
 export const informationNumber=n=>Number(Number(n||0).toFixed(1));
 export function abilitySummary(ability,player=null) {
  if(!ability)return '';
@@ -162,7 +162,7 @@ export function abilityScaling(ability) {
  return supports?`${damage}; healing and protection also use Warding and Defence`:damage;
 }
 export function equipmentPurpose(item) {
- if(item?.type==='weapon')return ({mace:'Crushing melee weapon. Three deliberate blows end in a heavy slam; trains Blunt Weapons.',hammer:'Heavy crushing melee weapon; trains Blunt Weapons.',bow:'Ranged weapon for aimed shots and charged heavy attacks.',crossbow:'Ranged weapon for aimed shots and heavy attacks.',spiritFocus:'Ranged focus that fires bolts using Stamina.',eldritch:'Ranged conduit; its attacks train Spirit.',scythe:'Melee weapon with sweeping attacks; trains Scythes.',staff:'Melee staff; its strikes train Warding.',spear:'Reach weapon with thrusts and sweeping cuts; trains Warding.'}[item.weaponType]) || 'Melee weapon for close-range light and heavy combinations.';
+ if(item?.type==='weapon')return ({mace:'Crushing melee weapon. Three deliberate blows end in a heavy slam; trains Blunt Weapons.',hammer:'Heavy crushing melee weapon; trains Blunt Weapons.',bow:'Ranged weapon for aimed shots and charged heavy attacks.',crossbow:'Ranged weapon for aimed shots and heavy attacks.',grimoire:'Ranged grimoire. Attacks use Mana (Spirit), train Grimoires, and restore 6 Mana on successful enemy hits.',spiritFocus:'Ranged focus. Attacks use Stamina and restore 6 Mana on successful enemy hits.',eldritch:'Ranged conduit; its attacks train Spirit.',scythe:'Melee weapon with sweeping attacks; trains Scythes.',staff:'Melee staff; its strikes train Warding.',spear:'Reach weapon with thrusts and sweeping cuts; trains Warding.'}[item.weaponType]) || 'Melee weapon for close-range light and heavy combinations.';
  if(item?.type==='armour')return 'Adds protection against incoming hits.';
  if(item?.type==='trinket')return 'Adds the listed combat bonuses while equipped.';
  if(item?.type==='scroll')return `Read to learn ${getAbilityById(item.learnsAbility)?.name||'its technique'}, then assign it in Abilities.`;

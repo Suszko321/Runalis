@@ -3,7 +3,7 @@ import {getGearVisualProfile} from './gearVisualStyle.js';
 import {getEnemyTargetId} from './coopEnemyScaling.js';
 
 export const WEAPON_READY_SECONDS=6;
-const STOWABLE_WEAPONS=new Set(['sword','dagger','axe','mace','hammer','spear','staff','scythe','spiritFocus']);
+const STOWABLE_WEAPONS=new Set(['sword','dagger','axe','mace','hammer','spear','staff','scythe','spiritFocus','grimoire']);
 const stances=new WeakMap();
 export function canSheatheWeapon(actor){
   const ref=actor?.equipment?.weapon,id=typeof ref==='string'?ref:ref?.id;

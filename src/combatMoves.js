@@ -145,6 +145,7 @@ const HEAVY_WEAPON_PROFILES = {
   crossbow: { threshold: 0.52, maxHold: 1.15, damageMultiplier: 1.85, staminaCostMultiplier: 2.2, durationMultiplier: 1.24, rangeMultiplier: 1.16, widthMultiplier: 1.2, lungeDistance: 8, knockbackMultiplier: 1.55, staggerBonus: 0.2 },
   scythe: { threshold: 0.5, maxHold: 1.08, damageMultiplier: 1.78, staminaCostMultiplier: 2.1, durationMultiplier: 1.2, rangeMultiplier: 1.14, lungeDistance: 22, knockbackMultiplier: 1.55, staggerBonus: 0.2 },
   spiritFocus: { threshold: 0.5, maxHold: 1.08, damageMultiplier: 1.68, staminaCostMultiplier: 2.05, durationMultiplier: 1.16, rangeMultiplier: 1.12, widthMultiplier: 1.16, lungeDistance: 10, knockbackMultiplier: 1.35, staggerBonus: 0.16 },
+  grimoire: { threshold: 0.5, maxHold: 1.08, damageMultiplier: 1.68, staminaCostMultiplier: 2.05, durationMultiplier: 1.16, rangeMultiplier: 1.12, widthMultiplier: 1.16, lungeDistance: 10, knockbackMultiplier: 1.35, staggerBonus: 0.16 },
   eldritch: { threshold: 0.48, maxHold: 1.05, damageMultiplier: 1.62, staminaCostMultiplier: 1.9, durationMultiplier: 1.14, rangeMultiplier: 1.08, widthMultiplier: 1.12, lungeDistance: 10, knockbackMultiplier: 1.3, staggerBonus: 0.14 },
   unarmed: { threshold: 0.4, maxHold: 0.92, damageMultiplier: 1.45, staminaCostMultiplier: 1.55, durationMultiplier: 1.1, rangeMultiplier: 1.08, lungeDistance: 16, knockbackMultiplier: 1.25, staggerBonus: 0.08 }
 };
@@ -580,6 +581,7 @@ export const WEAPON_MOVESETS = {
   }
 };
 
+WEAPON_MOVESETS.grimoire={skill:'grimoire',moves:WEAPON_MOVESETS.spiritFocus.moves.map((move,i)=>({...move,id:`grimoire_inscription_${i+1}`,name:['Inscribed Page','Turning Verse','Sealed Testament'][i],skill:'grimoire'}))};
 export const COMBAT_TIMING_BASELINE = Object.fromEntries(Object.entries(WEAPON_MOVESETS).map(([id,set])=>[id,set.moves.map(m=>({id:m.id,duration:m.duration,startup:m.startup,activeStart:m.activeStart,activeEnd:m.activeEnd,recovery:m.recovery}))]));
 for (const set of Object.values(WEAPON_MOVESETS)) for (const move of set.moves) {
   const tell = move.comboType==='heavy' ? .80 : .70;
@@ -762,7 +764,11 @@ function requestWeaponAttack(player, world, input, log, now, options = {}) {
   let move = heavyRequested ? buildUniversalHeavyMove(player, modifiedBaseMove, weapon, weaponType) : modifiedBaseMove;
   move = applyMythicalMeleeModifiers(player,applyCombinationFinisher(move,weaponType,sequence),weaponType);
 
-  if (!spendStamina(player, move.staminaCost, 0.5)) {
+  if(weaponType==='grimoire'){
+    move={...move,spiritCost:move.staminaCost,staminaCost:0};
+    if(Number(player.spirit||0)<move.spiritCost){log?.('Not enough Mana (Spirit) to cast from this grimoire.');return false;}
+    player.spirit-=move.spiritCost;
+  }else if (!spendStamina(player, move.staminaCost, 0.5)) {
     log?.(heavyRequested ? 'Not enough stamina for a heavy attack.' : 'Not enough stamina to attack.');
     return false;
   }
@@ -793,7 +799,7 @@ function requestWeaponAttack(player, world, input, log, now, options = {}) {
   player.dirX = aim.x;
   player.dirY = aim.y;
 
-  playSfx(['mace','hammer'].includes(weaponType)?'bluntLift':weaponType === 'spiritFocus' ? SOUND_EVENT_KEYS.SPELL_RELEASE : move.kind === 'projectile' ? 'bow' : 'attack', {
+  playSfx(['mace','hammer'].includes(weaponType)?'bluntLift':['spiritFocus','grimoire'].includes(weaponType) ? SOUND_EVENT_KEYS.SPELL_RELEASE : move.kind === 'projectile' ? 'bow' : 'attack', {
     volume: move.comboType === 'heavy' ? 1 : 0.82,
     throttle: 0.035
   });
@@ -1068,7 +1074,7 @@ export function applyCombinationFinisher(move,type,sequence) {
   if (['sword','scythe','axe'].includes(type)) result.arcDegrees=Math.min(165,(move.arcDegrees||70)+18);
   if (['dagger','spear'].includes(type)) result.lungeDistance=(move.lungeDistance||0)+12;
   if (['mace','hammer','staff'].includes(type)) result.knockback=(move.knockback||0)+14;
-  if (['bow','crossbow','spiritFocus'].includes(type)) result.projectileSpeed=(move.projectileSpeed||300)*1.15;
+  if (['bow','crossbow','spiritFocus','grimoire'].includes(type)) result.projectileSpeed=(move.projectileSpeed||300)*1.15;
   return result;
 }
 
@@ -1157,12 +1163,16 @@ function getUniversalHeavyPreviewMove(player, weapon, weaponType) {
 }
 
 function applyWeaponMoveModifiers(player, move, weapon, weaponType) {
-  if (!move || weaponType !== 'spiritFocus') return move;
+  if (!move || !['spiritFocus','grimoire'].includes(weaponType)) return move;
 
-  const bonuses = getSkillTreeBonuses(player);
+  const allBonuses = getSkillTreeBonuses(player);
+  // Shot bonuses belong to their own weapon tree, never the other category.
+  const bonuses={...allBonuses};
+  if(weaponType==='grimoire')for(const key of ['focusBoltDamagePct','focusBoltCostReductionPct','focusBoltRangePct','focusBoltSpeedPct','focusStaggerPct','focusBoltPierceChancePct'])bonuses[key]=allBonuses[key.replace('focusBolt','grimoireBolt').replace('focusStagger','grimoireStagger')]||0;
   const traits = Array.isArray(weapon?.traits) ? weapon.traits.map(trait => String(trait).toLowerCase()) : [];
   const modified = { ...move };
   modified.focusItemId=weapon?.id;
+  modified.weaponType=weaponType;
   if(FOCUS_PROJECTILE_STYLES[weapon?.id])modified.color=FOCUS_PROJECTILE_STYLES[weapon.id].color;
 
   const damagePct =
@@ -1185,14 +1195,15 @@ function applyWeaponMoveModifiers(player, move, weapon, weaponType) {
     Math.max(0, Number(bonuses.focusBoltPierceChancePct || 0)) / 100 +
     (traits.includes('prism edge') ? 0.12 : 0);
 
-  const itemStaminaCost = Number(weapon?.staminaCost || 0);
+  const itemStaminaCost = Number((weaponType==='grimoire'?weapon?.spiritCost:weapon?.staminaCost) || 0);
   const moveBaseCost = Number(modified.staminaCost || 8);
   const weaponAdjustedCost = itemStaminaCost > 0
     ? Math.max(3, itemStaminaCost + moveBaseCost - 8)
     : moveBaseCost;
 
   modified.damageMultiplier = Number(modified.damageMultiplier || 1) * (1 + damagePct / 100);
-  modified.staminaCost = Math.max(3, Math.ceil(weaponAdjustedCost * (1 - Math.min(0.55, costReductionPct / 100))));
+  const adjustedCost=weaponAdjustedCost * (1 - Math.min(0.55, costReductionPct / 100));
+  modified.staminaCost = Math.max(3,weaponType==='grimoire'?Math.round(adjustedCost*100)/100:Math.ceil(adjustedCost));
   modified.projectileRange = Math.max(
     Number(modified.projectileRange || 260),
     Number(weapon?.range || 0) || 0
@@ -1219,7 +1230,7 @@ function buildUniversalHeavyMove(player, move, weapon, weaponType) {
   const activeStart = Math.max(0.08, Math.min(duration * 0.68, sourceActiveStart * profile.durationMultiplier + 0.04));
   const activeEnd = Math.min(duration - 0.05, activeStart + Math.max(0.07, (sourceActiveEnd - sourceActiveStart) * 1.15));
   const projectile = move.kind === 'projectile';
-  const focus = weaponType === 'spiritFocus' || weaponType === 'eldritch';
+  const focus = ['spiritFocus','grimoire'].includes(weaponType) || weaponType === 'eldritch';
 
   const heavy = {
     ...move,
@@ -1292,7 +1303,7 @@ function getHeavyAttackProfile(weaponType, weapon) {
 
 function getHeavyImpact(move, weaponType) {
   if (weaponType === 'scythe') return 'heavySpiritSlash';
-  if (weaponType === 'spiritFocus') return 'focusBoltHit';
+  if (['spiritFocus','grimoire'].includes(weaponType)) return 'focusBoltHit';
   if (weaponType === 'eldritch') return 'eldritchBeam';
   if (weaponType === 'bow' || weaponType === 'crossbow') return 'powerArrowHit';
   if (weaponType === 'mace' || weaponType === 'hammer' || move.kind === 'circle') return 'groundSlam';
@@ -1466,6 +1477,7 @@ function maybeFireProjectile(player, move, state, world) {
     knockback: move.knockback || 10,
     stagger: move.stagger || 0,
     skill: move.skill || getSkillForWeaponType(getWeaponType(getEquippedWeapon(player))) || 'archery',
+    weaponType:move.weaponType,
     comboType: move.comboType,
     impact: move.impact || 'arrowHit',
     pierceRemaining: move.pierce || 0,
@@ -1589,7 +1601,7 @@ function resolveProjectileHits(player, world, projectile, log) {
 
 function calculateMoveDamage(player, move) {
   const weapon = getEquippedWeapon(player);
-  const weaponType = getWeaponType(weapon);
+  const weaponType = move.weaponType || getWeaponType(weapon);
   const moveset = getMovesetForWeaponType(weaponType);
   const skillId = ['mace','hammer'].includes(weaponType)?'blunt':move.skill || moveset.skill || weapon?.primarySkill || weapon?.skill || 'blade';
 
@@ -1637,7 +1649,7 @@ export function calculateWeaponDamage(player, weapon, fallbackWeaponType = 'unar
 
   const legacyPower = Number(weapon.power || 0) * 0.75;
   const spiritPower = Number(weapon.spirit || 0) * 0.5;
-  const focusPower = weapon?.weaponType === 'spiritFocus'
+  const focusPower = ['spiritFocus','grimoire'].includes(weapon?.weaponType)
     ? Number(weapon.focusPower || 0) * 0.85
     : 0;
 
@@ -1875,8 +1887,8 @@ function getCritChance(player, weapon, move) {
     chance += Math.min(0.08, getSkillLevel(player, 'archery') * 0.0008);
   }
 
-  if (weapon?.weaponType === 'spiritFocus') {
-    chance += Math.min(0.06, getSkillLevel(player, 'spirit') * 0.0006);
+  if (['spiritFocus','grimoire'].includes(weapon?.weaponType)) {
+    chance += Math.min(0.06, getSkillLevel(player,weaponProficiency(weapon,'spirit')) * 0.0006);
   }
 
   chance += (treeBonuses.critChancePct || 0) / 100;
@@ -1904,7 +1916,7 @@ function scaleMoveTiming(move, speedMultiplier) {
 
 function getDamageColor(move, damagePacket) {
   if (damagePacket?.crit) return '#ffcc66';
-  if (damagePacket?.weaponType === 'spiritFocus' || move.impact === 'focusBoltHit') return '#fff1b8';
+  if (['spiritFocus','grimoire'].includes(damagePacket?.weaponType) || move.impact === 'focusBoltHit') return '#fff1b8';
   if (damagePacket?.skillId === 'spirit') return '#b68cff';
   if (damagePacket?.skillId === 'warding') return '#73d18a';
   if (move.kind === 'projectile') return '#d9ad4f';
@@ -1918,11 +1930,12 @@ function getDefaultSkillForWeaponType(weaponType) {
 }
 
 function getSkillForWeaponType(weaponType) {
+  if(weaponType==='grimoire')return 'grimoire';
   if (weaponType === 'bow') return 'archery';
   if (weaponType === 'crossbow') return 'archery';
   if (weaponType === 'scythe') return 'spirit';
   if (weaponType === 'eldritch') return 'spirit';
-  if (weaponType === 'spiritFocus') return 'spirit';
+  if (['spiritFocus','grimoire'].includes(weaponType)) return 'spirit';
   if (weaponType === 'staff') return 'warding';
   if (weaponType === 'spear') return 'warding';
   if (weaponType === 'dagger') return 'blade';

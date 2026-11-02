@@ -95,11 +95,11 @@ test('primary weapon melee and projectile hits restore spirit once per hit, incl
  const weapons=new Map();for(const [id,item] of Object.entries(ITEMS))if(item.slot==='weapon'&&item.weaponType&&!weapons.has(item.weaponType))weapons.set(item.weaponType,id);
  assert.ok(weapons.size>=6);
  for(const [type,id] of weapons)for(const heavy of [false,true]){
-  const p=actor('gravecaller'),w=world(),t=now();p.equipment.weapon=id;p.spirit=0;
+  const p=actor('gravecaller'),w=world(),t=now();p.equipment.weapon=id;p.spirit=type==='grimoire'?50:0;
   const e=foe(p,284,320,{hp:100000,maxHp:100000});w.enemies=[e];
-  assert.ok((heavy?requestHeavyAttack:requestBasicAttack)(p,w,aim,()=>{},t),type);
+  assert.ok((heavy?requestHeavyAttack:requestBasicAttack)(p,w,aim,()=>{},t),type);const paid=p.combatState.attackMove.spiritCost||0;
   for(let i=1;i<=120;i++)updateWeaponCombat(p,w,aim,1/60,t+i/60,()=>{});
-  assert.ok(e.hp<e.maxHp,type+' '+heavy+' missed');assert.equal(p.spirit,PRIMARY_WEAPON_SPIRIT_ON_HIT,type+' '+heavy+' reward');
+  assert.ok(e.hp<e.maxHp,type+' '+heavy+' missed');assert.equal(p.spirit,(type==='grimoire'?50-paid:0)+PRIMARY_WEAPON_SPIRIT_ON_HIT,type+' '+heavy+' reward');
  }
  const weapon=weapons.get('sword')||weapons.values().next().value;
  for(const scenario of ['miss','cap','dormant','kill']){

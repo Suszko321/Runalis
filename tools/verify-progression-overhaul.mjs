@@ -140,7 +140,7 @@ test('all eight light/heavy combinations execute with real finisher, hit timing 
    if(step===2){assert.ok(p.combatState.attackMove.finisher);assert.equal(p.combatState.attackMove.sequence,sequence);}
    for(let frame=1;frame<=40;frame++)updateWeaponCombat(p,w,aim,1/60,start+frame/60,()=>{});
   }
-  assert.ok(e.hp<e.maxHp,type+sequence+' must hit');assert.ok(p.stamina<10000);
+  assert.ok(e.hp<e.maxHp,type+sequence+' must hit');if(type==='grimoire'){assert.equal(p.stamina,10000);assert(p.spirit<200);}else assert.ok(p.stamina<10000);
  }
 });
 test('faster attacks still register contact when a frame crosses the entire active interval',()=>{

@@ -178,7 +178,7 @@ function inferArchetype(text, classId) {
 
 function inferMaterial(text, slot, weaponType) {
   if (includesAny(text, ['veyrglass', 'tideglass', 'watcher glass', 'mirror'])) return 'veyrglass';
-  if (weaponType === 'spiritFocus') return includesAny(text, ['dawn', 'sun', 'halo', 'uncrowned']) ? 'stone' : 'steel';
+  if (['spiritFocus','grimoire'].includes(weaponType)) return includesAny(text, ['dawn', 'sun', 'halo', 'uncrowned']) ? 'stone' : 'steel';
   if (includesAny(text, ['bone', 'lich'])) return 'bone';
   if (includesAny(text, ['robe', 'hood', 'mantle', 'tunic', 'coat', 'garb', 'wrap'])) return 'cloth';
   if (includesAny(text, ['leather', 'hunter', 'roadless', 'rogue'])) return 'leather';
@@ -189,6 +189,7 @@ function inferMaterial(text, slot, weaponType) {
 }
 
 function inferVisualWeaponType(text, explicit) {
+  if(explicit==='grimoire')return 'grimoire';
   if (includesAny(text, ['old knife', 'grave knife', 'dagger'])) return 'dagger';
   if (explicit === 'spiritFocus' || includesAny(text, ['dawnlens', 'spirit focus', 'pilgrim\'s focus', 'pilgrims focus', 'sealglass prism', 'moonlit reliquary', 'grave-lens', 'red seal conductor', 'sunfracture gauntlet', 'uncrowned prism'])) return 'spiritFocus';
   if (includesAny(text, ['eldritch', 'conduit', 'starless'])) return 'eldritch';
@@ -205,7 +206,7 @@ function inferSilhouette(text, slot, weaponType, archetype) {
     if (weaponType === 'bow') return text.includes('longbow') ? 'longbow' : 'bow';
     if (weaponType === 'staff') return archetype === 'thornbinder' ? 'branchstaff' : 'staff';
     if (weaponType === 'scythe') return 'scythe';
-    if (weaponType === 'spiritFocus') return text.includes('gauntlet') ? 'focusgauntlet' : text.includes('reliquary') ? 'reliquaryfocus' : 'spiritfocus';
+    if (['spiritFocus','grimoire'].includes(weaponType)) return text.includes('gauntlet') ? 'focusgauntlet' : text.includes('reliquary') ? 'reliquaryfocus' : 'spiritfocus';
     if (weaponType === 'eldritch') return 'conduit';
     return text.includes('rapier') ? 'rapier' : text.includes('black iron') ? 'greatsword' : 'sword';
   }

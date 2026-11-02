@@ -17,7 +17,7 @@ import { ITEMS, getAbilityById, normalizeAbilityId } from './data.js';
 import {createDisciplinePassives} from './skillTreePassives.js';
 import {getCombatLevel} from './skills.js';
 
-export const SKILL_TREE_VERSION = 16;
+export const SKILL_TREE_VERSION = 17;
 const removedOathNodes=new Set(['blade_execution','blade_guardian_oath']);
 
 export const SKILL_TREE_NODES = {
@@ -1195,7 +1195,7 @@ const WEAPON_TREE_CONFIG = {
     }
   },
   spiritFocus: {
-    title: 'Spirit Focus Mastery',
+    title: 'Foci Mastery',
     root: 'Focus Initiate',
     branchA: 'Steady Hand',
     branchB: 'Efficient Channel',
@@ -1235,7 +1235,13 @@ const WEAPON_TREE_CONFIG = {
   }
 };
 
+WEAPON_TREE_CONFIG.grimoire={
+ title:'Grimoire Mastery',root:'First Inscription',branchA:'Long Verses',branchB:'Economical Script',
+ secondA:'Piercing Marginalia',secondB:'Weight of Words',capstone:'Living Testament',
+ bonuses:Object.fromEntries(Object.entries(WEAPON_TREE_CONFIG.spiritFocus.bonuses).map(([node,bonuses])=>[node,Object.fromEntries(Object.entries(bonuses).map(([key,value])=>[key.replace('focusBolt','grimoireBolt').replace('focusStagger','grimoireStagger'),value]))]))
+};
 Object.assign(SKILL_TREE_NODES, createWeaponTreeNodes());
+for(const node of Object.values(SKILL_TREE_NODES).filter(n=>n.tree==='grimoire'))node.desc=`Grimoire attacks spend Mana (Spirit) and restore 6 Mana on successful enemy hits. ${describeSkillTreeBonuses(node.bonuses).join('. ')}.`;
 // New techniques form two parallel branches after each existing core. Existing
 // doctrine choices and capstones are retained unchanged.
 for (const tree of ['blade','archery','spirit','warding','hydromancy','lightbringer','eldritch']) {
@@ -1264,7 +1270,7 @@ for (const node of Object.values(SKILL_TREE_NODES)) {
 
 export const CORE_SKILL_TREE_ORDER = ['blade', 'archery', 'spirit', 'warding', 'hydromancy', 'lightbringer', 'eldritch'];
 export const BLOODLINE_SKILL_TREE_ORDER = ['cambion', 'nephilim', 'vampire'];
-export const WEAPON_SKILL_TREE_ORDER = ['sword', 'blunt', 'bow', 'staff', 'scythe', 'spiritFocus', 'eldritchWeapon'];
+export const WEAPON_SKILL_TREE_ORDER = ['sword', 'blunt', 'bow', 'staff', 'scythe', 'spiritFocus', 'grimoire', 'eldritchWeapon'];
 export const SKILL_TREE_ORDER = [...CORE_SKILL_TREE_ORDER, ...BLOODLINE_SKILL_TREE_ORDER, ...WEAPON_SKILL_TREE_ORDER];
 const warnedSkillTreeCycles = new Set();
 
@@ -1789,7 +1795,8 @@ function treeDisplayName(tree) {
     bow: 'Bow Mastery',
     staff: 'Staff Mastery',
     scythe: 'Scythe Mastery',
-    spiritFocus: 'Spirit Focus Mastery',
+    spiritFocus: 'Foci Mastery',
+    grimoire:'Grimoire Mastery',
     eldritchWeapon: 'Conduit Mastery'
   };
 
@@ -1807,6 +1814,7 @@ function getProgressionSkillForTree(tree) {
     lightbringer: 'spirit',
     scythe: 'spirit',
     spiritFocus: 'spirit',
+    grimoire:'grimoire',
     eldritchWeapon: 'spirit'
   };
   return map[tree] || tree;
@@ -1956,6 +1964,7 @@ export function describeSkillTreeBonuses(bonuses) {
     lightbringerShieldPct: 'Lightbringer Shield',
     brandedTargetDamagePct: 'Branded Target Damage',
     overbrightDuration: 'Overbright Duration',
+    grimoireBoltDamagePct:'Grimoire Shot Damage',grimoireBoltCostReductionPct:'Grimoire Mana Cost Reduction',grimoireBoltRangePct:'Grimoire Range',grimoireBoltSpeedPct:'Grimoire Projectile Speed',grimoireBoltPierceChancePct:'Grimoire Pierce Chance',grimoireStaggerPct:'Grimoire Stagger',
     focusBoltDamagePct: 'Focus Bolt Damage',
     focusBoltCostReductionPct: 'Focus Bolt Cost Reduction',
     focusBoltRangePct: 'Focus Bolt Range',

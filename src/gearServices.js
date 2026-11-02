@@ -26,6 +26,6 @@ export function commitGearSale(player,quote){
 export function gearDeconstructionRewards(item){
  const rank=GEAR_RARITIES[gearRarity(item)].rank,rewards=[['ironScrap',[1,2,3,5,8,12][rank]]];
  if(rank>=2)rewards.push(['arcaneDust',[0,0,1,3,6,10][rank]]);
- const gathered=['bow','staff','spiritFocus'].includes(item.weaponType)?'sturdyHardwood':item.type==='armour'?'amberResin':item.type==='trinket'?'fieldstone':'blackironOre';
+ const gathered=['bow','staff','spiritFocus','grimoire'].includes(item.weaponType)?'sturdyHardwood':item.type==='armour'?'amberResin':item.type==='trinket'?'fieldstone':'blackironOre';
  rewards.push([gathered,1+Math.floor(rank/2)]);if(rank>=4)rewards.push(['towerFragment',rank-3]);return rewards;
 }

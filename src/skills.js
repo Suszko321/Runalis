@@ -20,6 +20,11 @@ import { awardHotbarMasteryXp } from './abilityMasterySystem.js';
 // -----------------------------------------------------------------------------
 
 export const RUNALIS_SKILLS = {
+  grimoire: {
+    id:'grimoire',name:'Grimoires',shortName:'GRM',type:'combat',dormantName:'Untrained',
+    description:'Book-bound weapon mastery. Grimoire light and heavy attacks spend Mana (Spirit); successful enemy hits restore Mana like other weapons.',
+    primaryVerb:'Inscribe',combatWeight:1,classNote:'Any class can train Grimoires and unlock its independent weapon mastery tree.'
+  },
   blunt: {
     id:'blunt', name:'Blunt Weapons', shortName:'BLT', type:'combat', dormantName:'Untrained',
     description:'Crushing force with maces and hammers. Strengthens blunt weapon attacks and Oathkeeper techniques.',
@@ -201,7 +206,7 @@ Object.assign(RUNALIS_SKILLS, {
   dexterity: { id:'dexterity', name:'Dexterity', shortName:'DEX', type:'combat', dormantName:'Untrained', description:'Physical handling: modest attack cadence and dodge efficiency.', primaryVerb:'React' }
 });
 
-export const WEAPON_COMBAT_SKILL_IDS = ['blade', 'blunt', 'scythe', 'archery', 'spirit', 'warding', 'summoning'];
+export const WEAPON_COMBAT_SKILL_IDS = ['blade', 'blunt', 'scythe', 'archery', 'spirit', 'warding', 'summoning','grimoire'];
 export const SURVIVAL_COMBAT_SKILL_IDS = ['defence', 'hitpoints', 'stamina', 'focus', 'dexterity'];
 export const COMBAT_SKILL_IDS = [...WEAPON_COMBAT_SKILL_IDS, ...SURVIVAL_COMBAT_SKILL_IDS];
 
@@ -300,7 +305,7 @@ export function createNewSkillState() {
     };
   }
 
-  return { skills, combat: { level: 1, xp: 0 }, progressionVersion: 2, bluntProgressionVersion: 1 };
+  return { skills, combat: { level: 1, xp: 0 }, progressionVersion: 2, bluntProgressionVersion: 1,grimoireProgressionVersion:1 };
 }
 
 export function getSkillDefinition(skillId) {
@@ -940,6 +945,7 @@ export function migrateSkillState(player) {
   if (!player.skillState) {
     player.skillState = createNewSkillState();
     if(player.skills?.blade)delete player.skillState.bluntProgressionVersion;
+    if(player.skills?.spirit)delete player.skillState.grimoireProgressionVersion;
   }
 
   if (!player.skillState.skills) {
@@ -1023,6 +1029,17 @@ export function migrateSkillState(player) {
     if(player.loadout?.primarySkill==='blade' && /mace|hammer|maul/i.test(String(player.equipment?.weapon?.id||player.equipment?.weapon||'')))player.loadout.primarySkill='blunt';
   }
   player.skillState.legacySkillsImported = true;
+  // These books previously trained Spirit. Preserve established book users'
+  // proficiency once without taking away their Spirit attribute or focus history.
+  if(!player.skillState.grimoireProgressionVersion){
+    const oldBooks=new Set(['threadbarePrimer','roseboundCodex','mortuaryGrimoire','ashenScripture','dawnLitany','firstStarTestament','crimsonConcord','wintersUnwrittenLaw','hollowSunCanticle']);
+    const book=ref=>oldBooks.has(typeof ref==='string'?ref:ref?.id||ref?.itemId)||ref?.weaponType==='grimoire';
+    const refs=[...Object.values(player.equipment||{}),...(player.inventory||[]),...(Array.isArray(player.bank)?player.bank:player.bank?.items||[])];
+    const source=player.skillState.skills.spirit,target=player.skillState.skills.grimoire;
+    if(refs.some(book)&&source&&(source.level>target.level||source.level===target.level&&source.xp>target.xp))player.skillState.skills.grimoire={...source};
+    if(book(player.equipment?.weapon)&&player.loadout?.primarySkill==='spirit')player.loadout.primarySkill='grimoire';
+    player.skillState.grimoireProgressionVersion=1;
+  }
 
   // Class migration and cleanup.
   if (player.classId && CLASS_SKILL_LINKS[player.classId]) {

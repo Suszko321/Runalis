@@ -13,10 +13,10 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
   const classes=['thornbinder','gravecaller','lightbringer','oathkeeper','fellhunter','waverider','eldritch','classless'],world={mode:'dungeon',width:30,height:22,tiles:Array.from({length:22},()=>Array.from({length:30},()=>({passable:true,biome:'grass'}))),enemies:[],objects:[],effects:[]};
   let gripCases=0,heldCases=0;const report=[];
   Object.entries(BOSS_ARMORY_ITEMS).forEach(([id,item],i)=>{
-   const x=30+i%4*355,y=90+Math.floor(i/4)*290,profile=BOSS_ARMORY_ART[id];c.fillStyle='#ded2c2';c.font='17px sans-serif';c.fillText(item.name,x,y);c.font='13px sans-serif';c.fillText(classes[i][0].toUpperCase()+classes[i].slice(1)+' · '+(item.weaponType==='spiritFocus'?'Book focus':item.weaponType),x,y+24);
+   const x=30+i%4*355,y=90+Math.floor(i/4)*290,profile=BOSS_ARMORY_ART[id];c.fillStyle='#ded2c2';c.font='17px sans-serif';c.fillText(item.name,x,y);c.font='13px sans-serif';c.fillText(classes[i][0].toUpperCase()+classes[i].slice(1)+' · '+(item.weaponType==='grimoire'?'Grimoire':item.weaponType),x,y+24);
    const im=asset(profile.sheet).image;c.imageSmoothingEnabled=false;c.drawImage(im,x+5,y+48,96,128);
    if(!itemIconMarkup(item).includes(profile.sheet+'.png'))throw Error('Inventory icon does not use new art '+id);
-   const p=createPlayer('Armory');chooseClass(p,classes[i]);Object.assign(p,{x:200,y:200,hp:500,maxHp:500,stamina:1000,maxStamina:1000,dirX:1,dirY:0});addItem(p,id);if(!equipGearEntry(p,p.inventory.findLastIndex(e=>e.id===id)))throw Error('Cannot equip '+id);
+   const p=createPlayer('Armory');chooseClass(p,classes[i]);Object.assign(p,{x:200,y:200,hp:500,maxHp:500,stamina:1000,maxStamina:1000,dirX:1,dirY:0});addItem(p,id);if(!equipGearEntry(p,p.inventory.findLastIndex(e=>e.id===id)))throw Error('Cannot equip '+id);p.spirit=p.maxSpirit=1000;
    const original=c.drawImage.bind(c),calls=[];c.drawImage=(...args)=>{calls.push(args);original(...args);};
    for(const [j,[dx,dy]]of [[0,1],[1,0],[0,-1],[-1,0]].entries()){
     p.x=x+155+j%2*105;p.y=y+110+Math.floor(j/2)*105;p.dirX=dx;p.dirY=dy;p.combatState=null;drawHumanActor(c,p,{x:0,y:0});

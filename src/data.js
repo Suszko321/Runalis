@@ -287,6 +287,7 @@ export const WEAPON_XP_PROFILES = {
     spirit: 0.25
   },
 
+  grimoire: {grimoire:0.85,warding:0.15},
   spiritFocus: {
     spirit: 0.85,
     warding: 0.15

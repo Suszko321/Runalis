@@ -42,7 +42,7 @@ console.log('PASS '+combinations+' class/item combinations equip, attack, damage
  assert(useAbility(0,p,world(),()=>{},now,aim));assert(getPetalStorm(p));assert.equal(p.equipment.weapon,'roseReaper');
 }
 console.log('PASS Petalknight casts its real Petal Storm while wielding Rose Reaper');
-const focuses=Object.values(ITEMS).filter(i=>i.weaponType==='spiritFocus');assert.equal(focuses.length,21);assert.equal(new Set(focuses.map(i=>{const s=FOCUS_PROJECTILE_STYLES[i.id];return `${s?.sheet||'focus-projectiles'}:${s?.index}`;})).size,21);assert(focuses.every(i=>FOCUS_PROJECTILE_STYLES[i.id]));
+const focuses=Object.values(ITEMS).filter(i=>['spiritFocus','grimoire'].includes(i.weaponType));assert.equal(focuses.length,21);assert.equal(new Set(focuses.map(i=>{const s=FOCUS_PROJECTILE_STYLES[i.id];return `${s?.sheet||'focus-projectiles'}:${s?.index}`;})).size,21);assert(focuses.every(i=>FOCUS_PROJECTILE_STYLES[i.id]));
 for(let slot=1;slot<=4;slot++)for(const item of focuses)for(const heavy of [false,true]){
  const p=actor('thornbinder',slot),w=world();equip(p,item.id);assert((heavy?requestHeavyAttack:requestBasicAttack)(p,w,aim,()=>{},now));
  // Equipment may change after windup; the committed shot retains its identity.

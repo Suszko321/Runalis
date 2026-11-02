@@ -1330,7 +1330,7 @@ export function getPower(player) {
 
   const oldWeaponPower = weapon?.power || 0;
   const newWeaponBase = weapon?.baseDamage || 0;
-  const focusPower = weapon?.weaponType === 'spiritFocus'
+  const focusPower = ['spiritFocus','grimoire'].includes(weapon?.weaponType)
     ? Number(weapon.focusPower || 0) * 1.2
     : 0;
   const trinketPower = trinket?.spirit || trinket?.power || 0;

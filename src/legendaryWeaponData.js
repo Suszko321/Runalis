@@ -22,7 +22,7 @@ const definitions=[
  ['lastHorizonBow','The Last Horizon','bows',18,12,2,0,0,0,0,passive('horizonLastLight','Last Light','executeBonus',{thresholdPct:.3,bonusPct:38})],
  ['eclipseSeraphBow','Eclipse Seraph','bows',16,9,6,0,0,0,0,passive('eclipseSeraphRefrain','Eclipse Refrain','cooldownFlatDamage',{amount:30,cooldown:5})]
 ];
-const family={grimoires:{weaponType:'spiritFocus',skill:'spirit',secondarySkill:'warding',primaryMultiplier:5.8,secondaryMultiplier:1.1},swords:{weaponType:'sword',skill:'blade',secondarySkill:'spirit',primaryMultiplier:6,secondaryMultiplier:1},staves:{weaponType:'staff',skill:'warding',secondarySkill:'spirit',primaryMultiplier:5.9,secondaryMultiplier:1.2},maces:{weaponType:'mace',skill:'blunt',secondarySkill:'warding',primaryMultiplier:6.1,secondaryMultiplier:.9},bows:{weaponType:'bow',skill:'archery',secondarySkill:'spirit',primaryMultiplier:6,secondaryMultiplier:.7}};
+const family={grimoires:{weaponType:'grimoire',skill:'grimoire',secondarySkill:'warding',primaryMultiplier:5.8,secondaryMultiplier:1.1},swords:{weaponType:'sword',skill:'blade',secondarySkill:'spirit',primaryMultiplier:6,secondaryMultiplier:1},staves:{weaponType:'staff',skill:'warding',secondarySkill:'spirit',primaryMultiplier:5.9,secondaryMultiplier:1.2},maces:{weaponType:'mace',skill:'blunt',secondarySkill:'warding',primaryMultiplier:6.1,secondaryMultiplier:.9},bows:{weaponType:'bow',skill:'archery',secondarySkill:'spirit',primaryMultiplier:6,secondaryMultiplier:.7}};
 export const LEGENDARY_WEAPON_ITEMS={};
 export const LEGENDARY_WEAPON_ART={};
 export const LEGENDARY_WEAPON_FAMILIES={};
@@ -38,7 +38,7 @@ for(const [index,[id,name,group,baseDamage,power,spirit,focusPower,staminaCost,r
   :'Incoming hits deal 8% less damage and restore 3 stamina.';
  legendaryPassive.desc=effect;
  LEGENDARY_WEAPON_ITEMS[id]={id,name,type:'weapon',slot:'weapon',rarity:'legendary',stack:false,...f,primarySkill:f.skill,baseDamage,power,spirit,value:600+column*35,
-  ...(focusPower?{focusPower,staminaCost,range,projectileSpeed}:{}),...(id==='starlessKingsOath'?{visualSilhouette:'greatsword'}:{}),
+  ...(focusPower?{focusPower,...(group==='grimoires'?{spiritCost:staminaCost}:{staminaCost}),range,projectileSpeed}:{}),...(id==='starlessKingsOath'?{visualSilhouette:'greatsword'}:{}),
   endgameExclusive:true,allowedGearRarities:['legendary'],minCombatLevel:50,dropMinEnemyLevel:50,noRandomDrop:true,legendaryPassive,
   traits:['Legendary Armory',group==='grimoires'?'Bound Grimoire':group==='maces'?'Blunt Weapon':group==='staves'?'Warding Staff':group==='bows'?'Longbow':'Forged Blade'],
   desc:`${name}. ${legendaryPassive.name}: ${effect} Combat Level 50. Found at Legendary quality from level 50+ elites and bosses; owned copies may ascend at a blacksmith. Any class may wield it.`};

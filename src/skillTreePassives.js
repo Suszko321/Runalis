@@ -65,6 +65,10 @@ const disciplines = {
     ['Attuned Core', {maxSpirit:6}], ['Frugal Spark', {focusBoltCostReductionPct:4}],
     ['Clear Facets', {focusBoltSpeedPct:5}], ['Resonant Heart', {focusBoltDamagePct:5, focusStaggerPct:4}]
   ],
+  grimoire: [
+    ['Margin Notes',{grimoireBoltDamagePct:3}],['Economical Ink',{grimoireBoltCostReductionPct:4}],
+    ['Unbroken Lines',{grimoireBoltRangePct:5}],['Illuminated Script',{grimoireBoltSpeedPct:5,grimoireStaggerPct:4}]
+  ],
   eldritchWeapon: [
     ['Insulated Mind', {maxSpirit:6}], ['Red Tempering', {armour:2}],
     ['Patient Rupture', {spiritDamagePct:4}], ['Enduring Circuit', {eliteDamagePct:5, maxSpirit:4}]

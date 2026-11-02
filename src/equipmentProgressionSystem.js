@@ -72,10 +72,10 @@ export function getTierUpgradeCost(item,targetTier,entry=null) {
   if(next<2 || next>MAX_UPGRADE_TIER)return null;
   const rank=GEAR_RARITIES[gearRarity(item,entry)].rank,scale=[1,2,4,7,11,16][rank];
   const raw=[['ironScrap',(next-1)*scale]];
-  const gathered=item?.weaponType==='bow'||item?.weaponType==='staff'||item?.weaponType==='spiritFocus'?'sturdyHardwood':item?.type==='armour'?'amberResin':item?.type==='trinket'?'fieldstone':'blackironOre';
+  const gathered=item?.weaponType==='bow'||item?.weaponType==='staff'||['spiritFocus','grimoire'].includes(item?.weaponType)?'sturdyHardwood':item?.type==='armour'?'amberResin':item?.type==='trinket'?'fieldstone':'blackironOre';
   if(next>=6||rank>=1)raw.push([gathered,Math.ceil(next/5)*scale]);
   if(rank>=2||(rank>=1&&next>=6))raw.push(['arcaneDust',Math.ceil(next/4)*scale]);
-  if(rank>=2||(rank>=1&&next>=11))raw.push([item?.weaponType==='bow'?'thornsilkFiber':item?.weaponType==='scythe'?'graveSilver':item?.weaponType==='staff'?'spiritwoodSplinter':item?.weaponType==='spiritFocus'?'lumenQuartz':item?.type==='trinket'?'tideglassCrystal':'oathsteelShard',Math.ceil(next/5)*scale]);
+  if(rank>=2||(rank>=1&&next>=11))raw.push([item?.weaponType==='bow'?'thornsilkFiber':item?.weaponType==='scythe'?'graveSilver':item?.weaponType==='staff'?'spiritwoodSplinter':['spiritFocus','grimoire'].includes(item?.weaponType)?'lumenQuartz':item?.type==='trinket'?'tideglassCrystal':'oathsteelShard',Math.ceil(next/5)*scale]);
   if(rank>=1&&next>=11||rank>=2)raw.push([['staff','spiritFocus'].includes(item?.weaponType)?'paleEssence':item?.type==='weapon'?'cultAsh':'boneShard',Math.ceil(next/4)*scale]);
   if(rank>=2)raw.push(['bossCore',(rank-1)*Math.ceil(next/5)]);
   if(rank>=3)raw.push(['towerFragment',(rank-2)*Math.ceil(next/5)]);

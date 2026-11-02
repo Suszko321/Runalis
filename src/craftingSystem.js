@@ -225,7 +225,7 @@ function getSalvageRewards(item) {
 
 function getGatheredUpgradeMaterial(item, nextLevel) {
   if (nextLevel >= 5 && (item?.rarity === 'rare' || item?.rarity === 'occult' || item?.rarity === 'epic' || item?.rarity === 'relic')) {
-    if (item?.weaponType === 'spiritFocus') return 'lumenQuartz';
+    if (['spiritFocus','grimoire'].includes(item?.weaponType)) return 'lumenQuartz';
     if (item?.weaponType === 'staff') return 'spiritwoodSplinter';
     if (item?.weaponType === 'bow') return 'thornsilkFiber';
     if (item?.weaponType === 'scythe') return 'graveSilver';
@@ -233,7 +233,7 @@ function getGatheredUpgradeMaterial(item, nextLevel) {
     return 'oathsteelShard';
   }
 
-  if (item?.weaponType === 'bow' || item?.weaponType === 'staff' || item?.weaponType === 'spiritFocus') {
+  if (item?.weaponType === 'bow' || item?.weaponType === 'staff' || ['spiritFocus','grimoire'].includes(item?.weaponType)) {
     return 'sturdyHardwood';
   }
 

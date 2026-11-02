@@ -5,6 +5,7 @@ import { LEGACY_SKILL_ART } from './skillArtProfiles.js';
 import { TECHNIQUE_ICON_PATHS } from './combatTechniqueIcons.js';
 // Distinct discipline stages and doctrines keep their own primary emblem.
 const primary={
+ grimoire_root:'M5 9Q15 5 24 11Q33 5 43 9V39Q33 35 24 41Q15 35 5 39ZM24 11V41M10 15L18 16M10 22L18 23M30 16L38 15M30 23L38 22',
  blunt_root:'oathkeeperOathStrike',
  blunt_branch_a:'M18 42H22V22L28 17L24 8H16L12 17L18 22ZM16 12H24M30 12L39 16L31 21M31 29L42 33L33 38',
  blunt_merge:'M22 42H26V23L32 20L35 13L30 6H18L13 13L16 20L22 23ZM19 10H29M4 27L9 22M39 22L44 27M9 37L15 33M33 33L39 37',
@@ -46,6 +47,10 @@ function symbol(node) {
  return motifs[node.tree]||'ironOath';
 }
 export function getPassiveIconArt(node) {
+ if(node.tree==='grimoire'){
+  const rune=[...node.id].reduce((n,c)=>Math.imul(n^c.charCodeAt(0),16777619),2166136261)>>>0;
+  return {path:'',palette:['#bda778','#f2e5be','#322c43'],detail:`<path d="${primary.grimoire_root}" fill="#322c43" stroke="#f2e5be" stroke-width="2"/>${Array.from({length:16},(_,i)=>rune&(1<<i)?`<rect x="${17+i%4*4}" y="${22+Math.floor(i/4)*4}" width="2" height="2" fill="#bda778"/>`:'').join('')}`};
+ }
  if(node.expertise){
   const family=node.expertise.family,sub=SUBCLASSES[family],palette=sub?sub.colors:['#d6b575','#fff2cd','#382b24'];
   const path=sub?SUBCLASS_ICON_PATHS[family]:'M16 3L20 12L30 12L22 19L25 29L16 23L7 29L10 19L2 12L12 12Z';

@@ -149,7 +149,7 @@ export function sampleWeaponAttackPose(move, weaponType, elapsed, direction, cla
 
 export function sampleAbilityChargePose(classId, weaponType, progress, direction, abilityFamily=null) {
   const t = easeInOutCubic(clamp01(progress));
-  const spellLike = abilityFamily?abilityFamily!=='melee'&&abilityFamily!=='ranged':['gravecaller', 'necromancer', 'thornbinder', 'waverider', 'hydromancer', 'lightbringer', 'eldritch'].includes(classId) || ['staff', 'spiritFocus', 'eldritch'].includes(weaponType);
+  const spellLike = abilityFamily?abilityFamily!=='melee'&&abilityFamily!=='ranged':['gravecaller', 'necromancer', 'thornbinder', 'waverider', 'hydromancer', 'lightbringer', 'eldritch'].includes(classId) || ['staff', 'spiritFocus', 'grimoire', 'eldritch'].includes(weaponType);
   const directionX = Number(direction?.x || 0);
   const directionY = Number(direction?.y || 0);
 
@@ -634,7 +634,7 @@ export function getClassEffectStyle(classId) {
 
 function resolveAttackFamily(move, weaponType) {
   if (move?.attackFamily && ATTACK_FAMILIES[move.attackFamily]) return move.attackFamily;
-  if (weaponType === 'spiritFocus') return 'channel';
+  if (['spiritFocus','grimoire'].includes(weaponType)) return 'channel';
   if (weaponType === 'bow' || weaponType === 'crossbow' || move?.kind === 'projectile') return 'bow';
   if (weaponType === 'eldritch' || move?.comboType === 'channel') return 'channel';
   if (weaponType === 'spear') return 'thrust';

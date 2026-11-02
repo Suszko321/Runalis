@@ -18,7 +18,7 @@ export function weaponArtIndex(id,profile={}) {
   if(type==='dagger')return 1;
   if(['axe','mace','hammer','spear'].includes(type))return {axe:2,mace:3,hammer:4,spear:5}[type];
   if(type==='eldritch')return 23;
-  if(type==='spiritFocus')return 16+(/gauntlet/.test(text)?6:/redseal/.test(text)?5:/grave/.test(text)?4:/moon/.test(text)?3:/prism|sealglass/.test(text)?2:/spirit|pilgrim/.test(text)?1:0);
+  if(['spiritFocus','grimoire'].includes(type))return 16+(/gauntlet/.test(text)?6:/redseal/.test(text)?5:/grave/.test(text)?4:/moon/.test(text)?3:/prism|sealglass/.test(text)?2:/spirit|pilgrim/.test(text)?1:0);
   if(type==='staff')return /thorn|briar|druid/.test(text)?11:/bone|lich|grave|necro/.test(text)?10:7;
   if(type!=='sword')return null;
   if(/axe/.test(text))return 2;
@@ -43,7 +43,7 @@ export function equippedArtReady(id,profile){
 export function drawEquippedArt(ctx,id,profile,x,y,side=1) {
   // Uniform world-size correction covers every old/new focus and grimoire.
   // Inventory icons and non-focus weapon registrations retain their native sizes.
-  if(profile?.weaponType==='spiritFocus'){
+  if(['spiritFocus','grimoire'].includes(profile?.weaponType)){
     ctx.save();ctx.translate(x,y);ctx.scale(.75,.75);
     const drawn=drawEquippedArtModel(ctx,id,profile,0,0,side);ctx.restore();return drawn;
   }

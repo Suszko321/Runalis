@@ -3024,6 +3024,7 @@ function getWeaponHudIcon(weapon) {
   if (type === 'scythe') return 'SCY';
   if (type === 'staff') return 'STF';
   if (type === 'spiritfocus') return 'FOC';
+  if (type === 'grimoire') return 'GRM';
   if (type === 'eldritch') return 'ELD';
   return 'ATK';
 }
@@ -3041,6 +3042,7 @@ function getBasicAttackName(weapon) {
   if (!weapon) return 'Basic Strike';
 
   if (weapon.weaponType === 'bow') return 'Arrow Shot';
+  if(weapon.weaponType==='grimoire')return 'Grimoire Shot';
   if (weapon.weaponType === 'spiritFocus') return 'Focus Bolt';
   if (weapon.weaponType === 'scythe') return 'Scythe Slash';
   if (weapon.weaponType === 'staff') return 'Staff Strike';
@@ -3614,7 +3616,7 @@ function skillTreePathButton(player, tree, selectedTree) {
 }
 
 function skillTreeLabel(tree) {
-  return {blade:'Oathkeeper',archery:'Fellhunter',spirit:'Gravecaller',warding:'Thornbinder',hydromancy:'Waverider',lightbringer:'Lightbringer',eldritch:'Eldritch',spiritFocus:'Focus Mastery'}[tree] || skillLabel(tree);
+  return {blade:'Oathkeeper',archery:'Fellhunter',spirit:'Gravecaller',warding:'Thornbinder',hydromancy:'Waverider',lightbringer:'Lightbringer',eldritch:'Eldritch',spiritFocus:'Foci Mastery',grimoire:'Grimoire Mastery'}[tree] || skillLabel(tree);
 }
 
 function canTreeEverBeActive(player, tree) {
@@ -4584,7 +4586,8 @@ function weaponTypeLabel(type) {
   if (type === 'crossbow') return 'Crossbow';
   if (type === 'staff') return 'Staff';
   if (type === 'scythe') return 'Scythe';
-  if (type === 'spiritFocus') return 'Spirit Focus';
+  if(type==='grimoire')return 'Grimoires';
+  if (type === 'spiritFocus') return 'Foci';
 
   return type || 'Weapon';
 }

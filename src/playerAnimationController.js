@@ -135,6 +135,7 @@ const WEAPON_MOTION = Object.freeze({
   scythe: Object.freeze({ anticipation: -0.22, strike: 0.32, follow: 0.2, recoil: 1.8 }),
   staff: Object.freeze({ anticipation: -0.1, strike: 0.16, follow: 0.08, recoil: 1.15 }),
   spiritFocus: Object.freeze({ anticipation: -0.06, strike: 0.12, follow: -0.02, recoil: 0.9 }),
+  grimoire: Object.freeze({ anticipation: -0.06, strike: 0.12, follow: -0.02, recoil: 0.9 }),
   eldritch: Object.freeze({ anticipation: -0.06, strike: 0.1, follow: -0.04, recoil: 0.65 }),
   unarmed: Object.freeze({ anticipation: -0.08, strike: 0.1, follow: 0.04, recoil: 0.8 })
 });
@@ -337,7 +338,7 @@ function applyAttackPose(pose, combatState, direction, motion, weaponMotion, cla
     pose.weaponOffsetY -= pose.phase === 'strike' ? 2 : 0;
   } else if (pose.weaponType === 'scythe') {
     pose.cloakSway *= 1.35;
-  } else if (pose.weaponType === 'spiritFocus') {
+  } else if (['spiritFocus','grimoire'].includes(pose.weaponType)) {
     pose.phase = sampled.phase === 'anticipation' ? 'focus' : sampled.phase === 'strike' ? 'release' : 'recover';
     pose.rootOffsetX *= 0.58;
     pose.rootOffsetY *= 0.58;

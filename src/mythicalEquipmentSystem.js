@@ -43,7 +43,7 @@ export function mythicalChannelGeometry(player,channel) {
 }
 export function applyMythicalMeleeModifiers(player,move,weaponType) {
  const n=getMythicalSetCounts(player).ashenExecutioner || 0;
- if(!n || ['bow','crossbow','spiritFocus','unarmed'].includes(weaponType))return move;
+ if(!n || ['bow','crossbow','spiritFocus','grimoire','grimoire','unarmed'].includes(weaponType))return move;
  const result={...move,staminaCost:move.staminaCost*.95};
  if(n>=2&&move.finisher&&move.comboType==='heavy'){result.arcDegrees=Math.min(180,(move.arcDegrees||70)+15);result.stagger=Math.min(.55,(move.stagger||0)+.06);}
  if(n>=3&&move.sequence==='LLH'){
