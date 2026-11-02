@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {sampleWeaponStance,canSheatheWeapon,hasHostileTarget} from '../src/weaponStance.js';
+import {sampleWeaponStance,canSheatheWeapon,hasHostileTarget,WEAPON_READY_SECONDS} from '../src/weaponStance.js';
 import {ITEMS} from '../src/data.js';
 import {getGearVisualProfile} from '../src/gearVisualStyle.js';
 const player={id:'hero',equipment:{weapon:'noviceBlade'},combatState:{attackId:0,attacking:false}},world={enemies:[]};
@@ -28,9 +28,24 @@ const ally={...player,id:'ally',combatState:{}};assert.equal(sampleWeaponStance(
 let covered=0;
 for(const [id,item] of Object.entries(ITEMS))if(item.slot==='weapon'){
  const type=getGearVisualProfile(id,item).weaponType;
- if(['sword','dagger','axe','mace','hammer','spear','staff','scythe'].includes(type)){
+ if(['sword','dagger','axe','mace','hammer','spear','staff','scythe','spiritFocus'].includes(type)){
   assert.equal(canSheatheWeapon({equipment:{weapon:id}}),true,id);covered++;
  }else assert.equal(canSheatheWeapon({equipment:{weapon:id}}),false,id);
 }
+let focusCases=0;
+for(const item of Object.values(ITEMS).filter(i=>i.weaponType==='spiritFocus'))for(let slot=1;slot<=4;slot++){
+ const p={id:'focus-P'+slot,slot,equipment:{weapon:item.id},combatState:{attackId:0}},w={enemies:[]},stance=t=>sampleWeaponStance(p,w,t).sheathed;
+ assert(stance(0));p.combatState.attacking=true;p.combatState.attackId++;assert(!stance(1));assert(!stance(1.4));p.combatState.attacking=false;
+ assert(!stance(1.4+WEAPON_READY_SECONDS-.001));assert(stance(1.4+WEAPON_READY_SECONDS+.001));
+ // Completed attacks, charges, casts and guards all refresh the same timer.
+ p.combatState.attackId++;assert(!stance(10));assert(stance(16.001));
+ p.combatState.heavyChargeActive=true;assert(!stance(20));p.combatState.heavyChargeActive=false;assert(!stance(25.999));assert(stance(26.001));
+ p.visualAction={startedAt:30,duration:.7};assert(!stance(30.5));p.visualAction=null;assert(!stance(36.499));assert(stance(36.501));
+ p.actionState={blocking:true};assert(!stance(40));p.actionState.blocking=false;assert(stance(46.001));
+ const foe={hp:10,alive:true,combatTargetKind:'player',combatTargetId:p.id};w.enemies=[foe];assert(!stance(50));assert(!stance(500));
+ foe.hp=0;assert(!stance(505.999));assert(stance(506.001));foe.hp=10;foe.combatTargetId='other-player';assert(stance(510));foe.combatTargetId=p.id;foe.returningHome=true;assert(stance(511));foe.returningHome=false;w.safeZone=true;assert(stance(512));
+ const before=JSON.stringify({p,w});stance(600);assert.equal(JSON.stringify({p,w}),before);focusCases++;
+}
+console.log('PASS '+focusCases+' grimoire/focus timelines across all four owners: six-second boundaries, continuous threats, casts/charges/guards, co-op target isolation and safe-zone/home-return exclusions');
 const report={coveredWeapons:covered,sixSecondDelay:'passed',attackAndCharge:'passed',enemyTargeting:'passed',cooperativeIsolation:'passed',inputsUnchanged:'passed'};
 fs.writeFileSync(new URL('../docs/visual-production/weapon-stance-checks.json',import.meta.url),JSON.stringify(report,null,2));console.log(report);

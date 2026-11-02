@@ -12,6 +12,14 @@ may show. The attachment follows the existing body/root bob, not the swinging
 wrist, and does not switch anatomical sides between held frames. One equipment
 draw occurs per frame. Redundant back-sheathed hints cannot duplicate it.
 
+Live players and co-op actors use the existing `sampleWeaponStance` owner before
+settling at the hip. All19 books/focuses now participate in that shared rule:
+attacking, charging, casting, guarding or a live hostile targeting this player
+keeps the item in hand, followed by the existing six-second quiet period. Dead/
+returning-home enemies, enemies targeting someone else and safe zones retain the
+same exclusions as other weapons. Ordinary resting art previews do not sample or
+reset the actor's timer. The smaller size and anatomical hip placement remain.
+
 Attacks, casts, summons, charging and guarding retain the established action
 attachment and use the smaller model. Existing arm ownership, original body
 silhouette, movement clocks, attacks, damage and hitboxes remain authoritative.
@@ -36,6 +44,11 @@ These are ignored local production-render captures, not alternate runtime art.
 - `verify-focus-hip-browser.cjs`: all nineteen items acquired/equipped, 1,368
   Chromium production samples across both bodies, all facings and idle/walk/run;
   correct depth order, one model per frame and no missing resources/page errors.
+  Another152 rendered readiness timelines cover both bodies/all facings, retained
+  hand pose after the attack animation ends, exact delay boundaries, continuous
+  targeting and return to the identical settled hip. The native art suite checks
+  the same152 paired transitions. `verify-weapon-stance.mjs` covers83 stowable
+  weapons, including76 focus/owner timelines for all19 items and four players.
 - Legendary weapons browser:520 renders, all20 equipped pieces/icons and five
   normal-game family captures. Existing boss-armory browser covers all19 distinct
   projectile identities and152 direction/weight cases. One earlier normal-profile

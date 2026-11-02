@@ -15,6 +15,7 @@ const {getHumanAnimationPose}=await import('../src/playerAnimationController.js'
 const {WEAPON_MOVESETS}=await import('../src/combatMoves.js');
 const {getHumanVisualProfile,applyHumanVisualProfile}=await import('../src/humanVisualProfiles.js');
 const {focusAtHip,focusHipTransform,focusHipBehindBody}=await import('../src/handedness.js');
+const {sampleWeaponStance,WEAPON_READY_SECONDS}=await import('../src/weaponStance.js');
 const items=Object.values(ITEMS).filter(i=>i.weaponType==='spiritFocus');assert.equal(items.length,19);
 for(const name of ['human-male','human-female','human-male-attack','human-female-attack','human-male-cast','human-female-cast','heads-custom','melee-arm-parts','arcane-special'])asset(name);
 for(const item of items)if(BOSS_ARMORY_ART[item.id])asset(BOSS_ARMORY_ART[item.id].sheet);
@@ -51,6 +52,17 @@ for(const [ii,item]of items.entries()){
  }
  for(const bodyType of ['male','female']){
   const visible=[];for(const dirX of [1,-1]){Object.assign(p,{bodyType,dirX,dirY:0,isMoving:false,combatState:{},visualAction:null,actionState:{},equipment:{weapon:item.id}});const shown=render(item).pixels,hidden=render(item,{omitFocus:true}).pixels;let count=0;for(let i=0;i<shown.length;i+=4)if(shown[i]!==hidden[i]||shown[i+1]!==hidden[i+1]||shown[i+2]!==hidden[i+2]||shown[i+3]!==hidden[i+3])count++;visible.push(count);}assert(visible[0]>visible[1],item.id+' far hip should be mostly occluded');
+ }
+ for(const [bi,bodyType]of ['male','female'].entries())for(const [di,[dirX,dirY]]of [[0,1],[1,0],[0,-1],[-1,0]].entries()){
+  Object.assign(p,{bodyType,dirX,dirY,isMoving:true,walkTime:2.1,combatState:{attackId:0},visualAction:null,actionState:{},equipment:{weapon:item.id}});
+  const time=1000+ii*1000+bi*100+di*20,w={enemies:[]},stance=t=>sampleWeaponStance(p,w,t).sheathed;
+  assert(stance(time));const resting=render(item,{weaponSheathed:true}).pixels;
+  p.combatState.attacking=true;p.combatState.attackId++;assert(!stance(time+1));p.combatState.attacking=false;
+  const ready=render(item,{weaponSheathed:stance(time+1.01)}).pixels;assert.notDeepEqual(ready,resting,'Ready weapon must be in hand after attack ends');
+  assert(!stance(time+1+WEAPON_READY_SECONDS-.001));assert.deepEqual(render(item,{weaponSheathed:stance(time+1+WEAPON_READY_SECONDS+.001)}).pixels,resting,'Expired readiness must return to same hip');
+  w.enemies=[{hp:10,combatTargetKind:'player',combatTargetId:p.id||p.name||'focus'}];p.id=w.enemies[0].combatTargetId;
+  assert(!stance(time+10));assert.deepEqual(render(item,{weaponSheathed:stance(time+10.1)}).pixels,ready,'Threat must retain hand pose');w.enemies[0].dead=true;
+  assert(!stance(time+16.099));assert(stance(time+16.101));
  }
  for(const set of ['starweaver','sunwardRegent','moonstagWarden','runeboundMarshal'])for(const bodyType of ['male','female'])for(const [dirX,dirY]of [[1,0],[-1,0]])for(let key=0;key<4;key++){
   Object.assign(p,{bodyType,dirX,dirY,isMoving:true,walkTime:(key+.1)/.5,combatState:{},visualAction:null,actionState:{},equipment:{weapon:item.id,helm:set+'Helm',chest:set+'Chest',legs:set+'Legs',trinket:set+'Mantle'}});render(item);

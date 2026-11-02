@@ -15,6 +15,16 @@ const assert=require('node:assert/strict');
    const im=asset(BOSS_ARMORY_ART[item.id]?.sheet||'arcane-special').image,draw=c.drawImage.bind(c),calls=[],before=JSON.stringify(p);c.clearRect(0,0,240,240);c.drawImage=(...args)=>{calls.push(args);draw(...args);};drawHumanActor(c,p,{x:0,y:0},{animationTime:5});c.drawImage=draw;if(JSON.stringify(p)!==before)throw Error('Actor changed');const positions=calls.map((args,index)=>({args,index})),weapons=positions.filter(r=>r.args[0]===im);if(weapons.length!==1)throw Error('Duplicate/missing focus '+item.id);
    const bodies=positions.filter(r=>r.args[0].width===256&&r.args[0].height===320&&r.args.length===9&&r.args[3]>10&&r.args[4]>10);if(!bodies.length)throw Error('Missing body');const rear=facing==='left'||facing==='up';if(rear?weapons[0].index>=bodies[0].index:weapons[0].index<=bodies.at(-1).index)throw Error('Wrong hip depth '+item.id+'/'+facing);samples++;
   }
-  return{items:items.length,samples,bodies:2,facings:4,states:3,oneFocusPerFrame:true,depthOrder:true,actorUnchanged:true};
+  const {sampleWeaponStance,WEAPON_READY_SECONDS}=await import('/src/weaponStance.js'),{getEnemyTargetId}=await import('/src/coopEnemyScaling.js');let readinessCases=0;
+  for(const item of items)for(const bodyType of ['male','female'])for(const [dirX,dirY]of [[0,1],[1,0],[0,-1],[-1,0]]){
+   const p=actors[item.id],w={enemies:[]},time=1000+readinessCases*30;Object.assign(p,{bodyType,dirX,dirY,isMoving:true,walkTime:2.1,actionState:{},visualAction:null,combatState:{attackId:0}});
+   const im=asset(BOSS_ARMORY_ART[item.id]?.sheet||'arcane-special').image;
+   const drawAt=t=>{const stance=sampleWeaponStance(p,w,t),draw=c.drawImage.bind(c);let matrix,count=0;c.clearRect(0,0,240,240);c.drawImage=(...args)=>{if(args[0]===im){matrix=c.getTransform();count++;}draw(...args);};const before=JSON.stringify(p);drawHumanActor(c,p,{x:0,y:0},{animationTime:5,weaponSheathed:stance.sheathed});c.drawImage=draw;if(count!==1||JSON.stringify(p)!==before)throw Error('Readiness render contract');return{stowed:stance.sheathed,x:matrix.e,y:matrix.f};};
+   const resting=drawAt(time);if(!resting.stowed)throw Error('Initial hip');p.combatState.attacking=true;p.combatState.attackId++;drawAt(time+1);p.combatState.attacking=false;
+   const hand=drawAt(time+1.01);if(hand.stowed||(Math.abs(hand.x-resting.x)<.01&&Math.abs(hand.y-resting.y)<.01))throw Error('Focus returned to hip immediately');
+   if(drawAt(time+1+WEAPON_READY_SECONDS-.001).stowed)throw Error('Early hip return');const expired=drawAt(time+1+WEAPON_READY_SECONDS+.001);if(!expired.stowed||Math.abs(expired.x-resting.x)>.01||Math.abs(expired.y-resting.y)>.01)throw Error('Wrong settled hip');
+   w.enemies=[{hp:10,combatTargetKind:'player',combatTargetId:getEnemyTargetId(p)}];if(drawAt(time+10).stowed||drawAt(time+20).stowed)throw Error('Threat lost readiness');w.enemies[0].dead=true;if(drawAt(time+25.999).stowed||!drawAt(time+26.001).stowed)throw Error('Threat expiry');readinessCases++;
+  }
+  return{items:items.length,samples,readinessCases,bodies:2,facings:4,states:3,oneFocusPerFrame:true,depthOrder:true,actorUnchanged:true};
  });assert.equal(result.items,19);assert.equal(result.samples,1368);assert.deepEqual(errors,[]);assert.deepEqual(missing,[]);console.log('PASS',JSON.stringify({...result,noPageErrors:true,noMissingResources:true}));
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -3,11 +3,11 @@ import {getGearVisualProfile} from './gearVisualStyle.js';
 import {getEnemyTargetId} from './coopEnemyScaling.js';
 
 export const WEAPON_READY_SECONDS=6;
-const BACK_WEAPONS=new Set(['sword','dagger','axe','mace','hammer','spear','staff','scythe']);
+const STOWABLE_WEAPONS=new Set(['sword','dagger','axe','mace','hammer','spear','staff','scythe','spiritFocus']);
 const stances=new WeakMap();
 export function canSheatheWeapon(actor){
   const ref=actor?.equipment?.weapon,id=typeof ref==='string'?ref:ref?.id;
-  return !!id&&BACK_WEAPONS.has(getGearVisualProfile(id,ITEMS[id]||{}).weaponType);
+  return !!id&&STOWABLE_WEAPONS.has(getGearVisualProfile(id,ITEMS[id]||{}).weaponType);
 }
 export function hasHostileTarget(actor,world){
   if(world?.safeZone)return false;

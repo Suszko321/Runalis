@@ -419,3 +419,20 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - Engineering11/11/build; affected weapon combat/save/loot/ascension,8,960 weapon
   art,3,776 locomotion,23,136 melee rig and64 stance cases pass.
   [Visual review, contracts and limitations](focus-hip/README.md).
+
+### E35 · Grimoire/focus combat-ready persistence · IMPLEMENTED, verified
+
+- Reproduced immediate return to hip after an action: Spirit focuses were absent
+  from the shared stowable registry and the hip predicate ignored the live stance.
+  All19 books/focuses now use the existing six-second readiness owner. Player and
+  co-op renderers already supply its result; that result now selects hand versus
+  hip placement through the visual pose. No second timer, saved state or proximity
+  policy was introduced. Smaller scale and fixed resting-hip depth remain.
+- Passing76 item/owner timelines cover all19 finds/four players, attack/cast/charge/
+  guard refresh, exact expiry, continuously targeting enemies and existing dead/
+  home-return/safe-zone/other-recipient exclusions. Native and Chromium each verify
+  152 rendered after-attack/threat/expiry transitions across both bodies/facings.
+  Existing1,368 browser hip samples,5,472 native hip samples,608 active samples,
+  1,216 armour/mantle cases,83 stowable weapons,8,960 weapon art samples,3,776
+  locomotion renders and actual weapon combat/save/loot/ascension checks pass.
+- Engineering11/11/build pass. [Behaviour and verification](focus-hip/README.md).

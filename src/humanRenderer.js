@@ -90,6 +90,9 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
     classId: actor.classId || options.classId || null,
     moving: Math.abs(dirX) > 0.05 || Math.abs(dirY) > 0.05
   });
+  // Live player/co-op renders supply the shared combat stance. Authoring previews
+  // without a stance remain at rest and cannot reset the actor's readiness timer.
+  animationPose.weaponReady = options.weaponSheathed === false;
   if(usesSideLocomotion(animationPose,facing)){
     // Hold four authored pixel poses. Fractional rocking/scaling made the
     // strip-based gait look like a smoothly deforming paper puppet.
