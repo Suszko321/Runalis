@@ -478,32 +478,9 @@ export function useGuildClerk(game) {
 }
 
 export function useBank(game) {
-  const player = game.player;
-  player.storage = player.storage || {
-    goldReserve: 0,
-    materialsStored: 0
-  };
-
-  const deposit = Math.min(25, Math.max(0, Number(player.gold || 0)));
-  if (deposit > 0) {
-    player.gold -= deposit;
-    player.storage.goldReserve += deposit;
-    game.log?.(`Bank: stored ${deposit} gold. Reserve: ${player.storage.goldReserve}.`);
-    addStatusText(player, 'Gold Stored', { color: '#d9ad4f' });
-    return true;
-  }
-
-  if (player.storage.goldReserve > 0) {
-    const withdraw = Math.min(25, player.storage.goldReserve);
-    player.storage.goldReserve -= withdraw;
-    player.gold += withdraw;
-    game.log?.(`Bank: withdrew ${withdraw} gold.`);
-    addStatusText(player, 'Gold Withdrawn', { color: '#d9ad4f' });
-    return true;
-  }
-
-  game.log?.('Bank: no gold to store yet.');
-  return true;
+  const owner=game.hostGame||game,npc=game.world.objects.find(o=>o.id==='orrakaiBank');
+  if(game.player.networkRemote&&owner.onlineSession?.delegateService(game.player,{type:'bank'},npc))return true;
+  return owner.banking?.open(game.player,npc)||false;
 }
 
 export function useClassTrainerService(game) {
@@ -807,6 +784,7 @@ function createCapitalObjects() {
       talk: 'Road Watch: "Past the bridge, Orrakai stops being able to save you. Check the requirements board first."'
     }),
     hubObject('npc', 'orrakaiBanker', 'Bank Clerk', 24, 28, {
+      npcId: 'orrakaiBanker',
       factionId: 'outpost',
       disposition: 'friendly',
       dirX: 1,

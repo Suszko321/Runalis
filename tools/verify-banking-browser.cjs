@@ -1,0 +1,65 @@
+const {chromium}=require(process.env.RUNALIS_NODE_MODULES+'/playwright');
+const assert=require('node:assert/strict'),fs=require('node:fs'),launch=require('./browser-game-smoke.cjs');
+const base=process.env.RUNALIS_URL||'http://127.0.0.1:8771',out='docs/banking';
+(async()=>{
+ const browser=await chromium.launch({channel:'msedge',headless:true}),errors=[],checks=[];fs.mkdirSync(out,{recursive:true});
+ const check=name=>{checks.push(name);console.log('PASS '+name);};
+ try{
+  async function open(){const page=await browser.newPage({viewport:{width:1280,height:800}});page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>{window.bankGame=()=>document.getElementById('pauseOverlay')?.__runalisGame;Element.prototype.requestFullscreen=async()=>{};window.testPads=[];navigator.getGamepads=()=>testPads;window.setPad=(slot,button=-1)=>{testPads[slot]={id:'Bank pad '+slot,index:slot,connected:true,mapping:'standard',axes:[0,0,0,0],buttons:Array.from({length:16},(_,i)=>({pressed:i===button,value:i===button?1:0}))};};});await launch(page,base);await page.waitForFunction(()=>bankGame()?.started&&!document.querySelector('#loadingScreen.active'));return page;}
+  async function teller(page){await page.evaluate(()=>{const g=bankGame(),npc=g.world.objects.find(o=>o.id==='orrakaiBanker');Object.assign(g.player,{x:npc.x,y:npc.y+30,isMoving:false,moveTarget:null});g.player.dialogueSettings={instantText:true,reducedMotion:true};g.keys.clear();});await page.waitForTimeout(150);await page.keyboard.press('e');await page.waitForFunction(()=>bankGame().dialogue.phase==='AWAITING_CHOICE').catch(async error=>{console.log(await page.evaluate(async()=>{const g=bankGame();return{dialogue:{active:g.dialogue.active,phase:g.dialogue.phase,options:g.dialogue.options,npc:g.dialogue.npcObjectId},position:[g.player.x,g.player.y],near:(await import('/src/gameInteraction.js')).nearestObject(g),bank:g.banking.hasLocalOpen(),logs:g.logLines.slice(-5)};}));throw error;});const index=await page.evaluate(()=>bankGame().dialogue.options.findIndex(o=>o.action==='bank'));assert(index>=0);await page.waitForTimeout(180);for(let i=0;i<index;i++)await page.keyboard.press('ArrowDown');await page.keyboard.press('Enter');await page.locator('.player-bank').waitFor();await page.waitForTimeout(100);}
+  const page=await open();
+  await page.evaluate(async()=>{const g=bankGame(),{createGearEntry}=await import('/src/equipmentProgressionSystem.js'),{createPlayer,chooseClass}=await import('/src/player.js'),{readProfiles,writeProfiles,createSaveState}=await import('/src/gameSave.js');g.player.gold=1000;g.player.inventory=[createGearEntry(g.player,'oldKnife',{gearRarity:'rare',upgradeTier:5,itemLevel:12})];g.player.inventory[0].customBankMetadata={roll:33};g.player.inventory[0].locked=true;g.player.storage={goldReserve:25};g.save(false);const other=createPlayer('Shared Vault Heir');chooseClass(other,'oathkeeper');other.inventory=[];other.gold=50;other.storage={goldReserve:40};const profiles=readProfiles();profiles.bankHeir={id:'bankHeir',name:other.name,state:createSaveState({player:other,world:g.world})};writeProfiles(profiles);window.bankGear=JSON.stringify(g.player.inventory[0]);});
+  await teller(page);
+  assert.equal(await page.evaluate(async()=>(await import('/src/profileStorage.js')).decodeDeviceBank(localStorage.getItem((await import('/src/gameSave.js')).PROFILE_KEY)).gold),65);
+  await page.locator('[data-bank-amount]').fill('600');await page.locator('[data-bank-gold="deposit"]').click();await page.waitForFunction(()=>bankGame().player.gold===400);
+  await page.locator('[data-bank-item][data-withdraw="false"]').click();await page.waitForFunction(()=>bankGame().player.inventory.length===0);
+  let result=await page.evaluate(async()=>{const save=await import('/src/gameSave.js'),bank=(await import('/src/profileStorage.js')).decodeDeviceBank(localStorage.getItem(save.PROFILE_KEY));return{bank,saved:save.readProfiles().playerSmoke.state.player,gear:bankGear};});
+  assert.equal(result.bank.gold,665);assert.equal(result.saved.gold,400);assert.equal(result.saved.storage.goldReserve,0);assert.equal(JSON.stringify(result.bank.items[0]),result.gear);assert.equal(result.saved.inventory.length,0);
+  check('Actual teller dialogue opens bank; legacy reserves merge once and deposits durably preserve exact locked gear');
+  // A genuine storage exception must leave both live and durable balances unchanged.
+  await page.locator('[data-bank-amount]').fill('100');
+  await page.evaluate(()=>{window.bankOriginalSetItem=Storage.prototype.setItem;Storage.prototype.setItem=function(){throw new DOMException('Bank quota test','QuotaExceededError');};});
+  await page.locator('[data-bank-gold="deposit"]').click();await page.getByText('Transfer was not saved.',{exact:false}).waitFor();assert.equal(await page.evaluate(()=>bankGame().player.gold),400);
+  await page.evaluate(()=>Storage.prototype.setItem=bankOriginalSetItem);assert.equal(await page.evaluate(async()=>(await import('/src/profileStorage.js')).decodeDeviceBank(localStorage.getItem((await import('/src/gameSave.js')).PROFILE_KEY)).gold),665);
+  check('Quota failure reports a failed transfer without moving live or saved gold');
+  await page.locator('[data-bank-close]').first().click();
+  const penalty=await page.evaluate(async()=>{const g=bankGame(),lost=g.applyDeathGoldPenalty();g.save(false);return{lost,gold:g.player.gold,bank:(await import('/src/profileStorage.js')).decodeDeviceBank(localStorage.getItem((await import('/src/gameSave.js')).PROFILE_KEY)).gold};});assert.deepEqual(penalty,{lost:48,gold:352,bank:665});
+  await page.reload();await page.locator('[data-load="bankHeir"]').click();await page.waitForFunction(()=>bankGame()?.started);await teller(page);
+  await page.locator('[data-bank-item][data-withdraw="true"]').click();await page.waitForFunction(()=>bankGame().player.inventory.some(e=>e.customBankMetadata?.roll===33));
+  await page.locator('[data-bank-amount]').fill('100');await page.locator('[data-bank-gold="withdraw"]').click();await page.waitForFunction(()=>bankGame().player.gold===150);
+  result=await page.evaluate(async()=>{const {readProfiles,PROFILE_KEY}=await import('/src/gameSave.js');return{profiles:readProfiles(),bank:(await import('/src/profileStorage.js')).decodeDeviceBank(localStorage.getItem(PROFILE_KEY))};});assert.equal(result.bank.gold,565);assert.equal(result.profiles.bankHeir.state.player.gold,150);assert.equal(result.profiles.bankHeir.state.player.inventory[0].customBankMetadata.roll,33);assert.equal(result.profiles.bankHeir.state.player.storage.goldReserve,0);assert.equal(result.profiles.playerSmoke.state.player.gold,352);
+  check('Death penalizes only carried gold; another saved character withdraws the same gear and shared gold after reload without repeating migration');
+  for(const [width,height]of [[844,390],[390,844],[640,360]]){await page.setViewportSize({width,height});await page.waitForTimeout(120);const box=await page.locator('.player-bank').boundingBox();assert(box.x>=-1&&box.y>=-1&&box.x+box.width<=width+1&&box.y+box.height<=height+1);assert(await page.locator('[data-bank-close]').last().isVisible());await page.screenshot({path:`${out}/bank-${width}.png`});}
+  check('Shared bank fits phone portrait, phone landscape and short desktop viewports');
+  await page.evaluate(async()=>{const g=bankGame(),{createGearEntry}=await import('/src/equipmentProgressionSystem.js');g.player.inventory.unshift(createGearEntry(g.player,'oldKnife',{upgradeTier:2}));document.querySelector('[data-bank-item][data-withdraw="false"]').click();});
+  await page.getByText('This item changed. Select it again.',{exact:true}).waitFor();assert.equal(await page.evaluate(()=>bankGame().player.inventory.length),2);await page.evaluate(()=>bankGame().player.inventory.shift());
+  check('A bag mutation between display and click rejects the stale selection instead of depositing a different gear copy');
+  await page.evaluate(()=>{const g=bankGame();g.player.x+=200;});await page.waitForFunction(()=>!bankGame().banking.isBusy(bankGame().player));
+  await page.setViewportSize({width:1280,height:800});await teller(page);
+  await page.evaluate(()=>{setPad(0);setPad(1,9);});
+  await page.locator('[data-coop-load]:not([disabled])').filter({hasText:'Player smoke review'}).click();await page.evaluate(()=>setPad(1));await page.waitForFunction(()=>bankGame().player.coop.players.length===1);
+  await page.evaluate(()=>{const g=bankGame(),actor=g.player.coop.players[0],npc=g.world.objects.find(o=>o.id==='orrakaiBanker');Object.assign(actor,{x:npc.x+18,y:npc.y+30});if(!g.banking.open(actor,npc))throw Error('P2 bank open failed');});
+  const first=page.locator('[data-bank-owner="1"]'),second=page.locator('[data-bank-owner="2"]');await first.waitFor();await second.waitFor();
+  await second.locator('[data-bank-amount]').fill('10');await second.locator('[data-bank-gold="withdraw"]').click();await page.waitForFunction(()=>bankGame().player.coop.players[0].gold===362);assert.equal(await page.evaluate(()=>bankGame().player.gold),150);
+  await page.evaluate(()=>setPad(1,0));await page.waitForTimeout(120);await page.evaluate(()=>setPad(1));await page.waitForFunction(()=>bankGame().player.coop.players[0].gold===372);assert.equal(await page.evaluate(()=>bankGame().player.gold),150);
+  await page.evaluate(()=>setPad(1,1));await page.waitForTimeout(120);await page.evaluate(()=>setPad(1));await second.waitFor({state:'detached'});assert(await first.isVisible());
+  check('Two local bank panels share the vault while P2 controller withdrawals and close leave P1 character and panel untouched');
+  await page.evaluate(()=>setPad(0));await page.waitForTimeout(100);await page.evaluate(()=>setPad(0,1));await page.waitForTimeout(100);await page.evaluate(()=>setPad(0));await page.waitForFunction(()=>!bankGame().banking.hasLocalOpen());
+  check('Moving away closes bank; real controller polling routes B to close');
+  await page.close();
+  // Each online browser uses its own vault, through the existing character-menu ownership.
+  const host=await open(),guest=await open();
+  await host.evaluate(()=>{const g=bankGame(),npc=g.world.objects.find(o=>o.id==='orrakaiBanker');Object.assign(g.player,{x:npc.x+150,y:npc.y+30,gold:1000});g.profileName=g.player.name=g.player.profileName=g.player.appearance.name='Bank Host';});
+  await guest.evaluate(()=>{const g=bankGame();g.player.gold=700;g.profileName=g.player.name=g.player.profileName=g.player.appearance.name='Bank Guest';});
+  const password='Bank-'+crypto.randomUUID();await host.evaluate(()=>bankGame().onlineSession.openMenu());await host.locator('[data-online-password]').fill(password);await host.locator('[data-online-host]').click();await host.waitForFunction(()=>bankGame().onlineSession.role==='host',null,{timeout:30000});await host.locator('[data-online-close]').click();
+  await guest.evaluate(()=>bankGame().onlineSession.openMenu());await guest.locator('[data-online-password]').fill(password);await guest.locator('[data-online-join]').click();await guest.waitForFunction(()=>bankGame().onlineSession.ready,null,{timeout:30000});
+  await host.evaluate(()=>{const g=bankGame(),npc=g.world.objects.find(o=>o.id==='orrakaiBanker');Object.assign(g.player.coop.players[0],{x:npc.x,y:npc.y+30});});
+  await guest.waitForFunction(()=>{const g=bankGame(),npc=g.world.objects.find(o=>o.id==='orrakaiBanker');return npc&&Math.hypot(g.player.x-npc.x,g.player.y-npc.y)<40;});
+  await guest.keyboard.press('e');await guest.waitForFunction(()=>bankGame().dialogue.phase==='AWAITING_CHOICE');await guest.waitForTimeout(200);await guest.keyboard.press('Enter');await guest.locator('.player-bank').waitFor();await guest.waitForTimeout(150);await guest.locator('[data-bank-amount]').fill('200');await guest.locator('[data-bank-gold="deposit"]').click();await guest.waitForFunction(()=>bankGame().player.gold===500);await host.waitForFunction(()=>bankGame().player.coop.players[0].gold===500);
+  const bankGold=async p=>p.evaluate(async()=>(await import('/src/profileStorage.js')).decodeDeviceBank(localStorage.getItem((await import('/src/gameSave.js')).PROFILE_KEY)).gold);
+  assert.equal(await bankGold(guest),200);assert.equal(await bankGold(host),0);assert.equal(await host.evaluate(()=>bankGame().player.gold),1000);
+  await guest.locator('[data-bank-all="withdraw"]').click();await guest.waitForFunction(()=>bankGame().player.gold===700);await host.waitForFunction(()=>bankGame().player.coop.players[0].gold===700);await guest.locator('[data-bank-close]').first().click();await guest.waitForTimeout(700);assert.equal(await guest.evaluate(()=>bankGame().player.gold),700);
+  check('Native WebRTC teller delegation deposits and withdraws guest gold without accessing the host device vault or gold');
+  assert.deepEqual(errors,[]);fs.writeFileSync(out+'/browser-results.json',JSON.stringify({checks,errors,base},null,2));console.log(`${checks.length}/${checks.length} browser banking checks passed`);
+ }finally{await browser.close();}
+})().catch(error=>{console.error(error);process.exitCode=1;});

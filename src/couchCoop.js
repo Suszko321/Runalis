@@ -1,3 +1,4 @@
+import {decodeProfileCollection,encodeProfileCollection} from './profileStorage.js';
 import {menuDirection,directionalMenuItem} from './menuNavigation.js';
 import {partyEntryPending} from './partyEntrySystem.js';
 import {moveActorWithCollision as moveWorldActor} from './world.js';
@@ -322,6 +323,7 @@ export function joinCouchCoopPlayer(game, slotNumber = 2, controllerSlotIndex = 
 export function leaveCouchCoopPlayer(game, ally, options = {}) {
   if (!game?.player || !ally || ally === game.player) return false;
   game.trading?.cancelActor(ally);
+  game.banking?.close(ally);
 
   const coop = ensureCouchCoop(game);
   if (!coop) return false;
@@ -1369,7 +1371,7 @@ function loadUnifiedProfiles() {
 
     if (!raw) return {};
 
-    const parsed = JSON.parse(raw);
+    const parsed = decodeProfileCollection(raw);
 
     return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
       ? parsed
@@ -1389,7 +1391,7 @@ function saveUnifiedProfiles(profiles) {
 
     window.localStorage.setItem(
       UNIFIED_PROFILE_STORAGE_KEY,
-      JSON.stringify(cleanProfiles)
+      encodeProfileCollection(cleanProfiles,window.localStorage.getItem(UNIFIED_PROFILE_STORAGE_KEY))
     );
 
     return true;
@@ -1919,7 +1921,7 @@ function createAllyGameView(game, ally) {
 }
 
 function isCoopActorBusy(game, ally) {
-  if(game.trading?.isBusy(ally))return true;
+  if(game.trading?.isBusy(ally)||game.banking?.isBusy(ally))return true;
   if(game.localMenus?.isBusy(ally))return true;
   if (ally.networkMenuBusy) return true;
   if (game?.dialogue?.active && game.dialogue.actor === ally) return true;

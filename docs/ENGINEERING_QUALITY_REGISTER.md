@@ -631,3 +631,34 @@ memory, security or gameplay readiness claim follows solely from a green build.
   Multiplayer remain reachable. No page errors. Existing seven-size inventory
   suite, engineering 12/12 and production build pass; physical devices untested.
   [Behaviour and evidence](mobile-banner-removal/README.md).
+
+### E45 — Shared device gear/gold bank · IMPLEMENTED, feature validation
+
+- **Source observations:** the Bank Clerk lacked a dialogue identity and only
+  logged a line; the Storage Bank service toggled 25 gold between carried funds
+  and a private `storage.goldReserve`. No gear transfer or shared vault existed.
+- **Behavior:** real teller dialogue offers Open Bank, with actor-owned gear and
+  gold deposit/withdraw controls, whole amounts/all gold, exact instance/rarity/
+  upgrade/lock preservation, current gear capacity/acquisition restrictions and
+  cancellation on separation, death, controller loss, leave or world change.
+  Local co-op shares the device vault; online guests bank in their own browser.
+  Existing 12% carried-gold death penalties cannot reach stored funds.
+- **Persistence:** one reserved metadata entry in the existing profile collection,
+  hidden from character readers and preserved by both writers, fallback slimming
+  and profile deletion. A single write commits bank and character before live
+  mutation. Existing reserves migrate once with cleared originals in that write.
+  Quota/corrupt-current-storage failure preserves data and reports the failure.
+  No character schema change, additional service or dependency.
+- **Passing contracts:** 6/6 Node groups and 8/8 final packaged-browser cases,
+  including real teller input, two-profile legacy migration, save/reload into
+  another character, actual death-penalty invocation, quota failure, three compact
+  layouts, stale displayed-item rejection, independent local controller/panel ownership and native WebRTC guest
+  vault isolation. Browser testing reproduced a bank overlay covering the local
+  join picker; the panel now hides/yields input until that picker closes, and the
+  two-local-player case passes. Zero page errors. Engineering 13/13/build pass;
+  existing storage 12/12, trading browser 10/10, local menus 12/12 and online
+  lifecycle 9/9 pass. [Contracts and evidence](banking/README.md).
+- **Limits:** browser-origin/profile storage, not cross-device account sync.
+  Existing E03 imported-character trust, distributed online recovery and general
+  simultaneous-tab character-save concurrency remain open. Physical phones/
+  controllers, Safari, separate networks and long soak remain untested.

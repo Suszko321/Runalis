@@ -842,6 +842,7 @@ function buildDialogueOptions(dialogueState, options, player, settings = {}) {
     ? (Array.isArray(options) ? options.map(option => ({ ...option })) : [])
     : appendNpcQuestOptions(dialogueState, options, player);
   const provider=dialogueState.world?.objects?.find(o=>o.id===dialogueState.npcObjectId);
+  if(provider?.id==='orrakaiBanker'&&!withNpcQuests.some(o=>o.action==='bank'))withNpcQuests.unshift({id:'open-bank',text:'Open bank',action:'bank'});
   if(provider?.apothecaryService&&dialogueState.world.mode==='capital'&&settings.appendNpcQuests!==false&&
     !withNpcQuests.some(o=>o.action==='maraApothecary')){
     const leave=withNpcQuests.findIndex(o=>o.id==='leave'||o.close);
@@ -2369,7 +2370,7 @@ function syncQuestStateBridgeFromQuestLog(player) {
 
 function openFallbackDialogue(dialogueState, npcObject, player = null) {
   const nodeId = dialogueState.dialogueId || `fallback:${npcObject.id || 'npc'}`;
-  const serviceChoices=npcObject.workshopService?buildDialogueOptions(dialogueState,[],player):[];
+  const serviceChoices=npcObject.workshopService||npcObject.id==='orrakaiBanker'?buildDialogueOptions(dialogueState,[],player):[];
   const node = {
     id: nodeId,
     speakerId: npcObject.npcId || npcObject.id || 'npc',

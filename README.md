@@ -1,5 +1,13 @@
 # Runalis - Original Land Expanded
 
+## Shared bank — November 2, 2026
+
+Talk to Orrakai's Bank Clerk and choose **Open bank** to store or withdraw gear
+and gold. The vault is shared by all saved characters in the same browser profile.
+Stored gold is safe from death; existing gold reserves migrate automatically.
+Works with local co-op and online guests' own device storage. See
+[bank controls, persistence and verification](docs/banking/README.md).
+
 ## Player trading — November 2, 2026
 
 Stand next to another player for four seconds in a safe zone such as Orrakai.

@@ -483,3 +483,20 @@ imported character remains a separate authority problem. Cross-browser persisten
 is not a distributed crash-atomic database: a browser/process loss before a guest
 receives/saves a completed result still needs the separately scoped durable receipt
 work. There is no added backend, paid relay or host migration.
+
+## 12. Shared device banking — implemented November 2, 2026
+
+The Bank Clerk exposes **Open bank** through existing dialogue actions. The
+Storage Bank service uses the same actor-owned interface. Local participants
+retain independent focus, balances and saves while sharing the device vault;
+online guests use the established browser-owned service/menu commit channel
+and never access the host's bank. Compatibility advances to
+`runalis-online-9-banking`, superseding section 11's historical build value.
+
+Gear moves with its exact identity, upgrades, rarity, metadata and lock. Existing
+acquisition/capacity rules apply to withdrawals; equipped, bound and quest gear
+cannot be deposited. Gold in the vault is outside actor death-penalty balances.
+Legacy character reserves migrate once. Bank and affected local character are
+saved in one existing collection replacement before updating live state. All
+profile writers preserve the reserved bank metadata, including slimming/deletion.
+See [scope, verification and remaining distributed-save limits](banking/README.md).

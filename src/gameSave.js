@@ -1,3 +1,4 @@
+import {decodeProfileCollection,encodeProfileCollection} from './profileStorage.js';
 import {installMalakarSanctum} from './malakarEncounter.js';
 import {cancelPartyEntry} from './partyEntrySystem.js';
 import {syncBossReturnPortals} from './bossReturnPortals.js';
@@ -119,7 +120,7 @@ let pendingDeleteProfileId = null;
 
 export function readProfiles() {
   try {
-    const current = JSON.parse(localStorage.getItem(PROFILE_KEY)) || {};
+    const current = decodeProfileCollection(localStorage.getItem(PROFILE_KEY));
 
     if (Object.keys(current).length) {
       const migration = migrateLegacyCouchCoopProfilesInto(current);
@@ -177,9 +178,9 @@ function alignProfileNames(profiles) {
   return profiles;
 }
 
-export function writeProfiles(profiles) {
+export function writeProfiles(profiles, bank) {
   try {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(profiles));
+    localStorage.setItem(PROFILE_KEY, encodeProfileCollection(profiles,localStorage.getItem(PROFILE_KEY),bank));
     // Keep recovery sources until the replacement collection is durable.
     clearLegacyProfileStorage();
     return true;
@@ -188,7 +189,7 @@ export function writeProfiles(profiles) {
 
     try {
       const slimProfiles = slimProfileCollection(profiles);
-      localStorage.setItem(PROFILE_KEY, JSON.stringify(slimProfiles));
+      localStorage.setItem(PROFILE_KEY, encodeProfileCollection(slimProfiles,localStorage.getItem(PROFILE_KEY),bank));
       clearLegacyProfileStorage();
       return true;
     } catch (secondErr) {
@@ -196,7 +197,7 @@ export function writeProfiles(profiles) {
 
       try {
         const emergencyProfiles = emergencySlimProfileCollection(profiles);
-        localStorage.setItem(PROFILE_KEY, JSON.stringify(emergencyProfiles));
+        localStorage.setItem(PROFILE_KEY, encodeProfileCollection(emergencyProfiles,localStorage.getItem(PROFILE_KEY),bank));
         clearLegacyProfileStorage();
         return true;
       } catch (thirdErr) {

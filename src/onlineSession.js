@@ -14,7 +14,7 @@ import {observeSfx,playSfx} from './audioSystem.js';
 import {cancelActiveAbilityCharge,cancelActiveHeavyAttackCharge} from './combat.js';
 import {answerPartyEntry,partyEntrySnapshot,receivePartyEntry,partyEntryPending,cancelPartyEntry} from './partyEntrySystem.js';
 
-const CHARACTER_FIELDS=['name','appearance','bodyType','skin','hair','shirt','pants','boots','inventory','equipment','equippedGear','equipmentProgressionVersion','gearInstanceSequence','equipmentInstances','ownedGear','gearInstances','loadout','gold','attributes','attributePoints','skillState','skillTree','skills','knownAbilities','unlockedAbilities','unlockedPassives','abilityMorphs','abilityMastery','abilityExpertise','skillExpertise','expertise','crafting','craftingState','recipeUnlocks','inputBindings'];
+const CHARACTER_FIELDS=['name','appearance','bodyType','skin','hair','shirt','pants','boots','inventory','equipment','equippedGear','equipmentProgressionVersion','gearInstanceSequence','equipmentInstances','ownedGear','gearInstances','loadout','gold','storage','attributes','attributePoints','skillState','skillTree','skills','knownAbilities','unlockedAbilities','unlockedPassives','abilityMorphs','abilityMastery','abilityExpertise','skillExpertise','expertise','crafting','craftingState','recipeUnlocks','inputBindings'];
 const VISUAL_FIELDS=['name','x','y','dirX','dirY','hp','maxHp','stamina','maxStamina','spirit','maxSpirit','isMoving','walkTime','lifeState','downedState','reviveAction','combatState','actionState','visualAction','visualHitUntil','vampireForm','vampireFrenzyUntil','vampireInstinct','abilityCharge','activeChannel','summons','traps','combatEffects','floatingTexts','flags','classId','className','appearance','bodyType','skin','hair','shirt','pants','boots','equipment','loadout','level','combatLevel','bloodline','gravecaller','lightbringer','currentZone','lastCombatAimX','lastCombatAimY','eliteFrost','eliteFrozenUntil','eliteFrostRecoveryUntil'];
 const pick=(object,fields)=>Object.fromEntries(fields.filter(key=>object[key]!==undefined).map(key=>[key,object[key]]));
 const sceneIds=new WeakMap();let nextScene=0;
@@ -168,7 +168,7 @@ class OnlineSession {
    if(!this.backup)this.backup=createSaveState(this.game);
    clearTimeout(this.connectTimer);this.connecting=false;this.role='guest';this.ready=false;this.initializing=true;
    this.syncClock(packet.clock);
-   this.game.trading?.reset();this.tradeRevision=packet.tradeRevision||0;
+   this.game.trading?.reset();this.game.banking?.reset();this.tradeRevision=packet.tradeRevision||0;
    applySaveToGame(this.game,packet.state);this.game.setUiOwner(this.game.player);this.game.player.networkRemote=false;
    this.receivedGroups={};this.smoothing.clear();this.partyActors.clear();this.initializing=false;this.ready=true;this.lastSnapshot=Date.now();this.menu.close();this.menu.clearPassword();this.setStatus('Joined the host’s world.');this.wire.send({type:'ready'});return;
   }
@@ -177,7 +177,8 @@ class OnlineSession {
   }
   if(packet.type==='service'&&this.role==='guest'){
    const npc=this.game.world.objects.find(o=>o.id===packet.npcId);
-   if(packet.action==='shop')openMarketShop(this.game,npc);
+   if(packet.action==='bank')this.game.banking?.open(this.game.player,npc);
+   else if(packet.action==='shop')openMarketShop(this.game,npc);
    else if(npc)openWorkshopService(this.game,npc,packet.action==='workshopWeapons'?'weapons':packet.action==='workshopArmour'?'armour':'craft');
   }
  }
@@ -265,7 +266,7 @@ class OnlineSession {
   if(Number.isFinite(dx)&&Number.isFinite(dy)&&Math.hypot(dx,dy)>.01&&Math.hypot(dx,dy)<256){this.smoothing.set(target,{x,y,toX:source.x,toY:source.y,at:Date.now()});target.x=x;target.y=y;}
   else this.smoothing.delete(target);
  }
- isMenuBusy(){return this.game.paused||!!document.querySelector('.panel.open,#characterCreatorOverlay.active,#workshopServiceOverlay.active,#marketShopOverlay.active,#onlineMultiplayerOverlay.active');}
+ isMenuBusy(){return this.game.paused||!!document.querySelector('.player-bank,.panel.open,#characterCreatorOverlay.active,#workshopServiceOverlay.active,#marketShopOverlay.active,#onlineMultiplayerOverlay.active');}
  updateGuest(dt){
   if(!this.ready)return;
   const g=this.game,now=Date.now(),busy=this.isMenuBusy();
@@ -318,7 +319,7 @@ class OnlineSession {
  cancelCharges(){if(this.role==='guest')this.wire?.send({type:'cancelCharge'});}
  sendPartyEntryAnswer(id,accept){if(this.role==='guest'&&this.ready)this.wire?.send({type:'party-entry',id,accept});}
  delegateService(actor,action,npc){
-  if(!['shop','workshopWeapons','workshopArmour','workshopCraft'].includes(action.type))return false;
+  if(!['bank','shop','workshopWeapons','workshopArmour','workshopCraft'].includes(action.type))return false;
   const record=[...this.clients.values()].find(c=>c.actor===actor);if(!record)return false;
   actor.networkMenuBusy=true;record.wire.send({type:'service',action:action.type,npcId:npc?.id});return true;
  }
@@ -337,6 +338,7 @@ class OnlineSession {
  }
  disconnect({restore=true}={}){
   this.game.trading?.reset();
+  this.game.banking?.reset();
   cancelPartyEntry(this.game,'',false);
   this.attempt=(this.attempt||0)+1;
   clearTimeout(this.connectTimer);const wasGuest=this.role==='guest',state=wasGuest&&this.backup?this.guestSaveState():null;

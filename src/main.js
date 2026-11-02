@@ -98,6 +98,7 @@ import {
 import { drawMinimapPanel, drawPlayerMinimap, renderMinimapHud, updateMinimapExploration } from './minimapHud.js';
 import {cameraPreference,partyCameraLayout} from './coopCamera.js';
 import {createLocalPlayerMenus} from './localPlayerMenus.js';
+import {createBanking} from './bankUi.js';
 
 import { TILE, getAbilityById } from './data.js';
 import { ACT1_OVERWORLD_DISPLAY_NAME, getDefaultWorldName, normalizePlayerFacingWorldName } from './worldNames.js';
@@ -481,7 +482,7 @@ class RunalisGame {
       abilityName: id => getAbilityById(id)?.name,
       cancelCharge: () => { this.onlineSession?.cancelCharges();cancelActiveAbilityCharge(this.player); cancelActiveHeavyAttackCharge(this.player, this.world); },
       menu: () => {
-        if(this.trading?.isBusy(this.player))return;
+        if(this.trading?.isBusy(this.player)||this.banking?.isBusy(this.player))return;
         if (this.dialogue?.active&&!this.dialogue.actor?.networkRemote || isBlockingDomOverlayActive() || this.world?.mode === 'act1Opening') return;
         if (this.paused) this.togglePause(false);
         toggleGameMenuChooser(this.setUiOwner(this.player));
@@ -515,6 +516,7 @@ class RunalisGame {
     ensureCouchCoop(this);
     this.localMenus=createLocalPlayerMenus(this);
     this.trading=createTrading(this);
+    this.banking=createBanking(this);
     this.setUiOwner(this.player);
 
     const label = document.getElementById('activeProfileLabel');
@@ -625,7 +627,7 @@ class RunalisGame {
     this.openingSkipKeys=new Set();
     this.keydown = event => {
       unlockAudio();
-      if(this.trading?.handleKeyboard(event))return;
+      if(this.banking?.handleKeyboard(event)||this.trading?.handleKeyboard(event))return;
       if(handlePartyEntryKeyboard(this,event))return;
       if(handleMalakarKeyboard(this,event))return;
       if (this.developerEditor?.handleKeyDown(event)) return;
@@ -805,7 +807,7 @@ class RunalisGame {
     };
 
     this.mousedown = event => {
-      if(event.target.closest?.('.player-trade')||this.trading?.isBusy(this.player))return;
+      if(event.target.closest?.('.player-trade')||this.trading?.isBusy(this.player)||this.banking?.isBusy(this.player))return;
       if(partyEntryPending(this))return;
       if (event.target.closest?.('#mobileControls,#mobileRotate') || (this.mobileControls && event.target !== this.canvas)) return;
       unlockAudio();
@@ -941,6 +943,7 @@ class RunalisGame {
     this.started = false;
     this.onlineSession?.destroy();
     this.trading?.destroy();
+    this.banking?.destroy();
     this.deathScreen?.destroy();
     this.localMenus?.destroy();
     this.mobileControls?.destroy();
@@ -1152,7 +1155,7 @@ class RunalisGame {
     if(handlePartyEntryInput(this))return true;
     if(this.deathScreen?.active&&this.deathScreen.handleController(this.getAllControllerInputsForUi()))return true;
     if(handleMalakarInput(this))return true;
-    const controllerInputs = this.getAllControllerInputsForUi().filter(input=>!this.trading?.handleInput(input,this.getActorForControllerInput(input))&&!this.localMenus?.handleInput(input,this.getActorForControllerInput(input)));
+    const controllerInputs = this.getAllControllerInputsForUi().filter(input=>!this.banking?.handleInput(input,this.getActorForControllerInput(input))&&!this.trading?.handleInput(input,this.getActorForControllerInput(input))&&!this.localMenus?.handleInput(input,this.getActorForControllerInput(input)));
 
     if (this.world?.mode === 'act1Opening' && !isBlockingDomOverlayActive() && controllerInputs.some(input => input?.confirmPressed || input?.cancelPressed || input?.backPressed)) {
       requestAct1OpeningSkip(this);
@@ -1514,6 +1517,7 @@ class RunalisGame {
       this.update(dt, now);
     }
     this.trading?.update(this.paused?0:dt);
+    this.banking?.render();
     this.onlineSession?.updateHost(dt);
 
     this.updateScreenShake(dt);
@@ -1819,7 +1823,7 @@ class RunalisGame {
 
   isActorInterfaceBusy(actor) {
     if (!actor) return false;
-    if(this.trading?.isBusy(actor))return true;
+    if(this.trading?.isBusy(actor)||this.banking?.isBusy(actor))return true;
     if(this.localMenus?.isBusy(actor))return true;
     if(actor===this.player&&document.querySelector('#onlineMultiplayerOverlay.active'))return true;
     if(this.workshopService?.active&&this.workshopService.actor===actor)return true;
@@ -1863,6 +1867,7 @@ class RunalisGame {
     }
     this.dialogue.pendingAction = null;
     closeDialogue(this.dialogue, { immediate: true });
+    if(action.type==='bank')return this.banking.open(actor,serviceNpc);
     if(action.type==='maraApothecary')return useMaraApothecary(this.setUiOwner(actor),serviceNpc);
     if(['workshopWeapons','workshopArmour','workshopCraft'].includes(action.type)){
       openWorkshopService(this.setUiOwner(actor),serviceNpc,action.type==='workshopWeapons'?'weapons':action.type==='workshopArmour'?'armour':'craft');return true;
@@ -1973,7 +1978,7 @@ class RunalisGame {
 
   isSharedPartyCameraMode() {
     if (this.onlineSession?.role) return false;
-    if(this.trading?.hasLocalOpen())return false;
+    if(this.trading?.hasLocalOpen()||this.banking?.hasLocalOpen())return false;
     if(this.localMenus?.hasOpen())return false;
     const layout=partyCameraLayout(getActiveLocalPlayers(this.player),this.canvas.width,this.canvas.height,this.coopCameraShared??true,cameraPreference());
     this.coopCameraShared=layout.shared;
@@ -2871,6 +2876,7 @@ class RunalisGame {
 
   applySave(saveState) {
     this.trading?.reset();
+    this.banking?.reset();
     const applied = applySaveToGame(this, saveState);
 
     if (!applied) return;
