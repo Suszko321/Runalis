@@ -254,6 +254,19 @@ html:root body.mobile-input.fullscreen-menu-design #app .game-shell .panel.open.
 html:root body.mobile-input.fullscreen-menu-design #app .game-shell .panel.open.menu-chooser > .tabs > .tab:is(:hover,:focus,.active,.game-ui-controller-focus) {
  font-size:18px!important;transform:none!important;background:#342c21!important;color:#efc65d!important;
 }
+/* Section switching belongs to the chooser; workspaces use the freed top edge. */
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell .panel.open:not(.menu-chooser) {
+ display:block!important;
+}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell .panel.open:not(.menu-chooser) > .tabs {
+ display:none!important;visibility:hidden!important;pointer-events:none!important;
+}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell .panel > .tab-panel:not(.active) {
+ display:none!important;
+}
+html:root body.mobile-input.fullscreen-menu-design #app .game-shell .panel.open:not(.menu-chooser) .tab-panel.active > :is(.subtab-bar,.skills-sheet-tabs) {
+ padding-right:64px!important;box-sizing:border-box;
+}
 body.mobile-input:has(.panel.open) .mobile-tools > button:not([data-action="menu"]){display:none!important}
 body.mobile-input:has(.panel.open) .mobile-tools{top:max(4px,env(safe-area-inset-top));right:max(4px,env(safe-area-inset-right))}
 html:root body.mobile-input.fullscreen-menu-design #app .game-shell #skills .mobile-detail-open .ability-detail-pane{top:max(4px,env(safe-area-inset-top))!important}

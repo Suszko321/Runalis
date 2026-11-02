@@ -334,7 +334,7 @@ html body .inventory-extended-details summary { cursor:pointer; padding:10px 0; 
   html:root body.fullscreen-menu-design #app .game-shell .panel.open #inventory.runalis-menu-workspace.active[data-inventory-subtab="equipment"] {
     position:fixed !important; width:auto !important; max-width:none !important;
     display:flex !important; flex-direction:column !important; min-height:0 !important;
-    height:auto !important; top:calc(54px + env(safe-area-inset-top,0px)) !important;
+    height:auto !important; top:max(4px,env(safe-area-inset-top,0px)) !important;
     bottom:max(8px,env(safe-area-inset-bottom,0px)) !important;
     left:max(4px,env(safe-area-inset-left,0px)) !important; right:max(4px,env(safe-area-inset-right,0px)) !important;
     overflow:hidden !important; scrollbar-gutter:auto !important;

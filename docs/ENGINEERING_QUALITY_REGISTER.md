@@ -614,3 +614,20 @@ memory, security or gameplay readiness claim follows solely from a green build.
   six sections open, Multiplayer opens, Menus closes, no page errors. Existing
   seven-size inventory checks, engineering 12/12 and production build pass.
   Physical devices untested. [Behaviour and evidence](mobile-menu-list/README.md).
+
+### E44 — Remove the main navigation banner inside mobile workspaces
+
+- Main tab strip now appears only in the chooser; the existing top-right Menus
+  control provides the return route. Equipment/Bag and skill-section tabs remain,
+  with room reserved for the button. Equipment top inset drops from 54px to the
+  safe-area edge, reclaiming the banner's space.
+- Layout verification reproduced invisible inactive Skills content occupying
+  space before Quests: subtab-specific display rules overrode the hidden panel.
+  Mobile direct-child inactive panels now use display:none, and active workspace
+  content uses block flow rather than inherited grid placement. No menu state,
+  action, inventory or save logic changed.
+- Passing touch checks: six menus at five phone/tablet portrait/landscape sizes,
+  no main strip, workspace at the top, section controls clear Menus, chooser and
+  Multiplayer remain reachable. No page errors. Existing seven-size inventory
+  suite, engineering 12/12 and production build pass; physical devices untested.
+  [Behaviour and evidence](mobile-banner-removal/README.md).
