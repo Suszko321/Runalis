@@ -3,8 +3,8 @@ import {WORLD_ART_STANDARD} from './worldArtDirection.js';
 
 // A quiet ground-plane cue, independent of attack aim and animation bob.
 // Draw after the body so a north-facing arrow is not lost behind the boots.
-export function drawPlayerGroundIndicator(ctx,actor,camera,scale=1){
-  if(!actor||actor.active===false)return;
+export function drawPlayerGroundIndicator(ctx,actor,camera,scale=1,combatReady=false){
+  if(!actor||actor.active===false||!combatReady)return;
   const rawX=Number.isFinite(actor.dirX)?actor.dirX:0;
   const rawY=Number.isFinite(actor.dirY)?actor.dirY:1;
   const length=Math.hypot(rawX,rawY);
@@ -16,17 +16,17 @@ export function drawPlayerGroundIndicator(ctx,actor,camera,scale=1){
   const alpha=ctx.globalAlpha;
   ctx.strokeStyle=color;
   ctx.fillStyle=color;
-  ctx.lineWidth=1;
-  ctx.globalAlpha=alpha*.18;
-  ctx.beginPath();
-  ctx.ellipse(0,2,19,9,0,0,Math.PI*2);
-  ctx.stroke();
-  // Use the same projection for the arrow and circle; retain diagonal facing.
+  ctx.lineWidth=1.2;
   ctx.globalAlpha=alpha*.28;
   ctx.beginPath();
-  ctx.moveTo(dx*24,2+dy*12);
-  ctx.lineTo(dx*18-dy*3,2+dy*9+dx*1.5);
-  ctx.lineTo(dx*18+dy*3,2+dy*9-dx*1.5);
+  ctx.ellipse(0,2,23,11,0,0,Math.PI*2);
+  ctx.stroke();
+  // Use the same projection for the arrow and circle; retain diagonal facing.
+  ctx.globalAlpha=alpha*.42;
+  ctx.beginPath();
+  ctx.moveTo(dx*29,2+dy*14.5);
+  ctx.lineTo(dx*22-dy*4,2+dy*11+dx*2);
+  ctx.lineTo(dx*22+dy*4,2+dy*11-dx*2);
   ctx.closePath();
   ctx.fill();
   ctx.restore();

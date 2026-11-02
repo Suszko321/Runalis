@@ -80,7 +80,7 @@ import {
   drawPresentationFront
 } from './presentationRenderer.js';
 import { sampleEnemyVisualState } from './combatFeedbackProfiles.js';
-import {sampleWeaponStance} from './weaponStance.js';
+import {sampleCombatReadiness,canSheatheWeapon} from './weaponStance.js';
 import {drawPlayerGroundIndicator} from './playerGroundIndicator.js';
 
 // -----------------------------------------------------------------------------
@@ -185,8 +185,9 @@ function getDepthActors(world, player) {
 // -----------------------------------------------------------------------------
 
 function drawPlayer(ctx, player, camera, world) {
+  const stance=sampleCombatReadiness(player,world);
   drawHumanActor(ctx, player, camera, {
-    weaponSheathed: sampleWeaponStance(player,world).sheathed,
+    weaponSheathed: canSheatheWeapon(player)&&!stance.ready,
     isPlayer: true,
     scale: 1.0,
     skin: player.skin || '#ffd1bd',
@@ -196,7 +197,7 @@ function drawPlayer(ctx, player, camera, world) {
     boots: player.boots || '#3a2a22',
     classId: player.classId || null
   });
-  drawPlayerGroundIndicator(ctx,player,camera);
+  drawPlayerGroundIndicator(ctx,player,camera,1,stance.ready);
 
   const p = screen(player, camera);
   hp(ctx, p.x, p.y - 54, player.hp, player.maxHp);
@@ -213,8 +214,9 @@ function drawCoopPlayers(ctx, player, camera, world, allies = getActiveCoopPlaye
 
     drawSummons(ctx, ally, camera);
 
+    const stance=sampleCombatReadiness(ally,world);
     drawHumanActor(ctx, ally, camera, {
-      weaponSheathed: sampleWeaponStance(ally,world).sheathed,
+      weaponSheathed: canSheatheWeapon(ally)&&!stance.ready,
       isPlayer: true,
       name: ally.name || 'Player 2',
       scale: ally.scale || 0.96,
@@ -225,7 +227,7 @@ function drawCoopPlayers(ctx, player, camera, world, allies = getActiveCoopPlaye
       boots: ally.boots || '#111111',
       classId: ally.classId || null
     });
-    drawPlayerGroundIndicator(ctx,ally,camera,ally.scale||.96);
+    drawPlayerGroundIndicator(ctx,ally,camera,ally.scale||.96,stance.ready);
 
     drawCombatProjectiles(ctx, ally, camera);
     drawAttackVisual(ctx, ally, camera);

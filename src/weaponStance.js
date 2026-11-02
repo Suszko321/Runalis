@@ -19,6 +19,11 @@ export function hasHostileTarget(actor,world){
 // Presentation state lives outside actors and saves. Preview renders cannot reset it.
 export function sampleWeaponStance(actor,world,now=performance.now()/1000){
   if(!canSheatheWeapon(actor))return {sheathed:false,readyUntil:0};
+  const {ready,...stance}=sampleCombatReadiness(actor,world,now);
+  return {...stance,sheathed:!ready};
+}
+// Readiness also applies to bows and unarmed players, whose weapons do not stow.
+export function sampleCombatReadiness(actor,world,now=performance.now()/1000){
   const combat=actor.combatState||{},action=actor.visualAction;
   const previous=stances.get(actor);
   const changedAttack=!!previous&&combat.attackId!==previous.attackId&&Number(combat.attackId)>0;
@@ -27,6 +32,6 @@ export function sampleWeaponStance(actor,world,now=performance.now()/1000){
   const threatened=hasHostileTarget(actor,world);
   let readyUntil=previous?.readyUntil||0;
   if(busy||changedAttack||threatened)readyUntil=now+WEAPON_READY_SECONDS;
-  const result={sheathed:!busy&&!threatened&&now>=readyUntil,readyUntil,attackId:combat.attackId};
+  const result={ready:busy||threatened||now<readyUntil,readyUntil,attackId:combat.attackId};
   stances.set(actor,result);return result;
 }

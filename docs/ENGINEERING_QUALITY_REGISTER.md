@@ -536,3 +536,19 @@ memory, security or gameplay readiness claim follows solely from a green build.
   through production world rendering. Inspected the decoded-sprite 4×8 gallery;
   no page errors. Engineering 11/11 and production build pass. Live transport and
   physical devices untested. [Behaviour and review](player-ground-indicator/README.md).
+
+### E40 — Ground marker follows combat readiness
+
+- Idle stance now hides the player ring/arrow. Combat-ready markers are about
+  20% larger with 28% ring/42% arrow opacity and a slightly stronger 1.2px stroke.
+  Player colours, ground anchor, facing and normal depth rendering are retained.
+- Extracted the existing readiness sampler so both the player body and marker
+  consume one shared result per render. Weapon sheathing policy is unchanged;
+  bows and unarmed actors can now expose the same combat readiness to the marker.
+  No new timer, actor/save fields, aggro rules or combat/input behavior introduced.
+- Passing: original 92-weapon stance and 84 focus timelines plus all-four-owner
+  bow/unarmed idle, attack, six-second recovery and sustained targeting cases.
+  Browser verifies zero idle markers then four distinct combat markers through
+  production rendering, 32 colour/facing cases and restored actor/Canvas state.
+  Inspected updated sprite gallery. Engineering 11/11 and production build pass;
+  live transport and physical devices untested. [Details](player-ground-indicator/README.md).

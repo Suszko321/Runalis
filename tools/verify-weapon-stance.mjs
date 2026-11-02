@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {sampleWeaponStance,canSheatheWeapon,hasHostileTarget,WEAPON_READY_SECONDS} from '../src/weaponStance.js';
+import {sampleWeaponStance,sampleCombatReadiness,canSheatheWeapon,hasHostileTarget,WEAPON_READY_SECONDS} from '../src/weaponStance.js';
 import {ITEMS} from '../src/data.js';
 import {getGearVisualProfile} from '../src/gearVisualStyle.js';
 const player={id:'hero',equipment:{weapon:'noviceBlade'},combatState:{attackId:0,attacking:false}},world={enemies:[]};
@@ -48,4 +48,11 @@ for(const item of Object.values(ITEMS).filter(i=>i.weaponType==='spiritFocus'))f
 }
 console.log('PASS '+focusCases+' grimoire/focus timelines across all four owners: six-second boundaries, continuous threats, casts/charges/guards, co-op target isolation and safe-zone/home-return exclusions');
 const report={coveredWeapons:covered,sixSecondDelay:'passed',attackAndCharge:'passed',enemyTargeting:'passed',cooperativeIsolation:'passed',inputsUnchanged:'passed'};
+for(const slot of [1,2,3,4])for(const weapon of [null,...Object.values(ITEMS).filter(i=>i.weaponType==='bow').map(i=>i.id),'noviceBlade']){
+ const p={id:'indicator-'+slot,slot,equipment:{weapon},combatState:{attackId:0}},w={enemies:[]},ready=t=>sampleCombatReadiness(p,w,t).ready;
+ assert(!ready(0));p.combatState.attacking=true;assert(ready(1));p.combatState.attacking=false;assert(ready(6.999));assert(!ready(7.001));
+ p.combatState.attackId++;assert(ready(8));assert(!ready(14.001));w.enemies=[{hp:10,combatTargetKind:'player',combatTargetId:p.id}];assert(ready(20));assert(ready(100));w.enemies[0].hp=0;assert(ready(105.999));assert(!ready(106.001));
+ if(!canSheatheWeapon(p))assert.equal(sampleWeaponStance(p,w,110).sheathed,false,'Bow/unarmed presentation preserved');
+}
+console.log('PASS ground indicator readiness for all four owners: idle, attacks, six-second recovery and sustained aggro, including bows/unarmed');
 fs.writeFileSync(new URL('../docs/visual-production/weapon-stance-checks.json',import.meta.url),JSON.stringify(report,null,2));console.log(report);
