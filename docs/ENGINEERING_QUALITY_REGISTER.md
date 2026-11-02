@@ -521,3 +521,18 @@ memory, security or gameplay readiness claim follows solely from a green build.
   established. Concurrent legacy profile boots initially timed out; serial local
   menu rerun passed. Physical devices, Safari and live online transport untested.
   [Behaviour and verification](mobile-inventory/README.md).
+
+### E39 — Subtle player ground identity and facing cue
+
+- Added an unfilled ground circle and small facing arrow to the existing main/
+  co-op player rendering paths. Static 18%/28% opacity, no glow or pulsing; anchored
+  to the common foot offset with the actor's rendered scale. NPCs, summons and
+  authoring/inventory previews remain outside these player-only call sites.
+- Reuses the established party palette and authoritative online partyMapSlot.
+  Arrow follows normalized facing, including diagonals, without changing input,
+  aim, animation, gameplay or saves. Canvas state is restored after each marker.
+- Passing browser contracts: 32 player-colour/direction cases, parent opacity,
+  actor/Canvas state preservation and exactly four differently coloured markers
+  through production world rendering. Inspected the decoded-sprite 4×8 gallery;
+  no page errors. Engineering 11/11 and production build pass. Live transport and
+  physical devices untested. [Behaviour and review](player-ground-indicator/README.md).

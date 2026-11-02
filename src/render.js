@@ -81,6 +81,7 @@ import {
 } from './presentationRenderer.js';
 import { sampleEnemyVisualState } from './combatFeedbackProfiles.js';
 import {sampleWeaponStance} from './weaponStance.js';
+import {drawPlayerGroundIndicator} from './playerGroundIndicator.js';
 
 // -----------------------------------------------------------------------------
 // MAIN DRAW
@@ -195,6 +196,7 @@ function drawPlayer(ctx, player, camera, world) {
     boots: player.boots || '#3a2a22',
     classId: player.classId || null
   });
+  drawPlayerGroundIndicator(ctx,player,camera);
 
   const p = screen(player, camera);
   hp(ctx, p.x, p.y - 54, player.hp, player.maxHp);
@@ -223,6 +225,7 @@ function drawCoopPlayers(ctx, player, camera, world, allies = getActiveCoopPlaye
       boots: ally.boots || '#111111',
       classId: ally.classId || null
     });
+    drawPlayerGroundIndicator(ctx,ally,camera,ally.scale||.96);
 
     drawCombatProjectiles(ctx, ally, camera);
     drawAttackVisual(ctx, ally, camera);
