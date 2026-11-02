@@ -98,6 +98,13 @@ class OnlineSession {
   }
   if(packet.type==='ready'){record.ready=true;return;}
   if(packet.type==='leave'){this.removeClient(record.connection.peer);return;}
+  if(packet.type==='trade'){
+   if(record.ready&&this.game.trading){
+    const result=this.game.trading.system.action(record.actor,packet.command);
+    if(!result.ok)this.sendTradeStates([record.actor],result.reason);
+   }
+   return;
+  }
   if(packet.type==='party-entry'){
    if(record.ready&&Number.isSafeInteger(packet.id)&&typeof packet.accept==='boolean')answerPartyEntry(this.game,record.actor,packet.accept,packet.id);
    return;
@@ -111,6 +118,9 @@ class OnlineSession {
    record.input=mergeOnlineInput(record.input,sanitizeOnlineInput(packet.input));return;
   }
   if(packet.type==='character'&&record.actor.networkMenuBusy){
+   if(this.game.trading?.isBusy(record.actor)||(packet.tradeRevision||0)!==(record.tradeRevision||0)){
+    record.wire.send({type:'character-rejected',revision:packet.revision,tradeRevision:record.tradeRevision||0,economy:wireClone(pick(record.actor,['inventory','gold'])),message:'Your trade changed this inventory. The current host inventory has been restored.'});return;
+   }
    // Co-op characters belong to their own browser. Only menu-owned character
    // fields are accepted; position, damage, health and the world remain host-run.
    const character=packet.character;if(!character||JSON.stringify(character).length>256000)throw Error('Invalid character update');
@@ -126,7 +136,7 @@ class OnlineSession {
  sendInitial(record){
   const state=createSaveState(this.game);state.player=wireClone(record.actor);delete state.player.networkRemote;delete state.player.networkId;state.player.slot=state.player.playerNumber=1;
   state.dialogueState=null;state.currentSession=null;state.lastKnownLocalPlayers=[];
-  record.scene=sceneKey(this.game.world);record.ready=false;record.caches={};record.wire.send({type:'initial',state,clock:performance.now(),build:ONLINE_BUILD});
+  record.scene=sceneKey(this.game.world);record.ready=false;record.caches={};record.wire.send({type:'initial',state,tradeRevision:record.tradeRevision||0,clock:performance.now(),build:ONLINE_BUILD});
  }
  joinConnection(connection){
   this.connection=connection;this.wire=bindOnlineConnection(connection,packet=>{if(this.connection===connection)this.guestMessage(packet).catch(error=>{if(this.connection===connection)this.fail(friendlyError(error));});},error=>{if(this.connection===connection)this.fail(friendlyError(error));});
@@ -142,12 +152,23 @@ class OnlineSession {
    if(this.connection===connection)this.wire?.send({type:'authenticate',protocol:ONLINE_PROTOCOL,build:ONLINE_BUILD,proof,player:createSaveState(this.game).player});return;
   }
   if(packet.type==='closed'){this.fail('The host closed the world. Your character has been saved.');return;}
+  if(packet.type==='trade'||packet.type==='character-rejected'){
+   if(this.role!=='guest')return;
+   let message=packet.message;
+   this.tradeRevision=packet.tradeRevision||0;
+   if(packet.economy){Object.assign(this.game.player,packet.economy);this.menuCommitPending=false;this.saveGuest(false);}
+   if(this.lastSaveSucceeded===false&&(packet.economy||message==='Trade completed.'))message='Your inventory is updated, but this browser could not save it. Keep this tab open, free browser storage and use Save.';
+   if(packet.type==='trade')this.game.trading?.receive(packet.state,message);
+   else this.game.log(message);
+   return;
+  }
   if(packet.type==='character-accepted'){if(packet.revision===this.characterRevision)this.menuCommitPending=false;return;}
   if(packet.type==='initial'){
    if(packet.build!==ONLINE_BUILD)throw Error('Refresh both games to use the same version.');
    if(!this.backup)this.backup=createSaveState(this.game);
    clearTimeout(this.connectTimer);this.connecting=false;this.role='guest';this.ready=false;this.initializing=true;
    this.syncClock(packet.clock);
+   this.game.trading?.reset();this.tradeRevision=packet.tradeRevision||0;
    applySaveToGame(this.game,packet.state);this.game.setUiOwner(this.game.player);this.game.player.networkRemote=false;
    this.receivedGroups={};this.smoothing.clear();this.partyActors.clear();this.initializing=false;this.ready=true;this.lastSnapshot=Date.now();this.menu.close();this.menu.clearPassword();this.setStatus('Joined the host’s world.');this.wire.send({type:'ready'});return;
   }
@@ -209,7 +230,7 @@ class OnlineSession {
   for(const entry of party)for(const key of ['eliteFrost','eliteFrozenUntil','eliteFrostRecoveryUntil'])entry.visual[key] ??=0;
   const full=Date.now()>(record.profileAt||0);if(full)record.profileAt=Date.now()+500;
   const sounds=this.audioQueue.filter(e=>e.id>(record.audioCursor||0));record.audioCursor=this.audioSequence;
-  return {type:'state',clock:performance.now(),groups,party,sounds,eliteEncounters:eliteEncounterPresentation(g.world,refs),self:p.networkId,profile:full?wireClone(p,refs):null,entryReady:partyEntrySnapshot(g,p),paused:!!g.paused||partyEntryPending(g),meta:wireClone(pick(g.world,['mode','name','theme','floor','depth','tier','regionId','actId','safeZone','cleared','dungeonState','bossRoomCenter','floorType','bossArena','arenaBarriers'])),dialogue:g.dialogue?.active&&g.dialogue.actor===p?wireClone({...g.dialogue,actor:undefined,world:undefined}):null,fishing:g.fishingMiniGame?.active&&g.fishingMiniGame.player===p?wireClone({...g.fishingMiniGame,object:undefined,player:undefined,objectId:g.fishingMiniGame.object?.id}):null};
+  return {type:'state',trade:g.trading?.snapshot(p)||null,clock:performance.now(),groups,party,sounds,eliteEncounters:eliteEncounterPresentation(g.world,refs),self:p.networkId,profile:full?wireClone(p,refs):null,entryReady:partyEntrySnapshot(g,p),paused:!!g.paused||partyEntryPending(g),meta:wireClone(pick(g.world,['mode','name','theme','floor','depth','tier','regionId','actId','safeZone','cleared','dungeonState','bossRoomCenter','floorType','bossArena','arenaBarriers'])),dialogue:g.dialogue?.active&&g.dialogue.actor===p?wireClone({...g.dialogue,actor:undefined,world:undefined}):null,fishing:g.fishingMiniGame?.active&&g.fishingMiniGame.player===p?wireClone({...g.fishingMiniGame,object:undefined,player:undefined,objectId:g.fishingMiniGame.object?.id}):null};
  }
  receiveState(packet){
   const g=this.game,busy=this.isMenuBusy();
@@ -222,6 +243,7 @@ class OnlineSession {
   g.player.coop={enabled:others.length>0,players:others};g.player.slot=g.player.playerNumber=1;g.player.networkRemote=false;
   const liveIds=new Set(others.map(a=>a.networkId));for(const [id,actor]of this.partyActors)if(!liveIds.has(id)){this.smoothing.delete(actor);this.partyActors.delete(id);}
   Object.assign(g.world,packet.meta||{},{networkGuest:true});
+  this.game.trading?.receive(packet.trade);
   for(const [group,delta]of Object.entries(packet.groups||{})){
    if(!['objects','enemies','effects','combatEffects','drops'].includes(group))continue;
    const values=this.receivedGroups[group] ||=new Map();for(const id of delta.remove||[])values.delete(id);for(const e of delta.upsert||[]){const old=values.get(e.id);if(old){this.applyVisual(old,e.value,true);values.set(e.id,old);}else values.set(e.id,e.value);}g.world[group]=[...values.values()];
@@ -256,7 +278,7 @@ class OnlineSession {
   if(g.dialogue.active&&controller.connected&&(controller.confirmPressed||controller.cancelPressed||controller.upPressed||controller.downPressed))this.sendDialogue({confirmPressed:controller.confirmPressed,cancelPressed:controller.cancelPressed,upPressed:controller.upPressed,downPressed:controller.downPressed,inputDevice:'controller'});
   this.pendingInput=partyEntryPending(g)?sanitizeOnlineInput():mergeOnlineInput(this.pendingInput,input);
   if(now>=this.sendAt){
-   this.sendAt=now+40;this.wire.send({type:'input',seq:++this.sequence,busy,viewport:{width:g.canvas.width,height:g.canvas.height},input:busy||partyEntryPending(g)||g.dialogue.active||g.fishingMiniGame?.active?sanitizeOnlineInput():this.pendingInput});this.pendingInput=null;
+   this.sendAt=now+40;this.wire.send({type:'input',seq:++this.sequence,busy,viewport:{width:g.canvas.width,height:g.canvas.height},input:busy||g.trading?.isBusy(g.player)||partyEntryPending(g)||g.dialogue.active||g.fishingMiniGame?.active?sanitizeOnlineInput():this.pendingInput});this.pendingInput=null;
   }
   if(now-this.lastSnapshot>20000){this.fail('The host stopped responding. Your character has been saved.');return;}
   if(now>=this.saveAt){this.saveAt=now+2500;this.saveGuest(false);}
@@ -277,7 +299,19 @@ class OnlineSession {
   g.camera.x+=(g.player.x-g.canvas.width/2-g.camera.x)*.25;g.camera.y+=(g.player.y-g.canvas.height/2-g.camera.y)*.25;
   g.input.attackPressed=g.input.attackReleased=g.input.dashPressed=false;g.clearAbilityInputEdges();
  }
- commitCharacter(){if(this.role==='guest'&&this.wire){this.menuCommitPending=true;this.characterRevision=(this.characterRevision||0)+1;this.wire.send({type:'character',revision:this.characterRevision,character:wireClone(pick(this.game.player,CHARACTER_FIELDS))});}}
+ commitCharacter(){if(this.role==='guest'&&this.wire&&!this.game.trading?.isBusy(this.game.player)){this.menuCommitPending=true;this.characterRevision=(this.characterRevision||0)+1;this.wire.send({type:'character',revision:this.characterRevision,tradeRevision:this.tradeRevision||0,character:wireClone(pick(this.game.player,CHARACTER_FIELDS))});}}
+ sendTradeCommand(command){if(this.role==='guest'&&this.ready)this.wire?.send({type:'trade',command});}
+ sendTradeStates(actors,message=''){
+  if(this.role!=='host')return;
+  for(const record of this.clients.values())if(record.ready&&actors.includes(record.actor))record.wire.send({type:'trade',tradeRevision:record.tradeRevision||0,state:this.game.trading.snapshot(record.actor),message});
+ }
+ completeTrade(actors){
+  if(this.role!=='host')return;
+  for(const record of this.clients.values())if(record.ready&&actors.includes(record.actor)){
+   record.tradeRevision=(record.tradeRevision||0)+1;
+   record.wire.send({type:'trade',tradeRevision:record.tradeRevision,state:this.game.trading.snapshot(record.actor),economy:wireClone(pick(record.actor,['inventory','gold'])),message:'Trade completed.'});
+  }
+ }
  sendDialogue(input){if(this.role!=='guest')return false;this.wire?.send({type:'dialogue',input});return true;}
  closeDialogue(){if(this.role!=='guest')return false;this.wire?.send({type:'dialogue',close:true});return true;}
  sendFishing(cancel=false){if(this.role!=='guest')return false;this.wire?.send({type:'fishing',cancel});return true;}
@@ -302,6 +336,7 @@ class OnlineSession {
   this.menu.render();
  }
  disconnect({restore=true}={}){
+  this.game.trading?.reset();
   cancelPartyEntry(this.game,'',false);
   this.attempt=(this.attempt||0)+1;
   clearTimeout(this.connectTimer);const wasGuest=this.role==='guest',state=wasGuest&&this.backup?this.guestSaveState():null;

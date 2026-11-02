@@ -231,6 +231,7 @@ function normalizeClassId(classId) {
 // -----------------------------------------------------------------------------
 
 export function interact(game) {
+  if((game.hostGame||game).trading?.interact(game.player))return;
   const nearest = nearestObject(game, INTERACTION_RANGE);
 
   if (!nearest) {

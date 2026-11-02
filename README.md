@@ -1,5 +1,14 @@
 # Runalis - Original Land Expanded
 
+## Player trading — November 2, 2026
+
+Stand next to another player for four seconds in a safe zone such as Orrakai.
+When the familiar dialogue dots appear, press **E / controller A / Interact**.
+Offer bag items or gold, accept the offer, then both confirm the final review.
+Crafting materials, quest items, locked items and currently equipped gear are
+excluded. Works in couch co-op and online parties. See
+[controls, transaction rules and verification](docs/player-trading/README.md).
+
 ## Narrative and world assessment — October 31, 2026
 
 The [World & Narrative Bible](docs/RUNALIS_WORLD_BIBLE.md) preserves the existing

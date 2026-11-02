@@ -4,6 +4,12 @@ October 31, 2026. Active root runtime. Companion:
 [Technical Bible](RUNALIS_MULTIPLAYER_BIBLE.md) and
 [executed evidence](multiplayer-audit/README.md).
 
+November 2 follow-up: [safe-zone player trading](player-trading/README.md) adds
+actor-owned offers and two-stage host-authoritative exchanges for local and online
+parties. Trade-time and stale pre-trade menu commits are rejected. This is a bounded
+improvement around MP-002, not closure of its broader trusted-character policy.
+The original assessment below remains historical evidence.
+
 ## Assessment
 
 RUNALIS already implements four-player local and four-player host-authoritative

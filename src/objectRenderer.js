@@ -847,7 +847,7 @@ function drawNpc(ctx, npc, camera, questActor = null) {
   if(objectInInteractionRange(questActor,npc))drawDialogueReadyIndicator(ctx,p.x,p.y-86);
 }
 
-function drawDialogueReadyIndicator(ctx,x,y){
+export function drawDialogueReadyIndicator(ctx,x,y){
   ctx.save();ctx.translate(Math.round(x),Math.round(y));
   ctx.shadowColor='#000';ctx.shadowBlur=4;
   ctx.fillStyle='#171b20';ctx.strokeStyle='#e5c87c';ctx.lineWidth=2;

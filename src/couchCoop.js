@@ -321,6 +321,7 @@ export function joinCouchCoopPlayer(game, slotNumber = 2, controllerSlotIndex = 
 
 export function leaveCouchCoopPlayer(game, ally, options = {}) {
   if (!game?.player || !ally || ally === game.player) return false;
+  game.trading?.cancelActor(ally);
 
   const coop = ensureCouchCoop(game);
   if (!coop) return false;
@@ -1238,7 +1239,7 @@ export function saveCouchCoopProfile(game, ally) {
   return saved;
 }
 
-function serializeCoopPlayerAsUnifiedProfile(game, ally, profiles = {}) {
+export function serializeCoopPlayerAsUnifiedProfile(game, ally, profiles = {}) {
   if (!ally) return null;
   const profileId = ally.profileId || createProfileId();
   const existingProfile = profiles?.[profileId] || null;
@@ -1918,6 +1919,7 @@ function createAllyGameView(game, ally) {
 }
 
 function isCoopActorBusy(game, ally) {
+  if(game.trading?.isBusy(ally))return true;
   if(game.localMenus?.isBusy(ally))return true;
   if (ally.networkMenuBusy) return true;
   if (game?.dialogue?.active && game.dialogue.actor === ally) return true;

@@ -4,7 +4,7 @@ import {fileURLToPath} from 'node:url';
 const root = fileURLToPath(new URL('../',import.meta.url));
 const suites = ['audit-engineering-foundation.mjs','verify-profile-storage.mjs','verify-bubble-ward-save.mjs',
   'verify-coop-session-state.mjs','verify-coop-readiness.mjs','verify-continent-persistence.mjs',
-  'verify-online-protocol.mjs','verify-party-entry.mjs','verify-mercy-aid-migration.mjs',
+  'verify-online-protocol.mjs','verify-party-entry.mjs','verify-player-trading.mjs','verify-mercy-aid-migration.mjs',
   'verify-long-term-progression.mjs','verify-hotbar-assignment.mjs'];
 let failed = 0;
 for (const suite of suites) {

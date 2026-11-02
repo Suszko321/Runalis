@@ -566,3 +566,36 @@ memory, security or gameplay readiness claim follows solely from a green build.
   repeated attempts cannot select artifacts left by previous attempts. Existing
   checks, deployment permissions and release/save handling are unchanged. The
   new run still executes the engineering and package gates before publishing.
+
+### E42 · Player-to-player trading · IMPLEMENTED, feature validation
+
+- **Request/behavior:** four stationary seconds within 72 world units and line of
+  sight in a marked safe zone expose the existing dialogue dots. E/controller
+  A/touch Interact opens actor-owned offers. Both accept, then both confirm a
+  separate final review. Offer edits invalidate approvals; decline/leave/death,
+  controller loss, separation or world change cancels unfinished trades.
+- **Authority/integrity:** common host/local transaction validates both projected
+  bags and balances before committing. No crafting inputs/materials, quest/bound,
+  locked or equipped items. Existing gear capacity/acquisition rules remain;
+  exact instance/tier/rarity metadata is preserved. Local profiles are written
+  together before live transfer; failure leaves the live exchange unchanged.
+  Online commands belong to the authenticated actor; trade revisions reject stale
+  approvals, and economy revisions fence delayed pre-trade character updates.
+- **Scope:** `tradeSystem`/`tradeUi`, small existing input/interaction/camera/session
+  hooks and a matching stylesheet. Reuses the existing NPC dot renderer and ally
+  profile serializer. No save-schema change, balance/content change, new service,
+  paid infrastructure or deployment. Online build compatibility is advanced so
+  older clients must refresh.
+- **Evidence:** eight Node transaction groups; local/source and packaged-browser
+  trade checks (10/10 final staged cases), including native WebRTC host/guest, separate local profiles,
+  gamepad ownership, compact panels, item fidelity, two approvals, delayed menu
+  commits, guest-to-guest host isolation, guest quota failure/save retry and
+  cancellation. The transaction suite joins the small engineering
+  gate (12 checks); static build and existing
+  independent-menu and online lifecycle suites pass. The broader online gameplay
+  suite times out on its mobile dialogue Leave button on both unchanged HEAD and
+  trading code; no claim that this pre-existing failure passed. See
+  [complete evidence and limitations](player-trading/README.md).
+- **Remaining boundaries:** E03's broader imported/updated-character trust is still
+  open. Different-browser storage is not crash-atomic; durable delivery receipts,
+  physical controllers, real phones and separate-network soak remain future work.

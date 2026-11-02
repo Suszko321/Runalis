@@ -15,6 +15,7 @@ export function createLocalPlayerMenus(game) {
     }
   }
   function open(actor){
+    if(game.trading?.isBusy(actor))return false;
     if(!eligible(actor))return false;
     if(sessions.has(actor))return true;
     const frame=document.createElement('iframe'),s={frame,world:game.world};sessions.set(actor,s);

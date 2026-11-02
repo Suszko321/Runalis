@@ -8,6 +8,7 @@ import {returnDungeonToNavStone,resetDungeonSession} from './dungeonSystem.js';
 import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
 import {initMobileShell, createMobileControls} from './mobileControls.js';
 import {createOnlineSession} from './onlineSession.js';
+import {createTrading} from './tradeUi.js';
 import {createDeathScreen} from './deathScreen.js';
 import {installReleaseUpdates} from './releaseUpdates.js';
 import {bindFullscreenButtons} from './fullscreenMenu.js';
@@ -480,6 +481,7 @@ class RunalisGame {
       abilityName: id => getAbilityById(id)?.name,
       cancelCharge: () => { this.onlineSession?.cancelCharges();cancelActiveAbilityCharge(this.player); cancelActiveHeavyAttackCharge(this.player, this.world); },
       menu: () => {
+        if(this.trading?.isBusy(this.player))return;
         if (this.dialogue?.active&&!this.dialogue.actor?.networkRemote || isBlockingDomOverlayActive() || this.world?.mode === 'act1Opening') return;
         if (this.paused) this.togglePause(false);
         toggleGameMenuChooser(this.setUiOwner(this.player));
@@ -512,6 +514,7 @@ class RunalisGame {
     this.profileName = this.player.name;
     ensureCouchCoop(this);
     this.localMenus=createLocalPlayerMenus(this);
+    this.trading=createTrading(this);
     this.setUiOwner(this.player);
 
     const label = document.getElementById('activeProfileLabel');
@@ -622,6 +625,7 @@ class RunalisGame {
     this.openingSkipKeys=new Set();
     this.keydown = event => {
       unlockAudio();
+      if(this.trading?.handleKeyboard(event))return;
       if(handlePartyEntryKeyboard(this,event))return;
       if(handleMalakarKeyboard(this,event))return;
       if (this.developerEditor?.handleKeyDown(event)) return;
@@ -801,6 +805,7 @@ class RunalisGame {
     };
 
     this.mousedown = event => {
+      if(event.target.closest?.('.player-trade')||this.trading?.isBusy(this.player))return;
       if(partyEntryPending(this))return;
       if (event.target.closest?.('#mobileControls,#mobileRotate') || (this.mobileControls && event.target !== this.canvas)) return;
       unlockAudio();
@@ -935,6 +940,7 @@ class RunalisGame {
     cancelPartyEntry(this,'',false);
     this.started = false;
     this.onlineSession?.destroy();
+    this.trading?.destroy();
     this.deathScreen?.destroy();
     this.localMenus?.destroy();
     this.mobileControls?.destroy();
@@ -1146,7 +1152,7 @@ class RunalisGame {
     if(handlePartyEntryInput(this))return true;
     if(this.deathScreen?.active&&this.deathScreen.handleController(this.getAllControllerInputsForUi()))return true;
     if(handleMalakarInput(this))return true;
-    const controllerInputs = this.getAllControllerInputsForUi().filter(input=>!this.localMenus?.handleInput(input,this.getActorForControllerInput(input)));
+    const controllerInputs = this.getAllControllerInputsForUi().filter(input=>!this.trading?.handleInput(input,this.getActorForControllerInput(input))&&!this.localMenus?.handleInput(input,this.getActorForControllerInput(input)));
 
     if (this.world?.mode === 'act1Opening' && !isBlockingDomOverlayActive() && controllerInputs.some(input => input?.confirmPressed || input?.cancelPressed || input?.backPressed)) {
       requestAct1OpeningSkip(this);
@@ -1507,6 +1513,7 @@ class RunalisGame {
     } else if (!entryBlocked&&!this.paused&&!this.deathScreen?.active) {
       this.update(dt, now);
     }
+    this.trading?.update(this.paused?0:dt);
     this.onlineSession?.updateHost(dt);
 
     this.updateScreenShake(dt);
@@ -1521,6 +1528,7 @@ class RunalisGame {
     );
 
     this.drawWorld();
+    this.trading?.drawHints();
     this.developerEditor?.draw(this.ctx, this.renderCamera);
     renderMinimapHud(this);
 
@@ -1811,6 +1819,7 @@ class RunalisGame {
 
   isActorInterfaceBusy(actor) {
     if (!actor) return false;
+    if(this.trading?.isBusy(actor))return true;
     if(this.localMenus?.isBusy(actor))return true;
     if(actor===this.player&&document.querySelector('#onlineMultiplayerOverlay.active'))return true;
     if(this.workshopService?.active&&this.workshopService.actor===actor)return true;
@@ -1964,6 +1973,7 @@ class RunalisGame {
 
   isSharedPartyCameraMode() {
     if (this.onlineSession?.role) return false;
+    if(this.trading?.hasLocalOpen())return false;
     if(this.localMenus?.hasOpen())return false;
     const layout=partyCameraLayout(getActiveLocalPlayers(this.player),this.canvas.width,this.canvas.height,this.coopCameraShared??true,cameraPreference());
     this.coopCameraShared=layout.shared;
@@ -2860,6 +2870,7 @@ class RunalisGame {
   }
 
   applySave(saveState) {
+    this.trading?.reset();
     const applied = applySaveToGame(this, saveState);
 
     if (!applied) return;

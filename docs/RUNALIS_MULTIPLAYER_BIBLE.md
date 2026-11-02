@@ -434,3 +434,52 @@ confirmed ownership/transport defects in controlled stages, followed by physical
 controller, quest/save and network validation. Existing online systems already
 cover substantial portions of the brief's phases 3–4; do not rebuild them or
 declare them production-complete. See the [implementation order](RUNALIS_MULTIPLAYER_AUDIT.md#implementation-order).
+
+## 11. Safe-zone player trading — implemented November 2, 2026
+
+`tradeSystem.js` owns transient pair readiness, offers, revisions and the single
+host/local transaction. `tradeUi.js` presents actor-owned offer and final-review
+screens. The normal game loop updates readiness; there is no second simulation,
+polling timer or persisted trade state. See [feature rules and evidence](player-trading/README.md).
+
+- Two active, living actors must stand within 72 world units with clear line of
+  sight for four simulation seconds in a world marked `safeZone`. Moving,
+  attacking, another owned interface or leaving the zone resets eligibility.
+  The existing NPC dialogue-dot renderer marks eligible player interactions.
+- Normal E/A/touch Interact opens the nearest eligible partner's trade. Up to
+  two distinct pairs can trade in a four-player party. Session membership binds
+  actual actor references; display/controller slots do not authorize a command.
+- Bag gear, eligible consumables/tools and whole gold amounts can be offered.
+  Material/reagent/raw-fish categories, all recipe inputs, quest/bound/locked
+  items and currently equipped items are excluded. Up to 20 item lines are
+  supported, with quantities and all-stack/all-gold controls.
+- Every offer edit clears both approvals. Both accept the same offer revision,
+  then separately confirm the immutable final review. Change Offer returns to
+  editing and clears confirmations. Stale actions cannot confirm newer offers.
+- The final synchronous commit revalidates both inventories, balances, exact gear
+  identities, capacity and existing acquisition/level rules. Both outgoing offers
+  free space before incoming gear is checked. Instance IDs, tier, rarity and other
+  item metadata move intact. No items are escrowed or removed while negotiating.
+- Decline, separation, unsafe/world transitions, death, ally controller loss,
+  player leave or channel loss cancels an unfinished trade. Unrelated players
+  retain their own controls. Local trade panels force split-screen and remain
+  inside their owner's viewport; independent controller focus is retained.
+- Local character projections are saved together with one existing profile-list
+  write before the live exchange is committed. Failure cancels without transferring.
+  The existing ally serializer is reused rather than inventing a save format.
+  Online guests receive and immediately save their own authoritative result.
+  Guest storage failure is reported without discarding the updated live inventory;
+  freeing storage and retrying Save can persist it.
+- Online commands are routed from the authenticated connection's actor and checked
+  against trade ID/revision. A per-connection economy revision rejects delayed
+  pre-trade character-menu commits; commits during an active trade are rejected.
+  Trade UI closure does not send an ordinary guest character-copy commit.
+  Scene initialization carries this revision. Compatibility build is now
+  `runalis-online-8-trading`; peers on older builds must reload.
+
+This protects trade commands and stale menu updates; it does not close the broader
+MP-002/E03 trusted-character-import/update policy. A malicious guest editing an
+imported character remains a separate authority problem. Cross-browser persistence
+is not a distributed crash-atomic database: a browser/process loss before a guest
+receives/saves a completed result still needs the separately scoped durable receipt
+work. There is no added backend, paid relay or host migration.
