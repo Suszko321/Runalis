@@ -8,7 +8,7 @@ import {menuDirection,directionalMenuItem} from './menuNavigation.js';
 import {playSfx} from './audioSystem.js';
 import {captureTouchMenuScroll} from './menuSheets.js';
 import {salvageInventoryItem} from './craftingSystem.js';
-import {gearDeconstructionRewards} from './gearServices.js';
+import {gearDeconstructionRewards,isItemLocked,itemLockRevision} from './gearServices.js';
 import {instanceGearItem,GEAR_RARITIES,gearRarity} from './gearRarity.js';
 import {gearBagCount} from './gearItemization.js';
 
@@ -20,7 +20,7 @@ function rows(s){
  normalizeEquipmentProgression(p);
  return [...Object.entries(p.equippedGear).filter(([,e])=>e).map(([slot,entry])=>({entry,location:`Equipped · ${label(slot)}`})),...p.inventory.filter(e=>isTieredEquipment(ITEMS[e.id])).map(entry=>({entry,location:'Bag'}))]
   .filter(({entry,location})=>s.category==='deconstruct'?location==='Bag':s.category==='all'||(s.category==='weapons'?ITEMS[entry.id]?.type==='weapon':ITEMS[entry.id]?.type!=='weapon'))
-  .map(({entry,location})=>({id:entry.instanceId,name:`${GEAR_RARITIES[gearRarity(ITEMS[entry.id],entry)].name} ${ITEMS[entry.id]?.name||entry.id}`,entry,meta:`${location} · Tier ${entry.upgradeTier}/20 · Gear bag ${gearBagCount(p)}/20`}));
+  .map(({entry,location})=>({id:entry.instanceId,name:`${GEAR_RARITIES[gearRarity(ITEMS[entry.id],entry)].name} ${ITEMS[entry.id]?.name||entry.id}`,entry,meta:`${location} · Tier ${entry.upgradeTier}/20 · Gear bag ${gearBagCount(p)}/20${isItemLocked(entry)?' · Locked':''}`}));
 }
 function categories(s){return s.kind==='blacksmith'?[['weapons','Weapons'],['armour','Armour & Trinkets'],['all','All Gear'],['deconstruct','Deconstruct']]:[['all','All Recipes'],...[...new Set(getAllRecipes().map(r=>r.skill))].map(id=>[id,label(id)])];}
 function requirements(p,materials){return (materials||[]).map(([id,n])=>`<div class="workshop-material"><span>${escape(ITEMS[id]?.name||id)}</span><strong class="${countItem(p,id)>=n?'enough':'missing'}">${countItem(p,id)} / ${n}</strong></div>`).join('');}
@@ -32,6 +32,7 @@ function detail(s,row){
   return `<h3>${escape(row.name)}</h3><p>${escape(item?.desc||'')}</p><p>Creates ${escape(item?.name||r.output)} ×${r.outputQty||1}</p><p>${escape(label(r.skill))} ${r.requiredLevel||1} required · You: ${status.level||1} · ${r.xp||0} XP</p>${item?itemStatBlock(p,item,{id:item.id,upgradeTier:1}):''}<h4>Ingredients · Available / Required</h4>${requirements(p,r.materials)}<p class="missing">${escape(status.reason)}</p><button data-workshop-perform ${status.ok?'':'disabled'}>Craft ${escape(item?.name||r.output)}</button>`;
  }
  const item=instanceGearItem(ITEMS[row.entry.id],row.entry),quote=makeOwnedGearUpgradeQuote(p,row.id);
+ if(s.category==='deconstruct'&&isItemLocked(row.entry))return `<h3>${escape(row.name)}</h3><p>${escape(row.meta)}</p><p>This item is locked. Unlock it in your inventory before deconstructing it.</p><button data-workshop-perform disabled>Locked Item Protected</button>`;
  if(s.category==='deconstruct')return `<h3>${escape(row.name)}</h3><p>${escape(row.meta)}</p>${itemStatBlock(p,item,row.entry)}<h4>Deconstruct into</h4>${gearDeconstructionRewards(item).map(([id,n])=>`<p>${escape(ITEMS[id]?.name||id)} ×${n}</p>`).join('')}<p>This permanently consumes this copy. Equipped gear is protected.</p><button data-workshop-perform>${s.pending?.type==='deconstruct'&&s.pending.instanceId===row.id?'Confirm Deconstruct':'Review Deconstruction'}</button>`;
  const missing=quote?.cost.materials.filter(([id,n])=>countItem(p,id)<n)||[],affordable=quote&&!quote.blockedReason&&p.gold>=quote.cost.gold&&!missing.length;
  const action=quote?.promotion?'Ascension':'Upgrade',pending=s.pending?.instanceId===quote?.instanceId&&s.pending?.currentTier===quote?.currentTier&&s.pending?.currentRarity===quote?.currentRarity;
@@ -75,7 +76,8 @@ function performSelected(game){
  const s=(game.hostGame||game).workshopService;if(!s||!workshopAccessStatus(s.actor,s.kind).ok){closeWorkshopService(game);return false;}
  const row=rows(s).find(r=>r.id===s.selected);if(!row)return false;let success=false;
  if(s.category==='deconstruct'){
-  const token={type:'deconstruct',instanceId:row.id,tier:row.entry.upgradeTier,rarity:gearRarity(ITEMS[row.entry.id],row.entry)};
+  if(isItemLocked(row.entry)){s.pending=null;s.message='Locked item protected. Unlock it in your inventory first.';refresh(game);return false;}
+  const token={type:'deconstruct',instanceId:row.id,tier:row.entry.upgradeTier,rarity:gearRarity(ITEMS[row.entry.id],row.entry),lockRevision:itemLockRevision(row.entry)};
   if(JSON.stringify(s.pending)!==JSON.stringify(token)){s.pending=token;s.message='Confirm deconstruction. This copy will be consumed for the listed upgrade materials.';refresh(game);document.querySelector('[data-workshop-perform]')?.focus();return false;}
   const index=s.actor.inventory.findIndex(e=>e.instanceId===row.id);success=salvageInventoryItem(s.actor,index,game);s.pending=null;s.message=success?'Deconstructed. Upgrade materials added and one gear slot freed.':'The item or service changed.';refresh(game);return success;
  }

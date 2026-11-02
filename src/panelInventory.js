@@ -1,7 +1,7 @@
 import {vampireOutsideHealing} from './vampireRules.js';
 import {instanceGearItem,GEAR_RARITIES} from './gearRarity.js';
 import {gearBagCount,canCarryGear,gearEquipReason} from './gearItemization.js';
-import {isGearInstanceEquipped} from './gearServices.js';
+import {isGearInstanceEquipped,isItemLocked,setItemLocked,inventoryDisposalKey} from './gearServices.js';
 ﻿import {equipmentPurpose,equipmentScaling,abilitySummary,abilityRequirements} from './uiInformation.js';
 import {equipGearEntry,unequipGearEntry,getTierStatBonus,getEquipmentTier,makeUpgradeQuote,upgradeEntryPreview} from './equipmentProgressionSystem.js';
 import {synchronizeEquipmentBoundSkills,dismissCoterieForEquipmentChange} from './equipmentBoundSkills.js';
@@ -216,6 +216,7 @@ export function performInventorySalvageAction(player, row, game, rerender) {
   const item = entry ? instanceGearItem(ITEMS[entry.id],entry) : null;
   const coterieOwner = getCoterieGearOwnerLabel(player, item?.id);
 
+  if(isItemLocked(entry)){game?.log?.('This item is locked. Unlock it in your inventory before deconstructing it.');return false;}
   if (!entry || !item || !isSalvageable(item) || isGearInstanceEquipped(player,entry)) {
     game?.log?.(coterieOwner
       ? `${item.name} is ${coterieOwner.toLowerCase()} and cannot be salvaged.`
@@ -225,7 +226,7 @@ export function performInventorySalvageAction(player, row, game, rerender) {
     return false;
   }
 
-  const confirmationKey = `${bagIndex}:${item.id}:${entry.qty || 1}`;
+  const confirmationKey = inventoryDisposalKey(entry,bagIndex);
   if (salvageNeedsConfirmation(item) && game?.uiState?.pendingInventorySalvageKey !== confirmationKey) {
     game.uiState = game.uiState || {};
     game.uiState.pendingInventorySalvageKey = confirmationKey;
@@ -243,6 +244,7 @@ export function performInventorySalvageAction(player, row, game, rerender) {
 }
 
 export function bindCharacterButtons(player, game, rerender) {
+  bindEquipmentActionButtons(player, game, rerender);
   document.querySelectorAll('[data-unequip-slot]').forEach(btn => {
     btn.onclick = () => {
       const slot = btn.dataset.unequipSlot;
@@ -476,7 +478,8 @@ function inventoryItemRow(player, entry, index, subtab, selected) {
     >
       <span class="inventory-list-rarity" style="--rarity:${rarityColor}"></span>
       <span class="item-icon inventory-list-icon" style="--rarity:${rarityColor}">${itemIconMarkup(item, { classId: player.classId })}</span>
-      <span class="inventory-list-name" style="color:${rarityColor}">${escapeHtml(item.name)}</span>
+      <span class="inventory-list-name inventory-rarity-name" style="--item-rarity:${rarityColor};color:${rarityColor}">${escapeHtml(item.name)}</span>
+      ${isItemLocked(entry)?'<span class="inventory-lock-badge">Locked</span>':''}
       ${entry.qty > 1 || coterieOwner ? `
         <span class="inventory-list-meta">
           ${entry.qty > 1 ? `<b class="inventory-list-quantity">x${entry.qty}</b>` : ''}
@@ -501,7 +504,7 @@ function inventoryItemDetail(player, entry, options = {}) {
   const coterieOwner = getCoterieGearOwnerLabel(player, item.id,entry);
   const equipped = playerEquipped || !!coterieOwner;
   const primaryHint = item.slot ? 'A Equip' : item.type==='scroll' ? 'A Read · double-click to learn' : isUsable(item) ? 'A Use' : '';
-  const salvageHint = isSalvageable(item) && !equipped ? 'Blacksmith: Deconstruct' : '';
+  const salvageHint = isItemLocked(entry)?'Locked · Cannot sell or deconstruct':isSalvageable(item) && !equipped ? 'Blacksmith: Deconstruct' : '';
   const bagIndex = findInventoryEntryIndex(player, entry);
 
   return `
@@ -511,11 +514,12 @@ function inventoryItemDetail(player, entry, options = {}) {
           ${itemIconMarkup(item, { classId: player.classId })}
         </div>
         <div>
-          <h2 style="color:${rarityColor}">${escapeHtml(item.name)}${qty}</h2>
+          <h2 class="inventory-rarity-name" style="--item-rarity:${rarityColor};color:${rarityColor}">${escapeHtml(item.name)}${qty}</h2>
           <p class="tag">${escapeHtml(rarity?.name || item.rarity || 'Item')}${item.slot?` · ${escapeHtml(slotLabel(item.slot))}`:''}${isUpgradable(item)?` · Tier ${entry.upgradeTier||1}/20`:''}${playerEquipped ? ' · Equipped' : coterieOwner ? ` · ${escapeHtml(coterieOwner)}` : ''}</p>
         </div>
       </div>
 
+      ${inventoryLockControls(entry,{bagIndex})}
       ${equipmentDescriptionMarkup(item)}
       ${itemStatBlock(player, item,entry)}
       ${tierIdentityBlock(player,item,entry)}
@@ -531,6 +535,7 @@ function inventoryItemDetail(player, entry, options = {}) {
         bagIndex,
         slot: normalizeEquipmentSlot(item.slot),
         item,
+        entry,
         equipped
       }) : ''}
 
@@ -601,7 +606,7 @@ function resolveSelectedEquipmentSlot(game) {
 
 function equipmentSlotButton(player, slot, label, selected) {
   const itemId = player.equipment?.[slot];
-  const item = itemId ? instanceGearItem(ITEMS[itemId],Object.values(player.equippedGear||{}).find(e=>e.id===itemId)) : null;
+  const item = itemId ? instanceGearItem(ITEMS[itemId],player.equippedGear?.[slot]) : null;
   const rarity = RARITY?.[item?.rarity];
   const rarityColor = rarity?.color || '#b8c0cc';
   const upgradeLevel = item ? getGearUpgradeLevel(player, slot) : 0;
@@ -622,7 +627,8 @@ function equipmentSlotButton(player, slot, label, selected) {
       </span>
       <span class="equipment-slot-button-copy">
         <span class="equipment-slot-button-label">${escapeHtml(label)}</span>
-        <b style="color:${rarityColor}">${item ? `${escapeHtml(item.name)} · Tier ${upgradeLevel+1}/20` : 'Empty'}</b>
+        <b class="inventory-rarity-name" style="--item-rarity:${rarityColor};color:${rarityColor}">${item ? `${escapeHtml(item.name)} · Tier ${upgradeLevel+1}/20` : 'Empty'}</b>
+        ${isItemLocked(player.equippedGear?.[slot])?'<small>Locked</small>':''}
         <small>${escapeHtml(summary)}</small>
       </span>
     </button>
@@ -632,7 +638,7 @@ function equipmentSlotButton(player, slot, label, selected) {
 function equipmentSlotDetail(player, slot) {
   const label = slotLabel(slot);
   const itemId = player.equipment?.[slot];
-  const item = itemId ? instanceGearItem(ITEMS[itemId],Object.values(player.equippedGear||{}).find(e=>e.id===itemId)) : null;
+  const item = itemId ? instanceGearItem(ITEMS[itemId],player.equippedGear?.[slot]) : null;
 
   if (!item) {
     return `
@@ -657,18 +663,19 @@ function equipmentSlotDetail(player, slot) {
           ${itemIconMarkup(item, { classId: player.classId })}
         </div>
         <div>
-          <h2 style="color:${rarityColor}">${escapeHtml(item.name)} · Tier ${upgradeLevel+1}/20</h2>
+          <h2 class="inventory-rarity-name" style="--item-rarity:${rarityColor};color:${rarityColor}">${escapeHtml(item.name)} · Tier ${upgradeLevel+1}/20</h2>
           <p class="tag">${escapeHtml(label)} / ${escapeHtml(rarity?.name || item.rarity || 'Item')} / Equipped</p>
         </div>
       </div>
 
+      ${inventoryLockControls(player.equippedGear?.[slot],{slot})}
       ${equipmentDescriptionMarkup(item)}
       ${itemStatBlock(player, item)}
       ${tierIdentityBlock(player,item,player.equippedGear?.[slot])}
       ${upgradeCostBlock(player, slot, item)}
       ${legendaryEffectBlock(item)}
 
-      ${equipmentActionButtons({ slot, item, equipped: true })}
+      ${equipmentActionButtons({ slot, item, entry:player.equippedGear?.[slot], equipped: true })}
       ${inventoryControllerHints(['A Unequip', 'Hold Y Inventory'])}
     </div>
   `;
@@ -711,7 +718,7 @@ function coterieSkeletonCard(player, skeleton, skeletonIndex, selectedSkeletonIn
                 </span>
                 <span class="equipment-slot-button-copy">
                   <span class="equipment-slot-button-label">${escapeHtml(label)}</span>
-                  <b style="color:${rarityColor}">${item ? escapeHtml(item.name) : 'Empty'}</b>
+                  <b class="inventory-rarity-name" style="--item-rarity:${rarityColor};color:${rarityColor}">${item ? escapeHtml(item.name) : 'Empty'}</b>
                   <small>${escapeHtml(item ? compactItemSummary(player, item) : 'Ready for gear')}</small>
                 </span>
               </button>
@@ -780,8 +787,9 @@ function coterieInventoryItemRow(player, entry, index, selected, placing) {
     >
       <span class="inventory-list-rarity" style="--rarity:${rarityColor}"></span>
       <span class="item-icon inventory-list-icon" style="--rarity:${rarityColor}">${itemIconMarkup(item, { classId: player.classId })}</span>
-      <span class="inventory-list-name" style="color:${rarityColor}">${escapeHtml(item.name)}</span>
+      <span class="inventory-list-name inventory-rarity-name" style="--item-rarity:${rarityColor};color:${rarityColor}">${escapeHtml(item.name)}</span>
       <b class="inventory-list-quantity">${escapeHtml(slotText)}</b>
+      ${isItemLocked(entry)?'<span class="inventory-lock-badge">Locked</span>':''}
       ${entry.qty > 1 ? `<b class="inventory-list-quantity">x${entry.qty}</b>` : ''}
     </button>
   `;
@@ -806,7 +814,7 @@ function coterieSlotDetail(player, skeletonIndex, slot, pendingItem = null, pend
             ${itemIconMarkup(pendingItem, { classId: player.classId })}
           </div>
           <div>
-            <h2 style="color:${rarityColor}">${escapeHtml(pendingItem.name)}</h2>
+            <h2 class="inventory-rarity-name" style="--item-rarity:${rarityColor};color:${rarityColor}">${escapeHtml(pendingItem.name)}</h2>
             <p class="tag">${canPlace ? `Place in ${role} ${label}` : `Cannot fit ${role} ${label}`}</p>
           </div>
         </div>
@@ -840,7 +848,7 @@ function coterieSlotDetail(player, skeletonIndex, slot, pendingItem = null, pend
           ${itemIconMarkup(item, { classId: player.classId })}
         </div>
         <div>
-          <h2 style="color:${rarityColor}">${escapeHtml(item.name)}</h2>
+          <h2 class="inventory-rarity-name" style="--item-rarity:${rarityColor};color:${rarityColor}">${escapeHtml(item.name)}</h2>
           <p class="tag">${escapeHtml(role)} ${escapeHtml(label)} · ${escapeHtml(rarity?.name || item.rarity || 'Item')} · Tier ${skeleton.equippedGear?.[slot]?.upgradeTier||1}/20</p>
         </div>
       </div>
@@ -850,6 +858,7 @@ function coterieSlotDetail(player, skeletonIndex, slot, pendingItem = null, pend
       ${coterieSpecialEffectNote(item)}
 
       ${coterieActionButtons({ skeletonIndex, slot, item, equipped: true })}
+      ${inventoryLockControls(skeleton.equippedGear?.[slot],{slot,skeletonIndex})}
       ${inventoryControllerHints(['A Unequip'])}
     </div>
   `;
@@ -877,7 +886,7 @@ function coterieInventoryItemDetail(player, entry, skeletonIndex, slot, options 
           ${itemIconMarkup(item, { classId: player.classId })}
         </div>
         <div>
-          <h2 style="color:${rarityColor}">${escapeHtml(item.name)}${qty}</h2>
+          <h2 class="inventory-rarity-name" style="--item-rarity:${rarityColor};color:${rarityColor}">${escapeHtml(item.name)}${qty}</h2>
           <p class="tag">Tier ${entry.upgradeTier||1}/20 · ${options.placing
             ? `Choose a slot for ${escapeHtml(item.name)}`
             : `A chooses this gear for placement`}</p>
@@ -890,6 +899,7 @@ function coterieInventoryItemDetail(player, entry, skeletonIndex, slot, options 
       ${coterieSpecialEffectNote(item)}
 
       ${coterieActionButtons({ bagIndex, skeletonIndex, slot, item, choosing: true })}
+      ${inventoryLockControls(entry,{bagIndex})}
       ${inventoryControllerHints([options.placing ? 'A Place on Right' : 'A Choose Gear'])}
     </div>
   `;
@@ -1127,7 +1137,7 @@ function updateEquipmentFocusRegionDom(game) {
 
 export function equipmentSlotCard(player, slot, label, itemId, options = {}) {
   const compact = !!options.compact;
-  const item = itemId ? instanceGearItem(ITEMS[itemId],Object.values(player.equippedGear||{}).find(e=>e.id===itemId)) : null;
+  const item = itemId ? instanceGearItem(ITEMS[itemId],player.equippedGear?.[slot]) : null;
 
   if (!item) {
     return `
@@ -1155,7 +1165,7 @@ export function equipmentSlotCard(player, slot, label, itemId, options = {}) {
         </div>
       </div>
       <h3>${escapeHtml(label)}</h3>
-      <b style="color:${rarityColor}">${escapeHtml(item.name)} · Tier ${upgradeLevel+1}/20</b>
+      <b class="inventory-rarity-name" style="--item-rarity:${rarityColor};color:${rarityColor}">${escapeHtml(item.name)} · Tier ${upgradeLevel+1}/20</b>
       <p class="tag">${escapeHtml(rarity?.name || item.rarity || 'Item')}</p>
 
       ${compact ? compactItemStatBlock(player, item) : itemStatBlock(player, item)}
@@ -1164,6 +1174,7 @@ export function equipmentSlotCard(player, slot, label, itemId, options = {}) {
       ${compact ? '' : `<p class="tag">Upgrade: ${escapeHtml(costText)}</p>`}
       <div class="equipment-slot-actions">
         <button data-unequip-slot="${slot}">Unequip</button>
+        ${inventoryLockControls(player.equippedGear?.[slot],{slot})}
       </div>
     </div>
   `;
@@ -1264,7 +1275,7 @@ function inventoryListSummary(list) {
   return `<p class="tag">${list.totalItems} item${list.totalItems === 1 ? '' : 's'}</p>`;
 }
 
-function equipmentActionButtons({ bagIndex = null, slot = null, item = null, equipped = false } = {}) {
+function equipmentActionButtons({ bagIndex = null, slot = null, item = null, entry = null, equipped = false } = {}) {
   const actions = [];
 
   if (bagIndex !== null && item?.slot) {
@@ -1277,7 +1288,7 @@ function equipmentActionButtons({ bagIndex = null, slot = null, item = null, equ
 
 
   if (bagIndex !== null && item && isSalvageable(item) && !equipped) {
-    actions.push(`<button data-equipment-action="salvage" data-inventory-item-index="${bagIndex}">Deconstruct (Blacksmith)</button>`);
+    actions.push(`<button data-equipment-action="salvage" data-inventory-item-index="${bagIndex}" ${isItemLocked(entry)?'disabled':''}>${isItemLocked(entry)?'Locked · Deconstruction Protected':'Deconstruct (Blacksmith)'}</button>`);
   } else if (slot && item && isSalvageable(item)) {
     actions.push(`<button data-equipment-action="salvage-equipped" data-equipment-slot="${escapeHtml(slot)}">Protected Salvage</button>`);
   }
@@ -1289,6 +1300,12 @@ function equipmentActionButtons({ bagIndex = null, slot = null, item = null, equ
       ${actions.join('')}
     </div>
   `;
+}
+
+function inventoryLockControls(entry,{bagIndex=null,slot=null,skeletonIndex=null}={}){
+  if(!entry)return '';
+  const locked=isItemLocked(entry);
+  return `<div class="inventory-lock-controls"><button type="button" data-equipment-action="toggle-lock" data-lock-item-id="${escapeHtml(entry.id)}" ${entry.instanceId?`data-lock-instance-id="${escapeHtml(entry.instanceId)}"`:''} ${bagIndex!==null?`data-inventory-item-index="${bagIndex}"`:''} ${slot?`data-equipment-slot="${escapeHtml(slot)}"`:''} ${skeletonIndex!==null?`data-lock-skeleton-index="${skeletonIndex}"`:''} aria-pressed="${locked}">${locked?'Unlock Item':'Lock Item'}</button><small>${locked?'Locked: protected from sale and deconstruction.':'Lock to protect from sale and deconstruction.'}</small></div>`;
 }
 
 function equipmentComparisonBlock(player, item,entry=null) {
@@ -1525,6 +1542,14 @@ function formatSignedNumber(value) {
 export function performEquipmentActionButton(player, button, game, rerender) {
   const action = button?.dataset?.equipmentAction;
   if (!action) return false;
+  if(action==='toggle-lock'){
+    const data=button.dataset;
+    const owned=[...(player.inventory||[]),...Object.values(player.equippedGear||{}),...(player.gravecaller?.skeletons||[]).flatMap(s=>Object.values(s.equippedGear||{}))];
+    const entry=data.lockInstanceId?owned.find(e=>e?.instanceId===data.lockInstanceId):data.inventoryItemIndex!==undefined?player.inventory?.[Number(data.inventoryItemIndex)]:null;
+    if(!entry||entry.id!==data.lockItemId||!setItemLocked(player,entry,!isItemLocked(entry)))return false;
+    if(game?.uiState)game.uiState.pendingInventorySalvageKey=null;
+    game?.log?.(`${ITEMS[entry.id]?.name||entry.id} ${isItemLocked(entry)?'locked':'unlocked'}.`);rerender?.();return true;
+  }
 
   if (action === 'equip') {
     const bagIndex = Number(button.dataset.inventoryItemIndex);

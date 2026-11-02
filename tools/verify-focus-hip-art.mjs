@@ -16,7 +16,7 @@ const {WEAPON_MOVESETS}=await import('../src/combatMoves.js');
 const {getHumanVisualProfile,applyHumanVisualProfile}=await import('../src/humanVisualProfiles.js');
 const {focusAtHip,focusHipTransform,focusHipBehindBody}=await import('../src/handedness.js');
 const {sampleWeaponStance,WEAPON_READY_SECONDS}=await import('../src/weaponStance.js');
-const items=Object.values(ITEMS).filter(i=>i.weaponType==='spiritFocus');assert.equal(items.length,19);
+const items=Object.values(ITEMS).filter(i=>i.weaponType==='spiritFocus');assert.equal(items.length,21);
 for(const name of ['human-male','human-female','human-male-attack','human-female-attack','human-male-cast','human-female-cast','heads-custom','melee-arm-parts','arcane-special'])asset(name);
 for(const item of items)if(BOSS_ARMORY_ART[item.id])asset(BOSS_ARMORY_ART[item.id].sheet);
 for(let i=0;i<150&&spriteArtStatus().some(a=>!a.ready&&!a.failed);i++)await new Promise(r=>setTimeout(r,10));assert.deepEqual(spriteArtStatus().filter(a=>a.failed),[]);

@@ -1,0 +1,36 @@
+const {chromium}=require(process.env.RUNALIS_NODE_MODULES+'/playwright');
+const fs=require('node:fs'),assert=require('node:assert/strict');
+(async()=>{const browser=await chromium.launch({channel:'msedge',headless:true}),errors=[],missing=[],out='docs/orrakai-practice-gear',base=process.env.RUNALIS_URL||'http://127.0.0.1:8766';fs.mkdirSync(out,{recursive:true});try{
+ const page=await browser.newPage({viewport:{width:1280,height:900}});page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400&&!r.url().endsWith('/favicon.ico'))missing.push(r.url());});
+ await page.route('**/src/main.js*',r=>r.fulfill({contentType:'text/javascript',body:fs.readFileSync('src/main.js','utf8')+'\nwindow.practiceReviewGame=()=>currentGame;'}));await require('./browser-game-smoke.cjs')(page,base);await page.waitForFunction(()=>practiceReviewGame()?.started);
+ await page.evaluate(()=>{const g=practiceReviewGame();g.player.skillState.combat.level=1;g.player.combatLevel=1;g.player.gold=120;g.player.inventory=[];g.player.dialogueSettings={instantText:true,reducedMotion:true};});
+ async function open(stock){
+  await page.evaluate(async stock=>{const g=practiceReviewGame(),npc=g.world.objects.find(n=>stock==='blacksmith'?n.workshopService==='blacksmith':n.apothecaryService);if(!npc)throw Error('Missing vendor '+stock);Object.assign(g.player,{x:npc.x,y:npc.y+30,moveTarget:null,isMoving:false});g.keys.clear();g.camera.x=g.player.x-g.canvas.width/2;g.camera.y=g.player.y-g.canvas.height/2;g.player.dialogueSettings={instantText:true,reducedMotion:true};},stock);
+  await page.waitForTimeout(150);await page.keyboard.press('e');await page.waitForFunction(()=>practiceReviewGame().dialogue.phase==='AWAITING_CHOICE');
+  const index=await page.evaluate(()=>practiceReviewGame().dialogue.options.findIndex(o=>o.action==='shop'));assert(index>=0);await page.waitForTimeout(160);for(let i=0;i<index;i++)await page.keyboard.press('ArrowDown');await page.keyboard.press('Enter');await page.locator('#marketShopOverlay.active').waitFor({timeout:5000}).catch(async e=>{console.error(await page.evaluate(()=>{const g=practiceReviewGame();return {dialogue:g.dialogue,shop:g.marketShop};}));throw e;});assert.equal(await page.evaluate(()=>practiceReviewGame().marketShop.stockId),stock);
+ }
+ let bought=0;for(const stock of ['blacksmith','alchemist']){
+  await open(stock);const expected=await page.evaluate(async stock=>(await import('/src/shopSystem.js')).marketOffersForStock(stock).map(o=>o.id),stock);assert.deepEqual(await page.locator('[data-market-offer]').evaluateAll(nodes=>nodes.map(n=>n.dataset.marketOffer)),expected);
+  for(const id of expected){await page.locator(`[data-market-offer="${id}"]`).click();const before=await page.evaluate(()=>practiceReviewGame().player.gold);await page.waitForTimeout(160);await page.locator(`[data-market-buy="${id}"]`).click();const result=await page.evaluate(id=>{const p=practiceReviewGame().player;return {entry:p.inventory.find(e=>e.id===id),gold:p.gold};},id);assert(result.entry,id);assert(result.gold<before);if(id!=='summonWolfScroll'){assert.equal(result.entry.gearRarity,'common');assert.equal(result.entry.upgradeTier,1);}bought++;}
+  await page.locator('[data-market-category="gear"]').click();assert.equal(await page.locator('[data-market-offer]').count(),stock==='blacksmith'?7:4);await page.screenshot({path:out+'/'+stock+'-shop.png'});await page.locator('[data-market-close]').click();
+ }
+ // Real smith service remains alongside its new shop dialogue option.
+ await page.evaluate(async()=>{const g=practiceReviewGame(),{equipGearEntry}=await import('/src/equipmentProgressionSystem.js');if(!equipGearEntry(g.player,g.player.inventory.findIndex(e=>e.id==='wornIronShortsword')))throw Error('Equip purchase');});
+ await open('blacksmith');await page.locator('[data-market-close]').click();
+ const result=await page.evaluate(async()=>{
+  const {COMMON_WEAPON_ITEMS:items,COMMON_WEAPON_ART:art}=await import('/src/commonWeaponData.js'),{drawHumanActor}=await import('/src/humanRenderer.js'),{asset,spriteArtStatus}=await import('/src/spriteArt.js'),{createPlayer,addItem}=await import('/src/player.js'),{equipGearEntry}=await import('/src/equipmentProgressionSystem.js'),{itemIconMarkup}=await import('/src/gearVisualStyle.js');
+  const actors={};for(const id of Object.keys(items)){const p=createPlayer(id);addItem(p,id);equipGearEntry(p,p.inventory.findIndex(e=>e.id===id));actors[id]=p;asset(art[id].sheet);asset(art[id].iconSheet);}for(let i=0;i<150&&spriteArtStatus().some(a=>!a.ready&&!a.failed);i++)await new Promise(r=>setTimeout(r,20));if(spriteArtStatus().some(a=>a.failed))throw Error('Missing sprite');
+  const cv=document.createElement('canvas');cv.width=1420;cv.height=60+Object.keys(items).length*220;const c=cv.getContext('2d');c.fillStyle='#282b2d';c.fillRect(0,0,cv.width,cv.height);c.fillStyle='#e4d6b7';c.font='18px sans-serif';c.fillText('Orrakai · plain Common practice gear · all ten existing weapon families',16,28);let renders=0;
+  for(const [index,[id,item]]of Object.entries(items).entries()){
+   const y=50+index*220;c.fillStyle='#fff';c.font='14px sans-serif';c.fillText(item.name,12,y+24);c.font='12px sans-serif';c.fillText(item.weaponType+' · Common · +1',12,y+44);c.drawImage(asset(art[id].iconSheet).image,16,y+70,48,48);
+   if(!itemIconMarkup(item).includes(art[id].iconSheet))throw Error('Wrong icon');const icon=new Image();icon.src='/assets/art/sprites/'+art[id].iconSheet+'.png';await icon.decode();
+   for(const [bi,bodyType]of ['male','female'].entries())for(const [di,[dirX,dirY]]of [[0,1],[1,0],[0,-1],[-1,0]].entries()){
+    const p=actors[id];Object.assign(p,{x:260+(bi*4+di)*150,y:y+185,hp:100,maxHp:100,bodyType,hairStyle:bodyType==='female'?'ponytail':'short',isMoving:true,walkTime:2.1,dirX,dirY,actionState:{},combatState:{}});p.appearance||={};p.appearance.hairStyle=p.hairStyle;
+    const im=asset(art[id].sheet).image,draw=c.drawImage.bind(c);let count=0;c.drawImage=(...args)=>{if(args[0]===im)count++;draw(...args);};const before=JSON.stringify(p);drawHumanActor(c,p,{x:0,y:0},{scale:1.8,animationTime:5});c.drawImage=draw;if(count!==1||before!==JSON.stringify(p))throw Error('Held model contract '+id);renders++;
+   }
+  }
+  return{renders,png:cv.toDataURL()};
+ });fs.writeFileSync(out+'/collection.png',Buffer.from(result.png.split(',')[1],'base64'));assert.equal(result.renders,88);
+ await page.setViewportSize({width:390,height:844});await open('alchemist');await page.locator('[data-market-category="gear"]').click();await page.locator('[data-market-offer="threadbarePrimer"]').click();assert(await page.locator('.market-shop-panel').evaluate(e=>e.getBoundingClientRect().width<=innerWidth));await page.screenshot({path:out+'/mobile-alchemist.png'});
+ assert.deepEqual(errors,[]);assert.deepEqual(missing,[]);console.log('PASS',JSON.stringify({realNpcDialogueShops:2,bought,commonWeapons:11,level:1,productionRenders:result.renders,bothBodies:true,facings:4,mobileFits:true,noPageErrors:true,noMissingResources:true}));
+}catch(e){console.error('Browser diagnostics',JSON.stringify({errors,missing}));throw e;}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

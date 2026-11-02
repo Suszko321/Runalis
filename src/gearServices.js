@@ -1,14 +1,23 @@
 import {ITEMS} from './data.js';
 import {isGear,instanceGearItem,gearRarity,GEAR_RARITIES} from './gearRarity.js';
+export const isItemLocked=entry=>entry?.locked===true;
+export const itemLockRevision=entry=>Number.isSafeInteger(entry?.itemLockRevision)&&entry.itemLockRevision>=0?entry.itemLockRevision:0;
+export function setItemLocked(player,entry,locked){
+ const owned=[...(player?.inventory||[]),...Object.values(player?.equippedGear||{}),...(player?.gravecaller?.skeletons||[]).flatMap(s=>Object.values(s.equippedGear||{}))];
+ if(!entry||!ITEMS[entry.id]||!owned.includes(entry))return false;
+ const value=locked===true;if(isItemLocked(entry)===value)return true;
+ entry.locked=value;entry.itemLockRevision=itemLockRevision(entry)+1;return true;
+}
+export const inventoryDisposalKey=(entry,index)=>entry?`${entry.instanceId||index}:${entry.id}:${entry.qty||1}:${itemLockRevision(entry)}`:null;
 export function isGearInstanceEquipped(player,entry){
  const refs=[...Object.values(player?.equippedGear||{}),...(player?.gravecaller?.skeletons||[]).flatMap(s=>Object.values(s.equippedGear||{}))];
  return entry?.instanceId?refs.some(r=>r?.instanceId===entry.instanceId):Object.values(player?.equipment||{}).includes(entry?.id);
 }
 export function makeGearSaleQuote(player,instanceId){
  const entry=player?.inventory?.find(e=>e.instanceId===instanceId),base=ITEMS[entry?.id];
- if(!entry||!isGear(base)||isGearInstanceEquipped(player,entry))return null;
+ if(!entry||!isGear(base)||isItemLocked(entry)||isGearInstanceEquipped(player,entry))return null;
  const item=instanceGearItem(base,entry),grade=gearRarity(base,entry),tier=entry.upgradeTier||1;
- return {instanceId,itemId:entry.id,rarity:grade,tier,owner:player.profileId||player.id||player.name,gold:Math.max(1,Math.floor((item.value||4)*.35*(1+.03*(tier-1))))};
+ return {instanceId,itemId:entry.id,rarity:grade,tier,lockRevision:itemLockRevision(entry),owner:player.profileId||player.id||player.name,gold:Math.max(1,Math.floor((item.value||4)*.35*(1+.03*(tier-1))))};
 }
 export function commitGearSale(player,quote){
  const live=quote&&makeGearSaleQuote(player,quote.instanceId);if(!live||JSON.stringify(live)!==JSON.stringify(quote))return false;

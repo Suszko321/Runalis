@@ -1,0 +1,21 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/common-weapons/magic-master.png",
+  "sourceColumn": 0,
+  "rect": [
+    44,
+    8,
+    8,
+    112
+  ],
+  "sheet": "common-weapon-bareWoodStaff",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 82,
+  "scale": 0.66,
+  "iconSheet": "common-weapon-bareWoodStaff-icon"
+}

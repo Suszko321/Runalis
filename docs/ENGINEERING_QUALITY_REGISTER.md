@@ -436,3 +436,61 @@ memory, security or gameplay readiness claim follows solely from a green build.
   1,216 armour/mantle cases,83 stowable weapons,8,960 weapon art samples,3,776
   locomotion renders and actual weapon combat/save/loot/ascension checks pass.
 - Engineering11/11/build pass. [Behaviour and verification](focus-hip/README.md).
+
+### E36 · Orrakai Common practice shops · IMPLEMENTED, verified
+
+- Aren's existing dialogue sells seven new plain martial weapons; Oren's counter
+  sells four magical variants plus the established Wolf Summon scroll. Eleven new
+  class-open weapon IDs cover all ten item-catalogue families, with separate book/
+  lens options. No starter gear reused, no class/level/quest gate,4–8 gold weapons,
+  explicit white Common/itemLevel1/+1 acquisition; original smith/restorative/
+  market services remain. Owned copies use existing upgrades/ascension. No new
+  random drop entries; unrestricted202-base/endgame pool probabilities retained.
+- Eleven modest raster models/icons and two focus shots use existing native grips,
+  stance and anatomy. Item source IDs/recipes/progression remain intact. Market
+  selection/filter/purchase all use the current vendor's stock; dialogue preserves
+  the NPC reference through the existing local/online shop path. Gold is debited
+  only after successful acquisition; wrong stock/unfunded/full bag stay atomic.
+- Passing352 level1 purchase/equip/save combinations across eight classes/four
+  owners; all new bases weaker than every existing same-family base;22 real light/
+  heavy hits and victory XP;11 actual smith upgrades; four real level1 Wolf Scroll
+  purchase/read/assign/cast cycles with duplicate protection. Browser physical NPC
+  interactions and keyboard dialogue open both stocks,12 real UI buys,88 native
+  model renders,11 decoded icons and390px layout, no page/resource errors.
+- Real XP contract reproduced spear light/heavy credit to Blade while item data
+  declared Warding. Attack skill lookup now honours the existing alias and spear
+  heavy fallback uses Warding. Existing XP/save data, hitboxes, timing and damage
+  calculation are preserved. Corrected misleading staff purpose text to Warding.
+- Engineering11/11/build/wearables pass; existing gear,24-group loot,265-base smith
+  ascension,13-group workshop, boss armory,92-weapon stance and melee23,136 samples
+  pass. Focus coverage expands to21, including6,048 native hip/672 active cases,
+  1,512 browser hip/168 ready timelines and21 unique projectile silhouettes/168
+  direction-weight cases. Existing gear sale/full-bag/mobile shop browser passes.
+- Twenty-four new inspected cells add no structural errors; eight approved player
+  hashes unchanged; aggregate audit retains24 pre-existing errors. Early dialogue
+  fixture confirmation initially failed;160ms settling yielded repeats passing,
+  without changing input runtime; exact original cause unisolated. Human economy
+  pacing and live online transport untested. [Content, prompts and evidence](orrakai-practice-gear/README.md).
+
+### E37 — Inventory disposal locks and equipped rarity text
+
+- Fixed missing per-copy/stack disposal protection: owned item details now expose
+  Lock/Unlock with a visible locked marker. Sale quotes, direct sale commits,
+  direct deconstruction, inventory actions, forge confirmation and bulk salvage
+  reject locked entries. Bulk selling removes only eligible unlocked entries,
+  including legacy duplicate stacks. Lock revisions invalidate old confirmations.
+- Lock metadata survives existing save/load, equipment changes, upgrades and
+  Coterie transfers. Normal use, crafting consumption and equipment progression
+  remain available; locks cover disposal rather than freezing item activity.
+- Source observation confirmed important equipment-name and parchment rules
+  overriding rarity colours. Scoped copy-specific rarity styling fixes equipped
+  rows/details; slot lookup now resolves the actual equipped copy. Dark detail
+  title backing preserves white/gold readability on parchment.
+- Passing contracts: 120 owner/grade/slot lock combinations, stale quotes,
+  protected mutations, exact-copy sales, stack merges, bulk sales, save/load,
+  upgrades and real Coterie transfers. Browser verifies 36 computed colours across
+  six grades, keyboard lock/unlock, protected shop/forge, stacks, equipped save
+  persistence and 390px controls with no page errors. Existing gear, smith,
+  workshop, loot and practice-gear contracts pass; engineering gate/build pass.
+- Browser evidence is an isolated fixture using production components/styles;
+  physical devices and live online transport untested. [Details](inventory-locks/README.md).

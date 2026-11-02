@@ -1,0 +1,21 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/common-weapons/martial-a-master.png",
+  "sourceColumn": 0,
+  "rect": [
+    34,
+    34,
+    27,
+    80
+  ],
+  "sheet": "common-weapon-wornIronShortsword",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 100,
+  "scale": 0.56,
+  "iconSheet": "common-weapon-wornIronShortsword-icon"
+}

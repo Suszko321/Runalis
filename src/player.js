@@ -1209,13 +1209,15 @@ export function addItem(player, id, qty = 1, metadata = {}) {
 
     if (found) {
       found.qty += safeQty;
+      if(metadata.locked===true){found.locked=true;found.itemLockRevision=Math.max(Number(found.itemLockRevision)||0,Number(metadata.itemLockRevision)||0);}
     } else {
-      player.inventory.push({ id, qty: safeQty });
+      player.inventory.push({ id, qty: safeQty,...(metadata.locked===true?{locked:true,itemLockRevision:Math.max(0,Math.floor(Number(metadata.itemLockRevision)||0))}:{}) });
     }
   } else {
     for (let i = 0; i < safeQty; i++) {
       const gearMetadata=metadata.rarityRollVersion===1?{upgradeTier:metadata.upgradeTier,gearRarity:canonicalGearRarity(metadata.gearRarity),rarityRollVersion:1,rarityAscensions:Math.min(5,Math.max(0,Math.floor(Number(metadata.rarityAscensions)||0))),itemLevel:Math.max(1,Math.floor(Number(metadata.itemLevel)||1))}:{};
-      player.inventory.push(isTieredEquipment(item) ? createGearEntry(player,id,gearMetadata) : { id, qty: 1 });
+      const lockMetadata=metadata.locked===true?{locked:true,itemLockRevision:Math.max(0,Math.floor(Number(metadata.itemLockRevision)||0))}:{};
+      player.inventory.push(isTieredEquipment(item) ? createGearEntry(player,id,{...gearMetadata,...lockMetadata}) : { id, qty: 1,...lockMetadata });
     }
   }
 

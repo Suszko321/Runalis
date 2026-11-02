@@ -1,7 +1,9 @@
 // Generated grip registration; reproduce with tools/pack-boss-armory.cjs.
 import {LEGENDARY_WEAPON_ART} from './legendaryWeaponData.js';
+import {COMMON_WEAPON_ART} from './commonWeaponData.js';
 export const BOSS_ARMORY_ART=Object.freeze({
   ...LEGENDARY_WEAPON_ART,
+  ...COMMON_WEAPON_ART,
   "roseReaper": {
     "sheet": "boss-armory-roseReaper",
     "width": 96,

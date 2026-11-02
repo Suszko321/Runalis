@@ -1,0 +1,21 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/common-weapons/martial-b-master.png",
+  "sourceColumn": 0,
+  "rect": [
+    32,
+    28,
+    32,
+    90
+  ],
+  "sheet": "common-weapon-wornIronMallet",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 100,
+  "scale": 0.58,
+  "iconSheet": "common-weapon-wornIronMallet-icon"
+}

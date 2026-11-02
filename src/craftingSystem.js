@@ -2,7 +2,7 @@ import {commitGearUpgrade,makeUpgradeQuote,getEquipmentTier,getEquipmentTierBonu
 import {workshopAccessStatus,hasCampfireCraftAccess} from './workshopAccess.js';
 import {gearAcquisitionReason} from './gearItemization.js';
 import {instanceGearItem} from './gearRarity.js';
-import {gearDeconstructionRewards,isGearInstanceEquipped} from './gearServices.js';
+import {gearDeconstructionRewards,isGearInstanceEquipped,isItemLocked} from './gearServices.js';
 // craftingSystem.js
 // Salvage, recipe crafting, and gear upgrade foundation.
 
@@ -28,6 +28,7 @@ const RARITY_SALVAGE = {
 export function salvageInventoryItem(player, bagIndex, game) {
   const entry = player?.inventory?.[bagIndex];
   if (!entry) return false;
+  if(isItemLocked(entry)){game?.log?.('This item is locked. Unlock it in your inventory before deconstructing it.');return false;}
 
   const item = instanceGearItem(ITEMS[entry.id || entry.itemId],entry);
   const access=workshopAccessStatus(player,'blacksmith');

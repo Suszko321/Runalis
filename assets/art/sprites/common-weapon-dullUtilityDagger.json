@@ -1,0 +1,21 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/common-weapons/martial-a-master.png",
+  "sourceColumn": 1,
+  "rect": [
+    40,
+    59,
+    15,
+    52
+  ],
+  "sheet": "common-weapon-dullUtilityDagger",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 100,
+  "scale": 0.5,
+  "iconSheet": "common-weapon-dullUtilityDagger-icon"
+}

@@ -1590,7 +1590,7 @@ function resolveProjectileHits(player, world, projectile, log) {
 function calculateMoveDamage(player, move) {
   const weapon = getEquippedWeapon(player);
   const weaponType = getWeaponType(weapon);
-  const moveset = WEAPON_MOVESETS[weaponType] || WEAPON_MOVESETS.unarmed;
+  const moveset = getMovesetForWeaponType(weaponType);
   const skillId = ['mace','hammer'].includes(weaponType)?'blunt':move.skill || moveset.skill || weapon?.primarySkill || weapon?.skill || 'blade';
 
   const base = calculateWeaponDamage(player, weapon, weaponType);
@@ -1924,7 +1924,7 @@ function getSkillForWeaponType(weaponType) {
   if (weaponType === 'eldritch') return 'spirit';
   if (weaponType === 'spiritFocus') return 'spirit';
   if (weaponType === 'staff') return 'warding';
-  if (weaponType === 'spear') return 'blade';
+  if (weaponType === 'spear') return 'warding';
   if (weaponType === 'dagger') return 'blade';
   if (weaponType === 'axe') return 'blade';
   if (weaponType === 'mace') return 'blunt';

@@ -1,0 +1,21 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/common-weapons/martial-b-master.png",
+  "sourceColumn": 1,
+  "rect": [
+    43,
+    7,
+    10,
+    112
+  ],
+  "sheet": "common-weapon-plainAshSpear",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 80,
+  "scale": 0.66,
+  "iconSheet": "common-weapon-plainAshSpear-icon"
+}

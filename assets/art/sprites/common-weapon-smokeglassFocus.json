@@ -1,0 +1,21 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/common-weapons/magic-master.png",
+  "sourceColumn": 2,
+  "rect": [
+    34,
+    49,
+    28,
+    64
+  ],
+  "sheet": "common-weapon-smokeglassFocus",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 100,
+  "scale": 0.34,
+  "iconSheet": "common-weapon-smokeglassFocus-icon"
+}

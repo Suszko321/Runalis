@@ -162,7 +162,7 @@ export function abilityScaling(ability) {
  return supports?`${damage}; healing and protection also use Warding and Defence`:damage;
 }
 export function equipmentPurpose(item) {
- if(item?.type==='weapon')return ({mace:'Crushing melee weapon. Three deliberate blows end in a heavy slam; trains Blunt Weapons.',hammer:'Heavy crushing melee weapon; trains Blunt Weapons.',bow:'Ranged weapon for aimed shots and charged heavy attacks.',crossbow:'Ranged weapon for aimed shots and heavy attacks.',spiritFocus:'Ranged focus that fires bolts using Stamina.',scythe:'Melee weapon with sweeping attacks; trains Scythes.',staff:'Melee staff; its strikes train Blades.'}[item.weaponType]) || 'Melee weapon for close-range light and heavy combinations.';
+ if(item?.type==='weapon')return ({mace:'Crushing melee weapon. Three deliberate blows end in a heavy slam; trains Blunt Weapons.',hammer:'Heavy crushing melee weapon; trains Blunt Weapons.',bow:'Ranged weapon for aimed shots and charged heavy attacks.',crossbow:'Ranged weapon for aimed shots and heavy attacks.',spiritFocus:'Ranged focus that fires bolts using Stamina.',eldritch:'Ranged conduit; its attacks train Spirit.',scythe:'Melee weapon with sweeping attacks; trains Scythes.',staff:'Melee staff; its strikes train Warding.',spear:'Reach weapon with thrusts and sweeping cuts; trains Warding.'}[item.weaponType]) || 'Melee weapon for close-range light and heavy combinations.';
  if(item?.type==='armour')return 'Adds protection against incoming hits.';
  if(item?.type==='trinket')return 'Adds the listed combat bonuses while equipped.';
  if(item?.type==='scroll')return `Read to learn ${getAbilityById(item.learnsAbility)?.name||'its technique'}, then assign it in Abilities.`;

@@ -1,0 +1,21 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/common-weapons/martial-b-master.png",
+  "sourceColumn": 3,
+  "rect": [
+    29,
+    12,
+    21,
+    104
+  ],
+  "sheet": "common-weapon-roughYewBow",
+  "width": 96,
+  "height": 128,
+  "gripX": 32,
+  "gripY": 64,
+  "scale": 0.6,
+  "iconSheet": "common-weapon-roughYewBow-icon"
+}

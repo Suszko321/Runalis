@@ -1,0 +1,21 @@
+{
+  "cellWidth": 96,
+  "cellHeight": 128,
+  "columns": 1,
+  "rows": 1,
+  "source": "assets/art/source/common-weapons/magic-master.png",
+  "sourceColumn": 1,
+  "rect": [
+    20,
+    50,
+    57,
+    72
+  ],
+  "sheet": "common-weapon-threadbarePrimer",
+  "width": 96,
+  "height": 128,
+  "gripX": 48,
+  "gripY": 100,
+  "scale": 0.34,
+  "iconSheet": "common-weapon-threadbarePrimer-icon"
+}

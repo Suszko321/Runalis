@@ -846,10 +846,12 @@ function buildDialogueOptions(dialogueState, options, player, settings = {}) {
     !withNpcQuests.some(o=>o.action==='maraApothecary')){
     const leave=withNpcQuests.findIndex(o=>o.id==='leave'||o.close);
     withNpcQuests.splice(leave<0?withNpcQuests.length:leave,0,{id:'mara-restorative',text:'Prepare a restorative (Gravecap + Pale Essence, or 8 gold).',action:'maraApothecary'});
+    withNpcQuests.unshift({id:'apothecary-practice-gear',text:'Buy Common magic gear and Wolf Summon scroll',action:'shop'});
   }
   if(provider?.workshopService&&!withNpcQuests.some(o=>String(o.action||'').startsWith('workshop'))){
     const smith=provider.workshopService==='blacksmith';
     withNpcQuests.unshift(...(smith?[
+      {id:'smith-practice-gear',text:'Buy Common practice weapons',action:'shop'},
       {id:'smith-weapons',text:'Upgrade Weapons',action:'workshopWeapons'},
       {id:'smith-armour',text:'Upgrade Armour & Trinkets',action:'workshopArmour'},
       {id:'smith-about',text:'Ask About Smithing',response:'I work on the piece you bring me, not a replacement. Each tier needs its own materials and coin. Bring spare equipment too; it need not be equipped. I can still refine ore or supply scrap at the forge.'}

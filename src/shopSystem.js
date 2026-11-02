@@ -1,6 +1,8 @@
 import {equipmentPurpose,equipmentScaling,abilitySummary} from './uiInformation.js';
 import {gearAcquisitionReason,gearBagCount} from './gearItemization.js';
-import {makeGearSaleQuote,commitGearSale} from './gearServices.js';
+import {ORRAKAI_PRACTICE_OFFERS,practiceMerchantKind} from './commonWeaponData.js';
+import {itemIconMarkup} from './gearVisualStyle.js';
+import {makeGearSaleQuote,commitGearSale,isItemLocked} from './gearServices.js';
 import {GEAR_RARITIES} from './gearRarity.js';
 import {calculateDisplayWeaponDamage} from './panelInventory.js';
 import {MYTHICAL_SETS} from './mythicalEquipmentData.js';
@@ -11,7 +13,7 @@ import { handleMenuSheetInput, menuSheetItemVisible, prepareMenuSheets,captureTo
 // Controller-friendly survival market overlay.
 
 import { ITEMS,getAbilityById } from './data.js';
-import { addItem, removeItem, countItem } from './player.js';
+import { addItem, countItem } from './player.js';
 import { addLootText, addStatusText } from './floatingText.js';
 import { playSfx } from './audioSystem.js';
 import { markPartyCollectObjective } from './dialogueSystem.js';
@@ -114,9 +116,11 @@ export function openMarketShop(game, merchant = null) {
     selectedIndex: 0,
     categoryId: merchant?.skillMerchant ? 'skills' : 'all',
     merchantName: merchant?.skillMerchant ? 'Ilyra, Pact Scribe' : null,
+    stockId: practiceMerchantKind(merchant),
     lastPurchaseAt: 0
   };
   game.marketShop = hostGame.marketShop;
+  if(hostGame.marketShop.stockId)hostGame.marketShop.merchantName=merchant.name;
   overlay.__runalisGame = game;
   hostGame.applyOwnedMenuViewport?.(overlay, game.player);
   overlay.innerHTML = createMarketShopHtml(game.player, hostGame.marketShop);
@@ -148,7 +152,7 @@ export function handleMarketShopControllerInput(input) {
   }
   const game = overlay.__runalisGame;
   const state = getMarketShopState(game, overlay);
-  const offers = getFilteredMarketOffers(state.categoryId);
+  const offers = getFilteredMarketOffers(state.categoryId,state.stockId);
 
   if (input?.rbPressed || input?.rightShoulderPressed || input?.tabRightPressed) {
     changeMarketCategory(game, overlay, 1);
@@ -244,7 +248,7 @@ function createMarketShopHtml(player, state = null) {
   const categoryId = MARKET_CATEGORIES.some(category => category.id === safeState.categoryId)
     ? safeState.categoryId
     : 'all';
-  const offers = getFilteredMarketOffers(categoryId);
+  const offers = getFilteredMarketOffers(categoryId,safeState.stockId);
   const selectedIndex = clampIndex(safeState.selectedIndex || 0, offers.length);
   const selected = offers[selectedIndex] || offers[0] || null;
 
@@ -252,7 +256,7 @@ function createMarketShopHtml(player, state = null) {
     <div class="market-shop-panel" role="dialog" aria-modal="true" aria-label="Market shop">
       <div class="market-shop-header">
         <div>
-          <span>${safeState.merchantName ? 'Orrakai · Skill Merchant' : 'Capital Market'}</span>
+          <span>${safeState.stockId?'Orrakai · Common Practice Gear':safeState.merchantName ? 'Orrakai · Skill Merchant' : 'Capital Market'}</span>
           <h2>${safeState.merchantName || 'Survival Goods'}</h2>
         </div>
         <p>Gold <b>${Math.max(0, Number(player.gold || 0))}</b></p>
@@ -303,7 +307,7 @@ function marketOfferRow(player, offer, index, selected) {
 
   return `
     <button type="button" class="market-offer-row${selected ? ' selected' : ''}" data-market-row="${index}" data-market-offer="${offer.id}" aria-selected="${selected ? 'true' : 'false'}">
-      <span class="market-offer-name">${escapeHtml(offer.label)}</span>
+      <span class="market-offer-name" ${offer.gearRarity?'style="color:#ffffff"':''}>${escapeHtml(offer.label)}</span>
       <span class="market-offer-meta">${escapeHtml(meta)}${owned ? ` - Owned ${owned}` : ''}</span>
       <span class="market-offer-price${disabled ? ' disabled' : ''}">${duplicateTool ? 'Owned' : `${offer.price}g`}</span>
     </button>
@@ -334,7 +338,8 @@ function marketOfferDetail(player, offer) {
   return `
     <div class="market-detail-card">
       <span class="market-detail-kicker">${escapeHtml(getMarketOfferMeta(offer))}</span>
-      <h3>${escapeHtml(offer.label)}</h3>
+      <h3>${offer.gearRarity?itemIconMarkup(item):''}${escapeHtml(offer.label)}</h3>
+      ${offer.gearRarity?'<p style="color:#ffffff">Common · +1/20 · No class or level requirement</p>':''}
       <p>${escapeHtml(duplicateTool ? 'Already owned.' : item?.type==='scroll'?`Learn ${getAbilityById(item.learnsAbility)?.name}: ${abilitySummary(getAbilityById(item.learnsAbility))}`:item?.slot?equipmentPurpose(item):offer.detail || item?.desc || 'A practical market good.')}</p>
       <div class="market-detail-stats">
         ${statBits.map(bit => `<span>${escapeHtml(bit)}</span>`).join('')}
@@ -413,15 +418,16 @@ function bindMarketShopEvents(game, overlay) {
   };
 }
 
-function buyMarketOffer(game, itemId) {
-  const offer = MARKET_OFFERS.find(entry => entry.id === itemId);
-  if (!offer || !game?.player) return false;
+export function buyMarketOffer(game, itemId) {
+  if(!game?.player)return false;
+  const state = getMarketShopState(game, document.getElementById('marketShopOverlay'));
+  const offer = marketOffersForStock(state.stockId).find(entry => entry.id === itemId);
+  if (!offer) return false;
 
   const player = game.player;
   const item = ITEMS[itemId];
   const acquisition=gearAcquisitionReason(player,itemId,offer.qty||1);
   if(acquisition){game.log?.(acquisition);return false;}
-  const state = getMarketShopState(game, document.getElementById('marketShopOverlay'));
   const now = performance.now();
 
   if (now - Number(state.lastPurchaseAt || 0) < 140) return false;
@@ -442,10 +448,11 @@ function buyMarketOffer(game, itemId) {
     if (result.ok) { state.lastPurchaseAt=now; playSfx('loot',{volume:.7}); }
     return result.ok;
   }
+  const metadata=offer.gearRarity?{gearRarity:offer.gearRarity,rarityRollVersion:1,itemLevel:1,upgradeTier:1}:{};
+  if(!addItem(player,itemId,offer.qty,metadata))return false;
   state.lastPurchaseAt = now;
   player.gold -= offer.price;
   player.gold = Math.max(0, Number(player.gold || 0));
-  addItem(player, itemId, offer.qty);
   markPartyCollectObjective(player, itemId, offer.qty);
   game.log?.(`Market: bought ${offer.label} for ${offer.price} gold.`);
   addLootText(player, offer.label, { color: item?.type === 'tool' ? '#ffcc66' : '#d9ad4f' });
@@ -453,7 +460,7 @@ function buyMarketOffer(game, itemId) {
   return true;
 }
 
-function sellMarketSalvage(game) {
+export function sellMarketSalvage(game) {
   const player = game?.player;
   if (!player) return false;
 
@@ -461,13 +468,13 @@ function sellMarketSalvage(game) {
   let soldCount = 0;
 
   for (const itemId of SELLABLES) {
-    const qty = countItem(player, itemId);
-    if (qty <= 0) continue;
-
-    const sellQty = Math.min(qty, itemId === 'crackedRelic' ? 1 : 3);
-    removeItem(player, itemId, sellQty);
-    soldValue += Math.max(1, Math.floor((ITEMS[itemId]?.value || 4) * 0.65)) * sellQty;
-    soldCount += sellQty;
+    let remaining=itemId==='crackedRelic'?1:3;
+    for(const entry of [...(player.inventory||[])]){
+      if(entry.id!==itemId||isItemLocked(entry)||remaining<=0)continue;
+      const sellQty=Math.min(Math.max(0,Number(entry.qty)||0),remaining);if(!sellQty)continue;
+      entry.qty-=sellQty;if(entry.qty<=0)player.inventory.splice(player.inventory.indexOf(entry),1);
+      remaining-=sellQty;soldValue+=Math.max(1,Math.floor((ITEMS[itemId]?.value||4)*.65))*sellQty;soldCount+=sellQty;
+    }
   }
 
   if (soldValue <= 0) {
@@ -509,10 +516,16 @@ function changeMarketCategory(game, overlay, direction) {
   refreshMarketShop(game, overlay);
 }
 
-function getFilteredMarketOffers(categoryId = 'all') {
-  if (categoryId === 'all') return MARKET_OFFERS;
+export function marketOffersForStock(stockId){
+  if(!Object.hasOwn(ORRAKAI_PRACTICE_OFFERS,stockId))return MARKET_OFFERS;
+  const gear=ORRAKAI_PRACTICE_OFFERS[stockId];
+  return stockId==='alchemist'?[...gear,...SKILL_SCROLL_OFFERS.filter(o=>o.id==='summonWolfScroll')]:gear;
+}
+function getFilteredMarketOffers(categoryId = 'all',stockId=null) {
+  const offers=marketOffersForStock(stockId);
+  if (categoryId === 'all') return offers;
 
-  return MARKET_OFFERS.filter(offer => getMarketOfferCategory(offer) === categoryId);
+  return offers.filter(offer => getMarketOfferCategory(offer) === categoryId);
 }
 
 function getMarketOfferCategory(offer) {
@@ -548,7 +561,7 @@ function refreshMarketShop(game, overlay) {
   // would undo the selected category/row before the new ledger is rendered.
   const state = getMarketShopState(game);
   const restoreScroll=overlay.dataset.marketCategoryId===state.categoryId?captureTouchMenuScroll(overlay):()=>{};
-  const offers = getFilteredMarketOffers(state.categoryId);
+  const offers = getFilteredMarketOffers(state.categoryId,state.stockId);
   state.selectedIndex = clampIndex(state.selectedIndex || 0, offers.length);
   overlay.dataset.marketSelectedIndex = String(state.selectedIndex);
   overlay.dataset.marketCategoryId = state.categoryId || 'all';

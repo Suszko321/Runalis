@@ -42,6 +42,6 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
     const angles=[],draws=[],target=document.createElement('canvas').getContext('2d');target.rotate=a=>angles.push(a);target.drawImage=(...a)=>draws.push(a);if(!drawFocusProjectile(target,{focusItemId:id,kind,dirX:dx,dirY:dy},0,0))throw Error('Missing focus renderer');if(Math.abs(angles[0]-Math.atan2(dy,dx))>.001||draws[0][1]!==style.index%4*32||draws[0][2]!==Math.floor(style.index/4)*32)throw Error('Wrong projectile direction/crop');projectileCases++;
    }
   }
-  if(masks.size!==19||pixelHashes.size!==19)throw Error('Foci need distinct silhouettes, not only color swaps');return {heldCases,gripCases,projectileCases,uniqueProjectileSilhouettes:masks.size,items:report};
+  if(masks.size!==21||pixelHashes.size!==21)throw Error('Foci need distinct silhouettes, not only color swaps');return {heldCases,gripCases,projectileCases,uniqueProjectileSilhouettes:masks.size,items:report};
  });assert.deepEqual(errors,[]);assert.deepEqual(missing,[]);await page.screenshot({path:'docs/boss-armory/runtime.png'});fs.writeFileSync('docs/boss-armory/browser-verification.json',JSON.stringify({...result,errors,missing},null,2));console.log('PASS '+JSON.stringify(result));
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

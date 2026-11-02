@@ -1,4 +1,5 @@
 import {retireRemovedQuestState} from './questRoster.js';
+import {inventoryDisposalKey} from './gearServices.js';
 import {vampireHealthCost} from './vampireRules.js';
 ﻿import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
 import {abilitySummary,abilityRequirements,abilityScaling,equipmentPurpose,equipmentScaling,informationNumber} from './uiInformation.js';
@@ -1358,7 +1359,7 @@ function getInventorySalvageConfirmationKey(game, element) {
   const entry = game?.player?.inventory?.[bagIndex];
   if (!entry) return null;
 
-  return `${bagIndex}:${entry.id}:${entry.qty || 1}`;
+  return inventoryDisposalKey(entry,bagIndex);
 }
 
 function getPendingInventorySalvageKey(game, element) {

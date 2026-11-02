@@ -1,0 +1,27 @@
+# Orrakai Common practice weapons — accepted prompts
+
+Built-in ImageGen. Four accepted transparent masters, saved locally in `assets/art/source/common-weapons/` (ignored authoring files). Native models/icons/projectiles are packed mechanically with `tools/pack-common-weapons.py`, at most16 opaque colours, binary alpha, measured real transparent gutters and native hand pivots. Only registered cells become runtime content; spare axe/crossbow sketches in the masters are not new item families. Existing class starter art is preserved.
+
+## martial-a
+
+Master: `assets/art/source/common-weapons/martial-a-master.png`
+
+Use case: stylized-concept. RUNALIS production pixel art atlas of FOUR very humble starter weapons, one horizontal row, upright, four separate equally spaced cells. LEFT TO RIGHT: 1 battered straight iron short sword with short double edged blade and straight simple iron crossguard, brown leather grip; 2 tiny utilitarian dull iron dagger, plain dark leather grip; 3 small iron woodcutting hand axe with simple wedge head on straight unvarnished ash handle; 4 plain iron round-headed mace with just four short flanges on a worn wood handle. Cheap common-quality tools, weakest ordinary shop weapons. NO gems, gold, magic, glowing highlights, runes, emblems or elaborate decoration. Dark fantasy 16-bit pixel art with visible square clusters, thin near-black outline, earthy grey iron and brown wood/leather, 16 colors per weapon, clear simple silhouette, upper-left light. Front view upright, entire weapons fit within CENTRAL75% of image height with large transparent margins above and below, wide empty gutters, no touching edges. True transparent background. No labels/text, characters, hands, shadows, floor, scene, panels or grid. Every weapon complete.
+
+## martial-b
+
+Master: `assets/art/source/common-weapons/martial-b-master.png`
+
+Use case: stylized-concept. RUNALIS production pixel art atlas of FIVE very humble common starter weapons, one horizontal row, upright in five separate equal cells. LEFT TO RIGHT: 1 small rectangular dull iron mallet/war hammer head on straight worn wooden handle; 2 simple narrow leaf-shaped dull iron spearhead fixed to a long straight bare wood pole; 3 simple short curved farm scythe iron blade pointing to RIGHT on long thin worn wood haft, no skulls; 4 crude upright wooden hunting self bow, grip at LEFT and tips to RIGHT, plain taut string on RIGHT, no arrow or decoration; 5 upright basic wooden crossbow, short central wooden stock vertically with plain horizontal iron/wood bow arms near top, simple string, no bolt and no crank. Weakest ordinary shop weapons, no class emblems. NO gems, gold, runes, magical effects, wings or ornaments. Dark fantasy handcrafted 16-bit pixel art, clearly visible square pixel clusters, thin near-black outline, brown wood/leather and matte grey iron, 16 colors per item. No photoreal surfaces. Whole items within CENTRAL75% of canvas height, large transparent border above and below all tips, wide empty gutters. True transparent background. No labels/text, hands, characters, shadow, scene, panels or grid. Five complete separated items.
+
+## magic
+
+Master: `assets/art/source/common-weapons/magic-master.png`
+
+Use case: stylized-concept. RUNALIS production pixel art starter MAGIC EQUIPMENT sheet: ONE horizontal row of FOUR very plain humble items in four separate equally spaced cells. LEFT TO RIGHT: 1 long thin straight unvarnished wooden practice staff, cut flat ends, a narrow rag wrap around handgrip, no crystal or branches or leaves; 2 small closed upright battered brown leather primer spellbook, plain vellum page block, simple string tie, no title or sigil; 3 palm-sized dull smoke-grey glass focus lens in a very plain tarnished iron ring frame with short leather loop, no gold or spikes, small simple handle below; 4 small inert grey chipped stone conductor on short wooden grip wrapped in drab cloth, no runes, colors, gems or glow. Cheap Common quality, weakest practice equipment, least ornate possible, no class identity. Dark fantasy handcrafted 16-bit pixel art, crisp visible square pixels, thin near-black outline, dull brown wood/leather, grey glass/iron, cream pages, 16 colors each, upper-left light. Staff tall, other three items much shorter, every item upright whole and isolated with very generous transparent space. Keep all objects within CENTRAL75% canvas height, no clipping. True transparent background. No character, hand, scene, shadow, particles, labels/text, grid, border or panels.
+
+## projectiles
+
+Master: `assets/art/source/common-weapons/projectiles-master.png`
+
+Use case: stylized-concept. RUNALIS game pixel art atlas: TWO very simple starter Spirit Focus projectiles, separated horizontally by a generous transparent gap. Both point RIGHT, no text. Left: a small folded CREAM VELLUM page sliver shaped like a short arrowhead, brown thin outline, one short grey tail behind on LEFT. Right: a tiny plain SMOKE-GREY glass pebble dart with a white reflective center and short dull silver pointed nose to RIGHT, charcoal outline. Cheap, understated beginner magical shots rather than ornate spells. Designed to read at 26 by18 pixels, crisp 16-bit pixel art, solid square pixel clusters, no gradients, 10 colors per shot. No glow, cloud, scenery, rays, huge trails, shadow, letters, frames or labels. Entire sprites fit inside their own equal left/right halves with ample fully transparent margin on every side, true transparent background.

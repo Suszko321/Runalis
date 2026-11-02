@@ -1862,7 +1862,7 @@ class RunalisGame {
     if(action.type==='foundOrder'||action.type==='orderLedger') return false;
 
     if (action.type === 'shop') {
-      openMarketShop(this.setUiOwner(actor));
+      openMarketShop(this.setUiOwner(actor),serviceNpc);
       return true;
     }
 

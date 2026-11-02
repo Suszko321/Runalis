@@ -26,5 +26,5 @@ const assert=require('node:assert/strict');
    w.enemies=[{hp:10,combatTargetKind:'player',combatTargetId:getEnemyTargetId(p)}];if(drawAt(time+10).stowed||drawAt(time+20).stowed)throw Error('Threat lost readiness');w.enemies[0].dead=true;if(drawAt(time+25.999).stowed||!drawAt(time+26.001).stowed)throw Error('Threat expiry');readinessCases++;
   }
   return{items:items.length,samples,readinessCases,bodies:2,facings:4,states:3,oneFocusPerFrame:true,depthOrder:true,actorUnchanged:true};
- });assert.equal(result.items,19);assert.equal(result.samples,1368);assert.deepEqual(errors,[]);assert.deepEqual(missing,[]);console.log('PASS',JSON.stringify({...result,noPageErrors:true,noMissingResources:true}));
+ });assert.equal(result.items,21);assert.equal(result.samples,1512);assert.deepEqual(errors,[]);assert.deepEqual(missing,[]);console.log('PASS',JSON.stringify({...result,noPageErrors:true,noMissingResources:true}));
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
