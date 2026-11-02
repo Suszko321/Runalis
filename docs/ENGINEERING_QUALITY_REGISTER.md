@@ -658,6 +658,14 @@ memory, security or gameplay readiness claim follows solely from a green build.
   two-local-player case passes. Zero page errors. Engineering 13/13/build pass;
   existing storage 12/12, trading browser 10/10, local menus 12/12 and online
   lifecycle 9/9 pass. [Contracts and evidence](banking/README.md).
+- **Guest-to-host follow-up:** added direct packaged-browser coverage for both
+  split-screen and native WebRTC visitors depositing exact gear and gold,
+  leaving/reloading their character, starting a new online host world and
+  withdrawing the same items/funds. Bank storage already belongs to the browser
+  profile rather than the world; no runtime change was needed. The expanded
+  banking browser suite passes 10/10 with no page errors; engineering 13/13 and
+  build pass. Online import may add existing itemId/quantity aliases before
+  banking; all original metadata and the complete deposited copy are verified.
 - **Limits:** browser-origin/profile storage, not cross-device account sync.
   Existing E03 imported-character trust, distributed online recovery and general
   simultaneous-tab character-save concurrency remain open. Physical phones/

@@ -18,7 +18,11 @@ items are outside this gear-and-gold vault.
 The vault belongs to the site's local browser storage, shared by every saved
 character in that browser profile, including local co-op characters. Online
 guests access their own browser's vault; the host never sends or saves that
-vault. This does not synchronize storage across browsers, devices or site origins.
+vault. Depositing while visiting a host's world keeps gear and gold available
+after leaving, reloading that character and hosting a new world. A split-screen
+participant can likewise leave, load their saved character as the main player
+and access the same shared device vault when hosting.
+This does not synchronize storage across browsers, devices or site origins.
 Clearing site storage removes it along with the existing character saves.
 
 Stored gold is outside actor balances and cannot be charged by either existing
@@ -68,12 +72,20 @@ distributed database transaction. Compatibility build advances to
   gear/metadata, another character's withdrawal, equipped/bound/material exclusion,
   stale identity, full bags, acquisition level, duplicate identity, host/co-op
   writers, emergency slimming, deleting all characters, quota and corrupt JSON.
-- `tools/verify-banking-browser.cjs`: 8/8 passing against the final production
+- `tools/verify-banking-browser.cjs`: 10/10 passing against the production
   package at `/_site`; zero page errors. Real teller dialogue, legacy reserves
   from two profiles, gear/gold transfers and saved values, quota failure, reload
   into a different character, actual carried-gold death penalty, three viewport
   sizes, stale displayed-gear selection, local co-op/controller ownership, moving away and native PeerJS/WebRTC
   guest teller delegation with isolated browser vaults.
+- Guest-to-host continuation coverage deposits gear and gold as a split-screen
+  participant and as a native WebRTC guest, leaves each session, reloads the
+  original saved character, opens a new online host world and withdraws both.
+  Exact instance ID, rarity, tier, lock and custom metadata remain; the original
+  online host's vault and carried gold stay untouched. Character normalization's
+  existing itemId/quantity aliases are checked separately from bank-copy fidelity.
+  This verifies existing world-independent bank ownership; no runtime ownership
+  or save-format change was necessary for this follow-up.
 - Inspected phone portrait and landscape captures. Follow-up styling keeps Store
   and Close labels unbroken and bank controls at least 44px high. Browser testing
   found the bank covering the local join picker; panels now hide and yield input
