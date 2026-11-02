@@ -552,3 +552,17 @@ memory, security or gameplay readiness claim follows solely from a green build.
   production rendering, 32 colour/facing cases and restored actor/Canvas state.
   Inspected updated sprite gallery. Engineering 11/11 and production build pass;
   live transport and physical devices untested. [Details](player-ground-indicator/README.md).
+
+### E41 — Pages reruns collide on uploaded artifact names
+
+- Remote evidence: release commit 00e8ffe passed engineering/build/upload, then
+  failed publishing with an OIDC token request socket hang-up despite existing
+  id-token:write permission. The live site continued serving cbd67bfeca189fda.
+- Rerunning failed jobs reproduced a separate deterministic workflow defect:
+  upload produced a second github-pages artifact and deploy-pages rejected the
+  ambiguous name (artifact count 2). Run 41468367049 attempts 1 and 2 document
+  both failures. This was a failed deployment, not proof of a phone cache defect.
+- Upload and deploy now share a name containing github.run_id/run_attempt, so
+  repeated attempts cannot select artifacts left by previous attempts. Existing
+  checks, deployment permissions and release/save handling are unchanged. The
+  new run still executes the engineering and package gates before publishing.
