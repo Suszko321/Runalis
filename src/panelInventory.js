@@ -111,7 +111,7 @@ export function renderInventory(player, game) {
       <button class="subtab ${subtab === 'bag' ? 'active' : ''}" data-inventory-subtab="bag">Bag</button>
     </div>
 
-    <p class="gear-bag-capacity">Gear bag: ${gearBagCount(player)} / 20 · Materials and consumables do not use gear slots. Mythical and Primordial drops unlock at Combat Level 50.</p>
+    <p class="gear-bag-capacity">Gear bag: ${gearBagCount(player)} / 20<span class="gear-bag-help"> · Materials and consumables do not use gear slots. Mythical and Primordial drops unlock at Combat Level 50.</span></p>
     ${subtab === 'equipment' ? renderInventoryEquipment(player, game) : ''}
     ${subtab === 'coterie' ? renderInventoryCoterie(player, game) : ''}
     ${subtab === 'bag' ? renderInventoryBag(player, game) : ''}
@@ -168,9 +168,6 @@ function bindInventoryPreviewRows(player, game, rerender) {
       bindEquipmentActionButtons(player, game, rerender);
     };
 
-    row.onmouseenter = () => {
-      if (!game.localMenuFrame && document.body.dataset.menuInputMode !== 'controller') selectItem();
-    };
     row.onfocus = selectItem;
     row.onclick = selectItem;
     row.ondblclick = () => {
@@ -292,6 +289,7 @@ function renderInventoryEquipment(player, game) {
       </section>
 
       <section class="equipment-character-pane" aria-label="Equipped character gear">
+        <h2 class="equipment-compact-heading">Equipped</h2>
         <div class="equipment-preview-card">
           <canvas
             class="equipment-preview-canvas"
@@ -519,12 +517,15 @@ function inventoryItemDetail(player, entry, options = {}) {
         </div>
       </div>
 
-      ${inventoryLockControls(entry,{bagIndex})}
-      ${equipmentDescriptionMarkup(item)}
-      ${itemStatBlock(player, item,entry)}
-      ${tierIdentityBlock(player,item,entry)}
-
+      <div class="inventory-primary-actions">
+        ${options.includeComparison ? equipmentActionButtons({bagIndex,slot:normalizeEquipmentSlot(item.slot),item,entry,equipped,disposal:false}) : ''}
+        ${inventoryLockControls(entry,{bagIndex})}
+      </div>
       ${options.includeComparison ? equipmentComparisonBlock(player, item,entry) : ''}
+      ${itemStatBlock(player, item,entry)}
+      <details class="inventory-extended-details" ${options.includeComparison?'':'open'}><summary tabindex="0">More details</summary>
+      ${equipmentDescriptionMarkup(item)}
+      ${tierIdentityBlock(player,item,entry)}
 
 
       ${legendaryEffectBlock(item)}
@@ -536,8 +537,10 @@ function inventoryItemDetail(player, entry, options = {}) {
         slot: normalizeEquipmentSlot(item.slot),
         item,
         entry,
-        equipped
+        equipped,
+        disposalOnly:true
       }) : ''}
+      </details>
 
       ${inventoryControllerHints([primaryHint, salvageHint].filter(Boolean))}
     </div>
@@ -668,14 +671,20 @@ function equipmentSlotDetail(player, slot) {
         </div>
       </div>
 
-      ${inventoryLockControls(player.equippedGear?.[slot],{slot})}
-      ${equipmentDescriptionMarkup(item)}
+      <div class="inventory-primary-actions">
+        ${equipmentActionButtons({ slot, item, entry:player.equippedGear?.[slot], equipped:true,disposal:false })}
+        ${inventoryLockControls(player.equippedGear?.[slot],{slot})}
+      </div>
+      <p class="equipment-comparison-summary" data-comparison="equipped">Currently equipped</p>
       ${itemStatBlock(player, item)}
+      <details class="inventory-extended-details"><summary tabindex="0">Effects & upgrades</summary>
+      ${equipmentDescriptionMarkup(item)}
       ${tierIdentityBlock(player,item,player.equippedGear?.[slot])}
       ${upgradeCostBlock(player, slot, item)}
       ${legendaryEffectBlock(item)}
 
-      ${equipmentActionButtons({ slot, item, entry:player.equippedGear?.[slot], equipped: true })}
+      ${equipmentActionButtons({ slot, item, entry:player.equippedGear?.[slot], equipped: true,disposalOnly:true })}
+      </details>
       ${inventoryControllerHints(['A Unequip', 'Hold Y Inventory'])}
     </div>
   `;
@@ -1112,9 +1121,6 @@ function bindEquipmentSlotRows(player, game, rerender) {
       updateEquipmentFocusRegionDom(game);
     };
 
-    row.onmouseenter = () => {
-      if (!game.localMenuFrame && document.body.dataset.menuInputMode !== 'controller') selectSlot();
-    };
     row.onfocus = selectSlot;
     row.onclick = selectSlot;
     row.ondblclick = () => {
@@ -1275,21 +1281,21 @@ function inventoryListSummary(list) {
   return `<p class="tag">${list.totalItems} item${list.totalItems === 1 ? '' : 's'}</p>`;
 }
 
-function equipmentActionButtons({ bagIndex = null, slot = null, item = null, entry = null, equipped = false } = {}) {
+function equipmentActionButtons({ bagIndex = null, slot = null, item = null, entry = null, equipped = false,disposal=true,disposalOnly=false } = {}) {
   const actions = [];
 
-  if (bagIndex !== null && item?.slot) {
+  if (!disposalOnly && bagIndex !== null && item?.slot) {
     actions.push(`<button data-equipment-action="equip" data-inventory-item-index="${bagIndex}">Equip</button>`);
   }
 
-  if (slot && equipped) {
+  if (!disposalOnly && slot && equipped) {
     actions.push(`<button data-equipment-action="unequip" data-equipment-slot="${escapeHtml(slot)}">Unequip</button>`);
   }
 
 
-  if (bagIndex !== null && item && isSalvageable(item) && !equipped) {
+  if (disposal && bagIndex !== null && item && isSalvageable(item) && !equipped) {
     actions.push(`<button data-equipment-action="salvage" data-inventory-item-index="${bagIndex}" ${isItemLocked(entry)?'disabled':''}>${isItemLocked(entry)?'Locked · Deconstruction Protected':'Deconstruct (Blacksmith)'}</button>`);
-  } else if (slot && item && isSalvageable(item)) {
+  } else if (disposal && slot && item && isSalvageable(item)) {
     actions.push(`<button data-equipment-action="salvage-equipped" data-equipment-slot="${escapeHtml(slot)}">Protected Salvage</button>`);
   }
 
@@ -1312,20 +1318,25 @@ function equipmentComparisonBlock(player, item,entry=null) {
   const slot = normalizeEquipmentSlot(item?.slot);
   if (!slot) return '';
 
-  const equippedItem = player.equipment?.[slot] ? ITEMS[player.equipment[slot]] : null;
-  if (!equippedItem) return `<p class="tag">Your ${escapeHtml(slotLabel(slot).toLowerCase())} slot is empty.</p>`;
+  const equippedEntry=player.equippedGear?.[slot];
+  const equippedItem = player.equipment?.[slot] ? instanceGearItem(ITEMS[player.equipment[slot]],equippedEntry) : null;
+  if (!equippedItem) return `<p class="equipment-comparison-summary good-text" data-comparison="empty">+ Empty ${escapeHtml(slotLabel(slot).toLowerCase())} slot</p>`;
   const rows = getComparisonRows(player, item, equippedItem,entry);
+  const up=rows.some(r=>r.delta>0),down=rows.some(r=>r.delta<0);
+  const verdict=up&&down?'mixed':up?'better':down?'worse':'equal';
+  const summary={better:'▲ Higher stats',worse:'▼ Lower stats',mixed:'↕ Stat trade-off',equal:'= Same core stats'}[verdict];
 
   return `
     <section class="equipment-comparison-block">
-      <h3>Compared With ${escapeHtml(slotLabel(slot))}</h3>
+      <p class="equipment-comparison-summary ${verdict==='better'?'good-text':verdict==='worse'?'bad-text':''}" data-comparison="${verdict}">${summary}</p>
+      <h3>Selected vs equipped</h3>
       <div class="stat-row">
         <span>Equipped</span>
         <b>${equippedItem ? escapeHtml(equippedItem.name) : 'Empty'}</b>
       </div>
       ${rows.map(row => `
         <div class="stat-row">
-          <span>${escapeHtml(row.label)}</span>
+          <span>${escapeHtml(row.label)} <small>${row.selected} / ${row.equipped}</small></span>
           <b class="${row.delta > 0 ? 'good-text' : row.delta < 0 ? 'bad-text' : ''}">
             ${row.delta > 0 ? '+' : ''}${escapeHtml(row.delta)}
           </b>
@@ -1338,21 +1349,25 @@ function equipmentComparisonBlock(player, item,entry=null) {
 function getComparisonRows(player, item, equippedItem,entry) {
   const rows = [];
   const damage = item?.type === 'weapon' ? calculateDisplayWeaponDamage(player, item,entry) : 0;
-  const equippedDamage = equippedItem?.type === 'weapon' ? calculateDisplayWeaponDamage(player, equippedItem) : 0;
+  const equippedDamage = equippedItem?.type === 'weapon' ? calculateDisplayWeaponDamage(player, equippedItem,player.equippedGear?.weapon) : 0;
 
   if (item?.type === 'weapon' || equippedItem?.type === 'weapon') {
-    rows.push({ label: 'Damage', delta: damage - equippedDamage });
+    rows.push({ label: 'Damage', selected:damage,equipped:equippedDamage,delta: Number((damage - equippedDamage).toFixed(2)) });
   }
 
-  for (const key of ['armour', 'spirit', 'power', 'heal', 'stamina']) {
+  for (const key of ['armour', 'spirit', 'power', 'focusPower', 'maxHp', 'maxStamina', 'maxSpirit', 'strength', 'dexterity', 'essence', 'heal', 'stamina']) {
     const value = Number(item?.[key] || 0)+(key==='armour'&&item?.type!=='weapon'&&item?.armour!==undefined?getTierStatBonus(item,entry?.upgradeTier,entry):0);
     const equippedValue = Number(equippedItem?.[key] || 0)+(key==='armour'&&equippedItem?.type!=='weapon'&&equippedItem?.armour!==undefined?getTierStatBonus(equippedItem,player.equippedGear?.[equippedItem.slot]?.upgradeTier,player.equippedGear?.[equippedItem.slot]):0);
     if (value || equippedValue) {
-      rows.push({ label: titleCase(key), delta: Number((value-equippedValue).toFixed(2)) });
+      rows.push({ label: titleCase(key.replace(/([A-Z])/g,' $1')), selected:Number(value.toFixed(2)),equipped:Number(equippedValue.toFixed(2)),delta: Number((value-equippedValue).toFixed(2)) });
     }
   }
 
-  return rows.length ? rows : [{ label: 'Core Stats', delta: 0 }];
+  if(item?.type==='trinket'||equippedItem?.type==='trinket'){
+    const selected=item?.type==='trinket'?getTierStatBonus(item,entry?.upgradeTier,entry):0,equipped=equippedItem?.type==='trinket'?getTierStatBonus(equippedItem,player.equippedGear?.trinket?.upgradeTier,player.equippedGear?.trinket):0;
+    if(selected||equipped)rows.push({label:'Tier power',selected:Number(selected.toFixed(2)),equipped:Number(equipped.toFixed(2)),delta:Number((selected-equipped).toFixed(2))});
+  }
+  return rows.length ? rows : [{ label: 'Core Stats', selected:0,equipped:0,delta: 0 }];
 }
 
 function upgradeCostBlock(player, slot, item) {
@@ -1693,6 +1708,7 @@ function equipBagItem(player, bagIndex, game, rerender) {
 
   const reason=gearEquipReason(player,entry.id,entry);if(reason){game?.log?.(reason);return false;}
   if(!equipGearEntry(player,bagIndex))return false;
+  if(game?.uiState){game.uiState.equipmentFocusRegion='slots';game.uiState.selectedEquipmentSlot=slot;}
   synchronizeEquipmentBoundSkills(player);
   if(game?.uiState)game.uiState.pendingGearUpgrade=null;
 
@@ -1828,8 +1844,14 @@ function unequipSlot(player, slot, game, rerender) {
   if (!itemId) return false;
 
   const item = ITEMS[itemId];
+  const instanceId=player.equippedGear?.[slot]?.instanceId;
 
   if(!unequipGearEntry(player,slot))return false;
+  if(game?.uiState){
+    game.uiState.equipmentFocusRegion='inventory';
+    game.uiState.selectedInventoryBagIndexBySubtab||={};
+    game.uiState.selectedInventoryBagIndexBySubtab.equipment=player.inventory.findIndex(e=>instanceId?e.instanceId===instanceId:e.id===itemId);
+  }
   synchronizeEquipmentBoundSkills(player);
   if(game?.uiState)game.uiState.pendingGearUpgrade=null;
 

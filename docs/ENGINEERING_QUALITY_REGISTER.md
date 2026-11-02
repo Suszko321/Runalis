@@ -494,3 +494,30 @@ memory, security or gameplay readiness claim follows solely from a green build.
   workshop, loot and practice-gear contracts pass; engineering gate/build pass.
 - Browser evidence is an isolated fixture using production components/styles;
   physical devices and live online transport untested. [Details](inventory-locks/README.md).
+
+### E38 — Compact mobile inventory and copy-specific comparisons
+
+- Source observations: responsive lexicon rules stacked the equipment panes;
+  stronger touch rules forced normal flow, defeating the bounded desktop layout.
+  The equipment tab now keeps bag / equipped / selected details in three adjacent
+  columns on phone, tablet, short screens and coarse-pointer devices. Independent
+  list/detail scrolling retains all gear; portrait art is omitted in compact mode.
+- Equip/Unequip and Lock/Unlock precede secondary details with 44px minimum
+  targets. Selection follows the same copy through equip/unequip and no longer
+  changes on hover. Full-bag protection and disposal locks remain authoritative.
+- Comparison now resolves the equipped instance's actual rarity as well as both
+  upgrade tiers. It shows green/red directional indicators and signed per-stat
+  deltas, plus equal/empty/trade-off cases. Build-specific passives/set effects
+  remain descriptive rather than being ranked by an invented overall score.
+- Passing browser contract: seven touch viewport sizes from 320×568 through
+  1440×1000; full 20-entry list, adjacent panes, on-screen actions/comparison,
+  zero outer/horizontal overflow, last-click retention, copy rarity, upgrades,
+  mixed stats, locks, equip/unequip, full-bag rejection, expanded details, isolated
+  local menu document and separate mouse desktop. No page errors. Existing lock,
+  itemization, ascension, workshop and 12-group local-player browser suites pass;
+  engineering gate and production build pass.
+- Broader mobile-controls browser suite timed out before menus at its five-slot
+  Block activation wait (line 38). Not a passing combat check; baseline cause not
+  established. Concurrent legacy profile boots initially timed out; serial local
+  menu rerun passed. Physical devices, Safari and live online transport untested.
+  [Behaviour and verification](mobile-inventory/README.md).
