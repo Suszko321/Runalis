@@ -599,3 +599,18 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - **Remaining boundaries:** E03's broader imported/updated-character trust is still
   open. Different-browser storage is not crash-atomic; durable delivery receipts,
   physical controllers, real phones and separate-network soak remain future work.
+
+### E43 — Mobile menu chooser uses a vertical left-side list
+
+- Source observation: generic touch navigation overrides flattened the chooser
+  into a sticky horizontal strip, with focused labels expanding into neighbours.
+  Chooser-scoped styles now provide a left rail, 18px stable labels, 44px targets,
+  safe-area spacing and independent vertical scrolling. Existing handlers and
+  all seven destinations are reused; open workspace navigation stays unchanged.
+- Visual review caught inherited align-self:end pushing the list downward after
+  portrait rotation. Explicit stretch/start alignment keeps it at the upper left.
+- Passing actual-game touch checks at five portrait/landscape sizes from 320px
+  to 1280px: left alignment after rotation, one column, no horizontal overflow,
+  six sections open, Multiplayer opens, Menus closes, no page errors. Existing
+  seven-size inventory checks, engineering 12/12 and production build pass.
+  Physical devices untested. [Behaviour and evidence](mobile-menu-list/README.md).
