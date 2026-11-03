@@ -1,5 +1,8 @@
 import {asset} from './spriteArt.js';
 import {humanHeadLayout} from './humanHeadLayout.js';
+import {ITEMS} from './data.js';
+import {getGearVisualProfile} from './gearVisualStyle.js';
+import {fittedWearable} from './playerWearableArt.js';
 const variants=new Map();
 const faceMasks=new WeakMap();
 // The source atlas shares brown tones between hair and facial shading. Colour
@@ -54,7 +57,7 @@ export function drawCustomHead(ctx,parts){
   }
   c.putImageData(pixels,0,0);if(variants.size>=32)variants.delete(variants.keys().next().value);variants.set(key,image);
  }
- const {row,col,scale,originX,originY}=humanHeadLayout(parts);
+ const {row,col,scale,originX,originY,eyeY}=humanHeadLayout(parts);
  ctx.save();ctx.imageSmoothingEnabled=false;
  if(col===2||parts.headgear){
   // Restore the authored neck where a covered head or rear arm replacement
@@ -62,6 +65,11 @@ export function drawCustomHead(ctx,parts){
   const width=parts.bodyType==='female'?4:5;
   ctx.drawImage(image,2*48+22,3*48+30,4,6,-width/2,-28+(parts.bob||0),width,col===2?7:5);
  }
- ctx.drawImage(image,col*48,row*48,48,48,originX-24*scale,originY,48*scale,48*scale);ctx.restore();return true;
+ const fit=fittedWearable(parts.headgear);
+ const hood=fit?.part===0&&asset(fit.sheet)?.ready&&
+  (fit.neckStyle==='cowl'||getGearVisualProfile(parts.headgear,ITEMS[parts.headgear]).silhouette==='hood');
+ // Tuck the crown of the hair under the lowered hood while retaining the face.
+ const firstRow=hood?eyeY-7:0;
+ ctx.drawImage(image,col*48,row*48+firstRow,48,48-firstRow,originX-24*scale,originY+firstRow*scale,48*scale,(48-firstRow)*scale);ctx.restore();return true;
 }
 asset('heads-custom');

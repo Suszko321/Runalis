@@ -758,3 +758,4 @@ memory, security or gameplay readiness claim follows solely from a green build.
 ### Hood seating follow-up
 
 - Lowered fitted hoods and headpieces with cowls by two native pixels while retaining the shoulder anchor and item-specific offsets. Browser review covered the Chapel Hermit and mixed outfits from four directions on both bodies.
+- Follow-up lowered the hood shell another two native pixels and cropped the covered hair above the face when fitted hood art is ready. Reviewed the 32 browser poses again, including the Hermit's front view.
