@@ -23,7 +23,9 @@ export function abilityProgressionCategories(ability) {
   if (ability.progressionCategories) return ability.progressionCategories;
   if (ability.summonType || /DeathEcho|Corpsebloom/.test(ability.id)) return ['summoning', 'spirit'];
   const physical = ['blade', 'blunt', 'archery', 'scythe'].includes(ability.skill);
-  const protective = /heal|ward|aegis|guard|shield|litany|mend|protection/i.test(ability.id);
+  const protective = ability.subclassMode
+    ? /^(heal|ward|retaliation)$/.test(ability.subclassMode)
+    : ability.damageReduction || /heal|ward|aegis|guard|shield|litany|mend|protection|bulwark/i.test(ability.id);
   if (protective) return ['warding', 'defence', 'spirit'];
   if (ability.mobilityProfile || /step|walk|stride|vault|retreat|leap/i.test(ability.id)) return ['dexterity', 'stamina'];
   return physical ? [ability.skill, 'stamina', 'dexterity'] : [ability.skill || 'spirit', 'spirit', 'focus'];

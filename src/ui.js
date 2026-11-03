@@ -3,7 +3,7 @@ import {retireRemovedQuestState} from './questRoster.js';
 import {inventoryDisposalKey} from './gearServices.js';
 import {vampireHealthCost} from './vampireRules.js';
 ﻿import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
-import {abilitySummary,abilityRequirements,abilityScaling,equipmentPurpose,equipmentScaling,informationNumber} from './uiInformation.js';
+import {abilitySummary,abilityTrainingLabel,abilityRequirements,abilityScaling,equipmentPurpose,equipmentScaling,informationNumber} from './uiInformation.js';
 import {getAbilityChargeTime} from './chargeSystem.js';
 import {bindMobileSkills} from './mobileSkills.js';
 import {getSunkenPressureState,SUNKEN_PRESSURE} from './sunkenPressureSystem.js';
@@ -3360,7 +3360,7 @@ function paperSkillRow(player, skillId) {
 function renderLastReward(player) {
   const reward=player.lastCombatReward;
   if(!reward)return '';
-  return `<div class="card"><h3>Last Victory · ${escapeHtml(reward.enemyName)}</h3><p>Combat XP +${reward.combatXP} · Training budget ${reward.allocationBudget}</p><p>${reward.awards.map(a=>`${escapeHtml(skillLabel(a.skillId))} +${a.amount.toFixed(1)}${a.sources?.length ? ` (${escapeHtml(a.sources.join(" + "))})` : ""}`).join(' · ')}</p><p class="tag">Training is split across offence, armour, useful actions and your chosen priority. Class affinities bias the split within the same budget.</p></div>`;
+  return `<div class="card"><h3>Last Victory · ${escapeHtml(reward.enemyName)}</h3><p>Combat XP +${reward.combatXP} · Training budget ${reward.allocationBudget}</p><p>${reward.awards.map(a=>`${escapeHtml(skillLabel(a.skillId))} +${a.amount.toFixed(1)}${a.sources?.length ? ` (${escapeHtml(a.sources.join(" + "))})` : ""}`).join(' · ')}</p><p class="tag">Training is split across offence, equipped abilities, armour, useful actions and your chosen priority. Class affinities bias the split within the same budget.</p></div>`;
 }
 
 function renderSkills(player, game) {
@@ -4066,15 +4066,16 @@ function renderAbilityDetail(player, ability) {
     ${availability.usable?'':`<p class="tag bad-text">${escapeHtml(availability.reason)}</p>`}
     <div class="stat-row"><span>Mastery ${mastery.level}</span><b>${Math.floor(mastery.xp)} / ${Math.ceil(mastery.next)} XP</b></div>
     <div class="mastery-progress"><i style="width:${Math.round(mastery.progress*100)}%"></i></div>
-    <p class="tag">Assigned abilities earn a small share of victory mastery XP. Effective use earns a larger share.</p>
+    <p class="tag">Equipped abilities share a small amount of training XP and mastery on qualifying victories. Effective use earns more.</p>
     ${mastery.level>1&&!ability.heldBlock?`<details class="information-extra"><summary>Mastery benefits</summary><p class="tag">+${((bonus.damage-1)*100).toFixed(1)}% potency · +${((bonus.range-1)*100).toFixed(1)}% reach · ${((1-(effective.channelProfile ? bonus.channelEfficiency : bonus.efficiency))*100).toFixed(1)}% lower ${effective.channelProfile?'channel upkeep':'cost'}.</p></details>`:''}
     </div>
   `;
 }
 
 function renderAbilityFacts(player,ability) {
-  if(ability.heldBlock)return `<div class="information-facts"><div class="stat-row"><span>Use</span><b>Hold to block; release to stop</b></div><div class="stat-row"><span>Upkeep</span><b>4 Stamina/s before perks; extra on hits</b></div><div class="stat-row"><span>Protection</span><b>62% less damage before class bonuses</b></div><div class="stat-row"><span>Equipped bonus</span><b>+25% Defence XP</b></div><div class="stat-row"><span>Scales with</span><b>Blocking perks and block-efficiency gear</b></div></div>`;
-  const profile=getAbilityUseChargeProfile(player,ability), rows=[];
+  const training = abilityTrainingLabel(ability);
+  if(ability.heldBlock)return `<div class="information-facts"><div class="stat-row"><span>Use</span><b>Hold to block; release to stop</b></div><div class="stat-row"><span>Upkeep</span><b>4 Stamina/s before perks; extra on hits</b></div><div class="stat-row"><span>Protection</span><b>62% less damage before class bonuses</b></div><div class="stat-row"><span>Trains</span><b>${escapeHtml(training)}</b></div><div class="stat-row"><span>Equipped bonus</span><b>+25% Defence XP weighting</b></div><div class="stat-row"><span>Scales with</span><b>Blocking perks and block-efficiency gear</b></div></div>`;
+  const profile=getAbilityUseChargeProfile(player,ability), rows=[['Trains',training]];
   if(ability.sunkenBase&&ability.damage>0)rows.push(['Depth','Builds over 20s · carries between enemies'],['Pressure','One burn per target and caster · up to 3s after its last hit'],['Disengage','5s without a damaging Sunken hit resets Depth']);
   if(ability.cryoSkill)rows.push(['Frost','3 spaced Chill hits prepare Brittle · weaker foes freeze briefly']);
   if(ability.cryoCleanse||ability.cryoFieldCleanse)rows.push(['Restoration',`${ability.cryoFieldCleanse?'Each sanctuary pulse':'On cast'} clears movement slows and accumulated elite frost from nearby allies`]);

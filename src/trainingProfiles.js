@@ -50,15 +50,30 @@ export function wornTraining(actor) {
   return weights;
 }
 
+// Older techniques execute their areas in bespoke combat handlers.
+const LEGACY_AREA_ABILITIES = new Set([
+  'oathkeeperConsecratedGround', 'fellhunterBearTrap', 'fellhunterCaltrops',
+  'fellhunterBombToss', 'fellhunterFlamingArrowVolley', 'fellhunterSmokeBomb',
+  'fellhunterKillZone', 'thornbinderBramblePatch', 'thornbinderRosebiteBurst',
+  'thornbinderRootPrison', 'hydromancerWellspring', 'hydromancerDelugeCrown',
+  'lightbringerSolarVerdict', 'lightbringerFirstSunrise', 'blackStarPulse',
+  'redMawRift', 'crimsonTide'
+]);
+
 export function abilityDisciplines(ability) {
   if (!ability) return [];
   if (ability.disciplines) return ability.disciplines;
   const disciplines = [];
-  if (ability.summonType) return ['summoning'];
+  if (ability.summonType || ability.subclassMode === 'spirits') return ['summoning'];
   if (ability.channelProfile) disciplines.push('channeling');
-  if (ability.radius || ability.aoe || /area|aoe|field|storm|pulse|maelstrom/i.test(`${ability.role} ${ability.effectProfile}`)) disciplines.push('areaControl');
-  if (ability.kind === 'melee' || (ability.range > 0 && ability.range <= 120 && /blade|blunt|scythe/.test(ability.skill))) disciplines.push('closeCombat');
-  return disciplines.slice(0, 2);
+  const mode = ability.sunkenBase ? null : ability.subclassMode;
+  const area = mode ? /^(auraChannel|field|burst|trap|aura)$/.test(mode)
+    : LEGACY_AREA_ABILITIES.has(ability.id) || ability.radius || ability.aoe ||
+      /area|aoe|field|storm|pulse|maelstrom/i.test(`${ability.role} ${ability.effectProfile}`);
+  if (area || ability.roseEruption || ability.petalStorm || ability.faeFlowerField) disciplines.push('areaControl');
+  if (mode === 'melee' || (!mode && (ability.kind === 'melee' ||
+    (ability.damage > 0 && ability.range > 0 && ability.range <= 120 && /blade|blunt|scythe/.test(ability.skill))))) disciplines.push('closeCombat');
+  return disciplines;
 }
 
 export function abilityTraining(ability) {

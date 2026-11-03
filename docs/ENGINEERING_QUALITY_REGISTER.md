@@ -709,3 +709,9 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - Fixed-budget progression from effective combat actions, equipment and selected priority. Light Armour, Heavy Armour, Channeling, Close Combat and Area Control give handling benefits. Three universal Wayfarer scrolls broaden class access to these playstyles.
 - Effective abilities share 18% of victory Combat XP as mastery. Five distinct assigned abilities share 2% even on weapon-only victories. Preserved legacy ranks and morphs. At Combat Level 47, a full-hotbar model reaches M29 on the most-used ability. The new cap curves soften permanent damage stacking while retaining conditional combat effects.
 - Four-slot encounter and healing checks, 11-class Wayfarer checks, save and browser tests, Grimoire and Spirit recovery regressions, engineering gate and build verified. Campaign balance and physical-controller use still need playtesting.
+
+### E50 — Ability and morph progression labels
+
+- Ability details and active tree nodes display combat training lines. Morph cards show their individual training profiles before unlock.
+- Equipped abilities share 2% of the victory training budget within the existing offence allocation. The encounter snapshots the assigned forms on first contribution.
+- Catalogue verification covers 101 base abilities and 154 morphs, plus equipped training on weapon-only victories and late loadout changes.

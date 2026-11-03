@@ -1,10 +1,18 @@
 import {ITEMS,getAbilityById,getAbilitySkillRequirement} from './data.js';
 import {weaponProficiency} from './progressionProfiles.js';
+import {abilityTraining} from './trainingProfiles.js';
 import {RUNALIS_SKILLS} from './skills.js';
 import {weaponSpiritRecoveryLabel} from './weaponSpiritRecovery.js';
 import {requiredSkillEquipment} from './equipmentBoundSkills.js';
 import {SUBCLASSES} from './subclassData.js';
 import {FELLHUNTER_BASE_INFO} from './fellhunterSkills.js';
+
+export function abilityTrainingLabel(ability) {
+  return Object.entries(abilityTraining(ability))
+    .sort((a,b) => b[1] - a[1])
+    .map(([id]) => RUNALIS_SKILLS[id]?.name || id)
+    .join(' · ');
+}
 
 // Player-facing explanations, shared by trees, the loadout and morph previews.
 // Numeric facts are read from the effective ability, never embedded in its prose.

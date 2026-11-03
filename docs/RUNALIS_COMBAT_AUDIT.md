@@ -169,3 +169,7 @@ Passing288 actual light/heavy hit cases across twelve families/four owners/three
 The encounter ledger records weapon, ability, worn gear and useful action evidence per actor. The fixed training budget uses a 40/25/20/15 split before normalized class affinities. Armour snapshots prevent a last-second gear swap from redirecting previous training. Older saves retain levels and morph choices. The mastery budget reserves 18% for effective use and 2% for the five assigned slots. In a full-hotbar simulation, the most-used ability reaches M29 at Combat Level 47.
 
 Automated checks cover four-slot damage/support credit, duplicate settlement, non-rewarding enemies, gear swaps, priority and M70 save round-trips, all 11 classes learning and using the three Wayfarer techniques, and four-slot healing with the host under threat. Desktop browser testing verified the priority control, victory award, HUD and save/reload. The Grimoire and primary weapon recovery regressions passed. Extended campaign pacing and physical-controller play still need a playtest.
+
+## Ability and morph training labels
+
+The ability detail and skill tree preview list the progression lines each skill trains. Every morph card shows the lines for its own form, including locked forms. On qualifying victories, the five assigned slots share 2% of the training budget from the existing offence share. Each slot distributes its share according to the form equipped at first contribution. Ability mastery has a separate budget.

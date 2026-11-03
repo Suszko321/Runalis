@@ -6,6 +6,7 @@ import { addFloatingText } from './floatingText.js';
 import { gainXp, getWeaponSkill } from './player.js';
 import { addCombatXP, syncLegacySkills, COMBAT_SKILL_IDS } from './skills.js';
 import { affinityMultiplier } from './progressionProfiles.js';
+import {resolveSubclassAbility} from './subclassVariants.js';
 import { ensureContribution, recordSupportContribution, addTrainingEvidence } from './encounterLedger.js';
 import { safeXP } from './progressionMath.js';
 import {restorePetalStormHealth} from './petalStormSustain.js';
@@ -24,7 +25,7 @@ export function recordEnemyCombatContribution(enemy, actor, skillId, damage = 0,
   const ability = abilityId && getAbilityById(abilityId);
   const committed = entry.hotbar.find(a => a.id === abilityId);
   if (options.source !== 'summon' || committed) {
-    const profile = ability ? committed?.training || abilityTraining(ability) : weaponTraining(id || 'blade', options.weaponType);
+    const profile = ability ? committed?.training || abilityTraining(resolveSubclassAbility(actor,ability)) : weaponTraining(id || 'blade', options.weaponType);
     addTrainingEvidence(entry.offenceTraining, profile, amount);
     addTrainingEvidence(entry.armourTraining, wornTraining(actor), amount);
   }
@@ -65,8 +66,12 @@ export function allocateEncounterXP(actor, contribution, budget) {
   for (const [skill, damage] of Object.entries(weapons)) {
     addTrainingEvidence(oldOffence, weaponTraining(skill), damage);
   }
+  const hotbar = {};
+  for (const ability of contribution.hotbar || []) addTrainingEvidence(hotbar, ability.training, 1);
+  const assignedShare = Object.keys(hotbar).length ? .02 : 0;
   for (const [name, evidence, share] of [
-    ['Offence', Object.keys(offence).length ? offence : oldOffence, XP_ALLOCATION.offence],
+    ['Offence', Object.keys(offence).length ? offence : oldOffence, XP_ALLOCATION.offence - assignedShare],
+    ['Hotbar', hotbar, assignedShare],
     ['Armour', contribution.armourTraining || wornTraining(actor), XP_ALLOCATION.armour],
     ['Actions', contribution.actionTraining || {}, XP_ALLOCATION.actions]
   ]) {

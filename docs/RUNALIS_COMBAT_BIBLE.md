@@ -342,7 +342,7 @@ Qualifying contributors require participation and proximity within 1,000 world
 units. The credited final actor gets full encounter Combat XP; other qualifying
 actors get half. An idle player is not automatically rewarded. The one-time guard
 prevents duplicate rewards. The training budget equals that actor's Combat XP.
-Offence receives 40%, worn gear 25%, useful defensive and support actions 20%,
+Offence receives 40%, including 2% shared by assigned abilities when present. Worn gear receives 25%, useful defensive and support actions 20%,
 and a selectable attribute 15%. Empty shares go to the selected priority, which
 defaults to Stamina. Class affinities weight the distribution within the budget.
 Weapon families and ability disciplines determine offence weights. Armour
