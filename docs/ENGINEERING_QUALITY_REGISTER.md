@@ -715,3 +715,15 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - Ability details and active tree nodes display combat training lines. Morph cards show their individual training profiles before unlock.
 - Equipped abilities share 2% of the victory training budget within the existing offence allocation. The encounter snapshots the assigned forms on first contribution.
 - Catalogue verification covers 101 base abilities and 154 morphs, plus equipped training on weapon-only victories and late loadout changes.
+
+### E51 — Light, Medium and Heavy Armour roles
+
+- Medium Armour has its own combat proficiency and worn-gear training. Armour weight affects ranged and close-range damage, protection, maximum Health and resource costs according to the piece's role.
+- Armour catalogue, actual bow and melee damage, technique scaling, training attribution, save/load and Health swap checks pass in verify-armour-progression.mjs.
+
+### E52 — Travel interaction indicators
+
+- Doors, stairs, portals and travel gates lacked the NPC-style proximity prompt. World prompts now share Interact's target selection, quest visibility and Orrakai line-of-sight checks. Travel uses a doorway, directional arrow or lock glyph.
+- Split-screen prompts use the viewport's actor. Shared-camera prompts show each local actor's target. Travel prompts take precedence over pending trade offers; an open trade still owns Interact.
+- Mara's stairs now transition the host world when selected by a party member and place the party at the arrival point using the existing hub travel rules.
+- `verify-travel-interaction-prompts.mjs` covers drawing and input contracts, including out-of-range and obscured targets, competing NPCs, both Mara stair directions through an actor view, and sealed versus open dungeon stairs. Physical mobile and live network play were not exercised.

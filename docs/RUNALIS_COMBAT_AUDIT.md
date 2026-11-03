@@ -173,3 +173,9 @@ Automated checks cover four-slot damage/support credit, duplicate settlement, no
 ## Ability and morph training labels
 
 The ability detail and skill tree preview list the progression lines each skill trains. Every morph card shows the lines for its own form, including locked forms. On qualifying victories, the five assigned slots share 2% of the training budget from the existing offence share. Each slot distributes its share according to the form equipped at first contribution. Ability mastery has a separate budget.
+
+## Three armour progression lines
+
+Light Armour favours ranged damage and mobility. Medium Armour trains with reinforced leathers and battlemage sets, trading some ranged output for stronger close attacks and protection. Heavy Armour favours Health and Defence and raises dodge and channel costs. All three use the same worn-gear encounter snapshots. Weapon projectiles commit their armour damage bonus at launch. Rarity and upgrades retain the base piece's weight.
+
+The focused verifier covers the full catalogue, representative melee and bow hits, close and ranged technique scaling, handling costs, armour XP and a save round-trip. Repeated swaps preserve the injured actor's Health fraction and leave downed actors at zero Health. Campaign pacing remains unmeasured.

@@ -20,8 +20,9 @@ import { affinityMultiplier, getClassAffinities } from './progressionProfiles.js
 // -----------------------------------------------------------------------------
 
 export const RUNALIS_SKILLS = {
-  lightArmour: {id:'lightArmour',name:'Light Armour',shortName:'LGT',type:'combat',description:'Train in cloth and leather. Improves dodge and channel efficiency in light equipment.'},
-  heavyArmour: {id:'heavyArmour',name:'Heavy Armour',shortName:'HVY',type:'combat',description:'Train in plate and mail. Improves protection while wearing heavy equipment.'},
+  lightArmour: {id:'lightArmour',name:'Light Armour',shortName:'LGT',type:'combat',description:'Train in cloth and archer gear. Improves ranged damage, dodging and channel efficiency.'},
+  mediumArmour: {id:'mediumArmour',name:'Medium Armour',shortName:'MED',type:'combat',description:'Train in reinforced leathers and battlemage gear. Improves close-range damage, ranged damage and protection.'},
+  heavyArmour: {id:'heavyArmour',name:'Heavy Armour',shortName:'HVY',type:'combat',description:'Train in plate and mail. Improves protection and maximum Health while wearing heavy equipment.'},
   channeling: {id:'channeling',name:'Channeling',shortName:'CHN',type:'combat',description:'Train through useful sustained casts. Reduces channel upkeep.'},
   closeCombat: {id:'closeCombat',name:'Close Combat',shortName:'CQC',type:'combat',description:'Train through close-range abilities. Improves their resource efficiency.'},
   areaControl: {id:'areaControl',name:'Area Control',shortName:'AOE',type:'combat',description:'Train through useful area abilities. Improves coverage.'},
@@ -213,7 +214,7 @@ Object.assign(RUNALIS_SKILLS, {
 
 export const WEAPON_COMBAT_SKILL_IDS = ['blade', 'blunt', 'scythe', 'archery', 'spirit', 'warding', 'summoning','grimoire'];
 export const SURVIVAL_COMBAT_SKILL_IDS = ['defence', 'hitpoints', 'stamina', 'focus', 'dexterity'];
-export const COMBAT_SKILL_IDS = [...WEAPON_COMBAT_SKILL_IDS, ...SURVIVAL_COMBAT_SKILL_IDS, 'lightArmour', 'heavyArmour', 'channeling', 'closeCombat', 'areaControl'];
+export const COMBAT_SKILL_IDS = [...WEAPON_COMBAT_SKILL_IDS, ...SURVIVAL_COMBAT_SKILL_IDS, 'lightArmour', 'mediumArmour', 'heavyArmour', 'channeling', 'closeCombat', 'areaControl'];
 
 export const CLASS_SKILL_LINKS = {
   oathkeeper: {

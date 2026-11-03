@@ -1204,7 +1204,14 @@ export function itemStatBlock(player, item, entry = null) {
   }
   const training = item.type === 'weapon' ? weaponTraining(item.primarySkill || item.skill || 'blade',item.weaponType) : armourTraining(item);
   if (training) rows.push(['Training',Object.keys(training).map(skillLabel).join(' · ')]);
-  if (item.type === 'armour') rows.push(['Handling',training?.heavyArmour ? 'More protection · higher dodge and channel costs' : 'Lower dodge cost · light training improves channel economy']);
+  if (item.type === 'armour') {
+    const [weight, handling] = training?.heavyArmour
+      ? ['Heavy', 'More Health and protection · higher dodge and channel costs']
+      : training?.mediumArmour
+        ? ['Medium', 'More close-range damage · modest ranged damage and protection']
+        : ['Light', 'Highest ranged damage bonus · easier dodging and channeling'];
+    rows.push(['Armour weight',weight],['Handling',handling]);
+  }
   if (item.power && item.type !== 'weapon') rows.push(['Power', item.power]);
   if (item.armour !== undefined && item.type!=='weapon' && Number(item.armour)+upgradeBonus>0) rows.push(['Armour', (Number(item.armour)+upgradeBonus).toFixed(2)]);
   if(item.type==='trinket'&&upgradeBonus>0)rows.push(['Tier power',`+${upgradeBonus.toFixed(2)} offensive power`]);

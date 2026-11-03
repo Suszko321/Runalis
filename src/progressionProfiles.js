@@ -9,7 +9,7 @@ export const CLASS_XP_AFFINITIES = Object.freeze({
 });
 export const SURVIVAL_ATTRIBUTES = ['hitpoints', 'stamina', 'defence', 'spirit'];
 export const CORE_ATTRIBUTES = [...SURVIVAL_ATTRIBUTES, 'focus', 'dexterity'];
-export const COMBAT_PROFICIENCIES = ['blade', 'blunt', 'scythe', 'archery', 'warding', 'summoning','grimoire','lightArmour','heavyArmour','channeling','closeCombat','areaControl'];
+export const COMBAT_PROFICIENCIES = ['blade', 'blunt', 'scythe', 'archery', 'warding', 'summoning','grimoire','lightArmour','mediumArmour','heavyArmour','channeling','closeCombat','areaControl'];
 export const getClassAffinities = player => CLASS_XP_AFFINITIES[normalizeClassId(player?.classId) || 'classless'] || CLASS_XP_AFFINITIES.classless;
 export const affinityMultiplier = (player, id) => (getClassAffinities(player).includes(id) ? 1.25 : 1)*(id==='defence'&&hasEquippedBlock(player)?BLOCK_DEFENCE_XP_MULTIPLIER:1);
 export function weaponProficiency(weapon, fallback = 'blade') {

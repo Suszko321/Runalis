@@ -81,8 +81,8 @@ for (const flag of ['trainingDummy','friendly','rewardSuppressed','summonedByBos
   close(total(p,ray),14.8);
 }
 
-const plate = Object.values(ITEMS).find(i=>i.type==='armour' && /plate/i.test(i.name));
-const cloth = Object.values(ITEMS).find(i=>i.type==='armour' && /robe/i.test(i.name));
+const plate = ITEMS.knightChest;
+const cloth = ITEMS.necromancerRobe;
 assert(plate && cloth);
 const malformed = actor(1), malformedFoe = foe();
 malformed.loadout.abilitySlots = ['thornLash','vineWhip',null,'invalid','block',ray];

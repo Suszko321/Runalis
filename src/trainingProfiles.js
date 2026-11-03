@@ -19,12 +19,26 @@ export function weaponTraining(skill, family) {
   return {[skill]:22, dexterity:10, stamina:8};
 }
 
+const HEAVY_ARMOUR_PIECES = new Set(['knightHelm','graveboundHelm','graveboundGreaves']);
+const MEDIUM_ARMOUR_PIECES = new Set([
+  'battleMageCoat','wardedChest','veyrCourtCoat','roadwardenCoat','brigandMask',
+  'briarCovenantGreaves','blackstarGreaves','watcherGreaves'
+]);
+
 export function armourTraining(item) {
   if (!item || item.type !== 'armour') return null;
   const style = `${item.visualSilhouette || ''} ${item.name || ''}`.toLowerCase();
-  if (item.armourWeight === 'heavy' || (!item.armourWeight && /plate|mail|steel|iron|greathelm|sabatons/.test(style))) {
+  const role = item.traits || [];
+  const weight = item.armourWeight || (
+    role.includes('Archer') ? 'light' :
+    role.includes('Battlemage') || item.setId === 'ashenExecutioner' || MEDIUM_ARMOUR_PIECES.has(item.id) ? 'medium' :
+    role.includes('Knight') || item.setId === 'pilgrimVigil' || HEAVY_ARMOUR_PIECES.has(item.id) || /plate|mail|steel|iron|greathelm|cuirass|sabatons/.test(style) ? 'heavy' :
+    /leather|brigandine|hide|garb/.test(style) ? 'medium' : 'light'
+  );
+  if (weight === 'heavy') {
     return {heavyArmour:50, defence:30, hitpoints:20};
   }
+  if (weight === 'medium') return {mediumArmour:50, stamina:20, dexterity:15, defence:15};
   if (/robe|cloth|silk|vestment|ritual/.test(style) || (item.spirit || 0) > (item.armour || 0)) {
     return {lightArmour:50, spirit:30, focus:20};
   }
@@ -88,12 +102,18 @@ export function abilityTraining(ability) {
 export function armourHandling(actor) {
   const weights = wornTraining(actor);
   const light = weights.lightArmour || 0;
+  const medium = weights.mediumArmour || 0;
   const heavy = weights.heavyArmour || 0;
-  const total = Math.max(350, light + heavy);
+  const total = Math.max(350, light + medium + heavy);
   const level = id => Math.max(0, (actor?.skillState?.skills?.[id]?.level || 1) - 1);
   const proficiency = id => level(id) / (level(id) + 40);
   return {
-    protection: 3 * heavy / total + 8 * heavy / total * proficiency('heavyArmour'),
+    protection: (medium * (2 + 4 * proficiency('mediumArmour')) +
+      heavy * (4 + 8 * proficiency('heavyArmour'))) / total,
+    maxHealthBonus: heavy / total * (.06 + .09 * proficiency('heavyArmour')),
+    rangedDamageBonus: light / total * (.06 + .09 * proficiency('lightArmour')) +
+      medium / total * (.025 + .035 * proficiency('mediumArmour')),
+    meleeDamageBonus: medium / total * (.05 + .08 * proficiency('mediumArmour')),
     dodgeCost: 1 + .18 * heavy / total - light / total * (.08 + .12 * proficiency('lightArmour')),
     channelCost: 1 + .12 * heavy / total - light / total * .08 * proficiency('lightArmour')
   };

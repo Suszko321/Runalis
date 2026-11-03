@@ -30,6 +30,7 @@ import {applyMythicalAbilityModifiers,applyMythicalWolf,getMythicalSetCounts} fr
 import {synchronizeEquipmentBoundSkills} from './equipmentBoundSkills.js';
 import { recordSupportContribution } from './encounterLedger.js';
 import { progressionPower, equipmentCombatPower, summonEquipmentPower, equipmentDamageMultiplier, offensiveBonusMultiplier } from './combatPower.js';
+import {abilityDisciplines, armourHandling} from './trainingProfiles.js';
 import {defensiveProtection,calculateBubbleWardDuration,calculateBubbleWardFlatAbsorb} from './protectionStats.js';
 import { getEquipmentStatBonuses } from './setBonusSystem.js';
 import { levelStat } from './progressionMath.js';
@@ -6925,7 +6926,11 @@ export function calculateAbilityDamage(player, ability) {
   const mastery = ability._mastery?.damage || 1;
   const investment = ability.hellSkill || ability.hunterMorph ? hellstalkerDamageInvestment(ability,bonuses) : 1;
   const power = ability.classId==='fellhunter' ? fellhunterAbilityPower(player) : progressionPower(player,ability.skill);
+  const handling = armourHandling(player);
+  const close = abilityDisciplines(ability).includes('closeCombat') || (ability.range > 0 && ability.range <= 120);
+  const armourBonus = close ? handling.meleeDamageBonus : ability.range >= 150 ? handling.rangedDamageBonus : 0;
   const bonus = offensiveBonusMultiplier(
+    armourBonus,
     mastery - 1,
     investment - 1,
     getAbilityEffectiveness(player,ability) - 1,

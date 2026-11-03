@@ -11,6 +11,7 @@ import {getEquipmentStatBonuses} from './setBonusSystem.js';
 import {applyMythicalMeleeModifiers} from './mythicalEquipmentSystem.js';
 import {getEquipmentTierBonus} from './equipmentProgressionSystem.js';
 import { progressionPower, attributeHandling, equipmentDamageMultiplier } from './combatPower.js';
+import {armourHandling} from './trainingProfiles.js';
 import { weaponProficiency } from './progressionProfiles.js';
 import {FOCUS_PROJECTILE_STYLES} from './focusProjectileData.js';
 import {equippedGearItem} from './gearItemization.js';
@@ -1482,6 +1483,7 @@ function maybeFireProjectile(player, move, state, world) {
     weaponType:move.weaponType,
     comboType: move.comboType,
     impact: move.impact || 'arrowHit',
+    armourDamageBonus: armourHandling(player).rangedDamageBonus,
     pierceRemaining: move.pierce || 0,
     color: projectileColor,
     hitEnemyIds: [],
@@ -1575,7 +1577,7 @@ function resolveProjectileHits(player, world, projectile, log) {
 
     if (distance > radius) continue;
 
-    const damagePacket = calculateMoveDamage(player, projectile);
+    const damagePacket = calculateMoveDamage(player, projectile, true);
 
     applyEnemyDamage(player, world, enemy, damagePacket, projectile, {
       attackDirX: projectile.dirX,
@@ -1601,7 +1603,7 @@ function resolveProjectileHits(player, world, projectile, log) {
 // DAMAGE / KILL XP
 // -----------------------------------------------------------------------------
 
-function calculateMoveDamage(player, move) {
+function calculateMoveDamage(player, move, ranged = false) {
   const weapon = getEquippedWeapon(player);
   const weaponType = move.weaponType || getWeaponType(weapon);
   const moveset = getMovesetForWeaponType(weaponType);
@@ -1629,6 +1631,7 @@ function calculateMoveDamage(player, move) {
   return {
     amount: Math.max(1, damage),
     crit,
+    armourDamageBonus: ranged ? move.armourDamageBonus || 0 : armourHandling(player).meleeDamageBonus,
     skillId,
     weaponType,
     comboType: move.comboType || 'light'
@@ -1686,7 +1689,8 @@ function applyEnemyDamage(player, world, enemy, damagePacket, move, state, log) 
     projectile: move.kind === 'projectile'
   }, world, log);
   damage=Math.ceil(damage*equipmentDamageMultiplier(player,enemy,damagePacket.element||move.element||
-    (damagePacket.weaponType==='scythe'?'necrotic':damagePacket.skillId==='warding'?'nature':null)));
+    (damagePacket.weaponType==='scythe'?'necrotic':damagePacket.skillId==='warding'?'nature':null),
+    damagePacket.armourDamageBonus));
   damage=mitigateEliteHit(enemy,player,damage,{heavy:damagePacket.comboType==='heavy'});
   if(move.mythicalAsh && state.mythicalAshAttackId!==state.attackId){
     state.mythicalAshAttackId=state.attackId;

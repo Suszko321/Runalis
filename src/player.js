@@ -852,11 +852,10 @@ function refreshDerivedVitals(player, forceFullVitals = false) {
     return;
   }
 
-  if (hpDelta > 0) {
-    player.hp = Math.min(player.maxHp, Math.max(1, Number(player.hp || 1) + hpDelta));
-  } else {
-    player.hp = Math.min(player.maxHp, Math.max(0, Number(player.hp || 0)));
-  }
+  // Keep the same health fraction when maximum health changes so armour swaps
+  // cannot repeatedly restore health or revive a downed actor.
+  const hp = Math.max(0, Number(player.hp || 0));
+  player.hp = Math.min(newMaxHp, hpDelta ? hp * newMaxHp / oldMaxHp : hp);
 
   if (staminaDelta > 0) {
     player.stamina = Math.min(player.maxStamina, Math.max(0, Number(player.stamina || 0) + staminaDelta));
@@ -887,7 +886,8 @@ export function calculateMaxHp(player) {
       ? 1.16
       : 1;
 
-  return Math.max(80, Math.floor(baseHp * classScalar * (1 + Math.max(0, treeBonuses.maxHpPct || 0) / 100)));
+  const healthBonus = Math.max(0, treeBonuses.maxHpPct || 0) / 100 + armourHandling(player).maxHealthBonus;
+  return Math.max(80, Math.floor(baseHp * classScalar * (1 + healthBonus)));
 }
 
 export function calculateMaxStamina(player) {

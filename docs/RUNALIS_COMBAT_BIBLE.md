@@ -349,8 +349,12 @@ Weapon families and ability disciplines determine offence weights. Armour
 contributions use the gear worn when the action happened. Chest, legs and helm
 have weights of four, two and one, with a smaller charm adjustment.
 
-Heavy Armour adds protection and increases the cost of dodges and channels. Light
-Armour improves dodging and sustained casting. Channeling lowers upkeep, Close
+Light Armour has the highest ranged damage bonus and reduces dodge and channel
+costs. Medium Armour gives the highest close-range damage bonus, a smaller ranged
+bonus and some protection. Heavy Armour gives the most protection and increases
+maximum Health, at a higher dodge and channel cost. Mixed sets blend these effects
+using chest, leg and helm weights of four, two and one. Maximum Health changes
+preserve the actor's current Health fraction. Channeling lowers upkeep, Close
 Combat lowers close-range technique costs, and Area Control extends area coverage.
 Equipment inspection shows training affinities. Skills → Progression shows the
 priority and the most recent encounter's training sources.
