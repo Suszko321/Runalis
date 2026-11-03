@@ -749,3 +749,8 @@ memory, security or gameplay readiness claim follows solely from a green build.
 
 - Uncharged directional projectiles, targeted abilities, ranged ground casts and channels use a 22-degree acquisition cone and up to 10 degrees of correction. Enemies behind cover, out of reach or outside the cone are ignored. Channels recalculate from current player intent.
 - Dedicated checks verify real projectile hits across four player slots and beam retargeting, angle bounds, cover, exclusions and direct manual aim. Existing charged aim, Vampire beam and Fae channel checks pass. Physical-device play was not exercised.
+
+### E56 — Grimoire and Foci weapon aim assist
+
+- Light and heavy Grimoire and Focus shots use the ranged ability assist at attack commitment. Heavy charge aim tracks the input until release. The correction is committed to the projectile without changing stored player intent.
+- Actual off-axis light hits and held heavy releases are verified for both weapon families across all four owner slots.

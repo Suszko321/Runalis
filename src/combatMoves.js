@@ -17,6 +17,7 @@ import {FOCUS_PROJECTILE_STYLES} from './focusProjectileData.js';
 import {equippedGearItem} from './gearItemization.js';
 import {instanceGearItem} from './gearRarity.js';
 import {weaponSpiritRecoveryAmount} from './weaponSpiritRecovery.js';
+import {assistAbilityAim} from './abilityAimAssist.js';
 import { getMeleeLightCombo } from './meleeLightCombos.js';
 // combatMoves.js
 // Runalis weapon moves, combos, aim direction, melee hitboxes, bow projectiles,
@@ -779,6 +780,9 @@ function requestWeaponAttack(player, world, input, log, now, options = {}) {
   state.comboTimer=COMBO_RESET_TIME;
 
   const aim = getAimDirection(player, input);
+  const shotAim = move.kind === 'projectile' && (weaponType === 'grimoire' || weaponType === 'spiritFocus')
+    ? assistAbilityAim(player, world, aim, move.projectileRange)
+    : aim;
 
   state.attacking = true;
   state.attackId += 1;
@@ -791,8 +795,8 @@ function requestWeaponAttack(player, world, input, log, now, options = {}) {
   if (move.lightCombo && move.finisher) {
     state.lightComboRecoveryUntil = now + state.attackMove.duration + move.comboRestartDelay;
   }
-  state.attackDirX = aim.x;
-  state.attackDirY = aim.y;
+  state.attackDirX = shotAim.x;
+  state.attackDirY = shotAim.y;
   state.attackLungeRemaining = Math.max(0, Number(state.attackMove.lungeDistance || 0));
   state.hitEnemyIds = [];
   state.comboQueued = false;

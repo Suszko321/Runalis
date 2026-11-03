@@ -3,7 +3,7 @@ import {ITEMS} from '../src/data.js';
 import {weaponSpiritRecoveryAmount} from '../src/weaponSpiritRecovery.js';
 import {createPlayer,chooseClass,addItem,getWeaponSkill,migratePlayer} from '../src/player.js';
 import {equipGearEntry} from '../src/equipmentProgressionSystem.js';
-import {requestBasicAttack,requestHeavyAttack,updateWeaponCombat,calculateWeaponDamage} from '../src/combatMoves.js';
+import {requestBasicAttack,requestHeavyAttack,updateBasicAttackInput,updateWeaponCombat,calculateWeaponDamage} from '../src/combatMoves.js';
 import {grantSharedCombatKillXp} from '../src/combatProgression.js';
 import {SKILL_TREE_NODES,getAvailableWeaponSkillTrees,spendSkillTreeNode,canSpendSkillTreeNode,getSkillTreeBonuses} from '../src/skillTreeSystem.js';
 import {normalizeProfileSave} from '../src/saveProfiles.js';
@@ -23,6 +23,24 @@ for(let slot=1;slot<=4;slot++)for(const item of [...books,...foci])for(const hea
  const loaded=normalizeProfileSave(JSON.parse(JSON.stringify(sanitizeForSave(p))));assert.equal(loaded.equipment.weapon,item.id);assert.equal(getWeaponSkill(loaded),book?'grimoire':'spirit');assert.equal(loaded.equippedGear.weapon.instanceId,p.equippedGear.weapon.instanceId);
 }
 console.log('PASS 168 real light/heavy hits across nine Grimoires and twelve Foci × four owners: correct resource, percentage Spirit recovery, distinct proficiency and save identity');
+for(let slot=1;slot<=4;slot++)for(const id of ['threadbarePrimer','smokeglassFocus'])for(const heavy of [false,true]){
+ const p=actor(id,slot),w=world();
+ const e={id:'off-axis',kind:'rat',hp:100000,maxHp:100000,x:440,y:349,r:14,radius:14,combatLevel:10};
+ w.enemies.push(e);
+ if(heavy){
+  updateBasicAttackInput(p,w,{...aim,combatAimX:0,combatAimY:-1,attackPressed:true,attackHeld:true},.6,now,()=>{});
+  assert.ok(p.combatState.heavyChargeReady);
+  assert.equal(p.combatState.heavyChargeAimY,-1);
+  assert.ok(updateBasicAttackInput(p,w,{...aim,attackReleased:true},0,now+.6,()=>{}));
+  assert.equal(p.combatState.attackMove.comboType,'heavy');
+ }else assert.ok(requestBasicAttack(p,w,aim,()=>{},now));
+ const angle=Math.atan2(p.combatState.attackDirY,p.combatState.attackDirX);
+ assert.ok(angle>0 && angle<=10*Math.PI/180);
+ assert.equal(p.dirY,0,'raw facing does not drift towards the target');
+ for(let n=1;n<=65;n++)updateWeaponCombat(p,w,aim,1/60,now+.6+n/60);
+ assert.ok(e.hp<100000,'off-axis shot landed');
+}
+console.log('PASS Grimoire and Focus aim assist on light shots and held heavy releases across four owners');
 for(const id of ['threadbarePrimer','smokeglassFocus'])for(const heavy of [false,true]){
  const p=actor(id),book=ITEMS[id].weaponType==='grimoire';const r=fire(p,heavy,false);assert.equal(p.spirit,book?r.m-r.cost:r.m);assert.equal(p.stamina,book?r.s:r.s-r.cost);
  const q=actor(id);q.spirit=0;q.stamina=0;const before=JSON.stringify(q);assert(!(heavy?requestHeavyAttack:requestBasicAttack)(q,world(),aim,()=>{},now));assert.equal(q.spirit,0);assert.equal(q.stamina,0);
