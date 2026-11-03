@@ -754,3 +754,7 @@ memory, security or gameplay readiness claim follows solely from a green build.
 
 - Light and heavy Grimoire and Focus shots use the ranged ability assist at attack commitment. Heavy charge aim tracks the input until release. The correction is committed to the projectile without changing stored player intent.
 - Actual off-axis light hits and held heavy releases are verified for both weapon families across all four owner slots.
+
+### Hood seating follow-up
+
+- Lowered fitted hoods and headpieces with cowls by two native pixels while retaining the shoulder anchor and item-specific offsets. Browser review covered the Chapel Hermit and mixed outfits from four directions on both bodies.

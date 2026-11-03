@@ -71,9 +71,11 @@ export function drawFittedPlayerHelm(ctx,image,facing,x,y,bob,pose,fit={row:0,ro
  if(!image)return false;
  const body=pose.bodyType==='female'?1:0,col={down:0,right:1,up:2,left:3}[facing]??0;
  const [rx,ry,w,h]=fit.rects?.[body]||rects[body][0],head=humanHeadLayout({...pose,facing,bob}),eye=head.at(24,head.eyeY);
- const top=Math.round(y+eye.y-(body?16:17)+(fit.headOffset||0));
+ const hasCowl=profile.silhouette==='hood'||fit.neckStyle==='cowl';
+ // Seat cloth hoods closer to the collar while keeping the cowl hem on the shoulders.
+ const top=Math.round(y+eye.y-(body?16:17)+(fit.headOffset||0)+(hasCowl?2:0));
  ctx.save();ctx.imageSmoothingEnabled=false;
- if(profile.silhouette==='hood'||fit.neckStyle==='cowl')drawHoodCowl(ctx,image,col*64+rx,(body*(fit.rows||3)+fit.row)*80+ry,w,h,x+head.originX,y,bob,head,body,facing,top);
+ if(hasCowl)drawHoodCowl(ctx,image,col*64+rx,(body*(fit.rows||3)+fit.row)*80+ry,w,h,x+head.originX,y,bob,head,body,facing,top);
  ctx.drawImage(image,col*64+rx,(body*(fit.rows||3)+fit.row)*80+ry,w,h,Math.round(x-w/2+head.originX),top,w,h);ctx.restore();return true;
 }
 const cowlPalettes=new WeakMap();
