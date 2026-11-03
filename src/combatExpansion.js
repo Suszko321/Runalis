@@ -118,6 +118,14 @@ function addShot(s,a,x,y,aim,now,extra={}) {
 }
 
 const handlers = {
+  wayfarerSweep(p,w,a,s,h) {
+    for (const enemy of nearby(w,p.x,p.y,a.radius || a.range,4)) hit(h,p,a,enemy,h.power,{aoe:true});
+    fx(h,p,a,'orbit',p.x,p.y,{radius:a.radius || a.range,ttl:.35});
+    return true;
+  },
+  wayfarerAid(p,w,a,s,h) {
+    return h.aid(a);
+  },
   oathBlades(p,w,a,s,h){return startOathBlades(p,w,a,s,h);},
   chain(p,w,a,s,h,aim) {
     const e=target(w,p,aim,a.range); if(!e)return false;
@@ -262,7 +270,7 @@ export function updateCombatTechniques(p,w,input,dt,now,h) {
       const end=point(w,p,{x:c.dirX,y:c.dirY},c.range);
       const visualRange=Math.hypot(end.x-p.x,end.y-p.y);
       const flow=Number(p.passiveState?.hydromancerFlowStacks||0);
-      fx(h,p,a,c.profile,p.x,p.y,{dirX:c.dirX,dirY:c.dirY,radius:c.profile==='maelstrom'?c.range*(1+Math.min(3,flow)*.08):c.range,range:visualRange,ttl:.2,phase:'active',elapsed:c.elapsed,layer:c.profile==='maelstrom'?'behind':'front'});
+      fx(h,p,a,c.profile==='wayfarerRay'?'conduit':c.profile,p.x,p.y,{dirX:c.dirX,dirY:c.dirY,radius:c.profile==='maelstrom'?c.range*(1+Math.min(3,flow)*.08):c.range,range:visualRange,ttl:.2,phase:'active',elapsed:c.elapsed,layer:c.profile==='maelstrom'?'behind':'front'});
       if(now>=(c.nextAudioAt||0)){c.nextAudioAt=now+.8;h.audio?.('channelLoop',a);}
     }
   }
@@ -283,7 +291,7 @@ function channelTick(p,w,s,c,h) {
     const flow=Number(p.passiveState?.hydromancerFlowStacks || 0);
     targets=nearby(w,p.x,p.y,c.range*(1+Math.min(3,flow)*.08));
     for(const e of targets){pull(w,e,p.x,p.y,heavy(e)?0:7);control(e,now,'slow',p,a);e.soakedUntil=now+2;e.hydromancerSoakedUntil=now+2;}
-  } else targets=lineTargets(w,p.x,p.y,c.dirX,c.dirY,c.range,c.profile==='thornstorm'?50:70,c.profile==='host'?3:c.profile==='conduit'?1:8);
+  } else targets=lineTargets(w,p.x,p.y,c.dirX,c.dirY,c.range,c.profile==='thornstorm'?50:c.profile==='wayfarerRay'?18:70,c.profile==='host'?3:['conduit','wayfarerRay'].includes(c.profile)?1:8);
   if(c.profile==='host')for(const e of targets)addShot(s,a,p.x-c.dirY*18,p.y+c.dirX*18,{x:c.dirX,y:c.dirY},now,{target:e,damage:c.damage,speed:260,profile:'host'});
   else {
     for(const e of targets){hit(h,p,a,e,c.damage,{channelTick:true});if(c.profile==='thornstorm'){control(e,now,'root',p,a);h.wound?.(e,a.id,c.damage*.15);}}

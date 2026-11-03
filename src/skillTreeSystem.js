@@ -1,4 +1,5 @@
 import {VAMPIRE_NODES} from './vampireData.js';
+import {weaponSpiritRecoveryLabel} from './weaponSpiritRecovery.js';
 import {endVampireForm} from './vampireSystem.js';
 import { COMBAT_EXPANSION_ABILITIES } from './combatExpansionData.js';
 import {getSubclassPassiveBonuses} from './subclassSystem.js';
@@ -1241,7 +1242,7 @@ WEAPON_TREE_CONFIG.grimoire={
  bonuses:Object.fromEntries(Object.entries(WEAPON_TREE_CONFIG.spiritFocus.bonuses).map(([node,bonuses])=>[node,Object.fromEntries(Object.entries(bonuses).map(([key,value])=>[key.replace('focusBolt','grimoireBolt').replace('focusStagger','grimoireStagger'),value]))]))
 };
 Object.assign(SKILL_TREE_NODES, createWeaponTreeNodes());
-for(const node of Object.values(SKILL_TREE_NODES).filter(n=>n.tree==='grimoire'))node.desc=`Grimoire attacks spend Mana (Spirit) and restore 6 Mana on successful enemy hits. ${describeSkillTreeBonuses(node.bonuses).join('. ')}.`;
+for(const node of Object.values(SKILL_TREE_NODES).filter(n=>n.tree==='grimoire'))node.desc=`Grimoire attacks spend Mana (Spirit) and restore ${weaponSpiritRecoveryLabel('grimoire')} on successful enemy hits. ${describeSkillTreeBonuses(node.bonuses).join('. ')}.`;
 // New techniques form two parallel branches after each existing core. Existing
 // doctrine choices and capstones are retained unchanged.
 for (const tree of ['blade','archery','spirit','warding','hydromancy','lightbringer','eldritch']) {

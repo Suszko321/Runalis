@@ -1,3 +1,4 @@
+import {TRAINING_PRIORITIES, trainingPriority} from './trainingProfiles.js';
 import {retireRemovedQuestState} from './questRoster.js';
 import {inventoryDisposalKey} from './gearServices.js';
 import {vampireHealthCost} from './vampireRules.js';
@@ -19,7 +20,7 @@ import {subclassSkillIcon} from './subclassArt.js';
 import { getClassAffinities, CORE_ATTRIBUTES, COMBAT_PROFICIENCIES } from './progressionProfiles.js';
 import { getMasteryProgress, getMasteryBonuses, applyAbilityMastery } from './abilityMasterySystem.js';
 import { getAbilityBindingLabel } from './abilityBindings.js';
-import { PRIMARY_WEAPON_SPIRIT_ON_HIT } from './combatMoves.js';
+import {weaponSpiritRecoveryLabel} from './weaponSpiritRecovery.js';
 import {menuDirection,directionalMenuItem} from './menuNavigation.js';
 import {closeWorkshopService} from './workshopService.js';
 // ui.js
@@ -2185,6 +2186,13 @@ function bindSubtabs(player, game) {
     };
   });
 
+  const trainingSelect = document.querySelector('[data-training-priority]');
+  if (trainingSelect) trainingSelect.onchange = () => {
+    if (!TRAINING_PRIORITIES.includes(trainingSelect.value)) return;
+    player.skillState.trainingPriority = trainingSelect.value;
+    game.save?.(false);
+  };
+
   document.querySelectorAll('[data-select-skill-id]').forEach(btn => {
     const selectSkill = () => {
       game.uiState.selectedSkillId = btn.dataset.selectSkillId;
@@ -2807,7 +2815,7 @@ function renderCombatHud(player) {
         name: getBasicAttackName(weapon),
         icon: getWeaponHudIcon(weapon),
         abilityId: weapon?.weaponType || 'basicAttack',
-        desc: `${weapon ? weaponTypeLabel(weapon.weaponType) : 'Unarmed'} - hold for heavy attack · +${PRIMARY_WEAPON_SPIRIT_ON_HIT} Spirit on hit`,
+        desc: `${weapon ? weaponTypeLabel(weapon.weaponType) : 'Unarmed'} - hold for heavy attack · restores ${weaponSpiritRecoveryLabel(weapon?.weaponType)} on enemy hit`,
         ready: true,
         cooldownPercent: 0,
         cooldownText: '',
@@ -3140,7 +3148,7 @@ function renderCharacterSheet(player, weapon, game) {
           ${sheetStat('Armour', Math.floor(getArmour(player)))}
           ${sheetStat('Weapon Damage', weaponDamage)}
           ${sheetStat('Gold', player.gold || 0)}
-          ${sheetStat('Favoured XP Bonus', getClassAffinities(player).map(id=>skillLabel(id)+' +25%').join(' · '))}
+          ${sheetStat('Training Affinities', getClassAffinities(player).map(id=>skillLabel(id)+' +25%').join(' · '))}
         </div>
       </div>
 
@@ -3222,7 +3230,7 @@ function statGlyph(label) {
     'Weapon Damage': 'DM',
     Gold: 'AU',
     'Highest Combat Skill': 'HS',
-    'Favoured XP Bonus': 'XP',
+    'Training Affinities': 'XP',
     'Equipped Value': 'EV',
     'Inventory Value': 'IV'
   };
@@ -3245,7 +3253,7 @@ function getCharacterStatValue(label, context) {
     'Weapon Damage': context.weaponDamage,
     Gold: context.player.gold || 0,
     'Highest Combat Skill': context.highestCombatText,
-    'Favoured XP Bonus': '+25%',
+    'Training Affinities': '+25%',
     'Equipped Value': `${context.equippedValue} Ash`,
     'Inventory Value': `${context.inventoryValue} Ash`
   };
@@ -3268,7 +3276,7 @@ function renderCharacterStatDetail(label, value) {
     'Weapon Damage': 'Strike power from your weapon, tier, Level and proficiency. Light/heavy combinations, target defenses and combat bonuses change the final hit.',
     Gold: 'Ash Coins carried for markets, upgrades, and travel.',
     'Highest Combat Skill': 'The combat discipline you have trained most deeply.',
-    'Favoured XP Bonus': 'Your two affinities earn 25% additional XP after encounter allocation. They do not change combat strength.',
+    'Training Affinities': 'Class affinities weight the encounter split within its fixed training budget.',
     'Equipped Value': 'Combined market value of currently equipped gear.',
     'Inventory Value': 'Combined market value of items carried in the inventory.'
   };
@@ -3352,7 +3360,7 @@ function paperSkillRow(player, skillId) {
 function renderLastReward(player) {
   const reward=player.lastCombatReward;
   if(!reward)return '';
-  return `<div class="card"><h3>Last Victory · ${escapeHtml(reward.enemyName)}</h3><p>Combat XP +${reward.combatXP} · Training budget ${reward.allocationBudget}</p><p>${reward.awards.map(a=>`${escapeHtml(skillLabel(a.skillId))} +${a.amount.toFixed(1)}`).join(' · ')}</p><p class="tag">Affinity bonuses are included. Weapon use and useful abilities shape your training.</p></div>`;
+  return `<div class="card"><h3>Last Victory · ${escapeHtml(reward.enemyName)}</h3><p>Combat XP +${reward.combatXP} · Training budget ${reward.allocationBudget}</p><p>${reward.awards.map(a=>`${escapeHtml(skillLabel(a.skillId))} +${a.amount.toFixed(1)}${a.sources?.length ? ` (${escapeHtml(a.sources.join(" + "))})` : ""}`).join(' · ')}</p><p class="tag">Training is split across offence, armour, useful actions and your chosen priority. Class affinities bias the split within the same budget.</p></div>`;
 }
 
 function renderSkills(player, game) {
@@ -3833,6 +3841,11 @@ function skillSection(title, skills, player, game, groups = null) {
         `}
       </section>
       <section class="world-skill-detail" data-skill-detail>
+        ${groups ? `<label class="tag">Training priority
+          <select data-training-priority aria-label="Training priority">
+            ${TRAINING_PRIORITIES.map(id=>`<option value="${id}" ${id===trainingPriority(player)?'selected':''}>${escapeHtml(skillLabel(id))}</option>`).join('')}
+          </select>
+        </label><p class="tag">15% of training XP plus unused shares. Other shares follow your attacks, armour and useful actions.</p>` : ''}
         ${renderSkillDetail(selected, player)}
       </section>
     </div>
@@ -3914,12 +3927,18 @@ function worldSkillPerks(skillId) {
     spirit:['Raises maximum Spirit and magical power','Also strengthens wolf and demon companions'],
     focus:['Faster magical charge buildup, up to 12%','Lower sustained channel costs, up to 12%'],
     dexterity:['Faster weapon cadence, up to 12%','Lower dodge cost, up to 15%'],
-    blunt:['Crushing mace and hammer damage','Also strengthens Oathkeeper techniques; +25% XP for Oathkeepers'],
+    blunt:['Crushing mace and hammer damage','Also strengthens Oathkeeper techniques and is favoured in their training split'],
     blade:['Controlled melee damage growth','Train with blades, staves, axes, and spears'],
     archery:['Controlled ranged damage growth','Train through real bow and ranged technique contribution'],
     scythe:['Raises scythe damage','Train with scythe attacks'],
     warding:['Controlled shield and healing potency','Useful protection and control shape encounter training'],
-    summoning:['Raises companion health, damage and armour','Summon skills gain mastery while on your hotbar whenever you earn XP'],
+    lightArmour:['Reduces the Stamina cost of dodges and Spirit upkeep of channels in light gear'],
+    heavyArmour:['Increases protection in heavy gear, which costs more to dodge and channel in'],
+    channeling:['Reduces sustained channel costs'],
+    closeCombat:['Reduces the cost of close-range techniques'],
+    areaControl:['Extends the reach of area techniques'],
+    grimoire:['Raises Grimoire attack power through weapon proficiency'],
+    summoning:['Raises companion health, damage and armour','Assigned summons gain a little mastery from victories and more when they contribute'],
     foraging: ['Higher material yield and better rare-find odds', 'Level 5: Gravecap can yield Pale Essence', 'Level 8 plus a foraging tool: rare roots and herbs'],
     mining: ['Higher material yield and better rare-find odds', 'Level 6 plus a mining tool: magical crystals', 'Level 10 plus a Tier 3 tool: Deepstone and Hollow Gems'],
     fishing: ['Better rare-fish odds; rods and tackle also help', 'Level 8 plus a Tier 2 rod: Tideglass Koi', 'Level 10 plus a Tier 3 rod: Pale Kingfin'],
@@ -4047,7 +4066,7 @@ function renderAbilityDetail(player, ability) {
     ${availability.usable?'':`<p class="tag bad-text">${escapeHtml(availability.reason)}</p>`}
     <div class="stat-row"><span>Mastery ${mastery.level}</span><b>${Math.floor(mastery.xp)} / ${Math.ceil(mastery.next)} XP</b></div>
     <div class="mastery-progress"><i style="width:${Math.round(mastery.progress*100)}%"></i></div>
-    <p class="tag">Earn XP with this skill on your hotbar to gain mastery. Using the skill is optional.</p>
+    <p class="tag">Assigned abilities earn a small share of victory mastery XP. Effective use earns a larger share.</p>
     ${mastery.level>1&&!ability.heldBlock?`<details class="information-extra"><summary>Mastery benefits</summary><p class="tag">+${((bonus.damage-1)*100).toFixed(1)}% potency · +${((bonus.range-1)*100).toFixed(1)}% reach · ${((1-(effective.channelProfile ? bonus.channelEfficiency : bonus.efficiency))*100).toFixed(1)}% lower ${effective.channelProfile?'channel upkeep':'cost'}.</p></details>`:''}
     </div>
   `;

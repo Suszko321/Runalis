@@ -1,3 +1,4 @@
+import {armourHandling} from './trainingProfiles.js';
 import {HOTBAR_SLOT_COUNT,HOTBAR_LAYOUT_VERSION} from './hotbarConfig.js';
 import {gearAcquisitionReason,equippedGearItem} from './gearItemization.js';
 import {GEAR_RARITIES,canonicalGearRarity} from './gearRarity.js';
@@ -9,7 +10,7 @@ import {isClassAvailable} from './classData.js';
 import { migrateLegendarySummonAccess } from './skillScrollSystem.js';
 import { affinityMultiplier, getClassAffinities, weaponProficiency } from './progressionProfiles.js';
 import { safeXP, levelStat, levelPower } from './progressionMath.js';
-import { normalizeAbilityMastery, awardHotbarMasteryXp } from './abilityMasterySystem.js';
+import { normalizeAbilityMastery } from './abilityMasterySystem.js';
 // player.js
 // Player creation, inventory, equipment, XP, classes, derived stats,
 // combat level and stat scaling.
@@ -1271,7 +1272,6 @@ export function gainXp(player, skillId, amount, log, options = {}) {
   const adjustedAmount = safeXP(amount) * (options.skipClassXpMultiplier ? 1 : affinityMultiplier(player, skillId));
 
   const result = addSkillXP(player.skillState, skillId, adjustedAmount);
-  if (!options.skipHotbarMastery) awardHotbarMasteryXp(player,result.xpAdded,performance.now()/1000,log);
 
   refreshDerivedProgression(player, false);
   syncLegacySkills(player);
@@ -1362,6 +1362,7 @@ export function getArmour(player) {
   return (
     (1 + levelStat(combatLevel)) * 0.15 +
     (1 + levelStat(defenceLevel)) * 0.55 +
+    armourHandling(player).protection +
     (helm?.armour || 0) +
     (weapon?.armour || 0) +
     (chest?.armour || 0) +

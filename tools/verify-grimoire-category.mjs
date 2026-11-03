@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {ITEMS} from '../src/data.js';
+import {weaponSpiritRecoveryAmount} from '../src/weaponSpiritRecovery.js';
 import {createPlayer,chooseClass,addItem,getWeaponSkill,migratePlayer} from '../src/player.js';
 import {equipGearEntry} from '../src/equipmentProgressionSystem.js';
 import {requestBasicAttack,requestHeavyAttack,updateWeaponCombat,calculateWeaponDamage} from '../src/combatMoves.js';
@@ -14,10 +15,10 @@ const world=()=>({mode:'dungeon',width:40,height:30,tiles:Array.from({length:30}
 function fire(p,heavy=false,hit=true){const w=world(),e={id:'target',kind:'rat',hp:100000,maxHp:100000,x:300,y:311,r:14,radius:14,combatLevel:10,xp:50};if(hit)w.enemies.push(e);const s=p.stamina,m=p.spirit;assert((heavy?requestHeavyAttack:requestBasicAttack)(p,w,aim,()=>{},now));const move=p.combatState.attackMove,cost=move.spiritCost||move.staminaCost;for(let n=1;n<120;n++)updateWeaponCombat(p,w,aim,1/60,now+n/60);if(hit)assert(e.hp<100000);return {e,w,cost,s,m,move};}
 for(let slot=1;slot<=4;slot++)for(const item of [...books,...foci])for(const heavy of [false,true]){
  const p=actor(item.id,slot),book=item.weaponType==='grimoire';p.stamina=book?0:500;p.spirit=book?500:0;const r=fire(p,heavy);
- assert.equal(p.stamina,book?0:r.s-r.cost);assert.equal(p.spirit,book?r.m-r.cost+6:6);assert.equal(getWeaponSkill(p),book?'grimoire':'spirit');if(book)assert.equal(r.move.staminaCost,0);
+ assert.equal(p.stamina,book?0:r.s-r.cost);assert.equal(p.spirit,Math.min(p.maxSpirit,(book?r.m-r.cost:0)+weaponSpiritRecoveryAmount(p,item.weaponType)));assert.equal(getWeaponSkill(p),book?'grimoire':'spirit');if(book)assert.equal(r.move.staminaCost,0);
  const loaded=normalizeProfileSave(JSON.parse(JSON.stringify(sanitizeForSave(p))));assert.equal(loaded.equipment.weapon,item.id);assert.equal(getWeaponSkill(loaded),book?'grimoire':'spirit');assert.equal(loaded.equippedGear.weapon.instanceId,p.equippedGear.weapon.instanceId);
 }
-console.log('PASS 168 real light/heavy hits across nine Grimoires and twelve Foci × four owners: correct resource, exactly6 Mana restored per target, distinct proficiency and save identity');
+console.log('PASS 168 real light/heavy hits across nine Grimoires and twelve Foci × four owners: correct resource, percentage Spirit recovery, distinct proficiency and save identity');
 for(const id of ['threadbarePrimer','smokeglassFocus'])for(const heavy of [false,true]){
  const p=actor(id),book=ITEMS[id].weaponType==='grimoire';const r=fire(p,heavy,false);assert.equal(p.spirit,book?r.m-r.cost:r.m);assert.equal(p.stamina,book?r.s:r.s-r.cost);
  const q=actor(id);q.spirit=0;q.stamina=0;const before=JSON.stringify(q);assert(!(heavy?requestHeavyAttack:requestBasicAttack)(q,world(),aim,()=>{},now));assert.equal(q.spirit,0);assert.equal(q.stamina,0);

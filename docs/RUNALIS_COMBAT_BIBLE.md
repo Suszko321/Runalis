@@ -191,12 +191,23 @@ identity: class Mastery gives all owned class forms ×1.05 effectiveness; a fami
 Expertise gives aligned forms ×1.15 and other class forms ×0.90. Universal and
 equipment skills are excluded from class penalties. Other morphs remain usable.
 
-Mastery XP is currently awarded to every distinct assigned hotbar skill from
-earned XP, even if never cast. Hit/use/kill records are statistics. Do not restore
-old contribution-only mastery or award it twice from proficiency distribution.
-Refinement uses `1−exp(−(mastery−1)/45)` with differing damage/range/efficiency
-coefficients by summon, protection, channel, mobility or attack. Channel efficiency
-has a separate 40% asymptotic reduction plus Focus handling.
+Qualifying victories reserve up to 20% of the actor's Combat XP for mastery.
+Effective ability damage and useful support share 18%. Up to five distinct
+abilities assigned at the actor's first contribution share the remaining 2%
+equally, including unused abilities and on weapon-only victories. Summons
+must be assigned at first contribution to qualify for the active share.
+Profession XP and actions outside qualifying encounters grant no mastery.
+Saved mastery ranks, selected morphs and visual evolution milestones carry forward. Levels 1–10 keep
+their XP thresholds. Beyond the opening curve, the exponential component doubles
+every three mastery levels.
+
+Refinement uses `1−exp(−(mastery−1)/45)`. The mastery power ceiling ranges from
+12% for ordinary attacks to 16% for summons and protection. Sustained channel
+savings combine mastery, Concentration and Channeling up to 35%, with separate
+armour handling. Permanent offensive bonuses are grouped additively within the
+ability and hit stages. Each group is linear through +30% and approaches +65%
+with diminishing returns. Authored charges, procs and target vulnerabilities keep
+their own combat rules.
 
 Every future skill/form specification must state its tactical purpose, inputs,
 geometry/cover rules, target limit, startup/contact/recovery, reference and delivered
@@ -330,9 +341,24 @@ Contribution records distinguish weapons, abilities, support and summon ownershi
 Qualifying contributors require participation and proximity within 1,000 world
 units. The credited final actor gets full encounter Combat XP; other qualifying
 actors get half. An idle player is not automatically rewarded. The one-time guard
-prevents duplicate rewards. Attribute allocation is 30% survival, 25% weapon,
-35% hotbar purpose and 10% participation, with documented fallbacks and class
-affinities. Do not redesign these shares while repairing attribution.
+prevents duplicate rewards. The training budget equals that actor's Combat XP.
+Offence receives 40%, worn gear 25%, useful defensive and support actions 20%,
+and a selectable attribute 15%. Empty shares go to the selected priority, which
+defaults to Stamina. Class affinities weight the distribution within the budget.
+Weapon families and ability disciplines determine offence weights. Armour
+contributions use the gear worn when the action happened. Chest, legs and helm
+have weights of four, two and one, with a smaller charm adjustment.
+
+Heavy Armour adds protection and increases the cost of dodges and channels. Light
+Armour improves dodging and sustained casting. Channeling lowers upkeep, Close
+Combat lowers close-range technique costs, and Area Control extends area coverage.
+Equipment inspection shows training affinities. Skills → Progression shows the
+priority and the most recent encounter's training sources.
+
+Ilyra's Orrakai skill stall offers three 12-Ash universal scrolls. Wayfarer Sweep
+trains close combat and area control, Wayfarer Ray trains channeling, and Wayfarer
+Aid gives every class a short-range party heal. The Grimoire weapon tree remains
+independent.
 
 Save schema is 18. Learned skills, slots, selected forms, mastery, bloodlines,
 equipment and appropriate live summons persist. Active channels/charges,
@@ -463,3 +489,6 @@ Common upgrades start at5 gold plus Iron Scrap, with gathered materials added la
 Foci is the category plural. Lens/prism/reliquary weapons remain stamina-driven Foci using their existing Spirit proficiency and Foci Mastery tree. All nine authored books become mana-driven Grimoires with their own Grimoires combat skill and twelve-node Grimoire Mastery tree. Both light and heavy attacks restore6 Mana on each successful enemy hit through the shared weapon pipeline; misses restore nothing, and the two categories never substitute one resource for the other. Mana uses the existing Spirit pool and is labelled Mana (Spirit) for books.
 
 Grimoire XP/scaling, shot perks, mana economy, range, pierce and stagger are independent of Focus shot investments. Existing book users receive their former Spirit proficiency in Grimoires once while retaining Spirit; gear IDs, sprites, projectile motifs, rare/legendary effects, saves and ascension progress remain. No class starter changes. [Detailed category, migration and verification contract](grimoire-category/README.md).
+## Percentage Spirit recovery — primary weapons
+
+The flat6 reward is superseded. Every successful primary-weapon target hit restores a share of the attacker's maximum Spirit: Grimoires40%, Foci30%, other weapon families/unarmed25%. Fractions remain, recovery caps at maximum, and light/heavy use the same percentage. Grimoires still pay Spirit and Foci stamina before attacking; misses and already-dead targets grant nothing. Distinct targets grant separate shares under existing per-target hit guards. Recovery uses the committed attack family, preventing a weapon swap from upgrading a projectile's return. Attack tooltips, equipment inspection and Grimoire tree text share the same formula. [Rules, examples and verification](weapon-spirit-recovery/README.md).

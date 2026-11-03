@@ -1,5 +1,9 @@
 # Foci and Grimoires
 
+Follow-up: [percentage recovery](../weapon-spirit-recovery/README.md) supersedes
+the original flat6 amounts below: Grimoires restore40%, Foci30%, other primary
+weapons25% of maximum Spirit per successful enemy target hit.
+
 Foci is the traditional plural of Focus. The game now separates these weapon
 families while preserving every existing item ID, sprite and projectile motif.
 

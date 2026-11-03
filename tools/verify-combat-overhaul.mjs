@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { createPlayer,chooseClass,migratePlayer } from '../src/player.js';
 import { ABILITIES,ITEMS,getAbilityById } from '../src/data.js';
-import { PRIMARY_WEAPON_SPIRIT_ON_HIT,requestBasicAttack,requestHeavyAttack,updateWeaponCombat } from '../src/combatMoves.js';
+import {requestBasicAttack,requestHeavyAttack,updateWeaponCombat } from '../src/combatMoves.js';
+import {weaponSpiritRecoveryAmount} from '../src/weaponSpiritRecovery.js';
 import { RUNALIS_CLASSES,normalizeAbilitySlots } from '../src/classData.js';
 import { COMBAT_EXPANSION_ABILITIES } from '../src/combatExpansionData.js';
 import { HOTBAR_SLOT_COUNT,normalizeAbilityManagementState,unlockActiveAbility,assignAbilityToSlot,clearAbilitySlot,getAbilityAvailability } from '../src/abilityLoadoutSystem.js';
@@ -71,13 +72,17 @@ test('all four controllers use RB tap/hold/release for weapons and RT tap/hold/r
  }
 });
 
-test('hotbar mastery follows earned XP while combat statistics and disciplines retain attribution',()=>{
+test('contributing abilities split mastery while statistics and disciplines retain attribution',()=>{
  const p=actor('gravecaller'),e=foe(p);p.knownAbilities.push('bloodLance');
  recordEnemyCombatContribution(e,p,'spirit',200,{sourceAbilityId:'graveSpark'});
  recordEnemyCombatContribution(e,p,'spirit',40,{sourceAbilityId:'bloodLance'});
  recordEnemyCombatContribution(e,p,'blade',10,{source:'weapon'});
  grantSharedCombatKillXp(p,e,80,()=>{});
- assert.ok(getAbilityMastery(p,'graveSpark').level>1);assert.equal(getAbilityMastery(p,'bloodLance').xp,0);
+ const bar=Object.values(e.combatContributors)[0].hotbar;
+ for(const [id,damage] of [['graveSpark',200],['bloodLance',40]]){
+  const passive=bar.some(a=>a.id===id)?1.6/bar.length:0;
+  assert.ok(Math.abs(getAbilityMastery(p,id).xp-(passive+14.4*damage/240))<1e-9);
+ }
  assert.equal(getAbilityMastery(p,'graveSpark').lifetimeContributingKills,1);assert.equal(getAbilityMastery(p,'graveSpark').lifetimeKills,0);
  const before=JSON.stringify(p.abilityMastery);grantSharedCombatKillXp(p,e,80,()=>{});assert.equal(JSON.stringify(p.abilityMastery),before);
  assert.ok(p.skillState.skills.spirit.xp>0);
@@ -89,7 +94,7 @@ test('mobility usage records participation without creating mastery before victo
  for(let i=0;i<150;i++)rewardMobilityMastery(p,w,id,160,11+i);
  const xp=getAbilityMastery(p,id).xp;assert.equal(xp,0);rewardMobilityMastery(p,w,id,160,300);assert.equal(getAbilityMastery(p,id).xp,xp);
  w.enemies[0].hp=0;w.enemies.push(foe(p));rewardMobilityMastery(p,w,id,160,301);assert.equal(getAbilityMastery(p,id).xp,0);
- unlockActiveAbility(p,id);p.loadout.abilitySlots[3]=id;grantSharedCombatKillXp(p,w.enemies[1],20);assert.equal(getAbilityMastery(p,id).xp,20);
+ unlockActiveAbility(p,id);p.loadout.abilitySlots[3]=id;grantSharedCombatKillXp(p,w.enemies[1],20);assert.ok(getAbilityMastery(p,id).xp>=3.6-1e-9&&getAbilityMastery(p,id).xp<=4+1e-9);
 });
 test('primary weapon melee and projectile hits restore spirit once per hit, including heavy attacks',()=>{
  const weapons=new Map();for(const [id,item] of Object.entries(ITEMS))if(item.slot==='weapon'&&item.weaponType&&!weapons.has(item.weaponType))weapons.set(item.weaponType,id);
@@ -99,7 +104,7 @@ test('primary weapon melee and projectile hits restore spirit once per hit, incl
   const e=foe(p,284,320,{hp:100000,maxHp:100000});w.enemies=[e];
   assert.ok((heavy?requestHeavyAttack:requestBasicAttack)(p,w,aim,()=>{},t),type);const paid=p.combatState.attackMove.spiritCost||0;
   for(let i=1;i<=120;i++)updateWeaponCombat(p,w,aim,1/60,t+i/60,()=>{});
-  assert.ok(e.hp<e.maxHp,type+' '+heavy+' missed');assert.equal(p.spirit,(type==='grimoire'?50-paid:0)+PRIMARY_WEAPON_SPIRIT_ON_HIT,type+' '+heavy+' reward');
+  assert.ok(e.hp<e.maxHp,type+' '+heavy+' missed');assert.equal(p.spirit,Math.min(p.maxSpirit,(type==='grimoire'?50-paid:0)+weaponSpiritRecoveryAmount(p,type)),type+' '+heavy+' reward');
  }
  const weapon=weapons.get('sword')||weapons.values().next().value;
  for(const scenario of ['miss','cap','dormant','kill']){
@@ -108,12 +113,12 @@ test('primary weapon melee and projectile hits restore spirit once per hit, incl
   if(scenario==='dormant')p.spiritAwakened=false;
   if(scenario!=='miss')w.enemies=[foe(p,284,320,{hp:scenario==='kill'?1:100000,maxHp:100000})];
   assert.ok(requestBasicAttack(p,w,aim,()=>{},t));for(let i=1;i<=90;i++)updateWeaponCombat(p,w,aim,1/60,t+i/60,()=>{});
-  assert.equal(p.spirit,scenario==='cap'?p.maxSpirit:scenario==='kill'||scenario==='dormant'?PRIMARY_WEAPON_SPIRIT_ON_HIT:0,scenario);
+  assert.equal(p.spirit,scenario==='cap'?p.maxSpirit:scenario==='kill'||scenario==='dormant'?weaponSpiritRecoveryAmount(p,ITEMS[weapon].weaponType):0,scenario);
  }
  const p=actor('gravecaller'),w=world(),t=now();p.equipment.weapon=weapon;p.spirit=0;
  w.enemies=[foe(p,284,320),foe(p,288,322)];
  assert.ok(requestBasicAttack(p,w,aim,()=>{},t));for(let i=1;i<=60;i++)updateWeaponCombat(p,w,aim,1/60,t+i/60,()=>{});
- assert.equal(p.spirit,PRIMARY_WEAPON_SPIRIT_ON_HIT*2,'each target should reward one hit');
+ assert.equal(p.spirit,Math.min(p.maxSpirit,weaponSpiritRecoveryAmount(p,ITEMS[weapon].weaponType)*2),'each target should reward one hit');
  const caster=actor('gravecaller'),spellWorld=world();caster.spirit=50;spellWorld.enemies=[foe(caster,300,320)];
  assert.ok(useAbility(0,caster,spellWorld,()=>{},t,aim));const paid=caster.spirit;
  for(let i=1;i<=60;i++)updateCombat(caster,spellWorld,aim,1/60,t+i/60,()=>{});
@@ -135,21 +140,21 @@ test('channel lifecycle: hold release, costs, death, stun, dash, duration, steer
 });
 
 test('every channel ignores legacy cooldowns, drains spirit, restarts immediately and becomes cheaper with mastery',()=>{
- const channels=ABILITIES.filter(a=>a.channelProfile);assert.equal(channels.length,6);
+ const channels=ABILITIES.filter(a=>a.channelProfile&&!a.vampire);assert.ok(channels.some(a=>a.id==="wayfarerRay"));
  for(const a of channels){
-  const p=actor(a.classId),w=world(),t=now();unlockActiveAbility(p,a.id);p.loadout.abilitySlots[3]=a.id;
+  const p=actor(a.classId || 'oathkeeper'),w=world(),t=now();unlockActiveAbility(p,a.id,{autoAssignEmpty:false});assert.ok(assignAbilityToSlot(p,3,a.id).ok,a.id);
   p.cooldowns[a.id]=t+100;p.abilityUseCharges={[a.id]:{rechargeQueue:[t+100,t+200,t+300]}};
-  assert.equal(a.cd,0,a.id);assert.equal(a.costType,'spirit',a.id);assert.ok(a.channelProfile.costPerSecond>=18,a.id);
+  assert.equal(a.cd,0,a.id);assert.equal(a.costType,'spirit',a.id);assert.ok(a.channelProfile.costPerSecond>0,a.id);
   assert.equal(getAbilityUseChargeState(p,a,t).maxCharges,1,a.id);
   p.stamina=50;const novice=applyAbilityMastery(p,a),stamina=p.stamina;
-  assert.ok(useAbility(3,p,w,()=>{},t,aim),a.id+' failed to start');
+  const log=[];assert.ok(useAbility(3,p,w,m=>log.push(m),t,aim),a.id+' failed to start '+log.join(' '));
   assert.equal(p.cooldowns[a.id],undefined,a.id);assert.equal(p.activeChannel.costPerSecond,novice.channelProfile.costPerSecond,a.id);
   const spirit=p.spirit;updateAbilityChannel(p,{...aim,ability3Held:true},.5,t+.5);
   assert.ok(Math.abs(p.spirit-(spirit-novice.channelProfile.costPerSecond*.5))<1e-8,a.id);assert.ok(p.stamina>=stamina,a.id+' spent stamina');
   stopAbilityChannel(p);assert.ok(useAbility(3,p,w,()=>{},t+.51,aim),a.id+' could not restart');stopAbilityChannel(p);
   let last=novice.channelProfile.costPerSecond;
   for(const level of [2,10,30,50,100]){getAbilityMastery(p,a.id,true).level=level;const refined=applyAbilityMastery(p,a);assert.ok(refined.channelProfile.costPerSecond<last,a.id);assert.ok(refined.cost<=novice.cost,a.id);assert.ok(refined.channelProfile.costPerSecond>=a.channelProfile.costPerSecond*.6,a.id);last=refined.channelProfile.costPerSecond;}
-  assert.ok(last<novice.channelProfile.costPerSecond*.7,a.id);
+  assert.ok(last<novice.channelProfile.costPerSecond*.85,a.id);
   p.spirit=0;assert.equal(useAbility(3,p,w,()=>{},t+.6,aim),false,a.id+' started empty');
   p.spirit=20;assert.ok(useAbility(3,p,w,()=>{},t+.7,aim),a.id);p.spirit=0;
   updateAbilityChannel(p,{...aim,ability3Held:true},.3,t+1);assert.equal(p.activeChannel,null,a.id+' did not stop on depletion');
@@ -212,7 +217,7 @@ test('effective shielding qualifies its caster for shared XP without awarding di
  rewardAbilitySupport(buff,w,30,1);assert.equal(getAbilityMastery(p,'lightbringerHaloAegis').xp,0);
  w.enemies=[foe(p)];rewardAbilitySupport(buff,w,0,2);assert.equal(getAbilityMastery(p,'lightbringerHaloAegis').xp,0);
  rewardAbilitySupport(buff,w,30,3);assert.equal(getAbilityMastery(p,'lightbringerHaloAegis').xp,0);
- unlockActiveAbility(p,'lightbringerHaloAegis');p.loadout.abilitySlots[3]='lightbringerHaloAegis';grantSharedCombatKillXp(p,w.enemies[0],20);assert.equal(getAbilityMastery(p,'lightbringerHaloAegis').xp,20);
+ unlockActiveAbility(p,'lightbringerHaloAegis');p.loadout.abilitySlots[3]='lightbringerHaloAegis';grantSharedCombatKillXp(p,w.enemies[0],20);assert.ok(getAbilityMastery(p,'lightbringerHaloAegis').xp>=3.6-1e-9&&getAbilityMastery(p,'lightbringerHaloAegis').xp<=4+1e-9);
 });
 
 test('Mandate triggers once after three attributed blade hits without recursive procs',()=>{
@@ -284,7 +289,7 @@ test('actual healing restores health and qualifies for victory XP without direct
  const p=actor('waverider'),w=world(),t=now(),id='hydromancerMendingCurrent';p.skillState.skills.warding.level=100;p.spirit=1000;p.maxSpirit=1000;
  unlockActiveAbility(p,id);p.loadout.abilitySlots[3]=id;w.enemies=[foe(p)];assert.ok(useAbility(3,p,w,()=>{},t,aim));assert.equal(getAbilityMastery(p,id).xp,0);
  p.hp-=25;p.spirit=1000;p.cooldowns={};assert.ok(useAbility(3,p,w,()=>{},t+1,aim));assert.equal(getAbilityMastery(p,id).xp,0);assert.equal(p.hp,p.maxHp);
- grantSharedCombatKillXp(p,w.enemies[0],20);assert.equal(getAbilityMastery(p,id).xp,20);
+ grantSharedCombatKillXp(p,w.enemies[0],20);assert.ok(getAbilityMastery(p,id).xp>=3.6-1e-9&&getAbilityMastery(p,id).xp<=4+1e-9);
 });
 
 test('repeated vessel casts keep effects, projectiles and swarms within hard limits',()=>{
@@ -298,7 +303,7 @@ test('repeated vessel casts keep effects, projectiles and swarms within hard lim
 // Each technique executes via the production coordinator, not a mock handler.
 for(const a of COMBAT_EXPANSION_ABILITIES) {
  test(`live execution + cleanup: ${a.name}`,()=>{
-   const p=actor(a.classId),w=world(),t=now();unlockActiveAbility(p,a.id,{autoAssignEmpty:false});p.loadout.abilitySlots[3]=a.id;
+   const p=actor(a.classId || 'oathkeeper'),w=world(),t=now();unlockActiveAbility(p,a.id,{autoAssignEmpty:false});p.loadout.abilitySlots[3]=a.id;
    w.enemies=[foe(p,360),foe(p,400,340),foe(p,410,300)];
    assert.ok(useAbility(3,p,w,()=>{},t,aim),a.id);
    assert.equal(getAbilityMastery(p,a.id).lifetimeSuccessfulUses,1);

@@ -11,16 +11,16 @@ const close=(a,b)=>assert.ok(Math.abs(a-b)<=Math.max(1e-6,Math.abs(b)*1e-12),`${
 const baseline=(l,c)=>c.base+c.linear*l+c.quadratic*l*l;
 for(const [id,c] of Object.entries(XP_CURVES)){
  for(let l=1;l<=10;l++)assert.equal(xpRequired(l,c),baseline(l,c),id+' preserves early pace');
- assert(xpRequired(11,c)<baseline(11,c)*1.001,'Ramp starts without a cost cliff');
+ assert(xpRequired(11,c)<baseline(11,c)*1.003,'Ramp starts without a cost cliff');
  let last=0;
  for(let l=1;l<=200;l++){const next=xpRequired(l,c);assert(next>last);last=next;}
- for(const [start,count] of [[1,10],[1,20],[9,8],[10,1],[11,1],[12,15],[35,65],[90,20],[200,25]]){
+ for(const [start,count] of [[1,10],[1,20],[9,8],[10,1],[11,1],[12,15],[35,65],[90,20],[100,25]]){
   let sum=0;for(let l=start;l<start+count;l++)sum+=xpRequired(l,c);
   close(xpForLevels(start,count,c),sum);
   const entry={level:start,xp:0},budget=xpForLevels(start,count,c);
   advanceProgression(entry,budget,c);assert.equal(entry.level,start+count);close(entry.xp,0);
  }
- const ratio=xpRequired(106,c)/xpRequired(99,c);assert(Math.abs(ratio-2)<.04);
+ const ratio=xpRequired(99+c.doubleEvery,c)/xpRequired(99,c);assert(Math.abs(ratio-2)<.04);
  const entry={level:1,xp:.25};advanceProgression(entry,1e15,c);
  assert(entry.level>100&&entry.level<500);assert(entry.xp>=0&&entry.xp<xpRequired(entry.level,c));
  close(xpForLevels(1,entry.level-1,c)+entry.xp,1e15+.25);
@@ -41,6 +41,6 @@ const original={combat:{...p.skillState.combat},skill:{...p.skillState.skills.fi
 let loaded=p;for(let i=0;i<4;i++){
  loaded=normalizeProfileSave(sanitizeForSave(loaded));assert.deepEqual(loaded.skillState.combat,original.combat);assert.deepEqual(loaded.skillState.skills.fishing,original.skill);assert.deepEqual(getAbilityMastery(loaded,'hydromancerWaterTorrent'),original.mastery);assert.equal(getEarnedSkillTreePoints(loaded),original.points);
 }
-console.log('PASS early levels unchanged, smooth increasing costs, seven-level doubling, closed-form totals, exact level awards, numeric extremes, skill points, mastery and repeated save/load.');
+console.log('PASS early levels unchanged, smooth increasing costs, configured doubling periods, closed-form totals, exact level awards, numeric extremes, skill points, mastery and repeated save/load.');
 console.table([10,20,30,50,75,99].map(level=>({level,playerOld:baseline(level,XP_CURVES.combat),playerNew:Math.round(xpRequired(level,XP_CURVES.combat)),masteryOld:baseline(level,XP_CURVES.mastery),masteryNew:Math.round(xpRequired(level,XP_CURVES.mastery)),ordinaryVictories:Math.ceil(xpRequired(level,XP_CURVES.combat)/enemyXPForLevel(level))})));
 

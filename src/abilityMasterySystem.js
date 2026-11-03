@@ -1,6 +1,6 @@
+import {getLivingPartyMembers} from './partySupport.js';
 import {getAbilityExpertise} from './skillExpertiseSystem.js';
 import {applyCombatTempo} from './combatTempo.js';
-import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
 import {resolveSubclassAbility} from './subclassVariants.js';
 import {getAbilityMorphOptions} from './abilityMorphSystem.js';
 import { attributeHandling } from './combatPower.js';
@@ -10,6 +10,7 @@ import { getAbilityById, normalizeAbilityId } from './data.js';
 import { addFloatingText } from './floatingText.js';
 import { playAbilityAudioEvent } from './abilityAudio.js';
 import { getBalancedAbility } from './abilityCombatProfiles.js';
+import {abilityDisciplines, armourHandling} from './trainingProfiles.js';
 
 export const MASTERY_MILESTONES = [5, 10, 20, 30, 50, 100, 250, 500];
 const supportSources = new WeakMap();
@@ -56,20 +57,28 @@ export function getMasteryBonuses(player, abilityId) {
   const refinement = 1 - Math.exp(-Math.max(0, level - 1) / 45);
   const ability=getAbilityById(abilityId), summon=!!ability?.summonType, mobility=!!ability?.mobilityProfile,
     protective=/heal|ward|aegis|guard|litany|mend/i.test(abilityId), channel=!!ability?.channelProfile;
-  return {damage:1 + (summon?.30:protective?.26:channel?.24:mobility?.10:.18) * refinement,
+  return {damage:1 + (summon?.16:protective?.16:channel?.14:mobility?.10:.12) * refinement,
     range:1 + (summon?0:protective?.06:mobility?.08:.12) * refinement,
     efficiency:1 - (mobility?.18:summon?.15:.1) * refinement,
-    channelEfficiency:1 - .4 * (1 - Math.exp(-Math.max(0, level - 1) / 25)),
+    channelEfficiency:1 - .24 * (1 - Math.exp(-Math.max(0, level - 1) / 25)),
     tier:MASTERY_MILESTONES.filter(l => level >= l).length, extraBounce:level >= 20 ? 1 : 0, extraSwarm:level >= 30 ? 1 : 0};
 }
 export function applyAbilityMastery(player, ability) {
   if (!ability) return ability;
   ability=applyCombatTempo(resolveSubclassAbility(player,getBalancedAbility(ability)));
   const bonus = getMasteryBonuses(player, ability.id);
-  const efficiency = (ability.channelProfile ? bonus.channelEfficiency : bonus.efficiency) * (ability.channelProfile ? 1 - .12 * attributeHandling(player,'focus') : 1);
+  const disciplines = abilityDisciplines(ability);
+  const channel = !!ability.channelProfile;
+  const savings = channel
+    ? 1 - bonus.channelEfficiency + .08 * attributeHandling(player,'focus') + .10 * attributeHandling(player,'channeling')
+    : 1 - bonus.efficiency + (disciplines.includes('closeCombat') ? .10 * attributeHandling(player,'closeCombat') : 0);
+  const efficiency = 1 - Math.min(.35, savings) + (channel ? armourHandling(player).channelCost - 1 : 0);
+  const coverage = disciplines.includes('areaControl') ? .12 * attributeHandling(player,'areaControl') : 0;
   return {...ability, damage: Number(ability.damage || 0),
     damageMultiplier: Number(ability.damageMultiplier || 0) * bonus.damage,
-    range: Number(ability.range || 0) * bonus.range, cost:Math.ceil(Number(ability.cost || 0) * efficiency),
+    range: Number(ability.range || 0) * (bonus.range + coverage),
+    ...(ability.radius ? {radius:ability.radius * (1 + coverage)} : {}),
+    cost:Math.ceil(Number(ability.cost || 0) * efficiency),
     channelProfile:ability.channelProfile?{...ability.channelProfile,costPerSecond:ability.channelProfile.costPerSecond*efficiency}:undefined,
     _mastery:bonus,_expertise:getAbilityExpertise(player,ability)};
 }
@@ -91,14 +100,9 @@ export function grantAbilityMasteryXp(player, abilityId, amount, now = performan
   }
   return amount;
 }
-export function awardHotbarMasteryXp(player, amount, now = performance.now()/1000, log = null) {
-  amount = safeXP(amount);
-  if (!player || !amount || !Array.isArray(player.loadout?.abilitySlots)) return 0;
-  const ids = new Set(player.loadout.abilitySlots.slice(0,HOTBAR_SLOT_COUNT).map(normalizeAbilityId).filter(id => getAbilityById(id)));
-  // Every distinct assigned skill receives the earned XP, regardless of casts,
-  // damage, cooldown, summon state, proficiency, or the currently selected morph.
-  for (const id of ids) grantAbilityMasteryXp(player,id,amount,now,log);
-  return ids.size;
+// Compatibility for older callers. Encounter settlement owns live mastery.
+export function awardHotbarMasteryXp() {
+  return 0;
 }
 export function recordAbilitySuccessfulUse(player, id) {
   getAbilityMastery(player, id, true).lifetimeSuccessfulUses++;
@@ -134,30 +138,30 @@ export function recordEnemyAbilityStatistics(enemy, contributions, now = perform
   }
 }
 // Compatibility for older callers. Combat statistics never award mastery XP;
-// live gameplay grants it only through awardHotbarMasteryXp when player XP arrives.
+// Live mastery XP is allocated from qualifying encounter contributions.
 export function awardEnemyAbilityMastery(enemy, contributions, baseXp, now = performance.now()/1000, log = null) {
   return recordEnemyAbilityStatistics(enemy, contributions, now);
 }
 export function getHostileCombatEnemies(player, world) {
   if(world?.safeZone || ['capital','hub','town'].includes(world?.mode))return [];
-  const party=[player,...(player.coop?.players||[])].filter(p=>p&&p.active!==false);
+  const party=getLivingPartyMembers(player);
   const targetIds=new Set(party.flatMap(p=>[p.id,p.profileId,p.sessionSlot,p.slot,p.playerNumber,p.name,...(p.summons||[]).map(s=>s.id)]).filter(v=>v!=null).map(String));
   return (world?.enemies || []).filter(e => e && e.hp > 0 && !e.dead && !e.remove && !e.friendly && !e.trainingDummy &&
     Math.hypot(e.x-player.x,e.y-player.y) < 650 &&
     ((targetIds.has(String(e.combatTargetId))) ||
       (!e.combatTargetId && (e.aggro > 0 || e.isInCombat || e.awakened))));
 }
-export function rewardCombatPurpose(player, world, id, amount, now, log = null) {
+export function rewardCombatPurpose(player, world, id, amount, now, log = null, purpose = 'support') {
   const enemies = getHostileCombatEnemies(player,world);
   if (!enemies.length || !(amount > 0)) return 0;
-  recordSupportContribution(player,enemies,id,amount);
+  recordSupportContribution(player,enemies,id,amount,purpose);
   // Useful support can qualify the player for shared victory XP. It does not
   // train an individual skill or create mastery XP before an XP reward arrives.
   return 0;
 }
 export function rewardMobilityMastery(player,world,id,distance,now,log=null) {
   if (distance < 28) return 0;
-  return rewardCombatPurpose(player,world,id,4,now,log);
+  return rewardCombatPurpose(player,world,id,4,now,log,'mobility');
 }
 
 // Keep caster references in ephemeral state, including shields cast on allies.

@@ -1,6 +1,6 @@
 import { XP_CURVES, xpRequired, xpForLevels, advanceProgression, safeXP, safeLevel } from './progressionMath.js';
 import { affinityMultiplier, getClassAffinities } from './progressionProfiles.js';
-import { awardHotbarMasteryXp } from './abilityMasterySystem.js';
+
 // skills.js
 // Runalis infinite skill + combat level system.
 //
@@ -20,6 +20,11 @@ import { awardHotbarMasteryXp } from './abilityMasterySystem.js';
 // -----------------------------------------------------------------------------
 
 export const RUNALIS_SKILLS = {
+  lightArmour: {id:'lightArmour',name:'Light Armour',shortName:'LGT',type:'combat',description:'Train in cloth and leather. Improves dodge and channel efficiency in light equipment.'},
+  heavyArmour: {id:'heavyArmour',name:'Heavy Armour',shortName:'HVY',type:'combat',description:'Train in plate and mail. Improves protection while wearing heavy equipment.'},
+  channeling: {id:'channeling',name:'Channeling',shortName:'CHN',type:'combat',description:'Train through useful sustained casts. Reduces channel upkeep.'},
+  closeCombat: {id:'closeCombat',name:'Close Combat',shortName:'CQC',type:'combat',description:'Train through close-range abilities. Improves their resource efficiency.'},
+  areaControl: {id:'areaControl',name:'Area Control',shortName:'AOE',type:'combat',description:'Train through useful area abilities. Improves coverage.'},
   grimoire: {
     id:'grimoire',name:'Grimoires',shortName:'GRM',type:'combat',dormantName:'Untrained',
     description:'Book-bound weapon mastery. Grimoire light and heavy attacks spend Mana (Spirit); successful enemy hits restore Mana like other weapons.',
@@ -202,13 +207,13 @@ export const RUNALIS_SKILLS = {
 Object.assign(RUNALIS_SKILLS, {
   scythe: { id:'scythe', name:'Scythes', shortName:'SCY', type:'combat', dormantName:'Untrained', description:'Reaping arcs, hooked attacks and momentum with scythes.', primaryVerb:'Reap' },
   summoning: { id:'summoning', name:'Summoning', shortName:'SUM', type:'combat', dormantName:'Untrained', description:'Universal companion proficiency. Sustained summon loadouts and useful companion combat train this discipline.', primaryVerb:'Call' },
-  focus: { id:'focus', name:'Focus', shortName:'FOC', type:'combat', dormantName:'Untrained', description:'Magical control: faster charge buildup and more efficient sustained channels.', primaryVerb:'Concentrate' },
+  focus: { id:'focus', name:'Concentration', shortName:'FOC', type:'combat', dormantName:'Untrained', description:'Magical control: faster charge buildup and more efficient sustained channels.', primaryVerb:'Concentrate' },
   dexterity: { id:'dexterity', name:'Dexterity', shortName:'DEX', type:'combat', dormantName:'Untrained', description:'Physical handling: modest attack cadence and dodge efficiency.', primaryVerb:'React' }
 });
 
 export const WEAPON_COMBAT_SKILL_IDS = ['blade', 'blunt', 'scythe', 'archery', 'spirit', 'warding', 'summoning','grimoire'];
 export const SURVIVAL_COMBAT_SKILL_IDS = ['defence', 'hitpoints', 'stamina', 'focus', 'dexterity'];
-export const COMBAT_SKILL_IDS = [...WEAPON_COMBAT_SKILL_IDS, ...SURVIVAL_COMBAT_SKILL_IDS];
+export const COMBAT_SKILL_IDS = [...WEAPON_COMBAT_SKILL_IDS, ...SURVIVAL_COMBAT_SKILL_IDS, 'lightArmour', 'heavyArmour', 'channeling', 'closeCombat', 'areaControl'];
 
 export const CLASS_SKILL_LINKS = {
   oathkeeper: {
@@ -493,7 +498,6 @@ export function addPlayerSkillXP(player, skillId, amount) {
   const adjusted = calculateSkillXpGain(player, skillId, amount);
 
   const result = addSkillXP(player.skillState, skillId, adjusted);
-  awardHotbarMasteryXp(player,result.xpAdded);
   return result;
 }
 
@@ -547,7 +551,6 @@ export function addCombatXP(player, amount, options = {}) {
   migrateSkillState(player);
   const result = advanceProgression(player.skillState.combat, amount, XP_CURVES.combat);
   player.combatLevel = player.skillState.combat.level;
-  awardHotbarMasteryXp(player,result.xpAdded,performance.now()/1000,options.log);
   return result;
 }
 

@@ -1,99 +1,124 @@
 import assert from 'node:assert/strict';
-import { createPlayer, chooseClass, gainXp } from '../src/player.js';
-import { addCombatXP, addPlayerSkillXP } from '../src/skills.js';
-import { getAbilityMastery, awardHotbarMasteryXp, rewardCombatPurpose, recordAbilitySuccessfulUse, recordAbilityDamage, recordEnemyAbilityStatistics, awardEnemyAbilityMastery, rewardMobilityMastery } from '../src/abilityMasterySystem.js';
-import { ABILITIES, normalizeAbilityId } from '../src/data.js';
-import { HOTBAR_SLOT_COUNT } from '../src/hotbarConfig.js';
-import { recordEnemyCombatContribution, grantSharedCombatKillXp } from '../src/combatProgression.js';
-import { unlockActiveAbility, assignAbilityToSlot } from '../src/abilityLoadoutSystem.js';
-import { getAbilityMorphOptions, selectAbilityMorph } from '../src/abilityMorphSystem.js';
-import { XP_CURVES, xpForLevels } from '../src/progressionMath.js';
-import { affinityMultiplier } from '../src/progressionProfiles.js';
-import { sanitizeForSave } from '../src/gameSave.js';
-import { normalizeProfileSave } from '../src/saveProfiles.js';
+import {createPlayer, chooseClass, gainXp} from '../src/player.js';
+import {addCombatXP, addPlayerSkillXP} from '../src/skills.js';
+import {getAbilityMastery, grantAbilityMasteryXp} from '../src/abilityMasterySystem.js';
+import {recordEnemyCombatContribution, grantSharedCombatKillXp} from '../src/combatProgression.js';
+import {recordSupportContribution, recordDefensiveTraining} from '../src/encounterLedger.js';
+import {offensiveBonusMultiplier} from '../src/combatPower.js';
+import {armourHandling, weaponTraining} from '../src/trainingProfiles.js';
+import {ITEMS} from '../src/data.js';
+import {XP_CURVES, xpForLevels} from '../src/progressionMath.js';
+import {sanitizeForSave} from '../src/gameSave.js';
+import {normalizeProfileSave} from '../src/saveProfiles.js';
 
-const ids=['hydromancerWaterTorrent','hydromancerMendingCurrent','hydromancerBubbleWard','summonWolf'];
-const actor=(name='test')=>{const p=createPlayer(name);chooseClass(p,'waverider');Object.assign(p,{id:name,x:260,y:320});
-  for(const [slot,id] of ids.entries()){unlockActiveAbility(p,id,{autoAssignEmpty:false});assert.ok(assignAbilityToSlot(p,slot,id).ok);}
-  return p;};
-const foe=p=>({id:'foe',name:'Target',x:290,y:320,hp:100,maxHp:100,xp:20,level:1,aggro:3,combatTargetId:p.id,combatTargetKind:'player'});
-const total=(p,id)=>{const m=getAbilityMastery(p,id);return xpForLevels(1,m.level-1,XP_CURVES.mastery)+m.xp;};
-const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
-const test=(name,fn)=>{fn();console.log('PASS '+name);};
+const ray = 'wayfarerRay', aid = 'wayfarerAid', sweep = 'wayfarerSweep';
+const hotbar = [ray, aid, sweep, 'summonWolf', 'block'];
+function actor(slot) {
+  const p = createPlayer('P' + slot);
+  chooseClass(p, 'classless');
+  Object.assign(p, {slot, x:260, y:320});
+  p.loadout.abilitySlots = [...hotbar];
+  return p;
+}
+const foe = () => ({name:'Target', x:290, y:320, hp:100, maxHp:100, xp:100});
+function hit(enemy, player, id) {
+  recordEnemyCombatContribution(enemy, player, 'blade', 40, id ? {sourceAbilityId:id} : {source:'weapon'});
+}
+function total(player, id) {
+  const m = getAbilityMastery(player,id);
+  return xpForLevels(1,m.level-1,XP_CURVES.mastery) + m.xp;
+}
+const awards = p => Object.fromEntries(p.lastCombatReward.awards.map(a => [a.skillId,a.amount]));
+const close = (a,b) => assert.ok(Math.abs(a-b)<1e-6, a + ' != ' + b);
 
-test('weapon-only victory trains every unused attack, heal, shield and inactive summon exactly once',()=>{
- const p=actor(),e=foe(p);recordEnemyCombatContribution(e,p,'blade',100,{source:'weapon'});grantSharedCombatKillXp(p,e,20);
- assert.equal(p.summons.length,0);
- for(const id of ids){close(total(p,id),20);assert.equal(getAbilityMastery(p,id).lifetimeSuccessfulUses,0);}
- close(p.lastCombatReward.awards.reduce((s,a)=>s+a.base,0),20);
- const before=JSON.stringify(p.abilityMastery);grantSharedCombatKillXp(p,e,20);assert.equal(JSON.stringify(p.abilityMastery),before);
-});
-test('quest and profession XP trains the hotbar using the actual earned amount including affinity',()=>{
- const p=actor();let expected=0;
- for(const skill of ['warding','renown','woodcutting','fishing','crafting']){gainXp(p,skill,10);expected+=10*affinityMultiplier(p,skill);for(const id of ids)close(total(p,id),expected);}
- assert.equal(getAbilityMastery(p,'hydromancerRiptideStep').xp,0);
-});
-test('co-op support and final-hit XP trains each participant hotbar at their own reward rate',()=>{
- const a=actor('first'),b=actor('final'),support=actor('support'),idle=actor('idle'),e=foe(a),w={mode:'dungeon',enemies:[e]};support.coop={players:[a,b]};
- recordEnemyCombatContribution(e,a,'warding',60,{sourceAbilityId:ids[0]});
- rewardCombatPurpose(support,w,ids[1],30,1);for(const id of ids)close(total(support,id),0);
- recordEnemyCombatContribution(e,b,'blade',40,{source:'weapon'});grantSharedCombatKillXp(b,e,20);
- for(const id of ids){close(total(a,id),10);close(total(b,id),20);close(total(support,id),10);close(total(idle,id),0);}
- assert.equal(getAbilityMastery(a,ids[0]).lifetimeContributingKills,1);
-});
-test('XP uses the current assigned skills; removed skills stop training and new skills need no cast',()=>{
- const p=actor(),e=foe(p);recordEnemyCombatContribution(e,p,'blade',100,{source:'weapon'});
- unlockActiveAbility(p,'hydromancerRiptideStep',{autoAssignEmpty:false});assert.ok(assignAbilityToSlot(p,0,'hydromancerRiptideStep').ok);
- grantSharedCombatKillXp(p,e,20);close(total(p,ids[0]),0);close(total(p,'hydromancerRiptideStep'),20);
-});
-test('empty bars, duplicate aliases, invalid IDs and extra slots cannot multiply rewards',()=>{
- const p=actor();p.loadout.abilitySlots=['thornLash','vineWhip','thornbinderThornLash','invalid',null,'summonWolf'];
- assert.equal(awardHotbarMasteryXp(p,10),1);close(total(p,'thornbinderThornLash'),10);close(total(p,'summonWolf'),0);
- p.loadout.abilitySlots=Array(5).fill(null);awardHotbarMasteryXp(p,10);close(total(p,'thornbinderThornLash'),10);
-});
-test('player XP entry points train fractional XP and reject zero, negative, nonfinite or invalid awards',()=>{
- const p=actor();addCombatXP(p,.5);const r=addPlayerSkillXP(p,'warding',.25);for(const id of ids)close(total(p,id),.5+r.xpAdded);
- const before=JSON.stringify(p.abilityMastery);
- for(const amount of [0,-10,NaN,Infinity]){addCombatXP(p,amount);addPlayerSkillXP(p,'warding',amount);gainXp(p,'fishing',amount);}
- addPlayerSkillXP(p,'invalid',30);assert.equal(JSON.stringify(p.abilityMastery),before);
-});
-test('unused skills cross mastery levels, unlock morphs and preserve shared progress through saves',()=>{
- const p=actor(),id=ids[0],first=getAbilityMorphOptions(p,id).find(o=>o.id!=='base');assert.ok(first&&!first.unlocked);
- const amount=xpForLevels(1,first.requiredMastery-1,XP_CURVES.mastery);addCombatXP(p,amount);
- assert.equal(getAbilityMastery(p,id).level,first.requiredMastery);assert.ok(selectAbilityMorph(p,id,first.id).ok);
- addCombatXP(p,7);close(total(p,id),amount+7);assert.equal(getAbilityMastery(p,id).lifetimeSuccessfulUses,0);
- const loaded=normalizeProfileSave(sanitizeForSave(p));for(const skill of ids)close(total(loaded,skill),total(p,skill));
- assert.equal(loaded.abilityMorphs[id],first.id);gainXp(loaded,'fishing',3);for(const skill of ids)close(total(loaded,skill),total(p,skill)+3);
-});
-test('large XP awards train all assigned skills equally without usage or cooldown gates',()=>{
- const p=actor();p.cooldowns=Object.fromEntries(ids.map(id=>[id,performance.now()/1000]));
- addCombatXP(p,1000000);for(const id of ids){close(total(p,id),1000000);assert.ok(getAbilityMastery(p,id).level>20);assert.equal(getAbilityMastery(p,id).lifetimeSuccessfulUses,0);}
-});
-test('every class, scroll, equipment and universal skill trains without use, only while assigned',()=>{
- const all=[...new Set(ABILITIES.map(a=>normalizeAbilityId(a.id)))];
- for(let offset=0;offset<all.length;offset+=HOTBAR_SLOT_COUNT){
-  const p=createPlayer('All skills'),batch=all.slice(offset,offset+HOTBAR_SLOT_COUNT);
-  p.loadout.abilitySlots=Array.from({length:HOTBAR_SLOT_COUNT},(_,i)=>batch[i]||null);
-  addCombatXP(p,60);
-  for(const id of all){close(total(p,id),batch.includes(id)?60:0);assert.equal(getAbilityMastery(p,id).lifetimeSuccessfulUses,0);}
-  p.loadout.abilitySlots=Array(HOTBAR_SLOT_COUNT).fill(null);addCombatXP(p,90);
-  for(const id of batch)close(total(p,id),60);
- }
- console.log(`Verified ${all.length} skills across all hotbar slots.`);
-});
-test('casting, summon damage, kill statistics, healing and movement never directly train skills',()=>{
- const p=actor(),e=foe(p),w={mode:'dungeon',enemies:[e]};
- const summons=ABILITIES.filter(a=>a.summonType).map(a=>a.id);
- const all=[...new Set([...ids,...summons])];
- // Removed summons may continue fighting, but their mastery must stay unchanged.
- for(const id of all){
-  recordAbilitySuccessfulUse(p,id);recordAbilityDamage(p,id,5000);
-  recordEnemyAbilityStatistics({...e,lastDamagedByActorId:p.id},[{actor:p,actorId:p.id,playerParticipation:true,abilities:{[id]:5000},lastAbilityId:id}],10);
-  awardEnemyAbilityMastery({...e},[{actor:p,playerParticipation:true,abilities:{[id]:5000}}],1000000,10);
-  rewardCombatPurpose(p,w,id,5000,10);rewardMobilityMastery(p,w,id,160,10);
-  close(total(p,id),0);assert.equal(getAbilityMastery(p,id).level,1);
- }
- addCombatXP(p,25);
- for(const id of all)close(total(p,id),ids.includes(id)?25:0);
-});
-console.log('Hotbar mastery verification complete.');
+const idle = actor(4), basic = foe();
+addCombatXP(idle,100);
+addPlayerSkillXP(idle,'warding',100);
+gainXp(idle,'fishing',100);
+for (const id of hotbar) close(total(idle,id),0);
+hit(basic,idle);
+grantSharedCombatKillXp(idle,basic,100);
+for (const id of hotbar) close(total(idle,id),.4);
+
+for (let finisher=0; finisher<4; finisher++) {
+  const players = [1,2,3,4].map(actor);
+  const [first, healer, tank, ranged] = players;
+  const enemy = foe();
+  hit(enemy,first,sweep);
+  recordSupportContribution(healer,[enemy],aid,30);
+  recordDefensiveTraining(enemy,tank,'block',25);
+  hit(enemy,ranged,ray);
+  const final = players[finisher];
+  hit(enemy,final);
+  grantSharedCombatKillXp(final,enemy,100);
+  for (const p of players) {
+    const reward = p===final ? 100 : 50;
+    close(p.lastCombatReward.combatXP,reward);
+    close(Object.values(awards(p)).reduce((a,b)=>a+b,0),reward);
+    const used = new Map([[first,sweep],[healer,aid],[ranged,ray]]).get(p);
+    for (const id of hotbar) close(total(p,id),reward*.02/5+(used===id?reward*.18:0));
+  }
+  assert(awards(tank).defence>0);
+  const saved = JSON.stringify(players.map(p=>p.abilityMastery));
+  grantSharedCombatKillXp(final,enemy,100);
+  assert.equal(JSON.stringify(players.map(p=>p.abilityMastery)),saved);
+}
+
+const p = actor(1), e = foe();
+hit(e,p,ray);
+recordSupportContribution(p,[e],aid,10);
+p.loadout.abilitySlots = ['summonDemon',null,null,null,null];
+recordEnemyCombatContribution(e,p,'summoning',50,{source:'summon',sourceAbilityId:'summonDemon'});
+grantSharedCombatKillXp(p,e,100);
+close(total(p,ray),14.8);
+close(total(p,aid),4);
+close(total(p,sweep),.4);
+close(total(p,'summonDemon'),0);
+for (const flag of ['trainingDummy','friendly','rewardSuppressed','summonedByBoss','summonedBy']) {
+  const enemy = {...foe(), [flag]:true};
+  hit(enemy,p,ray);
+  grantSharedCombatKillXp(p,enemy,100);
+  close(total(p,ray),14.8);
+}
+
+const plate = Object.values(ITEMS).find(i=>i.type==='armour' && /plate/i.test(i.name));
+const cloth = Object.values(ITEMS).find(i=>i.type==='armour' && /robe/i.test(i.name));
+assert(plate && cloth);
+const malformed = actor(1), malformedFoe = foe();
+malformed.loadout.abilitySlots = ['thornLash','vineWhip',null,'invalid','block',ray];
+hit(malformedFoe,malformed);
+grantSharedCombatKillXp(malformed,malformedFoe,100);
+close(total(malformed,'thornbinderThornLash'),1);
+close(total(malformed,'block'),1);
+close(total(malformed,ray),0);
+
+const armoured = actor(1), training = foe();
+armoured.equipment.chest = plate.id;
+const heavy = armourHandling(armoured);
+armoured.skillState.trainingPriority = 'spirit';
+recordEnemyCombatContribution(training,armoured,'grimoire',50,{source:'weapon',weaponType:'grimoire'});
+armoured.equipment.chest = cloth.id;
+const light = armourHandling(armoured);
+grantSharedCombatKillXp(armoured,training,100);
+assert(heavy.protection>light.protection && heavy.dodgeCost>light.dodgeCost && heavy.channelCost>light.channelCost);
+assert(awards(armoured).heavyArmour>0 && !awards(armoured).lightArmour);
+assert(awards(armoured).grimoire>0 && awards(armoured).spirit>awards(armoured).focus);
+assert(armoured.lastCombatReward.awards.some(a=>a.skillId==='spirit'&&a.sources.includes('Priority')));
+assert(weaponTraining('warding','staff').spirit>0 && weaponTraining('spirit','spiritFocus').focus>0);
+assert(weaponTraining('blunt','mace').defence>0 && weaponTraining('scythe','scythe').dexterity>0);
+assert.equal(normalizeProfileSave(sanitizeForSave(armoured)).skillState.trainingPriority,'spirit');
+
+for (const level of [10,25,47,75]) {
+  const specialist = actor(1), target = {...foe(), xp:xpForLevels(1,level-1,XP_CURVES.combat)};
+  hit(target,specialist,ray);
+  grantSharedCombatKillXp(specialist,target,target.xp);
+  assert.equal(specialist.skillState.combat.level,level);
+  if (level===47) assert.equal(getAbilityMastery(specialist,ray).level,29);
+  console.log('Combat Level',level,'single-ability Mastery',getAbilityMastery(specialist,ray).level);
+}
+const veteran = actor(1);
+grantAbilityMasteryXp(veteran,ray,xpForLevels(1,69,XP_CURVES.mastery));
+assert.equal(getAbilityMastery(normalizeProfileSave(sanitizeForSave(veteran)),ray).level,70);
+close(offensiveBonusMultiplier(.1,.15),1.25);
+assert(offensiveBonusMultiplier(.4,.4,.4)<1.65);
+console.log('PASS four-player rewards, all five hotbar slots, fixed XP, contribution and passive mastery, gear snapshots, priority saves, legacy ranks and diminishing bonuses.');

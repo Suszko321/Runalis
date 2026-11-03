@@ -17,7 +17,11 @@ export function gearAcquisitionReason(player,id,qty=1,metadata={}){
  if(GEAR_RARITIES[canonicalGearRarity(metadata.gearRarity||ITEMS[id].rarity)].rank>=4&&Number(player?.combatLevel||1)<50)return 'Combat Level 50 is required to obtain Mythical or Primordial gear.';
  return '';
 }
-export function equippedGearItem(player,slot){const id=player?.equipment?.[slot];return instanceGearItem(ITEMS[id],player?.equippedGear?.[slot]);}
+export function equippedGearItem(player,slot){
+ const ref=player?.equipment?.[slot];
+ const id=typeof ref==='object'?ref?.id:ref;
+ return instanceGearItem(ITEMS[id],player?.equippedGear?.[slot]);
+}
 export function gearRewardReason(player,rewards=[]){
  let reserved=0;
  for(const reward of rewards){const [id,qty=1]=Array.isArray(reward)?reward:[reward?.itemId,reward?.qty||1];

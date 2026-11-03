@@ -1,3 +1,4 @@
+import {recordDefensiveTraining} from './encounterLedger.js';
 import {getTauntTarget} from './tankTaunt.js';
 import { getArmour } from './player.js';
 import { rewardAbilitySupport } from './abilityMasterySystem.js';
@@ -1008,6 +1009,7 @@ export function applyTargetDamage(enemy, target, damage, world, log, options = {
   }
 
   if (!targetIsSummon && isDodgeInvulnerable(target)) {
+    if(!world || canEnemyHitTarget(enemy,target,world))recordDefensiveTraining(damageSource,target,'dodge',rawDamage);
     addFloatingText(target, 'Evade', {
       color: '#d9f7ff',
       ttl: 0.48,

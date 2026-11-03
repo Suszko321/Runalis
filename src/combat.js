@@ -29,7 +29,7 @@ import {getTierStatBonus} from './equipmentProgressionSystem.js';
 import {applyMythicalAbilityModifiers,applyMythicalWolf,getMythicalSetCounts} from './mythicalEquipmentSystem.js';
 import {synchronizeEquipmentBoundSkills} from './equipmentBoundSkills.js';
 import { recordSupportContribution } from './encounterLedger.js';
-import { progressionPower, equipmentCombatPower, summonEquipmentPower, equipmentDamageMultiplier } from './combatPower.js';
+import { progressionPower, equipmentCombatPower, summonEquipmentPower, equipmentDamageMultiplier, offensiveBonusMultiplier } from './combatPower.js';
 import {defensiveProtection,calculateBubbleWardDuration,calculateBubbleWardFlatAbsorb} from './protectionStats.js';
 import { getEquipmentStatBonuses } from './setBonusSystem.js';
 import { levelStat } from './progressionMath.js';
@@ -6436,8 +6436,8 @@ function attackSummonTarget(summon, target, player, world, log, now = performanc
     summon.summonPath === 'evolved' &&
     Number(summon.elderDevourCooldown || 0) <= 0;
   const summonAbility=resolveAbilityMorph(player,summon.sourceAbilityId||summon.summonAbilityId||getSummonAbilityIdForKind(summon.kind),summon.summonMorph==='base'?null:summon.summonMorph);
-  const summonMastery=(applyAbilityMastery(player,summonAbility)?._mastery?.damage||1)*getAbilityEffectiveness(player,summonAbility);
-  let damage = Math.ceil((summon.damage || 5) * (1 + Number(getBloodlineCombatModifiers(player).abilityDamagePct || 0)/100) * summonMastery * (empowered ? 1.25 : 1) * (elderDevour ? 1.75 : 1));
+  const summonMastery = offensiveBonusMultiplier((applyAbilityMastery(player,summonAbility)?._mastery?.damage || 1)-1, getAbilityEffectiveness(player,summonAbility)-1, Number(getBloodlineCombatModifiers(player).abilityDamagePct || 0)/100);
+  let damage = Math.ceil((summon.damage || 5) * summonMastery * (empowered ? 1.25 : 1) * (elderDevour ? 1.75 : 1));
   const procPower=damage;
   damage=Math.ceil(damage*equipmentDamageMultiplier(player,target,
     ['greaterLich','lich'].includes(summon.kind)?'necrotic':summon.kind==='thornbeast'?'nature':null));
@@ -6749,88 +6749,37 @@ function damageEnemyDirect(player, world, enemy, damage, skill, log, options = {
   let finalDamage = options.bleedSnapshot?Math.max(0,Number(damage)||0):Math.max(1, Math.floor(damage || 1));
 
   if(!options.bleedSnapshot){
-  if (options.singleTarget) {
-    finalDamage = Math.ceil(finalDamage * (1 + Math.max(0, treeBonuses.singleTargetDamagePct || 0) / 100));
-  }
-
-  if (options.aoe) {
-    finalDamage = Math.ceil(finalDamage * (1 + Math.max(0, treeBonuses.aoeDamagePct || 0) / 100));
-  }
-
-  if (skill === 'spirit') {
-    finalDamage = Math.ceil(finalDamage * (1 + Math.max(0, treeBonuses.necroticDamagePct || 0) / 100));
-  }
-
-  if (skill === 'warding') {
-    finalDamage = Math.ceil(finalDamage * (1 + Math.max(0, treeBonuses.natureDamagePct || 0) / 100));
-  }
-
-  if (options.sourceName === 'Judgment Smite' || options.sourceName === 'Heavenbreaker Judgment' || options.sourceName === 'Radiant Smite') {
-    finalDamage = Math.ceil(finalDamage * (1 + Math.max(0, treeBonuses.holyDamagePct || 0) / 100));
-  }
-
-  if (options.lightbringer || options.element === 'holy') {
-    finalDamage = Math.ceil(finalDamage * (1 + Math.max(0, treeBonuses.lightbringerDamagePct || 0) / 100));
-  }
-
-  if (
-    options.lightbringer &&
-    enemy.lightbringerHaloBrandUntil &&
-    enemy.lightbringerHaloBrandUntil > performance.now() / 1000
-  ) {
-    finalDamage = Math.ceil(finalDamage * (1 + Math.max(8, treeBonuses.brandedTargetDamagePct || 0) / 100));
-  }
-
   const bloodlineModifiers = getBloodlineCombatModifiers(player);
-
-  if (bloodlineModifiers.abilityDamagePct && options.sourceName) {
-    finalDamage = Math.ceil(finalDamage * (1 + Number(bloodlineModifiers.abilityDamagePct || 0) / 100));
+  const pct = (condition,value) => condition ? Number(value || 0) / 100 : 0;
+  const holy = options.element === 'holy';
+  const water = options.element === 'water';
+  const boss = enemy.isBoss || enemy.bossId || enemy.worldBoss || enemy.bossType;
+  const branded = options.lightbringer && enemy.lightbringerHaloBrandUntil > performance.now() / 1000;
+  const exposed = (isFellhunter(player) || options.fellhunter || options.exploitExposed) && isEnemyExposed(enemy);
+  finalDamage = Math.ceil(finalDamage * equipmentDamageMultiplier(
+    player, options.equipmentScaled ? null : enemy,
+    options.equipmentScaled ? null : options.element || (skill === 'spirit' ? 'necrotic' : skill === 'warding' ? 'nature' : null),
+    pct(options.singleTarget,treeBonuses.singleTargetDamagePct),
+    pct(options.aoe,treeBonuses.aoeDamagePct),
+    pct(skill === 'spirit',treeBonuses.necroticDamagePct),
+    pct(skill === 'warding',treeBonuses.natureDamagePct),
+    pct(holy || ['Judgment Smite','Heavenbreaker Judgment','Radiant Smite'].includes(options.sourceName),treeBonuses.holyDamagePct),
+    pct(options.lightbringer || holy,treeBonuses.lightbringerDamagePct),
+    pct(branded,Math.max(8,treeBonuses.brandedTargetDamagePct || 0)),
+    pct(options.sourceName || vampireSource?.bloodline,bloodlineModifiers.abilityDamagePct),
+    pct(options.element === 'fire',bloodlineModifiers.fireDamagePct),
+    pct(holy,bloodlineModifiers.holyDamagePct),
+    pct(water,treeBonuses.waterDamagePct),
+    pct(skill === 'spirit',bloodlineModifiers.necroticDamagePct),
+    pct(boss,treeBonuses.bossDamagePct),
+    pct(enemy.elite || enemy.modifier,treeBonuses.eliteDamagePct)
+  ));
+  if (water && isEnemySoaked(enemy)) {
+    finalDamage = Math.ceil(finalDamage * (1 + Math.max(0,enemy.waveriderWaterVulnerabilityPct || enemy.hydromancerWaterVulnerabilityPct || 10) / 100));
   }
-
-  if (options.element === 'fire') {
-    finalDamage = Math.ceil(finalDamage * (1 + Number(bloodlineModifiers.fireDamagePct || 0) / 100));
-  }
-
-  if (options.element === 'holy') {
-    finalDamage = Math.ceil(finalDamage * (1 + Number(bloodlineModifiers.holyDamagePct || 0) / 100));
-  }
-
-  if (options.element === 'water') {
-    finalDamage = Math.ceil(finalDamage * (1 + Math.max(0, treeBonuses.waterDamagePct || 0) / 100));
-  }
-
-  if (
-    options.element === 'water' &&
-    isEnemySoaked(enemy)
-  ) {
-    const vulnerability = Math.max(
-      0,
-      enemy.waveriderWaterVulnerabilityPct || enemy.hydromancerWaterVulnerabilityPct || 10
-    );
-    finalDamage = Math.ceil(finalDamage * (1 + vulnerability / 100));
-  }
-
-  if (skill === 'spirit' && bloodlineModifiers.necroticDamagePct) {
-    finalDamage = Math.ceil(finalDamage * (1 + Number(bloodlineModifiers.necroticDamagePct || 0) / 100));
-  }
-
-  if ((enemy.isBoss || enemy.bossId) && treeBonuses.bossDamagePct) {
-    finalDamage = Math.ceil(finalDamage * (1 + Math.max(0, treeBonuses.bossDamagePct || 0) / 100));
-  }
-
-  if ((enemy.elite || enemy.modifier) && treeBonuses.eliteDamagePct) {
-    finalDamage = Math.ceil(finalDamage * (1 + Math.max(0, treeBonuses.eliteDamagePct || 0) / 100));
-  }
-
-  if (
-    (isFellhunter(player) || options.fellhunter || options.exploitExposed) &&
-    isEnemyExposed(enemy)
-  ) {
-    const exposedBonus = Math.max(
-      0,
-      getEnemyExposedBonusPct(enemy) + Math.max(0, Number(treeBonuses.exposedDamagePct || 0))
-    );
-    finalDamage = Math.ceil(finalDamage * (1 + Math.min(38, exposedBonus) / 100));
+  if (exposed) {
+    const vulnerability = Math.max(0,getEnemyExposedBonusPct(enemy) + Math.max(0,Number(treeBonuses.exposedDamagePct || 0)));
+    finalDamage = Math.ceil(finalDamage * (1 + Math.min(38,vulnerability) / 100));
   }
 
   finalDamage = applyLegendaryOutgoingDamage(player, enemy, finalDamage, {
@@ -6843,8 +6792,6 @@ function damageEnemyDirect(player, world, enemy, damage, skill, log, options = {
     singleTarget: options.singleTarget
   }, world, log);
 
-  if(!options.equipmentScaled)finalDamage=Math.ceil(finalDamage*equipmentDamageMultiplier(player,enemy,
-    options.element||(skill==='spirit'?'necrotic':skill==='warding'?'nature':null)));
   }
   finalDamage=mitigateEliteHit(enemy,player,finalDamage,options);
   if(finalDamage<=0)return 0;
@@ -6973,11 +6920,18 @@ function gravecallerLifestealBonus(player,bonuses=getSkillTreeBonuses(player)){
   Number(getEquipmentStatBonuses(player).lifesteal||0)*100+getLegendaryLifestealPct(player);
 }
 export function calculateAbilityDamage(player, ability) {
-  const bonuses = getSkillTreeBonuses(player), bloodline = getBloodlineCombatModifiers(player);
+  const bonuses = getSkillTreeBonuses(player);
   const base = Number(ability.damage || 6) + equipmentCombatPower(player) * .52;
-  return Math.max(1, Math.round(base * (ability.damageMultiplier || 1) * (ability.hellSkill||ability.hunterMorph?hellstalkerDamageInvestment(ability,bonuses):1) * getAbilityEffectiveness(player,ability) *
-    (ability.classId==='fellhunter'?fellhunterAbilityPower(player):progressionPower(player,ability.skill)) * (1 + Math.max(0,bonuses.abilityDamagePct || 0)/100) *
-    (ability.bloodline ? 1 + Number(bloodline.abilityDamagePct || 0)/100 : 1)));
+  const mastery = ability._mastery?.damage || 1;
+  const investment = ability.hellSkill || ability.hunterMorph ? hellstalkerDamageInvestment(ability,bonuses) : 1;
+  const power = ability.classId==='fellhunter' ? fellhunterAbilityPower(player) : progressionPower(player,ability.skill);
+  const bonus = offensiveBonusMultiplier(
+    mastery - 1,
+    investment - 1,
+    getAbilityEffectiveness(player,ability) - 1,
+    Math.max(0,bonuses.abilityDamagePct || 0) / 100
+  );
+  return Math.max(1,Math.round(base * (ability.damageMultiplier || 1) / mastery * power * bonus));
 }
 
 function getSafeAimDirection(player, input = null) {
@@ -7281,6 +7235,16 @@ function resolveAbilitySourceName(name) {
 }
 function combatTechniqueHooks(player,world,log,now,input=null,ability=null) {
   return {now,log,aim:getSafeAimDirection(player,input),power:ability?calculateAbilityDamage(player,ability):0,
+    aid:a=>{
+      const recipients = getLivingPartyMembers(player).filter(member =>
+        member.hp < member.maxHp && Math.hypot(member.x-player.x,member.y-player.y) <= a.range);
+      for (const member of recipients) {
+        member.hp = Math.min(member.maxHp, member.hp + Math.ceil((member.maxHp - member.hp) * .12));
+        addFloatingText(member,'Wayfarer Aid',{color:'#a4d5a6',ttl:.7});
+      }
+      if (recipients.length) spawnWorldEffect(world,{kind:'slash',x:player.x,y:player.y,radius:a.range,color:'#a4d5a6',ttl:.35});
+      return recipients.length > 0;
+    },
     bonuses:()=>getSkillTreeBonuses(player),
     flow:()=>cycleHydromancerFlow(player,now),
     pay:a=>payAbilityCost(player,a),cooldown:a=>startAbilityCooldown(player,a,now),

@@ -1,3 +1,5 @@
+import {armourHandling} from './trainingProfiles.js';
+import {recordDefensiveTraining} from './encounterLedger.js';
 import {isBlockSkillHeld,hasEquippedBlock} from './hotbarConfig.js';
 import { attributeHandling } from './combatPower.js';
 import {getEquipmentStatBonuses} from './setBonusSystem.js';
@@ -253,6 +255,7 @@ export function applyDefensiveDamage(player, incomingDamage, log, attacker = nul
   };
 
   onPlayerBlockedDamage(player, result, attacker, world, log, now);
+  recordDefensiveTraining(attacker,player,'block',damage-result.hpDamage);
   applyBlockReflect(player, result, attacker, world, log, now);
 
   return result;
@@ -308,7 +311,7 @@ function tryStartDash(player, input, now, log) {
   if (state.guardBroken) return false;
 
   const treeBonuses = getSkillTreeBonuses(player);
-  const dashCost = STAMINA_ACTIONS.dash.staminaCost * (1 - .15 * attributeHandling(player,'dexterity')) * (1 - Math.max(0, treeBonuses.dodgeCostReductionPct || 0) / 100) * (1-(getEquipmentStatBonuses(player).dodgeCostReduction||0));
+  const dashCost = STAMINA_ACTIONS.dash.staminaCost * armourHandling(player).dodgeCost * (1 - .15 * attributeHandling(player,'dexterity')) * (1 - Math.max(0, treeBonuses.dodgeCostReductionPct || 0) / 100) * (1-(getEquipmentStatBonuses(player).dodgeCostReduction||0));
 
   if (player.stamina < dashCost) {
     log?.('Not enough stamina to dash.');

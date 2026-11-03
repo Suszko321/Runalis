@@ -4,7 +4,7 @@
 export const XP_CURVES = Object.freeze({
   combat: { base: 100, linear: 45, quadratic: 12, rampStart:10, doubleEvery:7 },
   skill: { base: 90, linear: 55, quadratic: 42, rampStart:10, doubleEvery:7 },
-  mastery: { base: 32, linear: 14, quadratic: 3, rampStart:10, doubleEvery:7 }
+  mastery: { base: 32, linear: 14, quadratic: 3, rampStart:10, doubleEvery:3 }
 });
 export const finiteNumber = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
 export const safeXP = value => Math.min(Number.MAX_SAFE_INTEGER, Math.max(0, finiteNumber(value)));

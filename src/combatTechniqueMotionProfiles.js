@@ -20,4 +20,12 @@ for(const [id,art] of Object.entries(LEGACY_SKILL_ART)) {
  const classId=id.startsWith('oathkeeper')?'oathkeeper':id.startsWith('fellhunter')?'fellhunter':id.startsWith('thornbinder')?'thornbinder':id.startsWith('hydromancer')?'waverider':id.startsWith('lightbringer')?'lightbringer':['graveSpark','summonLich','gravecallerSummonLich','bloodLance','soulSiphon'].includes(id)?'gravecaller':'eldritch';
  profiles[id]=Object.freeze({id:id+'_motion',...art,duration:art.duration*.72,classId,colors:SHARED_SKILL_PALETTES[id]||CLASS_COMBAT_PALETTES[classId],productionTechnique:true});
 }
+for (const [id, poseType, animationFamily] of [
+  ['wayfarerSweep','waterSweep','melee'],
+  ['wayfarerRay','heldConduit','channel'],
+  ['wayfarerAid','waterWard','guard']
+]) {
+  profiles[id] = Object.freeze({id:id+'_motion',poseType,animationFamily,duration:.5,releasePoint:.32,
+    colors:['#c0ccb4','#f4efca','#687e71'],productionTechnique:true});
+}
 export function getCombatTechniqueMotionProfile(id){return profiles[id]||null;}

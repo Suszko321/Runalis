@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { createPlayer, chooseClass, migratePlayer, addItem, gainXp, calculateMaxHp, calculateMaxStamina, calculateMaxSpirit } from '../src/player.js';
 import { ABILITIES, ITEMS, getAbilityById } from '../src/data.js';
-import { CLASS_XP_AFFINITIES, SURVIVAL_ATTRIBUTES, getClassAffinities, abilityProgressionCategories } from '../src/progressionProfiles.js';
+import { CLASS_XP_AFFINITIES, getClassAffinities, abilityProgressionCategories } from '../src/progressionProfiles.js';
 import { createNewSkillState, addSkillXP, addCombatXP, getCombatLevel, getCombatLevelProgress, migrateSkillState } from '../src/skills.js';
 import { XP_CURVES, xpRequired, xpForLevels, advanceProgression } from '../src/progressionMath.js';
 import { progressionPower } from '../src/combatPower.js';
@@ -31,18 +31,20 @@ const now=()=>performance.now()/1000+10;
 const aim={combatAimX:1,combatAimY:0,hasAim:true};
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-7,`${a} != ${b}`);
 
-test('independent Combat XP and all guaranteed survival attributes',()=>{
+test('independent Combat XP with weapon, armour and priority training',()=>{
  const p=actor(),e=foe(p);recordEnemyCombatContribution(e,p,'blade',100,{source:'weapon',weaponType:'sword'});
  grantSharedCombatKillXp(p,e,50);close(getCombatLevelProgress(p).xp,50);
  const combat=getCombatLevel(p);gainXp(p,'warding',1e6);assert.equal(getCombatLevel(p),combat);
- for(const id of SURVIVAL_ATTRIBUTES)assert.ok(p.skillState.skills[id].xp>0,id);
+ assert.ok(p.lastCombatReward.awards.some(a=>a.skillId==='stamina'&&a.sources.includes('Priority')));assert.ok(p.lastCombatReward.awards.some(a=>a.skillId==='blade'&&a.sources.includes('Offence')));
  close(p.lastCombatReward.awards.reduce((s,a)=>s+a.base,0),50);
 });
 test('every playable identity has exactly two distinct +25% affinities',()=>{
  for(const [id,affinities] of Object.entries(CLASS_XP_AFFINITIES)){
   assert.equal(new Set(affinities).size,2);const p=actor(id),e=foe(p);
   recordEnemyCombatContribution(e,p,'blade',100,{source:'weapon'});grantSharedCombatKillXp(p,e,50);
-  for(const a of p.lastCombatReward.awards)close(a.amount,a.base*(getClassAffinities(p).includes(a.skillId)?1.25:1)*(a.skillId==='defence'?1.25:1));
+  const weight = a=>a.base*(getClassAffinities(p).includes(a.skillId)?1.25:1);
+  const total = p.lastCombatReward.awards.reduce((sum,a)=>sum+weight(a),0);
+  for(const a of p.lastCombatReward.awards)close(a.amount,50*weight(a)/total);
  }
  const a=actor('oathkeeper'),b=actor('fellhunter');b.skillState=structuredClone(a.skillState);
  close(progressionPower(a,'blade'),progressionPower(b,'blade'));
@@ -72,7 +74,7 @@ test('summon specialization is locked at encounter entry and slot count cannot i
  recordEnemyCombatContribution(e,p,'blade',80,{source:'weapon'});p.loadout.abilitySlots[0]='summonWolf';
  recordEnemyCombatContribution(e,p,'blade',20,{source:'weapon'});grantSharedCombatKillXp(p,e,100);
  assert.ok(!p.lastCombatReward.awards.some(a=>a.skillId==='summoning'));
- for(const count of [1,4]){const q=actor(),f=foe(q);q.knownAbilities.push('summonWolf');q.loadout.abilitySlots=Array(count).fill('summonWolf');recordEnemyCombatContribution(f,q,'blade',100,{source:'weapon'});grantSharedCombatKillXp(q,f,100);close(q.lastCombatReward.awards.reduce((s,a)=>s+a.base,0),100);assert.ok(q.lastCombatReward.awards.find(a=>a.skillId==='summoning').base>0);}
+ for(const count of [1,4]){const q=actor(),f=foe(q);q.knownAbilities.push('summonWolf');q.loadout.abilitySlots=Array(count).fill('summonWolf');recordEnemyCombatContribution(f,q,'blade',100,{source:'weapon'});grantSharedCombatKillXp(q,f,100);close(q.lastCombatReward.awards.reduce((s,a)=>s+a.base,0),100);assert.ok(!q.lastCombatReward.awards.some(a=>a.skillId==='summoning'));}
 });
 test('starter merchant purchase, read, assignment, duplicates and ownership survive saves for every class',()=>{
  for(const id of Object.keys(CLASS_XP_AFFINITIES)){

@@ -4,6 +4,9 @@ import {normalizeClassId} from './classData.js';
 import { unlockActiveAbility, normalizeAbilityManagementState } from './abilityLoadoutSystem.js';
 
 export const SKILL_SCROLL_OFFERS = Object.freeze([
+  {id:'wayfarerSweepScroll',qty:1,price:12,label:'Scroll: Wayfarer Sweep',detail:'Learn close combat and area control through a sweeping strike.'},
+  {id:'wayfarerRayScroll',qty:1,price:12,label:'Scroll: Wayfarer Ray',detail:'Learn to sustain a directed ray and train Channeling.'},
+  {id:'wayfarerAidScroll',qty:1,price:12,label:'Scroll: Wayfarer Aid',detail:'Learn a modest party heal and train Warding.'},
   { id:'summonWolfScroll', qty:1, price:12, label:'Scroll: Summon Wolf', detail:'Learn a loyal wolf companion. Every class, any level. Read from Inventory → Loot, then assign in Skills → Abilities.' },
   { id:'guardScroll', qty:1, price:18, label:'Scroll: Guard', detail:'Learn an ordinary protective technique. Train Warding through actual protection.' }
 ]);

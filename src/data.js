@@ -2974,6 +2974,9 @@ export const ITEMS = {
 };
 
 Object.assign(ITEMS, {
+  wayfarerSweepScroll: {id:'wayfarerSweepScroll',name:'Scroll: Wayfarer Sweep',type:'scroll',learnsAbility:'wayfarerSweep',rarity:'common',stack:false,value:12},
+  wayfarerRayScroll: {id:'wayfarerRayScroll',name:'Scroll: Wayfarer Ray',type:'scroll',learnsAbility:'wayfarerRay',rarity:'common',stack:false,value:12},
+  wayfarerAidScroll: {id:'wayfarerAidScroll',name:'Scroll: Wayfarer Aid',type:'scroll',learnsAbility:'wayfarerAid',rarity:'common',stack:false,value:12},
   tornHide: {
     id: 'tornHide',
     name: 'Torn Hide',
@@ -3579,6 +3582,18 @@ Object.assign(ITEMS, {
 });
 
 export const ABILITIES = [
+  {id:'wayfarerSweep',name:'Wayfarer Sweep',skill:'closeCombat',unlockLevel:1,role:'melee area',
+    costType:'stamina',cost:12,cd:5,damage:7,damageMultiplier:.95,range:56,radius:56,
+    effectProfile:'wayfarerSweep',disciplines:['closeCombat','areaControl'],
+    progressionCategories:['stamina','dexterity'],desc:'Strike nearby enemies in a broad sweep. Any class can learn it.'},
+  {id:'wayfarerRay',name:'Wayfarer Ray',skill:'channeling',unlockLevel:1,role:'channel',
+    costType:'spirit',cost:4,cd:0,damage:3,damageMultiplier:.48,range:190,
+    effectProfile:'wayfarerRay',disciplines:['channeling'],noUseCharges:true,
+    channelProfile:{mode:'hold',duration:4,tickInterval:.4,movementMode:'slowed',costPerSecond:14},
+    progressionCategories:['spirit','focus'],desc:'Hold to sustain a short ray on the first enemy in its path. Any class can learn it.'},
+  {id:'wayfarerAid',name:'Wayfarer Aid',skill:'warding',unlockLevel:1,role:'support',
+    costType:'spirit',cost:14,cd:10,damage:0,range:120,effectProfile:'wayfarerAid',
+    progressionCategories:['warding','spirit'],desc:'Restore a small share of missing health to nearby party members. Any class can learn it.'},
   {
     id:'block',name:'Block',key:'F',skill:'defence',tree:'defence',unlockLevel:1,
     role:'defence',heldBlock:true,costType:'stamina',cost:0,cd:0,damage:0,range:0,

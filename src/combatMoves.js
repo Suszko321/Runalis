@@ -15,6 +15,7 @@ import { weaponProficiency } from './progressionProfiles.js';
 import {FOCUS_PROJECTILE_STYLES} from './focusProjectileData.js';
 import {equippedGearItem} from './gearItemization.js';
 import {instanceGearItem} from './gearRarity.js';
+import {weaponSpiritRecoveryAmount} from './weaponSpiritRecovery.js';
 import { getMeleeLightCombo } from './meleeLightCombos.js';
 // combatMoves.js
 // Runalis weapon moves, combos, aim direction, melee hitboxes, bow projectiles,
@@ -80,8 +81,8 @@ import {
   recordEnemyCombatContribution
 } from './combatProgression.js';
 
+// Legacy export for external tools; combat and UI use weaponSpiritRecovery.js.
 export const PRIMARY_WEAPON_SPIRIT_ON_HIT = 6;
-
 const DEFAULT_COMBAT_STATE = {
   attacking: false,
   attackId: 0,
@@ -763,6 +764,7 @@ function requestWeaponAttack(player, world, input, log, now, options = {}) {
   const modifiedBaseMove = applyWeaponMoveModifiers(player, baseMove, weapon, weaponType);
   let move = heavyRequested ? buildUniversalHeavyMove(player, modifiedBaseMove, weapon, weaponType) : modifiedBaseMove;
   move = applyMythicalMeleeModifiers(player,applyCombinationFinisher(move,weaponType,sequence),weaponType);
+  move={...move,weaponType};
 
   if(weaponType==='grimoire'){
     move={...move,spiritCost:move.staminaCost,staminaCost:0};
@@ -1704,7 +1706,7 @@ function applyEnemyDamage(player, world, enemy, damagePacket, move, state, log) 
   // Ability, summon and damage-over-time hits use separate damage paths.
   if (contributionDamage > 0) {
     player.spirit = Math.min(Math.max(0, player.maxSpirit || 0),
-      Math.max(0, player.spirit || 0) + PRIMARY_WEAPON_SPIRIT_ON_HIT);
+      Math.max(0, player.spirit || 0) + weaponSpiritRecoveryAmount(player,damagePacket.weaponType));
     if(move.kind!=='projectile')onOathkeeperMeleeContact(player,enemy,world,performance.now()/1000);
     onFellhunterWeaponContact(player,enemy,world,contributionDamage,performance.now()/1000);
   }

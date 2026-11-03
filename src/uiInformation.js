@@ -1,6 +1,7 @@
 import {ITEMS,getAbilityById,getAbilitySkillRequirement} from './data.js';
 import {weaponProficiency} from './progressionProfiles.js';
 import {RUNALIS_SKILLS} from './skills.js';
+import {weaponSpiritRecoveryLabel} from './weaponSpiritRecovery.js';
 import {requiredSkillEquipment} from './equipmentBoundSkills.js';
 import {SUBCLASSES} from './subclassData.js';
 import {FELLHUNTER_BASE_INFO} from './fellhunterSkills.js';
@@ -162,7 +163,7 @@ export function abilityScaling(ability) {
  return supports?`${damage}; healing and protection also use Warding and Defence`:damage;
 }
 export function equipmentPurpose(item) {
- if(item?.type==='weapon')return ({mace:'Crushing melee weapon. Three deliberate blows end in a heavy slam; trains Blunt Weapons.',hammer:'Heavy crushing melee weapon; trains Blunt Weapons.',bow:'Ranged weapon for aimed shots and charged heavy attacks.',crossbow:'Ranged weapon for aimed shots and heavy attacks.',grimoire:'Ranged grimoire. Attacks use Mana (Spirit), train Grimoires, and restore 6 Mana on successful enemy hits.',spiritFocus:'Ranged focus. Attacks use Stamina and restore 6 Mana on successful enemy hits.',eldritch:'Ranged conduit; its attacks train Spirit.',scythe:'Melee weapon with sweeping attacks; trains Scythes.',staff:'Melee staff; its strikes train Warding.',spear:'Reach weapon with thrusts and sweeping cuts; trains Warding.'}[item.weaponType]) || 'Melee weapon for close-range light and heavy combinations.';
+ if(item?.type==='weapon')return (({mace:'Crushing melee weapon. Three deliberate blows end in a heavy slam; trains Blunt Weapons.',hammer:'Heavy crushing melee weapon; trains Blunt Weapons.',bow:'Ranged weapon for aimed shots and charged heavy attacks.',crossbow:'Ranged weapon for aimed shots and heavy attacks.',grimoire:'Ranged grimoire. Attacks use Mana (Spirit) and train Grimoires.',spiritFocus:'Ranged focus. Attacks use Stamina.',eldritch:'Ranged conduit; its attacks train Spirit.',scythe:'Melee weapon with sweeping attacks; trains Scythes.',staff:'Melee staff; its strikes train Warding.',spear:'Reach weapon with thrusts and sweeping cuts; trains Warding.'}[item.weaponType]) || 'Melee weapon for close-range light and heavy combinations.')+` Successful enemy hits restore ${weaponSpiritRecoveryLabel(item.weaponType)}.`;
  if(item?.type==='armour')return 'Adds protection against incoming hits.';
  if(item?.type==='trinket')return 'Adds the listed combat bonuses while equipped.';
  if(item?.type==='scroll')return `Read to learn ${getAbilityById(item.learnsAbility)?.name||'its technique'}, then assign it in Abilities.`;

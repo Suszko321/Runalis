@@ -1,4 +1,6 @@
+import {armourTraining, weaponTraining} from './trainingProfiles.js';
 import {vampireOutsideHealing} from './vampireRules.js';
+import {weaponSpiritRecoveryLabel} from './weaponSpiritRecovery.js';
 import {instanceGearItem,GEAR_RARITIES} from './gearRarity.js';
 import {gearBagCount,canCarryGear,gearEquipReason} from './gearItemization.js';
 import {isGearInstanceEquipped,isItemLocked,setItemLocked,inventoryDisposalKey} from './gearServices.js';
@@ -1194,11 +1196,15 @@ export function itemStatBlock(player, item, entry = null) {
 
   if(item.type==='weapon'){
     rows.push(['Strike power',calculateDisplayWeaponDamage(player,item,entry)]);
+    rows.push(['Spirit on enemy hit',weaponSpiritRecoveryLabel(item.weaponType)]);
     rows.push(['Scales with',equipmentScaling(item)]);
     if(item.weaponType==='grimoire')rows.push(['First light shot',`${item.spiritCost??8} Mana (Spirit) before bonuses`]);
     if(item.weaponType==='spiritFocus')rows.push(['First light shot',`${item.staminaCost??8} Stamina before bonuses`]);
     if(item.range)rows.push(['Reach',`${Number((item.range/32).toFixed(1))} tiles`]);
   }
+  const training = item.type === 'weapon' ? weaponTraining(item.primarySkill || item.skill || 'blade',item.weaponType) : armourTraining(item);
+  if (training) rows.push(['Training',Object.keys(training).map(skillLabel).join(' · ')]);
+  if (item.type === 'armour') rows.push(['Handling',training?.heavyArmour ? 'More protection · higher dodge and channel costs' : 'Lower dodge cost · light training improves channel economy']);
   if (item.power && item.type !== 'weapon') rows.push(['Power', item.power]);
   if (item.armour !== undefined && item.type!=='weapon' && Number(item.armour)+upgradeBonus>0) rows.push(['Armour', (Number(item.armour)+upgradeBonus).toFixed(2)]);
   if(item.type==='trinket'&&upgradeBonus>0)rows.push(['Tier power',`+${upgradeBonus.toFixed(2)} offensive power`]);
@@ -1234,7 +1240,8 @@ export function compactItemStatBlock(player, item) {
   if (item.type === 'weapon') {
     rows.push(['Damage', calculateDisplayWeaponDamage(player, item)]);
     if (item.primarySkill) rows.push(['Scaling', skillLabel(item.primarySkill)]);
-    if(item.weaponType==='grimoire')rows.push(['Attack','Grimoire Shot · restores 6 Mana on enemy hit']);
+    rows.push(['Spirit on enemy hit',weaponSpiritRecoveryLabel(item.weaponType)]);
+    if(item.weaponType==='grimoire')rows.push(['Attack','Grimoire Shot']);
     if (item.weaponType === 'spiritFocus') rows.push(['Attack', 'Focus Bolt']);
     rows.push(['Heavy', 'Hold Attack']);
   } else {

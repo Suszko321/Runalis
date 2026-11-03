@@ -698,3 +698,14 @@ memory, security or gameplay readiness claim follows solely from a green build.
   outfit. Physical devices/live transport untested. Initial unbatched native test
   stopped for cache churn; same pair coverage passes batched by torso, without
   changing runtime caches. [Evidence and limits](headgear-compatibility/README.md).
+
+### E48 — Percentage primary weapon Spirit recovery · IMPLEMENTED, feature verified
+
+- Grimoires restore40% maximum Spirit per successful target hit; Foci30%; other primary families/unarmed25%. Recovery remains capped, fractional, attacker-owned and subject to existing target-hit guards. No miss/dead-target refund or cross-resource payment change. Committed family identity now covers ordinary weapon attacks/arrows as well as books/Foci.
+- Shared pure rate/amount/text rule supplies actual combat and hotbar, equipment/help and Grimoire tree descriptions. The old flat numeric export remains compatibility-only, with no runtime/UI use.
+- Passing288 real hit cases covering twelve families, four owners and three Spirit pools, repeat updates, caps/misses/dead targets/cleaves/fractions/weapon swaps;168 Grimoire cases and boss/legendary/practice gear checks. Chromium/WebKit desktop/mobile UI and engineering13/13/build pass. [Evidence and remaining broad-suite/human playtest limits](weapon-spirit-recovery/README.md).
+### E49 — Encounter training and ability mastery · IMPLEMENTED, feature verified
+
+- Fixed-budget progression from effective combat actions, equipment and selected priority. Light Armour, Heavy Armour, Channeling, Close Combat and Area Control give handling benefits. Three universal Wayfarer scrolls broaden class access to these playstyles.
+- Effective abilities share 18% of victory Combat XP as mastery. Five distinct assigned abilities share 2% even on weapon-only victories. Preserved legacy ranks and morphs. At Combat Level 47, a full-hotbar model reaches M29 on the most-used ability. The new cap curves soften permanent damage stacking while retaining conditional combat effects.
+- Four-slot encounter and healing checks, 11-class Wayfarer checks, save and browser tests, Grimoire and Spirit recovery regressions, engineering gate and build verified. Campaign balance and physical-controller use still need playtesting.
