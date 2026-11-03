@@ -768,7 +768,7 @@ function requestWeaponAttack(player, world, input, log, now, options = {}) {
   move={...move,weaponType};
 
   if(weaponType==='grimoire'){
-    move={...move,spiritCost:move.staminaCost,staminaCost:0};
+    move={...move,spiritCost:grimoireAttackManaCost(move.staminaCost),staminaCost:0};
     if(Number(player.spirit||0)<move.spiritCost){log?.('Not enough Mana (Spirit) to cast from this grimoire.');return false;}
     player.spirit-=move.spiritCost;
   }else if (!spendStamina(player, move.staminaCost, 0.5)) {
@@ -1163,6 +1163,10 @@ function getUniversalHeavyPreviewMove(player, weapon, weaponType) {
   const source = selectUniversalHeavySourceMove(moveset, skillLevel) || moveset.moves?.[0] || WEAPON_MOVESETS.unarmed.moves[0];
   const modifiedSource = applyWeaponMoveModifiers(player, source, weapon, weaponType);
   return buildUniversalHeavyMove(player, modifiedSource, weapon, weaponType);
+}
+
+export function grimoireAttackManaCost(cost) {
+  return Math.round(cost * 35) / 100;
 }
 
 function applyWeaponMoveModifiers(player, move, weapon, weaponType) {

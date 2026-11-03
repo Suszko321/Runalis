@@ -1,6 +1,7 @@
 import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
 import {mythicalChannelGeometry} from './mythicalEquipmentSystem.js';
-import { resolveActorCombatAim } from './combatAim.js';
+import { normalizeAimVector, resolveActorCombatAim } from './combatAim.js';
+import {assistAbilityAim} from './abilityAimAssist.js';
 
 // Channel lifecycle and payments only. Damage and visuals are supplied by combat.
 export function startAbilityChannel(player, ability, slot, now, aim, extra = {}) {
@@ -29,7 +30,7 @@ export function stopAbilityChannel(player, reason = 'cancelled', onEnd = null) {
   onEnd?.(channel,reason);
   return true;
 }
-export function updateAbilityChannel(player,input,dt,now,{onTick,onEnd,payResource} = {}) {
+export function updateAbilityChannel(player,input,dt,now,{onTick,onEnd,payResource,world} = {}) {
   const c = player?.activeChannel;
   if (!c) return false;
   const invalid = player.hp <= 0 || (player.lifeState && player.lifeState !== 'alive') || input?.controlLocked ||
@@ -52,7 +53,13 @@ export function updateAbilityChannel(player,input,dt,now,{onTick,onEnd,payResour
     }
     player.hp -= health;
   }
-  const aim = resolveActorCombatAim(player,input || {});
+  let aim = resolveActorCombatAim(player,input || {});
+  if (c.aimIntent) {
+    const explicit = normalizeAimVector(input?.combatAimX,input?.combatAimY);
+    if (aim.source !== 'last') c.aimIntent = aim;
+    else if (explicit.active && input?.aimSource !== 'last') c.aimIntent = explicit;
+    aim = assistAbilityAim(player,world,c.aimIntent,c.range);
+  }
   const angle = Math.atan2(c.dirY,c.dirX), desired = Math.atan2(aim.y,aim.x);
   const delta = Math.atan2(Math.sin(desired-angle),Math.cos(desired-angle));
   const turn = Math.max(0,dt) * c.turnRate;

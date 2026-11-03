@@ -501,3 +501,11 @@ The flat6 reward is superseded. Every successful primary-weapon target hit resto
 Healing trains from restoring missing Health, including direct regeneration. A skill that restores Health and grants a shield or buff is classified as Healing. Damage-based lifesteal is tracked separately from direct healing. Warding identifies shields and buffs. Taunting identifies skills and morphs that actively draw enemy attention, including Bulwark of Light, Deathknight Funeral Urn and Petal Knight Living Briar. A skill can train Taunting alongside its Healing or Warding role.
 
 Healing and Taunting appear in Progression and in the Support section of Skill Trees. Each has two universal nodes. Healing ranks and nodes improve raw recovery, subject to existing ability and target caps. Taunting ranks and nodes improve taunt radius and duration. Boss immunity, line of sight, taunt ownership and the leash continue to apply.
+
+### Grimoire Mana cost tuning
+
+Light attacks, combo shots and heavy attacks spend 35% of their previous Mana cost after move and tree modifiers. First shots across the nine books cost 2.10–3.50 Mana before perks. Threadbare Primer costs 2.80 Mana on its first shot and 5.95 on an unmodified heavy. Attacks retain their damage and restore 40% of maximum Spirit on a successful enemy hit.
+
+### Ranged ability aim assist
+
+Uncharged directional ranged abilities can correct their cast angle by up to 10 degrees toward an eligible visible enemy within 22 degrees of the player's aim. Target selection favours distance with a smaller angular preference, and an enemy already directly in the aim line preserves the input. Directional channels recalculate against the current player aim using their existing turn rate. Chargeable abilities, basic attacks, and radial, movement and autonomous companion effects follow their authored targeting.

@@ -7,7 +7,7 @@ import {isGearInstanceEquipped,isItemLocked,setItemLocked,inventoryDisposalKey} 
 ﻿import {equipmentPurpose,equipmentScaling,abilitySummary,abilityRequirements} from './uiInformation.js';
 import {equipGearEntry,unequipGearEntry,getTierStatBonus,getEquipmentTier,makeUpgradeQuote,upgradeEntryPreview} from './equipmentProgressionSystem.js';
 import {synchronizeEquipmentBoundSkills,dismissCoterieForEquipmentChange} from './equipmentBoundSkills.js';
-import { calculateWeaponDamage } from './combatMoves.js';
+import { calculateWeaponDamage, grimoireAttackManaCost } from './combatMoves.js';
 import { readSkillScroll } from './skillScrollSystem.js';
 // panelInventory.js
 // Inventory management, equipment inspection, consumables, and item stats.
@@ -1198,7 +1198,7 @@ export function itemStatBlock(player, item, entry = null) {
     rows.push(['Strike power',calculateDisplayWeaponDamage(player,item,entry)]);
     rows.push(['Spirit on enemy hit',weaponSpiritRecoveryLabel(item.weaponType)]);
     rows.push(['Scales with',equipmentScaling(item)]);
-    if(item.weaponType==='grimoire')rows.push(['First light shot',`${item.spiritCost??8} Mana (Spirit) before bonuses`]);
+    if(item.weaponType==='grimoire')rows.push(['First light shot',`${grimoireAttackManaCost(item.spiritCost??8)} Mana (Spirit) before bonuses`]);
     if(item.weaponType==='spiritFocus')rows.push(['First light shot',`${item.staminaCost??8} Stamina before bonuses`]);
     if(item.range)rows.push(['Reach',`${Number((item.range/32).toFixed(1))} tiles`]);
   }

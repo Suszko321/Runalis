@@ -99,7 +99,7 @@ export function updateVampire(p,w,input,dt,now,h){
   else {let steps=0;while(royalActive(p)&&now>=p.vampireForm.nextPayment&&steps++<32){p.vampireForm.nextPayment+=3;const cost=p.maxHp*.01;if(p.hp-cost<1)endVampireForm(p,now);else p.hp-=cost;}}
  }
  const c=p.activeChannel;
- if(c?.profile==='vampire')updateAbilityChannel(p,input,dt,now,{onTick:channel=>{
+ if(c?.profile==='vampire')updateAbilityChannel(p,input,dt,now,{world:w,onTick:channel=>{
   const aim={x:channel.dirX,y:channel.dirY},e=aimed(p,w,aim,channel.range,12)[0];
   if(e)deliver(p,w,channel.ability,e,channel.damage,h,{healed:0});
   effect(h,p,'beam',{targetX:e?.x??p.x+aim.x*channel.range,targetY:e?.y??p.y+aim.y*channel.range,ttl:.28});h.audio?.('channelLoop',channel.ability);

@@ -5,6 +5,7 @@ import {vampireActionCommitted,prepareVampireCombat,executeVampireAbility,update
 import {vampireHealthCost,vampireAbilityMultiplier,royalActive,vampirePerk,vampireOutsideHealing} from './vampireRules.js';
 import {getLivingPartyMembers} from './partySupport.js';
 import {applyTankTaunt,getTauntTarget} from './tankTaunt.js';
+import {assistAbilityAim,usesAbilityAimAssist} from './abilityAimAssist.js';
 import {healingProgressionMultiplier,supportProgression} from './supportProgression.js';
 import {prepareVeyreignTransformation} from './veyreignTransformation.js';
 import {updateVeyreignCombat} from './veyreignCombat.js';
@@ -1138,6 +1139,8 @@ function shouldSkipFarEnemyUpdate(enemy, player) {
 // ABILITIES
 // -----------------------------------------------------------------------------
 
+const assistedAbilityAim = Symbol('assistedAbilityAim');
+
 export function useAbility(index, player, world, log, now = performance.now() / 1000, input = null, charge = null) {
   if (!player || player.hp <= 0 || isActorControlLockedByRevive(player)) return false;
   ensureCombatPlayer(player);
@@ -1161,6 +1164,11 @@ export function useAbility(index, player, world, log, now = performance.now() / 
   if ((ability.vampire || ability.subclassId || ability.effectProfile || ['summonWolf','summonDemon'].includes(ability.id)) && world?.mode === 'pvpArena') { log?.('This technique is not yet available in the arena.'); return false; }
   // Block is a held stamina action, not a timed ward or paid spell.
   if(ability.heldBlock){recordAbilitySuccessfulUse(player,ability.id);return true;}
+  let aimIntent;
+  if (!charge && usesAbilityAimAssist(ability)) {
+    aimIntent = getSafeAimDirection(player,input);
+    input = {...input, [assistedAbilityAim]:assistAbilityAim(player,world,aimIntent,ability.range)};
+  }
   let used = false;
   let visualKind = 'cast';
 
@@ -1195,6 +1203,7 @@ export function useAbility(index, player, world, log, now = performance.now() / 
   }
 
   if (used) {
+    if (aimIntent && player.activeChannel?.abilityId === ability.id) player.activeChannel.aimIntent = aimIntent;
     const challenged = applyTankTaunt(player,world,ability,now,getSkillTreeBonuses(player));
     if (challenged.length) recordSupportContribution(player,challenged,ability.id,4*challenged.length,'taunt');
     if(ability.sunkenBase)for(const fx of (world.effects||[]).slice(effectStart)){
@@ -4118,6 +4127,7 @@ function updateLightbringerChannel(player, world, input, dt, now, log) {
   if (player.activeChannel?.abilityId !== 'lightbringerDawncarver' || player.activeChannel.subclassId) return;
   const channel=player.activeChannel;
   updateAbilityChannel(player,input,dt,now,{
+    world,
     onEnd:c=>{endLightbringerChannel(player,world,c);playAbilityAudioEvent('channelEnd',getAbilityById(c.abilityId));},
     onTick:c=>{
       const origin=getDawncarverBeamOrigin(player,c.dirX,c.dirY);
@@ -6947,6 +6957,7 @@ export function calculateAbilityDamage(player, ability) {
 }
 
 function getSafeAimDirection(player, input = null) {
+  if (input?.[assistedAbilityAim]) return input[assistedAbilityAim];
   const safeInput = input || buildFallbackInputFromPlayer(player);
   if(safeInput.rightStickActive || safeInput.mouseAimActive || Math.hypot(safeInput.rightStickAimX||0,safeInput.rightStickAimY||0)>.28) {
     const aim=resolveActorCombatAim(player,safeInput);

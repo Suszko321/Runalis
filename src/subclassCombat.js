@@ -576,7 +576,7 @@ export function updateSubclassCombat(p,w,input,dt,now,h){
   }
   if(s.lastHit&&now-s.lastHit>4){s.heat=0;s.combo=0;s.penance=Math.max(0,s.penance-dt*.5);}
   if(p.activeChannel?.subclassId){
-    updateAbilityChannel(p,input,dt,now,{payResource:h.payResource,onTick:c=>{
+    updateAbilityChannel(p,input,dt,now,{world:w,payResource:h.payResource,onTick:c=>{
       const a=c.ability,shape=mythicalChannelGeometry(p,c),aim={x:shape.dirX,y:shape.dirY};
       if(a.oathMorph){updateOathkeeperChannel(p,w,a,s,h,oathAPI,c.damage*shape.damageMultiplier);return;}
       if(c.subclassMode==='projectileChannel'){

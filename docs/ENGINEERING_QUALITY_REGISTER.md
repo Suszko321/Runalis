@@ -739,3 +739,13 @@ memory, security or gameplay readiness claim follows solely from a green build.
 
 - Two universal Support trees and two combat proficiency lines. Shared classification drives ability cards, morph cards and combat training. Hybrid healing and protection trains Healing.
 - Verified real casts, perk purchases, XP attribution, taunt exclusions and expiration, and save/load with the dedicated support progression and party support suites.
+
+### E54 — Grimoire attack Mana costs
+
+- Reduced final Mana spend for every Grimoire move by 65%, with hundredth-point precision. Equipment inspection uses the same conversion for the first light shot.
+- Verified light and heavy costs across nine books and four owners, Grimoire and Focus perk isolation, misses, insufficient resources and percentage Spirit recovery. Damage tuning is deferred pending campaign balance evidence.
+
+### E55 — Bounded ranged ability aim assist
+
+- Uncharged directional projectiles, targeted abilities, ranged ground casts and channels use a 22-degree acquisition cone and up to 10 degrees of correction. Enemies behind cover, out of reach or outside the cone are ignored. Channels recalculate from current player intent.
+- Dedicated checks verify real projectile hits across four player slots and beam retargeting, angle bounds, cover, exclusions and direct manual aim. Existing charged aim, Vampire beam and Fae channel checks pass. Physical-device play was not exercised.
