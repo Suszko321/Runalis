@@ -1,6 +1,7 @@
 import {ITEMS,getAbilityById,getAbilitySkillRequirement} from './data.js';
 import {weaponProficiency} from './progressionProfiles.js';
 import {abilityTraining} from './trainingProfiles.js';
+import {supportProgression} from './supportProgression.js';
 import {RUNALIS_SKILLS} from './skills.js';
 import {weaponSpiritRecoveryLabel} from './weaponSpiritRecovery.js';
 import {requiredSkillEquipment} from './equipmentBoundSkills.js';
@@ -111,6 +112,9 @@ export const informationNumber=n=>Number(Number(n||0).toFixed(1));
 export function abilitySummary(ability,player=null) {
  if(!ability)return '';
  if(ability.roseEruption||ability.gardenGraveMorph&&ability.subclassId==='petalknight'&&ability.id==='thornbinderRosebiteBurst')return ability.desc+' The impact pushes surviving enemies away; heavy enemies resist and bosses hold their ground.';
+ if(supportProgression(ability)==='healing')return ability.summonType
+  ? 'Summoning and mastery (companion); Healing proficiency and Healing tree perks (recovery)'
+  : 'Healing proficiency · Healing tree perks · skill mastery · class support bonuses';
  if(ability.oathBlades)return ability.desc;
  if(ability.spectralUrn)return ability.desc;
   if(ability.hunterMorph||ability.oathMorph)return ability.desc;
@@ -154,21 +158,22 @@ export function abilityRequirements(ability) {
  return [...new Set(requirements)].join(' · ');
 }
 export function abilityScaling(ability) {
- if(ability.roseMantle)return 'Each recipient’s maximum Health · Level · Warding · Defence · mastery · support perks (healing); charge · ward perks · class Expertise (protection). Healing and protection are capped.';
+ if(ability.roseMantle)return 'Each recipient’s maximum Health · Healing · mastery · support perks (healing); charge · ward perks · class Expertise (protection). Healing and protection are capped.';
+ if(supportProgression(ability)==='healing')return 'Healing proficiency · Healing tree perks · skill mastery · class support bonuses';
  if(ability.oathBlades)return 'Level · Blunt Weapons · Dexterity · skill mastery · weapon and charm · class Expertise; swords last eight seconds and one formation is allowed';
  if(ability.classId==='fellhunter')return 'Level · Dexterity · higher of Archery or equipped melee proficiency · skill mastery · weapon and charm'+(ability.hunterWard?'; wards use Warding, Defence and mastery, capped at 30%':'');
  if(ability.gardenSummon&&ability.subclassId==='petalknight')return 'Level · Summoning · mastery (companion damage and health); reflected damage is capped by the hit received and companion damage';
  if(ability.heldBlock)return 'Blocking perks and block-efficiency gear';
  if(ability.soulSiphonField)return 'Level · Spirit · mastery · Spirit gear (damage); maximum Health · mastery · support perks · Soul Fragments (healing)';
- if(ability.summonType)return 'Level · Summoning · skill mastery'+(['wolf','miniDemon','greaterLich'].includes(ability.summonType)?' · Spirit · Spirit gear':ability.summonType==='lich'?' · skeleton gear (Commander)':ability.summonType==='thornbeast'?'; passive healing also uses Warding':'');
- const defensive=['guard','briarWard','ironOath','hydromancerBubbleWard','hydromancerMendingCurrent','hydromancerWellspring','thornbinderLivingBriar','oathkeeperLastRite'].includes(ability.id)&&!ability.subclassId;
+ if(ability.summonType)return 'Level · Summoning · skill mastery'+(['wolf','miniDemon','greaterLich'].includes(ability.summonType)?' · Spirit · Spirit gear':ability.summonType==='lich'?' · skeleton gear (Commander)':'');
+ const defensive=['guard','briarWard','ironOath','hydromancerBubbleWard'].includes(ability.id)&&!ability.subclassId;
  if(['guard','briarWard','ironOath'].includes(ability.id)&&!ability.subclassId)return 'Level · Warding · Defence · mastery (protection and cost)';
- if(defensive)return 'Level · Warding · Defence · skill mastery · tree bonuses'+(ability.id==='oathkeeperLastRite'?' · missing health · Conviction':ability.id.startsWith('hydromancer')?' · Flow':'');
+ if(defensive)return 'Level · Warding · Defence · skill mastery · tree bonuses · Flow';
  const proficiency=defensive?'warding':ability.skill;
  const attribute=defensive?'defence':['blade','blunt','scythe','archery'].includes(proficiency)?'dexterity':'spirit';
  const damage=[...new Set(['Level',informationLabel(proficiency),informationLabel(attribute),'skill mastery','weapon and charm'])].filter(Boolean).join(' · ');
  const supports=ability.subclassId&&(['ward','heal','ritual','retaliation'].includes(ability.subclassMode)||['ward','heal','blessing','beacon','parry','smite'].includes(ability.subclassSecondary));
- return supports?`${damage}; healing and protection also use Warding and Defence`:damage;
+ return supports?`${damage}; protection also uses Warding and Defence`:damage;
 }
 export function equipmentPurpose(item) {
  if(item?.type==='weapon')return (({mace:'Crushing melee weapon. Three deliberate blows end in a heavy slam; trains Blunt Weapons.',hammer:'Heavy crushing melee weapon; trains Blunt Weapons.',bow:'Ranged weapon for aimed shots and charged heavy attacks.',crossbow:'Ranged weapon for aimed shots and heavy attacks.',grimoire:'Ranged grimoire. Attacks use Mana (Spirit) and train Grimoires.',spiritFocus:'Ranged focus. Attacks use Stamina.',eldritch:'Ranged conduit; its attacks train Spirit.',scythe:'Melee weapon with sweeping attacks; trains Scythes.',staff:'Melee staff; its strikes train Warding.',spear:'Reach weapon with thrusts and sweeping cuts; trains Warding.'}[item.weaponType]) || 'Melee weapon for close-range light and heavy combinations.')+` Successful enemy hits restore ${weaponSpiritRecoveryLabel(item.weaponType)}.`;

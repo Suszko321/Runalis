@@ -25,6 +25,8 @@ export const RUNALIS_SKILLS = {
   heavyArmour: {id:'heavyArmour',name:'Heavy Armour',shortName:'HVY',type:'combat',description:'Train in plate and mail. Improves protection and maximum Health while wearing heavy equipment.'},
   channeling: {id:'channeling',name:'Channeling',shortName:'CHN',type:'combat',description:'Train through useful sustained casts. Reduces channel upkeep.'},
   closeCombat: {id:'closeCombat',name:'Close Combat',shortName:'CQC',type:'combat',description:'Train through close-range abilities. Improves their resource efficiency.'},
+  healing: {id:'healing',name:'Healing',shortName:'HL',type:'combat',description:'Train by restoring missing Health with abilities. Improves direct healing and regeneration.'},
+  taunting: {id:'taunting',name:'Taunting',shortName:'TNT',type:'combat',description:'Train by challenging enemies with taunt abilities. Improves taunt radius and duration.'},
   areaControl: {id:'areaControl',name:'Area Control',shortName:'AOE',type:'combat',description:'Train through useful area abilities. Improves coverage.'},
   grimoire: {
     id:'grimoire',name:'Grimoires',shortName:'GRM',type:'combat',dormantName:'Untrained',
@@ -83,7 +85,7 @@ export const RUNALIS_SKILLS = {
     shortName: 'WRD',
     type: 'combat',
     dormantName: 'Untrained',
-    description: 'Defensive mastery, survival, blocking, protection, roots, shields, and resistance.',
+    description: 'Protective mastery for shields and buffs.',
     primaryVerb: 'Guard',
     combatWeight: 1,
     classLinkedTo: 'Thornbinder',
@@ -214,7 +216,7 @@ Object.assign(RUNALIS_SKILLS, {
 
 export const WEAPON_COMBAT_SKILL_IDS = ['blade', 'blunt', 'scythe', 'archery', 'spirit', 'warding', 'summoning','grimoire'];
 export const SURVIVAL_COMBAT_SKILL_IDS = ['defence', 'hitpoints', 'stamina', 'focus', 'dexterity'];
-export const COMBAT_SKILL_IDS = [...WEAPON_COMBAT_SKILL_IDS, ...SURVIVAL_COMBAT_SKILL_IDS, 'lightArmour', 'mediumArmour', 'heavyArmour', 'channeling', 'closeCombat', 'areaControl'];
+export const COMBAT_SKILL_IDS = [...WEAPON_COMBAT_SKILL_IDS, ...SURVIVAL_COMBAT_SKILL_IDS, 'lightArmour', 'mediumArmour', 'heavyArmour', 'channeling', 'closeCombat', 'areaControl', 'healing', 'taunting'];
 
 export const CLASS_SKILL_LINKS = {
   oathkeeper: {

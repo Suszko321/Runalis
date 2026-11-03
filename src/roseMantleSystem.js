@@ -1,6 +1,6 @@
 import {vampireOutsideHealing} from './vampireRules.js';
 import {getAbilityEffectiveness} from './skillExpertiseSystem.js';
-import {progressionPower} from './combatPower.js';
+import {healingProgressionMultiplier} from './supportProgression.js';
 import {hasLineOfSight} from './world.js';
 import {registerAbilitySupport,rewardAbilitySupport,rewardCombatPurpose} from './abilityMasterySystem.js';
 
@@ -13,7 +13,7 @@ export function roseMantleProfile(p,a,bonuses={}){
  const charge=a._charge?.damageMultiplier||1,expertise=getAbilityEffectiveness(p,a);
  // Bound ordinary progression before charging so holding still improves the
  // heal at high levels instead of the tap already consuming its entire cap.
- const investment=Math.min(1.5,(a._mastery?.damage||1)*progressionPower(p,'warding','defence')*(1+Math.min(40,bonuses.supportHealingPct||0)/100));
+ const investment=Math.min(1.5,(a._mastery?.damage||1)*healingProgressionMultiplier(p,bonuses)*(1+Math.min(40,bonuses.supportHealingPct||0)/100));
  const healing=charge*expertise*investment;
  return {burst:Math.min(.18,.08*healing),regen:Math.min(.03,.015*healing),
   reduction:Math.min(.35,.18*charge*expertise*(1+Math.min(40,bonuses.subclassWardPct||0)/100)),

@@ -179,3 +179,9 @@ The ability detail and skill tree preview list the progression lines each skill 
 Light Armour favours ranged damage and mobility. Medium Armour trains with reinforced leathers and battlemage sets, trading some ranged output for stronger close attacks and protection. Heavy Armour favours Health and Defence and raises dodge and channel costs. All three use the same worn-gear encounter snapshots. Weapon projectiles commit their armour damage bonus at launch. Rarity and upgrades retain the base piece's weight.
 
 The focused verifier covers the full catalogue, representative melee and bow hits, close and ranged technique scaling, handling costs, armour XP and a save round-trip. Repeated swaps preserve the injured actor's Health fraction and leave downed actors at zero Health. Campaign pacing remains unmeasured.
+
+## Healing and Taunting progression audit
+
+Ability details and morph cards use the same progression classification as encounter training. Healing takes precedence over Warding for hybrid support. Useful direct healing and a newly applied taunt contribute to the caster's victory rewards. Overhealing grants no healing credit, and refreshing an existing taunt on the same target does not create another contribution.
+
+Verified support classification, perk purchases, effective healing, overhealing, taunt range and expiry, and save/load. Existing four-slot party support and taunt checks and Rose Mantle checks passed.

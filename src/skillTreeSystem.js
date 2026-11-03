@@ -22,6 +22,26 @@ export const SKILL_TREE_VERSION = 17;
 const removedOathNodes=new Set(['blade_execution','blade_guardian_oath']);
 
 export const SKILL_TREE_NODES = {
+  healing_root: {
+    id:'healing_root',tree:'healing',name:'Restorative Practice',role:'Healing',
+    desc:'+8% direct healing and regeneration from Healing skills.',
+    cost:1,requires:[],bonuses:{directHealingPct:8}
+  },
+  healing_deepRecovery: {
+    id:'healing_deepRecovery',tree:'healing',name:'Deep Recovery',role:'Healing',
+    desc:'+12% direct healing and regeneration from Healing skills.',
+    cost:2,requires:['healing_root'],bonuses:{directHealingPct:12}
+  },
+  taunting_root: {
+    id:'taunting_root',tree:'taunting',name:'Carry the Challenge',role:'Taunting',
+    desc:'Taunts reach 24 pixels farther and last 0.5 seconds longer.',
+    cost:1,requires:[],bonuses:{tauntRadius:24,tauntDuration:.5}
+  },
+  taunting_holdTheLine: {
+    id:'taunting_holdTheLine',tree:'taunting',name:'Hold the Line',role:'Taunting',
+    desc:'Taunts reach another 16 pixels farther and last another 1 second.',
+    cost:2,requires:['taunting_root'],bonuses:{tauntRadius:16,tauntDuration:1}
+  },
   blade_root: {
     id: 'blade_root',
     tree: 'blade',
@@ -1272,7 +1292,8 @@ for (const node of Object.values(SKILL_TREE_NODES)) {
 export const CORE_SKILL_TREE_ORDER = ['blade', 'archery', 'spirit', 'warding', 'hydromancy', 'lightbringer', 'eldritch'];
 export const BLOODLINE_SKILL_TREE_ORDER = ['cambion', 'nephilim', 'vampire'];
 export const WEAPON_SKILL_TREE_ORDER = ['sword', 'blunt', 'bow', 'staff', 'scythe', 'spiritFocus', 'grimoire', 'eldritchWeapon'];
-export const SKILL_TREE_ORDER = [...CORE_SKILL_TREE_ORDER, ...BLOODLINE_SKILL_TREE_ORDER, ...WEAPON_SKILL_TREE_ORDER];
+export const SUPPORT_SKILL_TREE_ORDER = ['healing','taunting'];
+export const SKILL_TREE_ORDER = [...CORE_SKILL_TREE_ORDER, ...BLOODLINE_SKILL_TREE_ORDER, ...SUPPORT_SKILL_TREE_ORDER, ...WEAPON_SKILL_TREE_ORDER];
 const warnedSkillTreeCycles = new Set();
 
 export const CLASS_SKILL_TREE_LOCKS = {
@@ -1452,6 +1473,7 @@ export function getLockedSkillTreeForPlayer(player) {
 }
 
 export function isSkillTreeAllowedForPlayer(player, tree) {
+  if (SUPPORT_SKILL_TREE_ORDER.includes(tree)) return true;
   if (isClasslessPlayer(player) && CORE_SKILL_TREE_ORDER.includes(tree)) {
     return false;
   }
@@ -1888,6 +1910,9 @@ function createWeaponTreeNodes() {
 
 export function describeSkillTreeBonuses(bonuses) {
   const labels = {
+    directHealingPct: 'Direct healing',
+    tauntRadius: 'Taunt radius (pixels)',
+    tauntDuration: 'Taunt duration (seconds)',
     power: 'Power',
     subclassFocusPct: 'Morphed ability damage',
     subclassControlPct: 'Morphed control strength',

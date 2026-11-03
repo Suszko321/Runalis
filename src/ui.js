@@ -1,4 +1,5 @@
 import {TRAINING_PRIORITIES, trainingPriority} from './trainingProfiles.js';
+import {tankTauntProfile} from './tankTaunt.js';
 import {retireRemovedQuestState} from './questRoster.js';
 import {inventoryDisposalKey} from './gearServices.js';
 import {vampireHealthCost} from './vampireRules.js';
@@ -99,6 +100,7 @@ import {
 
 import {
   CORE_SKILL_TREE_ORDER,
+  SUPPORT_SKILL_TREE_ORDER,
   BLOODLINE_SKILL_TREE_ORDER,
   WEAPON_SKILL_TREE_ORDER,
   getSkillTreeNodesByTree,
@@ -3391,7 +3393,7 @@ function renderSkills(player, game) {
 }
 
 function skillTreeSheet(player, game) {
-  if (isClasslessPlayer(player)) {
+  if (isClasslessPlayer(player) && !SUPPORT_SKILL_TREE_ORDER.includes(game.uiState.selectedSkillTreeId)) {
     return classlessSkillTreeSheet(player,game);
   }
 
@@ -3423,6 +3425,10 @@ function skillTreeSheet(player, game) {
 
       ${renderSubclassTreeChoice(player,game)}
       <nav class="skill-tree-path-list" aria-label="Skill tree paths">
+        <div class="compact-path-group">
+          <span>Support</span>
+          ${SUPPORT_SKILL_TREE_ORDER.map(tree => skillTreePathButton(player, tree, selectedTree)).join('')}
+        </div>
         <div class="compact-path-group">
           <span>Class</span>
           ${getVisibleCoreSkillTreeOrder(player).map(tree => skillTreePathButton(player, tree, selectedTree)).join('')}
@@ -3479,6 +3485,10 @@ function classlessSkillTreeSheet(player,game) {
 
       <nav class="skill-tree-path-list" aria-label="Skill tree paths">
         <div class="compact-path-group">
+          <span>Support</span>
+          ${SUPPORT_SKILL_TREE_ORDER.map(tree => skillTreePathButton(player, tree, 'classless')).join('')}
+        </div>
+        <div class="compact-path-group">
           <span>Class</span>
           <p class="tag">No class tree. No class nodes can be learned.</p>
         </div>
@@ -3513,6 +3523,7 @@ function isClasslessPlayer(player) {
 }
 
 function resolveSelectedSkillTree(player, game) {
+  if (SUPPORT_SKILL_TREE_ORDER.includes(game.uiState.selectedSkillTreeId)) return game.uiState.selectedSkillTreeId;
   if (isClasslessPlayer(player)) {
     game.uiState.selectedSkillTreeId = 'classless';
     game.uiState.selectedSkillTreeNodeId = null;
@@ -3550,6 +3561,7 @@ function getVisibleSkillTreeOrder(player) {
   return [
     ...getVisibleCoreSkillTreeOrder(player),
     ...getVisibleBloodlineSkillTreeOrder(player),
+    ...SUPPORT_SKILL_TREE_ORDER,
     ...getAvailableWeaponSkillTrees(player)
   ];
 }
@@ -3571,6 +3583,10 @@ function resolveSelectedSkillTreeNode(player, game, tree) {
 }
 
 function getSkillTreeInfo(player, tree) {
+  if (SUPPORT_SKILL_TREE_ORDER.includes(tree)) return {
+    title:skillTreeLabel(tree),
+    subtitle:tree==='healing'?'Improve abilities that restore missing Health.':'Challenge enemies from farther away and hold their attention longer.'
+  };
   if (WEAPON_SKILL_TREE_ORDER.includes(tree)) {
     return {
       title: skillTreeLabel(tree),
@@ -3628,6 +3644,7 @@ function skillTreeLabel(tree) {
 }
 
 function canTreeEverBeActive(player, tree) {
+  if (SUPPORT_SKILL_TREE_ORDER.includes(tree)) return true;
   if (WEAPON_SKILL_TREE_ORDER.includes(tree)) {
     return getAvailableWeaponSkillTrees(player).includes(tree);
   }
@@ -3931,7 +3948,9 @@ function worldSkillPerks(skillId) {
     blade:['Controlled melee damage growth','Train with blades, staves, axes, and spears'],
     archery:['Controlled ranged damage growth','Train through real bow and ranged technique contribution'],
     scythe:['Raises scythe damage','Train with scythe attacks'],
-    warding:['Controlled shield and healing potency','Useful protection and control shape encounter training'],
+    warding:['Improves shields and protective buffs'],
+    healing:['Improves direct healing and regeneration','Train by restoring missing Health in combat'],
+    taunting:['Increases taunt radius and duration','Train by successfully challenging enemies'],
     lightArmour:['Highest ranged damage bonus','Reduces dodge costs and channel upkeep'],
     mediumArmour:['Highest close-range damage bonus','Adds modest ranged damage and protection'],
     heavyArmour:['Increases maximum Health and protection in heavy gear, which costs more to dodge and channel in'],
@@ -4077,6 +4096,8 @@ function renderAbilityFacts(player,ability) {
   const training = abilityTrainingLabel(ability);
   if(ability.heldBlock)return `<div class="information-facts"><div class="stat-row"><span>Use</span><b>Hold to block; release to stop</b></div><div class="stat-row"><span>Upkeep</span><b>4 Stamina/s before perks; extra on hits</b></div><div class="stat-row"><span>Protection</span><b>62% less damage before class bonuses</b></div><div class="stat-row"><span>Trains</span><b>${escapeHtml(training)}</b></div><div class="stat-row"><span>Equipped bonus</span><b>+25% Defence XP weighting</b></div><div class="stat-row"><span>Scales with</span><b>Blocking perks and block-efficiency gear</b></div></div>`;
   const profile=getAbilityUseChargeProfile(player,ability), rows=[['Trains',training]];
+  const taunt=tankTauntProfile(ability,player,getSkillTreeBonuses(player));
+  if(taunt)rows.push(['Taunt',`${informationNumber(taunt.radius/32)} tiles · ${informationNumber(taunt.duration)}s · ordinary enemies`]);
   if(ability.sunkenBase&&ability.damage>0)rows.push(['Depth','Builds over 20s · carries between enemies'],['Pressure','One burn per target and caster · up to 3s after its last hit'],['Disengage','5s without a damaging Sunken hit resets Depth']);
   if(ability.cryoSkill)rows.push(['Frost','3 spaced Chill hits prepare Brittle · weaker foes freeze briefly']);
   if(ability.cryoCleanse||ability.cryoFieldCleanse)rows.push(['Restoration',`${ability.cryoFieldCleanse?'Each sanctuary pulse':'On cast'} clears movement slows and accumulated elite frost from nearby allies`]);

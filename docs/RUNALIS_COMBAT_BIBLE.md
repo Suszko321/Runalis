@@ -496,3 +496,8 @@ Grimoire XP/scaling, shot perks, mana economy, range, pierce and stagger are ind
 ## Percentage Spirit recovery — primary weapons
 
 The flat6 reward is superseded. Every successful primary-weapon target hit restores a share of the attacker's maximum Spirit: Grimoires40%, Foci30%, other weapon families/unarmed25%. Fractions remain, recovery caps at maximum, and light/heavy use the same percentage. Grimoires still pay Spirit and Foci stamina before attacking; misses and already-dead targets grant nothing. Distinct targets grant separate shares under existing per-target hit guards. Recovery uses the committed attack family, preventing a weapon swap from upgrading a projectile's return. Attack tooltips, equipment inspection and Grimoire tree text share the same formula. [Rules, examples and verification](weapon-spirit-recovery/README.md).
+## Healing, Warding and Taunting
+
+Healing trains from restoring missing Health, including direct regeneration. A skill that restores Health and grants a shield or buff is classified as Healing. Damage-based lifesteal is tracked separately from direct healing. Warding identifies shields and buffs. Taunting identifies skills and morphs that actively draw enemy attention, including Bulwark of Light, Deathknight Funeral Urn and Petal Knight Living Briar. A skill can train Taunting alongside its Healing or Warding role.
+
+Healing and Taunting appear in Progression and in the Support section of Skill Trees. Each has two universal nodes. Healing ranks and nodes improve raw recovery, subject to existing ability and target caps. Taunting ranks and nodes improve taunt radius and duration. Boss immunity, line of sight, taunt ownership and the leash continue to apply.

@@ -5,6 +5,7 @@ import {vampireActionCommitted,prepareVampireCombat,executeVampireAbility,update
 import {vampireHealthCost,vampireAbilityMultiplier,royalActive,vampirePerk,vampireOutsideHealing} from './vampireRules.js';
 import {getLivingPartyMembers} from './partySupport.js';
 import {applyTankTaunt,getTauntTarget} from './tankTaunt.js';
+import {healingProgressionMultiplier,supportProgression} from './supportProgression.js';
 import {prepareVeyreignTransformation} from './veyreignTransformation.js';
 import {updateVeyreignCombat} from './veyreignCombat.js';
 import {veyreignVictory} from './veyreignDungeon.js';
@@ -418,6 +419,7 @@ function grantBriarBloom(player, world, now, durationBonus = 0, options = {}) {
     : THORNBINDER_BRIAR_BLOOM_DURATION + Math.max(0, Number(durationBonus || 0));
   const healingBoost = Math.max(0, Number(bonuses.briarBloomHealingPct || 0)) / 100;
 
+  if(options.active)state.briarBloomActiveUntil=now+duration;
   state.briarBloomUntil = Math.max(state.briarBloomUntil || 0, now + duration);
   state.briarBloomNextTickAt = state.briarBloomNextTickAt > now ? state.briarBloomNextTickAt : now + 0.6;
   state.briarBloomRadius = Math.max(options.radius || 0, THORNBINDER_BRIAR_BLOOM_RADIUS * (1 + Math.max(0, bonuses.briarBloomRadiusPct || 0) / 100));
@@ -442,16 +444,19 @@ function updateBriarBloomAura(player, world, state, now) {
 
   state.briarBloomNextTickAt = now + THORNBINDER_BRIAR_BLOOM_TICK;
 
-  const warding = getSkillLevel(player, 'warding');
-  const baseHeal = Math.max(1, Math.floor(1 + warding * 0.045));
-  const heal = Math.max(1, Math.floor(baseHeal * Number(state.briarBloomHealingScalar || 1)));
+  const baseHeal = healingProgressionMultiplier(player,getSkillTreeBonuses(player));
+  const heal = Math.max(1, baseHeal * Number(state.briarBloomHealingScalar || 1));
   const radius = Number(state.briarBloomRadius || THORNBINDER_BRIAR_BLOOM_RADIUS);
 
+  let restored = 0;
   forPartyNear(player, radius, member => {
     if (!member || member.hp <= 0) return;
+    const before = member.hp;
     const finalAmount = modifyBloodlineHealing(member, heal);
     member.hp = Math.min(member.maxHp || member.hp || 1, (member.hp || 0) + finalAmount);
+    restored += member.hp - before;
   });
+  if(restored && now < state.briarBloomActiveUntil)rewardCombatPurpose(player,world,'thornbinderLivingBriar',restored*.12,now,null,'healing');
 
   for (const summon of player.summons || []) {
     if (!summon || summon.alive === false || summon.hp <= 0 || summon.kind !== 'thornbeast') continue;
@@ -1190,7 +1195,8 @@ export function useAbility(index, player, world, log, now = performance.now() / 
   }
 
   if (used) {
-    applyTankTaunt(player,world,ability,now);
+    const challenged = applyTankTaunt(player,world,ability,now,getSkillTreeBonuses(player));
+    if (challenged.length) recordSupportContribution(player,challenged,ability.id,4*challenged.length,'taunt');
     if(ability.sunkenBase)for(const fx of (world.effects||[]).slice(effectStart)){
       if(['waterTorrent','bubbleWard','mendingCurrent','tidalCut','riptideStep','drowningPressure','wellspring','delugeCrown','combatTechnique'].includes(fx.kind)){
         fx.profile=fx.profile||fx.kind;fx.kind='sunkenSkill';fx.subclassId='sunken';fx.abilityId=ability.id;fx.colors=ability.colors;
@@ -1220,13 +1226,15 @@ export function useAbility(index, player, world, log, now = performance.now() / 
     if (!ability.mobilityProfile) rewardMobilityMastery(player,world,ability.id,Math.hypot(player.x-beforeUse.x,player.y-beforeUse.y),now,log);
     // Class drains already scale through actual damage, and the Acolyte rite
     // handles mastery inside its explicit percentage cap. Do not boost twice.
-    if(!ability.vampire&&!ability.oathMorph&&!ability.roseMantle&&!(isGravecallerSustain(player)&&(ability.classId==='gravecaller'||ability.bloodline==='vampire')))
+    if(supportProgression(ability)==='healing'&&(!ability.subclassId||ability.sunkenBase))
     for(const entry of partyHealth)if(entry.actor.hp>0) {
       const healing=Math.max(0,entry.actor.hp-entry.hp);
-      entry.actor.hp=Math.min(entry.actor.maxHp,entry.actor.hp+Math.floor(healing*((ability._mastery?.damage||1)*progressionPower(player,'warding','defence')*(ability.subclassId&&!ability.sunkenBase?1:getAbilityEffectiveness(player,ability))-1)));
+      if(!healing)continue;
+      const potency=(ability._mastery?.damage||1)*healingProgressionMultiplier(player,getSkillTreeBonuses(player))*getAbilityEffectiveness(player,ability);
+      entry.actor.hp=Math.min(entry.actor.maxHp,entry.hp+Math.round(healing*potency));
     }
     const effectiveHeal = partyHealth.reduce((sum,entry)=>sum+Math.max(0,entry.actor.hp-entry.hp),0);
-    if (effectiveHeal&&!ability.subclassId) rewardCombatPurpose(player,world,ability.id,effectiveHeal*.12,now,log);
+    if (effectiveHeal&&(!ability.subclassId||ability.sunkenBase)&&supportProgression(ability)==='healing') rewardCombatPurpose(player,world,ability.id,effectiveHeal*.12,now,log,'healing');
     playAbilityAudioEvent('cast',ability);
     if (!ability.effectProfile&&!ability.subclassId) spawnWorldEffect(world,{kind:'combatTechnique',profile:'release',abilityId:ability.id,classId:ability.classId||player.classId,colors:CLASS_COMBAT_PALETTES[ability.classId||player.classId],masteryTier:ability._mastery?.tier||0,x:player.x,y:player.y-6,radius:24+(ability._mastery?.tier||0)*2,ttl:.3});
     if (ability.id === 'lightbringerDawncarver' && ability.channelProfile) {
@@ -6275,10 +6283,9 @@ function applyThornbeastPassiveHeal(summon, player, world, dt, now, log) {
   const distance = Math.hypot(player.x - summon.x, player.y - summon.y);
   if (distance > 145) return;
 
-  const warding = 1 + levelStat(getSkillLevel(player,'warding'));
   const pathScalar = summon.summonPath === 'evolved' ? 1.35 : summon.summonPath === 'swarm' ? 0.45 : 0.75;
   const summonAbility=resolveAbilityMorph(player,summon.sourceAbilityId||summon.summonAbilityId,summon.summonMorph==='base'?null:summon.summonMorph);
-  const heal = Math.max(1, Math.floor((1 + warding * 0.08) * pathScalar))*getAbilityEffectiveness(player,summonAbility);
+  const heal = Math.max(1, 1.08 * pathScalar) * healingProgressionMultiplier(player,getSkillTreeBonuses(player)) * getAbilityEffectiveness(player,summonAbility);
 
   const before=player.hp;
   player.hp = Math.min(player.maxHp, player.hp + vampireOutsideHealing(player,heal));

@@ -5,6 +5,10 @@ import { LEGACY_SKILL_ART } from './skillArtProfiles.js';
 import { TECHNIQUE_ICON_PATHS } from './combatTechniqueIcons.js';
 // Distinct discipline stages and doctrines keep their own primary emblem.
 const primary={
+ healing_root:'M21 8H27V20H39V26H27V38H21V26H9V20H21Z',
+ healing_deepRecovery:'M6 24H14L19 12L25 34L30 21H42M10 37H38',
+ taunting_root:'M7 24H14L28 12V36L14 29H7ZM33 16L40 11M34 24H43M33 32L40 37',
+ taunting_holdTheLine:'M24 6L39 12V24Q38 37 24 42Q10 37 9 24V12ZM17 23L22 28L32 17',
  grimoire_root:'M5 9Q15 5 24 11Q33 5 43 9V39Q33 35 24 41Q15 35 5 39ZM24 11V41M10 15L18 16M10 22L18 23M30 16L38 15M30 23L38 22',
  blunt_root:'oathkeeperOathStrike',
  blunt_branch_a:'M18 42H22V22L28 17L24 8H16L12 17L18 22ZM16 12H24M30 12L39 16L31 21M31 29L42 33L33 38',

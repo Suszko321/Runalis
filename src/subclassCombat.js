@@ -12,7 +12,7 @@ import {hasLineOfSight,isPassable,moveActorWithCollision} from './world.js';
 import {presentClassMobility} from './classMovement.js';
 import {resolveSummonMovementSpeed} from './summonMovementSpeed.js';
 import {rewardMobilityMastery,rewardCombatPurpose,registerAbilitySupport,rewardAbilitySupport} from './abilityMasterySystem.js';
-import {progressionPower} from './combatPower.js';
+import {healingProgressionMultiplier} from './supportProgression.js';
 import {createFaeFlowerLayout} from './faeFlowerArt.js';
 import {GRAVECALLER_SUSTAIN} from './gravecallerSustain.js';
 import {clearEliteFrost} from './eliteEncounterSystem.js';
@@ -122,7 +122,7 @@ function emit(h,p,a,geometry,extra={}){h.effect({kind:'subclassAbility',abilityI
   x:p.x,y:p.y-5,dirX:h.aim?.x??p.dirX??1,dirY:h.aim?.y??p.dirY??0,
   radius:a.subclassRadius,colors:a.colors,hunterAilment:a.hunterAilment,ttl:.35,layer:geometry==='field'?'behind':'front',...extra});}
 function heal(p,w,a,amount,x,y,r,h,healingBonusMultiplier=1){
-  const bonuses=morphBonuses(p,a,h),scalar=1+(bonuses.supportHealingPct||0)/100;
+  const bonuses=morphBonuses(p,a,h),scalar=(1+(bonuses.supportHealingPct||0)/100)*healingProgressionMultiplier(p,bonuses);
   let total=0;
   for(const ally of a.oathMorph?[p]:validParty(p))if(Math.hypot(ally.x-x,ally.y-y)<=r&&sight(w,x,y,ally)){
     const value=Math.max(1,Math.round((amount+(bonuses.healingPower||0)*healingBonusMultiplier)*scalar*getAbilityEffectiveness(p,a))),before=ally.hp;
@@ -396,7 +396,7 @@ function supportCast(p,w,a,s,h,placeBeacon=true){
   }
   if(a.cryoSkill){
     if(a.cryoWard)ward(p,w,a,h,a.cryoWard,a.cryoWardDuration);
-    if(a.cryoHeal)heal(p,w,a,a.cryoHeal,p.x,p.y,a.subclassRadius,h);
+    if(a.cryoHeal)heal(p,w,a,a.cryoHeal*(a._mastery?.damage||1),p.x,p.y,a.subclassRadius,h);
     if(a.cryoCleanse)cleanseCryoAllies(p,w,a,h,p.x,p.y,a.subclassRadius);
     if(mode==='retaliation')s.retaliation={a,until:h.now+a.cryoWardDuration,power:h.power,stored:0};
     return;
@@ -410,7 +410,7 @@ function supportCast(p,w,a,s,h,placeBeacon=true){
     const souls=sub.id==='acolyte'?s.souls:0;s.souls=Math.max(0,s.souls-souls);
     if(sub.id==='acolyte'&&a.id==='soulSiphon'){
       const bonuses=morphBonuses(p,a,h),fraction=(GRAVECALLER_SUSTAIN.riteBase+souls*GRAVECALLER_SUSTAIN.ritePerSoul)*
-        (1+Math.min(40,bonuses.supportHealingPct||0)/100)*(a._mastery?.damage||1)*getAbilityEffectiveness(p,a);
+        (1+Math.min(40,bonuses.supportHealingPct||0)/100)*healingProgressionMultiplier(p,bonuses)*(a._mastery?.damage||1)*getAbilityEffectiveness(p,a);
       let restored=0;
       for(const ally of validParty(p))if(Math.hypot(ally.x-p.x,ally.y-p.y)<=a.subclassRadius&&sight(w,p.x,p.y,ally)){
         const before=ally.hp;
@@ -492,7 +492,7 @@ export function executeSubclassAbility(p,w,a,slot,h){
       s.fields=s.fields.filter(f=>f.a.id!==a.id);
       const flowers=createFaeFlowerLayout(a.subclassRadius).filter(f=>!w.tiles?.length||(isPassable(w,p.x+f.x,p.y+f.y)&&sight(w,p.x,p.y,{x:p.x+f.x,y:p.y+f.y})));
       const f=addField(s,a,h,p,{startedAt:h.now,until:h.now+a.duration,nextTick:h.now+.8,
-        healingPower:3*progressionPower(p,'warding','defence')*(a._mastery?.damage||1),
+        healingPower:3*(a._mastery?.damage||1),
         flowerVisual:{active:true,duration:a.duration,flowers}});
       emitFlowerField(p,h,f);
     }else{
@@ -631,7 +631,7 @@ export function updateSubclassCombat(p,w,input,dt,now,h){
       // Ground effects retain status application but use their own capped cadence.
       if(!f.trap)for(const e of foes){if(f.a.hellSkill||f.a.hunterMorph)continue;const sub=SUBCLASSES[f.a.subclassId];if(['sunken','petalknight'].includes(sub.id)&&!(f.a.gardenGraveMorph&&sub.id==='petalknight'))control(p,e,now,sub.id==='petalknight'?'root':'slow',.8,f.a);const entry=affliction(s,e,now,f.a);entry.ability=f.a;entry.until=now+(f.a.cryoSkill?5:2);}
       if(!f.a.soulSiphonField&&['heal','blessing'].includes(f.a.subclassSecondary)){
-        heal(p,w,f.a,f.a.bloomFieldHeal?f.a.bloomFieldHeal*progressionPower(p,'warding','defence')*(f.a._mastery?.damage||1):f.a.cryoFieldHeal?f.a.cryoFieldHeal*progressionPower(p,'warding','defence')*(f.a._mastery?.damage||1):f.a.faeFlowerField?f.healingPower:Math.max(2,f.power/getAbilityEffectiveness(p,f.a)*.3),f.x,f.y,f.radius,h,f.a.cryoFieldHeal||f.a.gardenGraveMorph?.25:1);
+        heal(p,w,f.a,f.a.bloomFieldHeal?f.a.bloomFieldHeal*(f.a._mastery?.damage||1):f.a.cryoFieldHeal?f.a.cryoFieldHeal*(f.a._mastery?.damage||1):f.a.faeFlowerField?f.healingPower:Math.max(2,f.power/getAbilityEffectiveness(p,f.a)*.3),f.x,f.y,f.radius,h,f.a.cryoFieldHeal||f.a.gardenGraveMorph?.25:1);
       }
       if(f.a.cryoFieldCleanse)cleanseCryoAllies(p,w,f.a,h,f.x,f.y,f.radius);
       if(f.a.subclassSecondary==='ward')ward(p,w,f.a,h,.2,1,f.x,f.y,f.radius);

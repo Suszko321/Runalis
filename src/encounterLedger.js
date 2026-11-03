@@ -3,6 +3,7 @@ import { abilityProgressionCategories } from './progressionProfiles.js';
 import {resolveSubclassAbility} from './subclassVariants.js';
 import {abilityTraining, wornTraining} from './trainingProfiles.js';
 import {HOTBAR_SLOT_COUNT} from './hotbarConfig.js';
+import {supportProgression} from './supportProgression.js';
 
 const actorIds = new WeakMap();
 let nextActor = 1;
@@ -55,7 +56,11 @@ export function recordSupportContribution(actor, enemies, abilityId, effectiveAm
     const credited = entry.support[key] - previous;
     const ability = resolveSubclassAbility(actor, getAbilityById(abilityId));
     addTrainingEvidence(entry.offenceTraining, abilityTraining(ability), credited);
-    const actionProfile = purpose === 'mobility' ? {dexterity:60, stamina:40} : {warding:60, spirit:40};
+    const support = supportProgression(ability);
+    const actionProfile = purpose === 'taunt' ? {taunting:75, defence:25}
+      : support === 'healing' ? {healing:75, spirit:25}
+      : purpose === 'mobility' ? {dexterity:60, stamina:40}
+      : support === 'warding' ? {warding:75, spirit:25} : {focus:60, spirit:40};
     addTrainingEvidence(entry.actionTraining, actionProfile, credited);
     addTrainingEvidence(entry.armourTraining, wornTraining(actor), credited);
     entry.playerParticipation = true;

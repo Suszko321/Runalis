@@ -727,3 +727,8 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - Split-screen prompts use the viewport's actor. Shared-camera prompts show each local actor's target. Travel prompts take precedence over pending trade offers; an open trade still owns Interact.
 - Mara's stairs now transition the host world when selected by a party member and place the party at the arrival point using the existing hub travel rules.
 - `verify-travel-interaction-prompts.mjs` covers drawing and input contracts, including out-of-range and obscured targets, competing NPCs, both Mara stair directions through an actor view, and sealed versus open dungeon stairs. Physical mobile and live network play were not exercised.
+
+### E52 — Healing and Taunting progression
+
+- Two universal Support trees and two combat proficiency lines. Shared classification drives ability cards, morph cards and combat training. Hybrid healing and protection trains Healing.
+- Verified real casts, perk purchases, XP attribution, taunt exclusions and expiration, and save/load with the dedicated support progression and party support suites.
