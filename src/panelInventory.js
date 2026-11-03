@@ -1,4 +1,4 @@
-import {armourTraining, weaponTraining} from './trainingProfiles.js';
+import {armourTraining, armourWeightLabel, weaponTraining} from './trainingProfiles.js';
 import {vampireOutsideHealing} from './vampireRules.js';
 import {weaponSpiritRecoveryLabel} from './weaponSpiritRecovery.js';
 import {instanceGearItem,GEAR_RARITIES} from './gearRarity.js';
@@ -515,7 +515,7 @@ function inventoryItemDetail(player, entry, options = {}) {
         </div>
         <div>
           <h2 class="inventory-rarity-name" style="--item-rarity:${rarityColor};color:${rarityColor}">${escapeHtml(item.name)}${qty}</h2>
-          <p class="tag">${escapeHtml(rarity?.name || item.rarity || 'Item')}${item.slot?` · ${escapeHtml(slotLabel(item.slot))}`:''}${isUpgradable(item)?` · Tier ${entry.upgradeTier||1}/20`:''}${playerEquipped ? ' · Equipped' : coterieOwner ? ` · ${escapeHtml(coterieOwner)}` : ''}</p>
+          <p class="tag">${escapeHtml(rarity?.name || item.rarity || 'Item')}${item.slot?` · ${escapeHtml([slotLabel(item.slot),armourWeightLabel(item)].filter(Boolean).join(' · '))}`:''}${isUpgradable(item)?` · Tier ${entry.upgradeTier||1}/20`:''}${playerEquipped ? ' · Equipped' : coterieOwner ? ` · ${escapeHtml(coterieOwner)}` : ''}</p>
         </div>
       </div>
 
@@ -669,7 +669,7 @@ function equipmentSlotDetail(player, slot) {
         </div>
         <div>
           <h2 class="inventory-rarity-name" style="--item-rarity:${rarityColor};color:${rarityColor}">${escapeHtml(item.name)} · Tier ${upgradeLevel+1}/20</h2>
-          <p class="tag">${escapeHtml(label)} / ${escapeHtml(rarity?.name || item.rarity || 'Item')} / Equipped</p>
+          <p class="tag">${escapeHtml([label,armourWeightLabel(item),rarity?.name || item.rarity || 'Item','Equipped'].filter(Boolean).join(' · '))}</p>
         </div>
       </div>
 
@@ -1205,12 +1205,12 @@ export function itemStatBlock(player, item, entry = null) {
   const training = item.type === 'weapon' ? weaponTraining(item.primarySkill || item.skill || 'blade',item.weaponType) : armourTraining(item);
   if (training) rows.push(['Training',Object.keys(training).map(skillLabel).join(' · ')]);
   if (item.type === 'armour') {
-    const [weight, handling] = training?.heavyArmour
-      ? ['Heavy', 'More Health and protection · higher dodge and channel costs']
-      : training?.mediumArmour
-        ? ['Medium', 'More close-range damage · modest ranged damage and protection']
-        : ['Light', 'Highest ranged damage bonus · easier dodging and channeling'];
-    rows.push(['Armour weight',weight],['Handling',handling]);
+    const handling = item.armourWeight === 'heavy'
+      ? 'More Health and protection · higher dodge and channel costs'
+      : item.armourWeight === 'medium'
+        ? 'More close-range damage · modest ranged damage and protection'
+        : 'Highest ranged damage bonus · easier dodging and channeling';
+    rows.push(['Handling',handling]);
   }
   if (item.power && item.type !== 'weapon') rows.push(['Power', item.power]);
   if (item.armour !== undefined && item.type!=='weapon' && Number(item.armour)+upgradeBonus>0) rows.push(['Armour', (Number(item.armour)+upgradeBonus).toFixed(2)]);

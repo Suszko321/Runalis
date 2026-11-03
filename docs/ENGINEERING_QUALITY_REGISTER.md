@@ -728,6 +728,13 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - Mara's stairs now transition the host world when selected by a party member and place the party at the arrival point using the existing hub travel rules.
 - `verify-travel-interaction-prompts.mjs` covers drawing and input contracts, including out-of-range and obscured targets, competing NPCs, both Mara stair directions through an actor view, and sealed versus open dungeon stairs. Physical mobile and live network play were not exercised.
 
+### E53 — Explicit armour weights and Orrakai beginner stock
+
+- All 126 wearable armour items declare a weight. Inventory and merchant labels, handling bonuses and combat XP use that designation. Existing player gear roles remain intact. The three plated faction helms now count as Heavy instead of defaulting to Light.
+- The Root & Retort sells three Common Light pieces for 18 gold total. Orrakai's blacksmith sells three Common Medium pieces for 22 gold and three Common Heavy pieces for 26 gold. Each outfit covers head, chest and legs, with individual Tier 1 purchases and no class or level gate.
+- Five new items reuse existing fitted sprite and icon cells. The catalogue, shop purchase/equip, role bonuses, save and XP contracts pass in `verify-armour-progression.mjs` and the wearable registration gate.
+- The browser smoke test opened both shops through NPC dialogue, bought all 21 offers at level 1, and checked the displayed armour weight labels.
+
 ### E52 — Healing and Taunting progression
 
 - Two universal Support trees and two combat proficiency lines. Shared classification drives ability cards, morph cards and combat training. Hybrid healing and protection trains Healing.

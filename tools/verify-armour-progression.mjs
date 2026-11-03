@@ -1,12 +1,15 @@
 import assert from 'node:assert/strict';
 import {ITEMS} from '../src/data.js';
-import {armourTraining,armourHandling} from '../src/trainingProfiles.js';
+import {armourTraining,armourHandling,armourWeightLabel} from '../src/trainingProfiles.js';
 import {createPlayer,chooseClass,getArmour,migratePlayer} from '../src/player.js';
 import {calculateAbilityDamage} from '../src/combat.js';
 import {requestBasicAttack,updateWeaponCombat} from '../src/combatMoves.js';
 import {recordEnemyCombatContribution,grantSharedCombatKillXp} from '../src/combatProgression.js';
 import {normalizeProfileSave} from '../src/saveProfiles.js';
 import {sanitizeForSave} from '../src/gameSave.js';
+
+import {buyMarketOffer,marketOffersForStock} from '../src/shopSystem.js';
+import {equipGearEntry} from '../src/equipmentProgressionSystem.js';
 
 const sets = {
   lightArmour:['clothHood','necromancerRobe','roughLegwraps'],
@@ -27,7 +30,10 @@ function actor(pieces) {
   return p;
 }
 for (const item of Object.values(ITEMS).filter(i=>i.type==='armour')) {
+  assert.ok(['light','medium','heavy'].includes(item.armourWeight),item.id);
   const weights=armourTraining(item);
+  assert.equal(weights[item.armourWeight+'Armour'],50,item.id);
+  assert.match(armourWeightLabel(item),/^(Light|Medium|Heavy) Armour$/);
   assert.equal(Object.keys(sets).filter(id=>weights[id]).length,1,item.id);
 }
 for (const [id,expected] of [['moonstagWardenChest','lightArmour'],['runeboundMarshalChest','mediumArmour'],['sunwardRegentChest','heavyArmour']]) {
@@ -90,4 +96,32 @@ p.hp=0;
 wear(p,sets.lightArmour);
 wear(p,sets.heavyArmour);
 assert.equal(p.hp,0);
+globalThis.document = {getElementById:() => null};
+const merchantArmour = stockId => marketOffersForStock(stockId).filter(o => ITEMS[o.id].type==='armour');
+assert.equal(merchantArmour('alchemist').length,3);
+assert.equal(merchantArmour('blacksmith').length,6);
+for (const [weight,stockId] of [['light','alchemist'],['medium','blacksmith'],['heavy','blacksmith']]) {
+  const offers = merchantArmour(stockId).filter(o => ITEMS[o.id].armourWeight===weight);
+  assert.deepEqual(offers.map(o => ITEMS[o.id].slot),slots);
+  const starter = createPlayer('Shop test');
+  starter.gold = offers.reduce((sum,offer) => sum+offer.price,0);
+  assert.ok(starter.gold <= 30);
+  const shop = {player:starter,marketShop:{stockId},log(){}};
+  for (const offer of offers) {
+    const wrongShop = {...shop,marketShop:{stockId:stockId==='alchemist'?'blacksmith':'alchemist'}};
+    assert.equal(buyMarketOffer(wrongShop,offer.id),false);
+    shop.marketShop.lastPurchaseAt = -Infinity;
+    assert.ok(buyMarketOffer(shop,offer.id),offer.id);
+    const index = starter.inventory.findIndex(e => e.id===offer.id);
+    assert.equal(starter.inventory[index].gearRarity,'common');
+    assert.equal(starter.inventory[index].upgradeTier,1);
+    assert.ok(equipGearEntry(starter,index),offer.id);
+  }
+  assert.equal(starter.gold,0);
+  const target = {name:'Target',hp:50,maxHp:50};
+  recordEnemyCombatContribution(target,starter,'blade',50,{source:'weapon',weaponType:'sword'});
+  grantSharedCombatKillXp(starter,target,100);
+  assert.deepEqual(starter.lastCombatReward.awards.filter(a => a.skillId.endsWith('Armour')).map(a => a.skillId),[weight+'Armour']);
+}
+console.log('PASS all nine beginner pieces buy and equip at level 1 and train the matching armour skill.');
 console.log('PASS armour catalogue, real bow and melee hits, ability damage, armour XP snapshots, save/load and injured gear swaps.');

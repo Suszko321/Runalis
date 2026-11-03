@@ -19,26 +19,20 @@ export function weaponTraining(skill, family) {
   return {[skill]:22, dexterity:10, stamina:8};
 }
 
-const HEAVY_ARMOUR_PIECES = new Set(['knightHelm','graveboundHelm','graveboundGreaves']);
-const MEDIUM_ARMOUR_PIECES = new Set([
-  'battleMageCoat','wardedChest','veyrCourtCoat','roadwardenCoat','brigandMask',
-  'briarCovenantGreaves','blackstarGreaves','watcherGreaves'
-]);
+export function armourWeightLabel(item) {
+  if (item?.type !== 'armour' || !item.armourWeight) return '';
+  return item.armourWeight[0].toUpperCase() + item.armourWeight.slice(1) + ' Armour';
+}
 
 export function armourTraining(item) {
   if (!item || item.type !== 'armour') return null;
-  const style = `${item.visualSilhouette || ''} ${item.name || ''}`.toLowerCase();
-  const role = item.traits || [];
-  const weight = item.armourWeight || (
-    role.includes('Archer') ? 'light' :
-    role.includes('Battlemage') || item.setId === 'ashenExecutioner' || MEDIUM_ARMOUR_PIECES.has(item.id) ? 'medium' :
-    role.includes('Knight') || item.setId === 'pilgrimVigil' || HEAVY_ARMOUR_PIECES.has(item.id) || /plate|mail|steel|iron|greathelm|cuirass|sabatons/.test(style) ? 'heavy' :
-    /leather|brigandine|hide|garb/.test(style) ? 'medium' : 'light'
-  );
+  const weight = item.armourWeight;
   if (weight === 'heavy') {
     return {heavyArmour:50, defence:30, hitpoints:20};
   }
   if (weight === 'medium') return {mediumArmour:50, stamina:20, dexterity:15, defence:15};
+  if (weight !== 'light') return null;
+  const style = `${item.visualSilhouette || ''} ${item.name || ''}`.toLowerCase();
   if (/robe|cloth|silk|vestment|ritual/.test(style) || (item.spirit || 0) > (item.armour || 0)) {
     return {lightArmour:50, spirit:30, focus:20};
   }

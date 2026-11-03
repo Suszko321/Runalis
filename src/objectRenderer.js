@@ -11,7 +11,7 @@ import {drawContinentalObject} from './continentArt.js';
 import {drawActionStateVisuals,drawCombatProjectiles} from './combatVisualsRenderer.js';
 import {drawOrrakaiFixture} from './orrakaiRenderer.js';
 import {drawForestKit,drawEchorynMajorPiece,drawEchorynLandmark} from './echorynRenderer.js';
-import {objectInInteractionRange} from './interactionRange.js';
+import {isTravelInteraction,selectInteractionTarget} from './interactionTargets.js';
 import {drawIronMireObject} from './ironMireArt.js';
 // objectRenderer.js
 // Runalis object renderer.
@@ -175,7 +175,7 @@ function drawObjectUnrotated(ctx, object, camera, questActor = null) {
   if (!object || object.depleted) return;
   if(drawIronMireObject(ctx,object,camera))return;
   if(isDungeonNpc(object)&&drawDungeonNpc(ctx,object,camera)){
-    if(objectInInteractionRange(questActor,object))drawDialogueReadyIndicator(ctx,object.x-camera.x,object.y-camera.y-(object.groveSkull?60:87));return;
+    return;
   }
   if(drawWorkshopFixture(ctx,object,camera))return;
   if (drawContinentalObject(ctx, object, camera, questActor)) return;
@@ -844,10 +844,31 @@ function drawNpc(ctx, npc, camera, questActor = null) {
   if (!npc.suppressQuestMarker && npcHasQuestInteraction(questActor, npc)) {
     drawQuestMark(ctx, p.x, p.y - 62);
   }
-  if(objectInInteractionRange(questActor,npc))drawDialogueReadyIndicator(ctx,p.x,p.y-86);
+}
+
+export function drawWorldInteractionIndicators(ctx, world, camera, actors) {
+  const targets = new Set(actors.map(actor => selectInteractionTarget(world, actor)));
+  for (const target of targets) {
+    if (target) drawWorldInteractionIndicator(ctx, camera, target);
+  }
+}
+
+function drawWorldInteractionIndicator(ctx, camera, target) {
+  const p = screen(target, camera);
+  if (target.kind === 'npc') {
+    const offset = isDungeonNpc(target) ? (target.groveSkull ? 60 : 87) : 86;
+    drawDialogueReadyIndicator(ctx, p.x, p.y - offset);
+  } else if (isTravelInteraction(target)) {
+    const glyph = target.locked ? 'lock' : target.direction || (target.kind === 'towerStairs' ? 'down' : 'door');
+    drawInteractionBadge(ctx, p.x, p.y - 20, glyph);
+  }
 }
 
 export function drawDialogueReadyIndicator(ctx,x,y){
+  drawInteractionBadge(ctx,x,y,'talk');
+}
+
+function drawInteractionBadge(ctx,x,y,glyph){
   ctx.save();ctx.translate(Math.round(x),Math.round(y));
   ctx.shadowColor='#000';ctx.shadowBlur=4;
   ctx.fillStyle='#171b20';ctx.strokeStyle='#e5c87c';ctx.lineWidth=2;
@@ -856,7 +877,27 @@ export function drawDialogueReadyIndicator(ctx,x,y){
   ctx.beginPath();ctx.moveTo(-3,9);ctx.lineTo(-3,14);ctx.lineTo(3,9);
   ctx.fill();ctx.stroke();
   ctx.fillStyle='#f7e6b8';
-  for(const offset of [-6,0,6])ctx.fillRect(offset-1,-1,3,3);
+  if (glyph === 'talk') {
+    for (const offset of [-6,0,6]) ctx.fillRect(offset-1,-1,3,3);
+  } else if (glyph === 'up' || glyph === 'down') {
+    const sign = glyph === 'up' ? 1 : -1;
+    ctx.strokeStyle = ctx.fillStyle;
+    ctx.beginPath();
+    ctx.moveTo(-4, sign * 1);
+    ctx.lineTo(0, sign * -3);
+    ctx.lineTo(4, sign * 1);
+    ctx.moveTo(0, sign * -3);
+    ctx.lineTo(0, sign * 5);
+    ctx.stroke();
+  } else if (glyph === 'lock') {
+    ctx.strokeStyle = ctx.fillStyle;
+    ctx.strokeRect(-2,-5,4,5);
+    ctx.fillRect(-4,-1,8,6);
+  } else {
+    ctx.strokeStyle = ctx.fillStyle;
+    ctx.strokeRect(-4,-5,8,10);
+    ctx.fillRect(0,0,2,2);
+  }
   ctx.restore();
 }
 

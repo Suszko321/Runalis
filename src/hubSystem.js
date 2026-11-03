@@ -166,7 +166,7 @@ function getWorldTransitionGame(game) {
   return game?.hostGame || game;
 }
 
-function placePartyNearHost(game) {
+export function placePartyNearHost(game) {
   const host = game?.player;
   if (!host) return;
 
@@ -191,7 +191,7 @@ function placePartyNearHost(game) {
   }
 }
 
-function clearPartyTravelCombatState(game) {
+export function clearPartyTravelCombatState(game) {
   const host = game?.player;
   if (!host) return;
 

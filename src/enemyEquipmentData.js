@@ -15,8 +15,11 @@ for(const [faction,style] of Object.entries(FACTION_STYLES)){
  for(const [part,label,stats] of definitions){
   const id=`${prefix}${part[0].toUpperCase()+part.slice(1)}`,slot=['bow','staff','dagger'].includes(part)?'weapon':part==='guard'?'trinket':part==='robe'||part==='scoutChest'?'chest':part==='scoutHelm'?'helm':part;
   const silhouette=part==='robe'?'robe':part==='scoutChest'?'leather':part==='scoutHelm'?'hood':slot==='chest'?style.silhouette:slot==='helm'?(['mask','hood','ritual'].includes(style.helm)?'hood':'helm'):slot==='legs'?(style.silhouette==='plate'?'plate':'leather'):undefined;
+  const armourWeight = slot==='helm' ? (silhouette==='hood'?'light':'heavy')
+    : slot==='chest'||slot==='legs' ? ({robe:'light',leather:'medium',plate:'heavy'}[silhouette]) : null;
   ENEMY_EQUIPMENT_ITEMS[id]={id,name:`${style.name} ${label}`,slot,type:slot==='weapon'?'weapon':slot==='trinket'?'trinket':'armour',rarity:'uncommon',stack:false,value:slot==='weapon'?28:18,...stats,
    ...(slot==='weapon'?{skill:stats.weaponType==='bow'?'archery':stats.weaponType==='staff'?'spirit':'blade',primarySkill:stats.weaponType==='bow'?'archery':stats.weaponType==='staff'?'spirit':'blade',primaryMultiplier:1.2,power:1}:{}),
+   ...(armourWeight?{armourWeight}:{}),
    desc:`Weathered ${style.name} equipment recovered from its wearer.`,enemyCollectible:true,visualFactionId:faction,visualPart:part,visualSilhouette:silhouette};
   set[part]=id;
  }

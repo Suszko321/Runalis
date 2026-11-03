@@ -1,6 +1,8 @@
 import {equipmentPurpose,equipmentScaling,abilitySummary} from './uiInformation.js';
 import {gearAcquisitionReason,gearBagCount} from './gearItemization.js';
 import {ORRAKAI_PRACTICE_OFFERS,practiceMerchantKind} from './commonWeaponData.js';
+import {ORRAKAI_BEGINNER_ARMOUR_STOCK} from './beginnerArmourData.js';
+import {armourWeightLabel} from './trainingProfiles.js';
 import {itemIconMarkup} from './gearVisualStyle.js';
 import {makeGearSaleQuote,commitGearSale,isItemLocked} from './gearServices.js';
 import {GEAR_RARITIES} from './gearRarity.js';
@@ -256,7 +258,7 @@ function createMarketShopHtml(player, state = null) {
     <div class="market-shop-panel" role="dialog" aria-modal="true" aria-label="Market shop">
       <div class="market-shop-header">
         <div>
-          <span>${safeState.stockId?'Orrakai · Common Practice Gear':safeState.merchantName ? 'Orrakai · Skill Merchant' : 'Capital Market'}</span>
+          <span>${safeState.stockId?'Orrakai · Common Beginner Gear':safeState.merchantName ? 'Orrakai · Skill Merchant' : 'Capital Market'}</span>
           <h2>${safeState.merchantName || 'Survival Goods'}</h2>
         </div>
         <p>Gold <b>${Math.max(0, Number(player.gold || 0))}</b></p>
@@ -518,7 +520,10 @@ function changeMarketCategory(game, overlay, direction) {
 
 export function marketOffersForStock(stockId){
   if(!Object.hasOwn(ORRAKAI_PRACTICE_OFFERS,stockId))return MARKET_OFFERS;
-  const gear=ORRAKAI_PRACTICE_OFFERS[stockId];
+  const armour = ORRAKAI_BEGINNER_ARMOUR_STOCK[stockId].map(([id,price]) => ({
+    id,price,qty:1,label:ITEMS[id].name,detail:ITEMS[id].desc,gearRarity:'common'
+  }));
+  const gear = [...ORRAKAI_PRACTICE_OFFERS[stockId],...armour];
   return stockId==='alchemist'?[...gear,...SKILL_SCROLL_OFFERS.filter(o=>o.id==='summonWolfScroll')]:gear;
 }
 function getFilteredMarketOffers(categoryId = 'all',stockId=null) {
@@ -541,7 +546,7 @@ function getMarketOfferCategory(offer) {
 function getMarketOfferMeta(offer) {
   const item = ITEMS[offer?.id];
   const category = MARKET_CATEGORIES.find(entry => entry.id === getMarketOfferCategory(offer));
-  return category?.label || formatMarketLabel(item?.type || 'Goods');
+  return armourWeightLabel(item) || category?.label || formatMarketLabel(item?.type || 'Goods');
 }
 
 function formatMarketLabel(value) {

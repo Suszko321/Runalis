@@ -1912,7 +1912,7 @@ class RunalisGame {
         const width=Math.ceil(this.canvas.width/zoom),height=Math.ceil(this.canvas.height/zoom);
         if(surface.width!==width)surface.width=width;
         if(surface.height!==height)surface.height=height;
-        draw(surface.getContext('2d'),this.world,this.player,this.renderCamera,{hideHud:true});
+        draw(surface.getContext('2d'),this.world,this.player,this.renderCamera,{hideHud:true,interactionActors:members});
         this.ctx.imageSmoothingEnabled=false;
         this.ctx.drawImage(surface,0,0,this.canvas.width,this.canvas.height);
       } else draw(this.ctx, this.world, this.player, this.renderCamera, {hideHud:false});
@@ -1998,7 +1998,8 @@ class RunalisGame {
 
       draw(this.ctx, this.world, this.player, camera, {
         viewport,
-        hideHud: true
+        hideHud: true,
+        interactionActors: [member]
       });
 
       this.drawPartyDirectionIndicators(member, members, camera, viewport);

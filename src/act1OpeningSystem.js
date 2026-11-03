@@ -4,7 +4,7 @@
 
 import { TILE } from './data.js';
 import { createWorld } from './world.js';
-import { createCapitalHubWorld } from './hubSystem.js';
+import { createCapitalHubWorld, clearPartyTravelCombatState, placePartyNearHost } from './hubSystem.js';
 import { openDialogue, startQuest } from './dialogueSystem.js';
 import { applyStoryFlags } from './storyProgress.js';
 import { ROOT_RETORT } from './orrakaiLayout.js';
@@ -171,16 +171,20 @@ export function recoverInOrrakai(game) {
 }
 
 export function enterMaraHouse(game) {
+  game = game?.hostGame || game;
   if(!game?.player||game.world?.mode!=='capital')return false;
   game.world=createMaraHouseWorld();game.world.opening.maraAddressDelay=Infinity;
   Object.assign(game.player,{x:7.5*TILE,y:9.5*TILE,dirX:0,dirY:-1,moveTarget:null,currentZone:game.world.name});
   game.player.mercyInOrrakai={...(game.player.mercyInOrrakai||{}),location:'maraHouse'};
   game.camera.x=game.player.x-game.canvas.width/2;game.camera.y=game.player.y-game.canvas.height/2;
+  clearPartyTravelCombatState(game);
+  placePartyNearHost(game);
   game.log?.('You climb to Mara’s room above the Root & Retort.');
   return true;
 }
 
 export function leaveMaraHouse(game) {
+  game = game?.hostGame || game;
   if (!game?.player || game.world?.mode !== 'maraHouse') return false;
   const hub = createCapitalHubWorld();
   hub.safeZone = true;
@@ -192,6 +196,8 @@ export function leaveMaraHouse(game) {
   game.player.dirX = 0; game.player.dirY = 1;
   game.player.currentZone = hub.name;
   game.player.mercyInOrrakai = { ...(game.player.mercyInOrrakai || {}), location: 'orrakai' };
+  clearPartyTravelCombatState(game);
+  placePartyNearHost(game);
   game.rememberSafeLocation?.('rootRetortDownstairs');
   game.camera.x = game.player.x - game.canvas.width / 2;
   game.camera.y = game.player.y - game.canvas.height / 2;

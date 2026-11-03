@@ -51,6 +51,7 @@ import {
 import {
   drawObjects,
   drawObjectDepthOverlays,
+  drawWorldInteractionIndicators,
   drawWorldDrops
 } from './objectRenderer.js';
 
@@ -166,6 +167,7 @@ export function draw(ctx, world, player, camera, options = {}) {
   drawLivingWorld(ctx, world, player, camera);
   drawEchorynDebug(ctx,world,camera);
   drawFloatingTexts(ctx, player, camera);
+  drawWorldInteractionIndicators(ctx, world, camera, options.interactionActors || [player]);
 
   ctx.restore();
 }

@@ -12,6 +12,13 @@ for(const faction of ['Covenant','LastDawn'])for(const [row,part]of ['Helm','Che
 }
 Object.assign(fittings,WEARABLE_CATALOGUE_ART);
 Object.assign(fittings,ENDGAME_WEARABLE_ART);
+Object.assign(fittings,{
+ apprenticeRobe:fittings.necromancerRobe,
+ reinforcedLeatherCap:fittings.brigandMask,
+ reinforcedLeatherLeggings:fittings.watcherGreaves,
+ rivetedIronCuirass:fittings.knightChest,
+ rivetedIronGreaves:fittings.ironGreaves
+});
 for(const fit of Object.values(fittings))fit.iconColumns??=fit.rows||3;
 export const fittedWearable=id=>fittings[id];
 export const fittedChest=id=>fittings[id]?.part===1;

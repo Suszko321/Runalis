@@ -32,6 +32,7 @@ for(const[id,name,role,rarity,base,accent,artDirection]of definitions){
  for(const[row,suffix]of ['Helm','Chest','Legs','Mantle'].entries()){
   const itemId=id+suffix,slot=['helm','chest','legs','trinket'][row];
   ENDGAME_ITEMS[itemId]={id:itemId,name:`${name} ${pieceLabels[role][row]}`,type:row===3?'trinket':'armour',slot,rarity,stack:false,value:Math.round((500+row*70)*scale),armour:scaled(armour[role][row]),spirit:scaled(spirit[role][row]),setId:id,
+   ...(row!==3?{armourWeight:{mage:'light',archer:'light',battlemage:'medium',knight:'heavy'}[role]}:{}),
    endgameExclusive:true,allowedGearRarities:[rarity],minCombatLevel:level,dropMinEnemyLevel:level,noRandomDrop:true,visualPalette:{base,accent},visualSilhouette:row===0?'helm':row===1?(role==='mage'?'robe':role==='archer'?'leather':'plate'):undefined,
    traits:['Endgame',role[0].toUpperCase()+role.slice(1),'Elite / Boss Loot'],desc:`${name} ${pieceLabels[role][row].toLowerCase()}. Combat Level ${level}. Drops from level ${level}+ elites and bosses; exists only at ${rarity==='mythic'?'Mythical':rarity[0].toUpperCase()+rarity.slice(1)} quality. Four-piece ensemble; any class may equip it.`};
   ENDGAME_WEARABLE_ART[itemId]={sheet,row,rows:4,bodies:2,part:row,color:base,iconColumns:4,

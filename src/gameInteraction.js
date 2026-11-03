@@ -16,7 +16,7 @@ import {isClassAvailable} from './classData.js';
 import { openMarketShop } from './shopSystem.js';
 import {discoverStone,investigateSecret,regionalHarvest,rememberHarvest,localizeHarvestBonuses,soundWorldRelic} from './worldExploration.js';
 import {objectInInteractionRange,INTERACTION_RANGE} from './interactionRange.js';
-import {hasLineOfSight} from './world.js';
+import {isCastleVeyrPoi,isTravelInteraction,selectInteractionTarget} from './interactionTargets.js';
 // gameInteraction.js
 // Runalis interaction system.
 //
@@ -231,8 +231,9 @@ function normalizeClassId(classId) {
 // -----------------------------------------------------------------------------
 
 export function interact(game) {
-  if((game.hostGame||game).trading?.interact(game.player))return;
-  const nearest = nearestObject(game, INTERACTION_RANGE);
+  const nearest = nearestObject(game);
+  const trading = (game.hostGame || game).trading;
+  if (trading?.isBusy(game.player) || (!isTravelInteraction(nearest) && trading?.interact(game.player))) return;
 
   if (!nearest) {
     game.log('Nothing close enough to interact with.');
@@ -501,46 +502,7 @@ export function interact(game) {
 }
 
 export function nearestObject(game, range = INTERACTION_RANGE) {
-  let best = null;
-  let bestDistance = Infinity;
-  let bestPriority = -Infinity;
-
-  for (const object of game.world.objects || []) {
-    if (!object || object.depleted) continue;
-    if (!isQuestObjectVisible(object,game.player)) continue;
-    if (object.interactable === false) continue;
-
-    const d = Math.hypot(object.x - game.player.x, object.y - game.player.y);
-    const priority = getInteractionPriority(object);
-
-    if (
-      objectInInteractionRange(game.player,object,range) &&
-      (!game.world.orrakaiRevision || hasLineOfSight(game.world,game.player.x,game.player.y,object.x,object.y)) &&
-      (d < bestDistance - 1 || (Math.abs(d - bestDistance) <= 8 && priority > bestPriority))
-    ) {
-      best = object;
-      bestDistance = d;
-      bestPriority = priority;
-    }
-  }
-
-  return best;
-}
-
-function getInteractionPriority(object) {
-  if (!object) return 0;
-  if (object.townStairs) return 54;
-  if (object.kind === 'npc') return 80;
-  if (object.kind === 'poiInvestigation') return 62;
-  if (object.kind === 'dungeonKey' || object.kind === 'dungeonChest' || object.kind === 'dungeonDoor' || object.kind === 'dungeonPuzzle' || object.kind === 'dungeonEvent') return 60;
-  if (object.kind === 'dungeonEntrance') return 55;
-  if (object.kind === 'sideZoneEntrance' || object.kind === 'sideZoneExit' || object.kind === 'towerEntrance' || object.kind === 'towerStairs' || object.kind === 'towerExit' || object.kind === 'dungeonStairs') return 54;
-  if (object.kind === 'capitalExit') return 52;
-  if (object.kind === 'capitalGate' || object.kind === 'travelRouteGate' || object.kind === 'travelRouteExit' || object.kind === 'travelRouteReturnGate') return 50;
-  if (['marketStall', 'blacksmithService', 'alchemistService', 'guildClerk', 'bankService', 'classTrainerService', 'arenaGate', 'noticeBoard'].includes(object.kind)) return 44;
-  if (object.kind === 'signpost') return 28;
-  if (object.poiId || object.decorative) return 25;
-  return 35;
+  return selectInteractionTarget(game.world, game.player, range);
 }
 
 // -----------------------------------------------------------------------------
@@ -1759,26 +1721,6 @@ function renderInteractionUI(game) {
   if (renderGame?.player) {
     renderUI(renderGame.player, renderGame.logLines, renderGame);
   }
-}
-
-function isCastleVeyrPoi(object) {
-  const id = String(object?.id || '').toLowerCase();
-  const name = String(object?.name || '').toLowerCase();
-  const poiId = String(object?.poiId || '').toLowerCase();
-  const dungeonId = String(object?.dungeonId || '').toLowerCase();
-
-  return (
-    id.includes('castleveyr') ||
-    id.includes('castle_veyr') ||
-    id.includes('castle-veyr') ||
-    name.includes('castle veyr') ||
-    poiId.includes('castleveyr') ||
-    poiId.includes('castle_veyr') ||
-    poiId.includes('castle-veyr') ||
-    dungeonId.includes('castleveyr') ||
-    dungeonId.includes('castle_veyr') ||
-    dungeonId.includes('castle-veyr')
-  );
 }
 
 export function getItemFloatingColor(itemId) {
