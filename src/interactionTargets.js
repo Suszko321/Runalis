@@ -2,6 +2,7 @@ import {objectInInteractionRange,INTERACTION_RANGE} from './interactionRange.js'
 import {isQuestObjectVisible} from './questInteractables.js';
 import {hasLineOfSight} from './world.js';
 
+const TILE_STAIR_APPROACH = 40;
 const TRAVEL_KINDS = new Set([
   'dungeonEntrance', 'dungeonExit', 'dungeonStairs',
   'sideZoneEntrance', 'sideZoneExit', 'towerEntrance', 'towerStairs', 'towerExit',
@@ -30,6 +31,8 @@ export function selectInteractionTarget(world, actor, range = INTERACTION_RANGE)
     if (!isQuestObjectVisible(object,actor)) continue;
 
     const d = Math.hypot(object.x - actor.x, object.y - actor.y);
+    // Give a player standing directly on a stair landing the travel action.
+    if(object.townStairs&&d<=TILE_STAIR_APPROACH&&hasLineOfSight(world,actor.x,actor.y,object.x,object.y))return object;
     const priority = getInteractionPriority(object);
 
     if (

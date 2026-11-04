@@ -5,6 +5,7 @@ import {drawGroveGround,drawGroveMother,drawGroveTells} from './blightedGroveArt
 import {drawOrchardGround,drawOrchardBoss,drawOrchardTells} from './ashenOrchardArt.js';
 import {drawIronMireGround,drawIronMireBoss,drawIronMireTells} from './ironMireArt.js';
 import {drawMalakarGround,drawMalakarTelegraphs,drawMalakarActor} from './malakarRenderer.js';
+import {drawUpstairsInterior} from './upstairsInteriorArt.js';
 import {drawLivingWorld} from './worldAtmosphereRenderer.js';
 import {sampleEnemyAttackPresentation} from './enemyAttackPresentation.js';
 import {ELITE_CUE_PROFILES} from './eliteHazardPresentation.js';
@@ -109,7 +110,7 @@ export function draw(ctx, world, player, camera, options = {}) {
 
   const bounds = getVisibleTileBounds(ctx, world, camera);
 
-  drawTiles(ctx, world, camera, bounds);
+  if(!drawUpstairsInterior(ctx,world,camera))drawTiles(ctx, world, camera, bounds);
   drawAuthoredGround(ctx, world, camera);
   drawMalakarGround(ctx,world,camera);
   drawGroveGround(ctx,world,camera);

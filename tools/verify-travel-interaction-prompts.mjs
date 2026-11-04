@@ -58,7 +58,10 @@ for (const [id,mode] of [['maraHouseDoor','capital'],['maraHomeEntrance','maraHo
     return isActorPositionPassable(game.world,ally.x,ally.y) && nearestObject(view) === stairs;
   });
   assert(approach,`A passable approach must select ${id}`);
-  assert.equal(nearestObject(view),stairs);
+  const blockingNpc={kind:'npc',x:ally.x,y:ally.y,r:14};
+  game.world.objects.unshift(blockingNpc);
+  assert.equal(nearestObject(view),stairs,'Stairs take precedence over a closer NPC on the landing');
+  game.world.objects.shift();
   assert.deepEqual(paint(game.world,ally),[marker(stairs)]);
   interact(view);
   assert.equal(game.world.mode,mode);

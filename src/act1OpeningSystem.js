@@ -62,8 +62,8 @@ export function createMaraHouseWorld() {
     width, height, tileSize: TILE, tiles, enemies: [], drops: [], effects: [], combatEffects: [],
     spawn: { x: MARA_HOUSE_SPAWN.x * TILE + TILE / 2, y: MARA_HOUSE_SPAWN.y * TILE + TILE / 2 },
     objects: [
-      prop('maraBed', 'bedroll', 7, 8, { scale: 1.1 }),
-      prop('maraTable', 'crateStack', 4, 5, { scale: 0.85 }),
+      prop('maraBed', 'infirmaryCot', 11, 6, { scale: 1.1 }),
+      prop('maraTable', 'contractTable', 4, 5, { scale: 0.85 }),
       prop('maraHerbs', 'sacks', 10, 4, { scale: 0.75 }),
       prop('maraLamp', 'lantern', 7, 3, { glow: '#d9ad4f' }),
       {
@@ -90,6 +90,8 @@ export function createAdventurersLounge() {
     spawn:{x:7.5*TILE,y:9.5*TILE},objects:[
       prop('guildLoungeTable','contractTable',4,5),
       prop('guildLoungeLamp','lantern',7,3),
+      prop('guildLoungeBenchWest','bench',3,7),
+      prop('guildLoungeBenchEast','bench',11,7),
       prop('guildLoungeSupplies','sacks',11,4),
       {id:'guildLoungeStairs',kind:'capitalExit',name:'Downstairs — Guild Hall',
         townStairs:true,direction:'down',x:7.5*TILE,y:10.5*TILE,r:20}

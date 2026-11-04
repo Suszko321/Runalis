@@ -151,7 +151,10 @@ export function updateLivingAdventurers(game,dt) {
     }
     const follows=hired&&!['act1Opening','pvpArena'].includes(world.mode);
     const nearby=follows||(!hired&&lounge);
-    const anchor=nearby&&(follows?findNearestActorPassablePoint(world,player.x-36,player.y+24,10,6):
+    const landing=follows&&world.objects.find(object=>object.townStairs&&
+      Math.hypot(player.x-object.x,player.y-object.y)<95);
+    const anchor=nearby&&(follows?findNearestActorPassablePoint(world,
+      landing?landing.x-84:player.x-36,landing?landing.y-62:player.y+24,10,6):
       {x:(2.5+index%6*2)*TILE,y:(3.5+Math.floor(index/6)%4*1.5)*TILE});
     const position=actor||anchor;
     if(!nearby){
@@ -185,7 +188,7 @@ export function updateLivingAdventurers(game,dt) {
     if(!actor.simulatedInCombat&&!actor.adventurerDowned){
       const ownerDistance=Math.hypot(actor.x-player.x,actor.y-player.y);
       if(follows){
-        actor.following=ownerDistance>(actor.following?48:68);
+        actor.following=landing?Math.hypot(actor.x-landing.x,actor.y-landing.y)<85:ownerDistance>(actor.following?48:68);
         if(!actor.following){actor.route=[];actor.nextRoute=0;}
       }
       if((actor.nextRoute||0)<=0){
