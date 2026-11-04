@@ -1,3 +1,4 @@
+import {ensureAdventurerMind,rememberAdventurer,rollAdventurerName} from './adventurerMind.js';
 import {getSummonMovementSpeed} from './combat.js';
 import {migratePlayer} from './player.js';
 import {gearBagCount,gearEquipReason} from './gearItemization.js';
@@ -13,7 +14,6 @@ const runtime = new WeakMap();
 const classes = ['fellhunter','gravecaller','oathkeeper','thornbinder','waverider','lightbringer'];
 const weapons = ['hunterBow','graveScythe','oathkeepersMace','rootStaff','tideglassRapier','crackedDawnlens'];
 const torsos = ['patchedRoadLeathers','necromancerRobe','leatherVest','thornbinderGarb','veyrCourtCoat','patchedTunic'];
-const names = ['Velka Ashreed','Serrik Dunmere','Ormira Vellthorn','Caldrin Rook','Nysera Fen','Daevren Grey'];
 export const ADVENTURER_HIRE_PRICE = 500;
 const COMPANION_TALK_DELAY = 3;
 const REVIVE_SECONDS = 20;
@@ -38,9 +38,10 @@ export function hireGuildAdventurer(game,vendor,actor,random=Math.random) {
   }
   const records=roster(actor);
   const index=Math.floor(random()*classes.length);
-  const name=names[Math.floor(random()*names.length)].split(' ')[0]+' '+names[Math.floor(random()*names.length)].split(' ')[1];
-  for(const record of records)record.hired=false;
+  const name=rollAdventurerName(records,random);
+  for(const record of records){record.hired=false;ensureAdventurerMind(record);}
   const record={id:'guild-hire-'+(records.length+1),name,classId:classes[index],bodyType:random()<.5?'female':'male',hired:true};
+  rememberAdventurer(ensureAdventurerMind(record,random,records),'event','Joined '+actor.name+' through the Adventurers Guild.');
   records.push(record);
   actor.gold-=ADVENTURER_HIRE_PRICE;
   game.log?.(`${name} joined your party for 500 gold.`);
@@ -64,6 +65,7 @@ export function changeAdventurerContract(game,npc,actor,hire) {
   if(!record||record.hired===hire)return false;
   if(hire)for(const other of records)other.hired=false;
   record.hired=hire;
+  rememberAdventurer(ensureAdventurerMind(record),'event',hire?'Rejoined '+actor.name+' on the road.':'Returned to the upstairs guild lounge.');
   npc.hiredAdventurer=hire;
   npc.nextRoute=0;
   npc.companionTalkTime=0;
@@ -90,6 +92,7 @@ export function transferAdventurerGear(game,npc,owner,slot,instanceId) {
   if(previous)owner.inventory.push(previous);
   if(incoming)gear[slot]=incoming;
   else delete gear[slot];
+  if(incoming)rememberAdventurer(ensureAdventurerMind(record),'event','Equipped '+ITEMS[incoming.id].name+' (gift by '+owner.name+')'+'.');
   npc.equipment[slot]=incoming?.id||null;
   npc.equippedGear[slot]=incoming||null;
   record.equipment={...npc.equipment};
@@ -141,7 +144,10 @@ export function updateLivingAdventurers(game,dt) {
   for(const [index,record] of records.entries()){
     let actor=state.actors.get(record.id);
     const hired=record.hired===true;
-    if((actor?actor.hp<=0:record.hp===0)&&record.reviveRemaining==null)record.reviveRemaining=REVIVE_SECONDS;
+    if((actor?actor.hp<=0:record.hp===0)&&record.reviveRemaining==null){
+      record.reviveRemaining=REVIVE_SECONDS;
+      rememberAdventurer(ensureAdventurerMind(record),'event','Went down during an expedition in '+(world.name||'the wilds')+'.');
+    }
     if(record.reviveRemaining!=null){
       record.reviveRemaining=Math.max(0,record.reviveRemaining-dt);
       if(record.reviveRemaining<=1e-9){
@@ -169,6 +175,8 @@ export function updateLivingAdventurers(game,dt) {
       initializeSimulatedSubclassPlayer(actor);
       const kit=Math.max(0,classes.indexOf(record.classId));
       actor.equipment={...actor.equipment,weapon:weapons[kit],chest:torsos[kit],legs:'roughLegwraps',...record.equipment};
+      actor.adventurerMind=ensureAdventurerMind(record);
+      if(hired&&!world.safeZone)rememberAdventurer(actor.adventurerMind,'event','Travelled with '+player.name+' to '+(world.name||'the wilds')+'.');
       actor.equippedGear={...record.gear};
       if(record.skills)Object.assign(actor.skillState.skills,structuredClone(record.skills));
       if(record.combat){actor.skillState.combat={...record.combat};actor.combatLevel=record.combat.level;}

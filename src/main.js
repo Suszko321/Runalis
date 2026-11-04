@@ -14,6 +14,7 @@ import {installReleaseUpdates} from './releaseUpdates.js';
 import {bindFullscreenButtons} from './fullscreenMenu.js';
 import { getKeyboardAbilitySlot } from './abilityBindings.js';
 import {handleGuildContract} from './adventurersGuildContracts.js';
+import {openAdventurerChat} from './adventurerChatUi.js';
 import {openAdventurerInventory} from './adventurerGearUi.js';
 import {updateLivingAdventurers,changeAdventurerContract,hireGuildAdventurer} from './livingAdventurers.js';
 import {updateSimulatedSubclassPlayers} from './simulatedSubclassPlayers.js';
@@ -331,6 +332,7 @@ function isBlockingDomOverlayActive() {
     'workshopServiceOverlay',
     'tailorOverlay',
     'adventurerGearOverlay',
+    'adventurerChatOverlay',
     'pvpArenaOverlay',
     'deathScreenOverlay',
     'onlineMultiplayerOverlay'
@@ -949,6 +951,7 @@ class RunalisGame {
     this.started = false;
     closeTailor(this);
     document.getElementById('adventurerGearOverlay')?.close();
+    document.getElementById('adventurerChatOverlay')?.close();
     this.onlineSession?.destroy();
     this.trading?.destroy();
     this.banking?.destroy();
@@ -1205,6 +1208,7 @@ class RunalisGame {
         return true;
       }
 
+      if(controllerHasMenuAction(input)&&this.inputOwnsOverlay(input,'adventurerChatOverlay')&&handleTailorController(input,'adventurerChatOverlay'))return true;
       if(controllerHasMenuAction(input)&&this.inputOwnsOverlay(input,'adventurerGearOverlay')&&handleTailorController(input,'adventurerGearOverlay'))return true;
       if(controllerHasMenuAction(input)&&this.inputOwnsOverlay(input,'tailorOverlay')&&handleTailorController(input))return true;
       if(controllerHasMenuAction(input)&&this.inputOwnsOverlay(input,'workshopServiceOverlay')&&handleWorkshopControllerInput(input))return true;
@@ -1832,7 +1836,7 @@ class RunalisGame {
   }
 
   isActorInterfaceBusy(actor) {
-    if(actor===this.player&&document.getElementById('adventurerGearOverlay')?.open)return true;
+    if(actor===this.player&&(document.getElementById('adventurerGearOverlay')?.open||document.getElementById('adventurerChatOverlay')?.open))return true;
     if(isTailorBusy(this,actor))return true;
     if (!actor) return false;
     if(this.trading?.isBusy(actor)||this.banking?.isBusy(actor))return true;
@@ -1889,6 +1893,7 @@ class RunalisGame {
       else hireGuildAdventurer(this,serviceNpc,actor);
       return true;
     }
+    if(action.type==='adventurerChat')return openAdventurerChat(this,serviceNpc,actor);
     if(action.type==='adventurerGear')return openAdventurerInventory(this,serviceNpc,actor);
     if(action.type==='hireAdventurer'||action.type==='dismissAdventurer'){
       const changed=changeAdventurerContract(this,serviceNpc,actor,action.type==='hireAdventurer');

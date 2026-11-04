@@ -1,3 +1,4 @@
+import {adventurerNerve} from './adventurerMind.js';
 import {getWeaponTypeFromPlayer} from './combatMoves.js';
 import {canAdventurerFight} from './livingAdventurers.js';
 import {createPlayer,chooseClass,migratePlayer} from './player.js';
@@ -74,7 +75,9 @@ export function updateSimulatedSubclassPlayers(game,dt,now=performance.now()/100
       input.combatAimX=npc.dirX;input.combatAimY=npc.dirY;
       const skills=npc.loadout.abilitySlots.map(id=>resolveSubclassAbility(npc,ABILITIES.find(a=>a.id===id))).filter(Boolean);
       const melee=!['bow','crossbow','spiritFocus','grimoire','eldritch'].includes(getWeaponTypeFromPlayer(npc));
-      const desired=melee?38:145,retreat=npc.hp<npc.maxHp*.3||d<desired*.6;
+      const nerve=adventurerNerve(npc.adventurerMind);
+      const desired=melee?38:145+(2-nerve)*8;
+      const retreat=npc.hp<npc.maxHp*(.38-nerve*.04)||d<desired*.6;
       const movement=npc.activeChannel||npc.abilityCharge?0:retreat?-1:d>desired+8?1:0;
       const speed=70*getPlayerMovementMultiplier(npc,now);
       npc.isMoving=!!movement&&moveActorWithCollision(npc,world,dx/d*movement*speed*dt,dy/d*movement*speed*dt);

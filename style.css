@@ -1542,3 +1542,15 @@ canvas {
 #adventurerGearOverlay::backdrop{background:#090b0dc9}
 #adventurerGearOverlay section{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:8px 0;padding:8px;border:1px solid #736346}
 #adventurerGearOverlay button{min-height:36px;padding:5px 8px;background:#302b24;color:inherit;border:1px solid #887451}
+#adventurerChatOverlay{width:min(560px,calc(100vw - 20px));max-height:calc(100dvh - 20px);overflow:auto;background:#20211f;color:#eee0c4;border:2px solid #9d8455;padding:12px;font:16px Georgia,serif}
+#adventurerChatOverlay::backdrop{background:#090b0dc9}
+#adventurerChatOverlay header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+#adventurerChatOverlay header button{margin-left:auto}
+#adventurerChatOverlay h2,#adventurerChatOverlay p{margin:0 0 5px}
+#adventurerChatOverlay header img{image-rendering:pixelated;border:1px solid #9d8455;background:#171b1b}
+.adventurer-transcript{max-height:min(260px,35dvh);min-height:72px;overflow:auto;padding:8px;background:#171b1b;border:1px solid #736346;overflow-wrap:anywhere}
+.adventurer-transcript strong{display:block;color:#edc56d}
+#adventurerChatOverlay details{margin:8px 0;max-height:100px;overflow:auto}
+#adventurerChatOverlay form>div{display:flex;gap:6px;margin:5px 0}
+#adventurerChatOverlay input[type="text"]{flex:1;min-width:0;font:inherit;padding:7px;background:#171b1b;color:inherit;border:1px solid #887451}
+#adventurerChatOverlay button{min-height:36px;padding:5px 8px;background:#302b24;color:inherit;border:1px solid #887451}

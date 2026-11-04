@@ -1,3 +1,4 @@
+import {rememberAdventurer} from './adventurerMind.js';
 import {trainingPriority, weaponTraining, wornTraining, abilityTraining} from './trainingProfiles.js';
 import { recordAbilityDamage, recordEnemyAbilityStatistics, grantAbilityMasteryXp } from './abilityMasterySystem.js';
 import { onTechniqueDamage, notifyTechniqueDeath } from './combatExpansion.js';
@@ -134,6 +135,8 @@ export function grantSharedCombatKillXp(finalActor, enemy, baseXp, log) {
     const actor = contribution.actor, budget = reward * (actor === credited ? 1 : .5);
     const combat = addCombatXP(actor, budget, {log});
     if(actor.livingAdventurer){
+      if(enemy.isBoss||combat.leveledUp)rememberAdventurer(actor.adventurerMind,'event',
+        'Helped defeat '+(enemy.name||enemy.kind||'an enemy')+(combat.leveledUp?' and reached level '+combat.newLevel:'')+'.');
       const armour=wornTraining(actor);
       const weight=['lightArmour','mediumArmour','heavyArmour'].sort((a,b)=>(armour[b]||0)-(armour[a]||0))[0];
       if(armour[weight])gainXp(actor,weight,budget*.5,undefined,{skipClassXpMultiplier:true});

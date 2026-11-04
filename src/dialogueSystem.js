@@ -2379,6 +2379,7 @@ function openFallbackDialogue(dialogueState, npcObject, player = null) {
     npcObject.hiredAdventurer
       ? {id:'dismiss-adventurer',text:'Send upstairs',action:'dismissAdventurer'}
       : {id:'hire-adventurer',text:'Bring into active party',action:'hireAdventurer'},
+    {id:'adventurer-chat',text:'Talk freely',action:'adventurerChat'},
     {id:'adventurer-gear',text:'Open equipment inventory',action:'adventurerGear'},
     {id:'leave',text:'Leave',close:true}
   ]:npcObject.workshopService||npcObject.id==='orrakaiBanker'?buildDialogueOptions(dialogueState,[],player):[];

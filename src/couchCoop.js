@@ -1933,6 +1933,7 @@ function isCoopActorBusy(game, ally) {
     document.getElementById('workshopServiceOverlay'),
     document.getElementById('tailorOverlay'),
     document.getElementById('adventurerGearOverlay'),
+    document.getElementById('adventurerChatOverlay'),
     document.getElementById('marketShopOverlay'),
     document.getElementById('fishingMiniGameOverlay'),
     document.getElementById('characterCreatorOverlay')

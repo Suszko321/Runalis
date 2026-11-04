@@ -793,3 +793,10 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - Companion dialogue opens an equipment inventory. Transfers move the original gear copy between the player's bag and the companion, preserve its tier, and honour locked items and bag capacity. Starting gear is supplied with the hire.
 - Companions use the shared exponential combat and skill curves with simpler XP awards for the held weapon and dominant worn armour weight. Runtime checks cover fee, bench and active roster, exact transfers, armour XP, recovery and real combat.
 - Both upstairs interiors now have timber floors, plaster and beams, rugs and daylight from visible windows. Stair approaches take priority over overlapping NPC talk prompts, and active companions stand aside at town stair landings. Browser review covered both rooms, and the travel fixture checks a closer NPC cannot intercept the stairs.
+
+### Adventurer personalities and free conversation
+
+- Recruitment rolls a unique name and a permanent voice, background, motive, values and temperament. Existing companions keep their names and get a stable personality when first loaded.
+- Companion dialogue opens a free-text chat with a journal. It retains explicit memories, selected conversation excerpts, and gameplay notes for recruitment, travel, gear, downing and level milestones. Recent turns and each memory category have fixed bounds. Explicit cautious/bold requests influence positioning and retreat thresholds through deterministic gameplay rules.
+- On-device replies are opt-in and offered only when the browser reports its language model is already available. The game supplies limited persona and memory context, treats returned text as dialogue only, and falls back to its local conversation engine on timeout or unavailability. No model keys or remote AI services are used.
+- The runtime suite verifies uniqueness, memory retrieval, persistence, tactic changes, storage bounds and the model adapter with a mock. The touch-browser fixture verifies the chat panel and recall after profile reload. A live on-device model was not exercised.
