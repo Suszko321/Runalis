@@ -26,6 +26,7 @@ export function selectInteractionTarget(world, actor, range = INTERACTION_RANGE)
 
   for (const object of world?.objects || []) {
     if (!objectInInteractionRange(actor,object,range) || object.presentationRetired) continue;
+    if (object.hiredAdventurer && (actor.isMoving||object.simulatedInCombat)) continue;
     if (!isQuestObjectVisible(object,actor)) continue;
 
     const d = Math.hypot(object.x - actor.x, object.y - actor.y);

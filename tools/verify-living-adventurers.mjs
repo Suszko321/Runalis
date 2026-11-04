@@ -3,7 +3,7 @@ import {createDialogueState,openDialogue,updateDialogue,chooseDialogueOption} fr
 import {createPlayer} from '../src/player.js';
 import {createAdventurersLounge} from '../src/act1OpeningSystem.js';
 import {normalizeProfileSave} from '../src/saveProfiles.js';
-import {updateLivingAdventurers,canAdventurerFight,changeAdventurerContract} from '../src/livingAdventurers.js';
+import {updateLivingAdventurers,canAdventurerFight,changeAdventurerContract,getHiredAdventurer} from '../src/livingAdventurers.js';
 import {updateSimulatedSubclassPlayers} from '../src/simulatedSubclassPlayers.js';
 
 const player=createPlayer('Test');
@@ -47,7 +47,19 @@ const travel={player:hiredSave,world:{...world,mode:'dungeon',objects:[]}};
 updateLivingAdventurers(travel,1/60);
 updateLivingAdventurers(travel,1/60);
 assert.deepEqual(travel.world.objects.map(o=>[o.id,o.hiredAdventurer]),[[recruit.id,true]]);
+assert.equal(getHiredAdventurer(world),recruit);
+assert(!changeAdventurerContract(game,recruit,player,false),'Recruit cannot be dismissed before waiting');
+for(let i=0;i<179;i++)updateLivingAdventurers(game,1/60);
+assert.equal(recruit.interactable,false);
+updateLivingAdventurers(game,1/60);
+assert.equal(recruit.interactable,true);
+player.isMoving=true;
+updateLivingAdventurers(game,1/60);
+assert.equal(recruit.interactable,false);
+player.isMoving=false;
+for(let i=0;i<180;i++)updateLivingAdventurers(game,1/60);
 assert(changeAdventurerContract(game,recruit,player,false));
+assert.equal(getHiredAdventurer(world),undefined);
 assert.equal(player.gold,10);
 Object.assign(player,restorePosition);
 const field={mode:'overworld',width:90,height:90,tiles:Array.from({length:90},()=>Array.from({length:90},()=>({passable:true,biome:'grass'}))),

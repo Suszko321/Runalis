@@ -1,5 +1,6 @@
+import {getSummonMovementSpeed} from './combat.js';
 import {addCombatXP} from './skills.js';
-import {objectInInteractionRange} from './interactionRange.js';
+import {objectInInteractionRange,INTERACTION_RANGE} from './interactionRange.js';
 import {hasLineOfSight} from './world.js';
 import {TILE} from './data.js';
 import {findNearestActorPassablePoint,isActorPositionPassable,moveActorWithCollision} from './world.js';
@@ -12,6 +13,7 @@ const torsos = ['patchedRoadLeathers','necromancerRobe','leatherVest','thornbind
 const names = ['Velka Ashreed','Serrik Dunmere','Ormira Vellthorn','Caldrin Rook','Nysera Fen','Daevren Grey'];
 const loungeSpots = [{x:5.5,y:6.5},{x:8.5,y:5.5},{x:10.5,y:6.5}];
 export const ADVENTURER_HIRE_PRICE = 10;
+const COMPANION_TALK_DELAY = 3;
 const TOWN_TIME = 75;
 const FIELD_TIME = 135;
 
@@ -26,6 +28,10 @@ function roster(player) {
     memory.adventurersGuildRoutes=true;
   }
   return records;
+}
+
+export function getHiredAdventurer(world) {
+  return world?.objects?.find(actor=>actor.hiredAdventurer&&actor.hp>0&&!actor.depleted);
 }
 
 export function changeAdventurerContract(game,npc,actor,hire) {
@@ -46,6 +52,8 @@ export function changeAdventurerContract(game,npc,actor,hire) {
   record.hired=hire;
   npc.hiredAdventurer=hire;
   npc.nextRoute=0;
+  npc.companionTalkTime=0;
+  npc.interactable=!hire;
   if(!hire){
     record.phase=game.world.mode==='adventurersLounge'?'town':'field';
     record.remaining=record.phase==='town'?TOWN_TIME:FIELD_TIME;
@@ -132,13 +140,13 @@ export function updateLivingAdventurers(game,dt) {
       state.actors.set(record.id,actor);
     }
     if(!world.objects.includes(actor))world.objects.push(actor);
-    actor.interactable=!actor.simulatedInCombat;
+
     if(follows&&Math.hypot(actor.x-player.x,actor.y-player.y)>700&&!actor.simulatedInCombat)Object.assign(actor,anchor);
     if(!actor.simulatedInCombat){
       if((actor.nextRoute||0)<=0){
         const spot=loungeSpots[index%loungeSpots.length];
         const service={x:spot.x*TILE,y:spot.y*TILE};
-        const target=follows?(Math.hypot(actor.x-player.x,actor.y-player.y)>64?anchor:null):phase==='town'?(record.remaining<25?world.objects.find(o=>o.id==='guildLoungeStairs'):service):
+        const target=follows?(Math.hypot(actor.x-player.x,actor.y-player.y)>52?anchor:null):phase==='town'?(record.remaining<25?world.objects.find(o=>o.id==='guildLoungeStairs'):service):
           findNearestActorPassablePoint(world,anchor.x+Math.sin(record.remaining/15+index)*180,
             anchor.y+Math.cos(record.remaining/17+index)*180,10,8);
         actor.route=path(world,actor,target);
@@ -150,13 +158,18 @@ export function updateLivingAdventurers(game,dt) {
       actor.isMoving=false;
       if(point){
         const dx=point.x-actor.x,dy=point.y-actor.y,d=Math.hypot(dx,dy);
-        const speed=Math.min(d,58*dt);
+        const speed=Math.min(d,follows?getSummonMovementSpeed(actor,player)*Math.min(.05,dt):58*dt);
         actor.dirX=dx/d;actor.dirY=dy/d;
         actor.isMoving=moveActorWithCollision(actor,world,actor.dirX*speed,actor.dirY*speed,10);
         if(actor.isMoving)actor.walkTime=((actor.walkTime||0)+dt*9)%10000;
       }
       if(phase==='town')actor.hp=Math.min(actor.maxHp,actor.hp+dt*4);
     }
+    const canTalk=follows&&!player.isMoving&&!actor.isMoving&&!actor.simulatedInCombat&&
+      Math.hypot(actor.x-player.x,actor.y-player.y)<INTERACTION_RANGE+actor.r&&
+      hasLineOfSight(world,player.x,player.y,actor.x,actor.y);
+    actor.companionTalkTime=canTalk?Math.min(COMPANION_TALK_DELAY,(actor.companionTalkTime||0)+dt):0;
+    actor.interactable=!actor.simulatedInCombat&&(!hired||actor.companionTalkTime>=COMPANION_TALK_DELAY-1e-9);
     record.position={x:actor.x,y:actor.y};
     record.equipment={...actor.equipment};
     record.hp=actor.hp;

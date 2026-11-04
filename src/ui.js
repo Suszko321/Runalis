@@ -1,3 +1,4 @@
+import {getHiredAdventurer} from './livingAdventurers.js';
 import {TRAINING_PRIORITIES, trainingPriority} from './trainingProfiles.js';
 import {tankTauntProfile} from './tankTaunt.js';
 import {retireRemovedQuestState} from './questRoster.js';
@@ -332,7 +333,7 @@ function renderUIContent(player, logLines, game, options = {}) {
     hideGameHudDom();
   } else {
     const hudPlayer = hostPlayer;
-    renderUnitFrames(hudPlayer);
+    renderUnitFrames(hudPlayer,game?.world);
     renderCombatHud(hudPlayer);
     renderMinimapHud(game);
     renderTrackedQuestHud(hudPlayer);
@@ -2581,7 +2582,7 @@ export function clearGameUiDom() {
 // TOP-LEFT MMORPG UNIT FRAMES
 // -----------------------------------------------------------------------------
 
-function renderUnitFrames(player) {
+function renderUnitFrames(player,world) {
   let frame = document.getElementById('unitFramesHud');
 
   if (!gameScreenIsActive()) {
@@ -2597,7 +2598,9 @@ function renderUnitFrames(player) {
 
   const activeSummons = (player.summons || []).filter(s => s.alive !== false);
   const activeCoop = (player.coop?.players || []).filter(ally => ally && ally.active !== false);
+  const companion=getHiredAdventurer(world);
   const partyEntries = [
+    ...(companion?[coopUnitFrame(companion,'Hired adventurer')]:[]),
     ...activeCoop.map(ally => coopUnitFrame(ally)),
     ...activeSummons.map(summon => summonUnitFrame(summon,player))
   ];
@@ -2673,10 +2676,10 @@ function summonUnitFrame(summon,player) {
   `;
 }
 
-function coopUnitFrame(ally) {
+function coopUnitFrame(ally,subtitle) {
   const hp = Math.max(0, ally.hp ?? ally.maxHp ?? 1);
   const maxHp = Math.max(1, ally.maxHp ?? hp ?? 1);
-  const className = ally.className || 'Classless';
+  const className = subtitle || ally.className || 'Classless';
 
   return `
     <div class="unit-frame summon-unit-frame coop-unit-frame">

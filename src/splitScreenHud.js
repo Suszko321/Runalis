@@ -1,3 +1,4 @@
+import {getHiredAdventurer} from './livingAdventurers.js';
 import {vampireHealthCost} from './vampireRules.js';
 import { ABILITY_GAMEPAD_LABELS } from './abilityBindings.js';
 import { getAbilityAvailability } from './abilityLoadoutSystem.js';
@@ -85,6 +86,20 @@ export function drawSplitScreenHud(ctx, player, viewport, options = {}) {
     ctx.fillStyle = 'rgba(3,6,12,.85)';ctx.fillRect(panelX, panelY + panelHeight + 2, panelWidth, 14);
     ctx.font = dense ? 'bold 7px sans-serif' : 'bold 9px sans-serif';ctx.textAlign = 'left';ctx.textBaseline = 'middle';ctx.fillStyle = '#f5edf8';
     ctx.fillText(trimText(ctx, statuses.join(' · '), panelWidth - 12, ctx.font), panelX + 6, panelY + panelHeight + 9);
+  }
+
+  const companion=getHiredAdventurer(game?.world);
+  if(companion){
+    const y=panelY+panelHeight+(statuses.length?20:5);
+    const height=dense?28:38,portrait=height-8;
+    drawHudPanel(ctx,panelX,y,panelWidth,height,'#edc56d');
+    drawHudPortrait(ctx,companion,panelX+7,y+4,portrait,portrait);
+    const x=panelX+portrait+12,width=panelWidth-portrait-20;
+    ctx.font='bold 10px Georgia';ctx.textAlign='left';ctx.textBaseline='top';ctx.fillStyle='#f5edf8';
+    ctx.fillText(trimText(ctx,companion.name,width,ctx.font),x,y+5);
+    ctx.fillStyle='#44262a';ctx.fillRect(x,y+height-10,width,5);
+    ctx.fillStyle=RESOURCE_COLORS.hp;
+    ctx.fillRect(x,y+height-10,width*Math.max(0,Math.min(1,companion.hp/Math.max(1,companion.maxHp))),5);
   }
 
   drawHotbar(ctx, player, viewport, compact, color, dense);
