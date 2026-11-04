@@ -540,7 +540,7 @@ export function talk(game, npc) {
     return;
   }
 
-  if (npc.dialogueId || npc.npcId) {
+  if (npc.livingAdventurer || npc.dialogueId || npc.npcId) {
     const opened = openDialogue(game.dialogue, npc, actor, game.world);
 
     if (opened) {

@@ -5736,6 +5736,10 @@ function handleEnemyDeath(enemy, player, world, log) {
   });
 
   if(enemy.rewardSuppressed||enemy.summonedBy||enemy.summonedByBoss)return;
+  if(player.livingAdventurer){
+    grantSharedCombatKillXp(player,enemy,enemy.xp ?? defaultEnemyXp(enemy),()=>{});
+    return;
+  }
   const questPlayer = player.questOwner || player;
   recordPoiEnemyDefeat(questPlayer, enemy, world);
   markKillObjective(player, enemy);

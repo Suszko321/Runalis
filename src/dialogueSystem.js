@@ -2370,12 +2370,17 @@ function syncQuestStateBridgeFromQuestLog(player) {
 
 function openFallbackDialogue(dialogueState, npcObject, player = null) {
   const nodeId = dialogueState.dialogueId || `fallback:${npcObject.id || 'npc'}`;
-  const serviceChoices=npcObject.workshopService||npcObject.id==='orrakaiBanker'?buildDialogueOptions(dialogueState,[],player):[];
+  const serviceChoices=npcObject.livingAdventurer?[
+    npcObject.hiredAdventurer
+      ? {id:'dismiss-adventurer',text:'Dismiss from party',action:'dismissAdventurer'}
+      : {id:'hire-adventurer',text:'Hire for 10 gold',action:'hireAdventurer'},
+    {id:'leave',text:'Leave',close:true}
+  ]:npcObject.workshopService||npcObject.id==='orrakaiBanker'?buildDialogueOptions(dialogueState,[],player):[];
   const node = {
     id: nodeId,
     speakerId: npcObject.npcId || npcObject.id || 'npc',
     speakerName: npcObject.name || 'Unknown',
-    text: npcObject.talk || `${npcObject.name || 'Someone'} has nothing else to say.`,
+    text: npcObject.livingAdventurer ? (npcObject.hiredAdventurer?'I’ll keep pace.':'I can travel with you for ten gold.') : npcObject.talk || `${npcObject.name || 'Someone'} has nothing else to say.`,
     closeAfterCurrent: !serviceChoices.length,
     runtimeChoices: serviceChoices
   };

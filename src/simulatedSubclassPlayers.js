@@ -1,3 +1,4 @@
+import {canAdventurerFight} from './livingAdventurers.js';
 import {createPlayer,chooseClass,migratePlayer} from './player.js';
 import {ABILITIES} from './data.js';
 import {ensureSimulatedSubclass} from './subclassSystem.js';
@@ -44,7 +45,8 @@ export function initializeSimulatedSubclassPlayer(npc){
 export function updateSimulatedSubclassPlayers(game,dt,now=performance.now()/1000){
   const {player:host,world}=game;if(!host||!world)return;
   const safe=world.safeZone||['capital','hub','town'].includes(world.mode);
-  const actors=(world.objects||[]).filter(n=>n?.simulatedPlayer||n?.isSimulatedPlayer).slice(0,4);
+  const actors=(world.objects||[]).filter(n=>(n?.simulatedPlayer||n?.isSimulatedPlayer)&&!n.depleted)
+    .sort((a,b)=>Number(!!b.hiredAdventurer)-Number(!!a.hiredAdventurer)||Number(!!b.livingAdventurer)-Number(!!a.livingAdventurer)).slice(0,4);
   for(const previous of trackedActors.get(game)||[])if(!actors.includes(previous)){
     clearSubclassCombatState(previous,'removed');setSubclassSupportParty(previous,[]);previous.abilityCharge=null;previous.simulatedInCombat=false;
   }
@@ -57,7 +59,8 @@ export function updateSimulatedSubclassPlayers(game,dt,now=performance.now()/100
       clearSubclassCombatState(npc);if(npc.hp<=0){npc.depleted=true;npc.isMoving=false;}continue;
     }
     setSubclassSupportParty(npc,[host,...(host.coop?.players||[]),...actors]);
-    const target=(world.enemies||[]).filter(e=>e.hp>0&&!e.dead&&!e.friendly&&!e.remove&&Math.hypot(e.x-npc.x,e.y-npc.y)<340&&Math.hypot(e.x-brain.origin.x,e.y-brain.origin.y)<450&&hasLineOfSight(world,npc.x,npc.y,e.x,e.y,{startSkip:1,endSkip:1}))
+    const combatWorld=npc.livingAdventurer?Object.assign(Object.create(world),{enemies:(world.enemies||[]).filter(enemy=>canAdventurerFight(enemy,npc.hiredAdventurer))}):world;
+    const target=(combatWorld.enemies||[]).filter(e=>e.hp>0&&!e.dead&&!e.friendly&&!e.remove&&Math.hypot(e.x-npc.x,e.y-npc.y)<340&&Math.hypot(e.x-brain.origin.x,e.y-brain.origin.y)<450&&hasLineOfSight(world,npc.x,npc.y,e.x,e.y,{startSkip:1,endSkip:1}))
       .sort((a,b)=>Math.hypot(a.x-npc.x,a.y-npc.y)-Math.hypot(b.x-npc.x,b.y-npc.y))[0];
     const input={mouseAimActive:!!target,mouseWorldX:target?.x,mouseWorldY:target?.y};
     if(brain.slot>=0){input[`ability${brain.slot}Held`]=!!target&&now<brain.releaseAt;input[`ability${brain.slot}Released`]=!input[`ability${brain.slot}Held`];if(input[`ability${brain.slot}Released`])brain.slot=-1;}
@@ -83,6 +86,6 @@ export function updateSimulatedSubclassPlayers(game,dt,now=performance.now()/100
         brain.nextDecision=now+1.5;
       }
     }
-    updateAbilityInput(npc,world,input,dt,now,()=>{});updateCombat(npc,world,input,dt,now,()=>{});
+    updateAbilityInput(npc,combatWorld,input,dt,now,()=>{});updateCombat(npc,combatWorld,input,dt,now,()=>{});
   }
 }

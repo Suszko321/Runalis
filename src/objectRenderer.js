@@ -832,8 +832,9 @@ function drawNpc(ctx, npc, camera, questActor = null) {
   drawWorkshopWorker(ctx,npc,camera);
   if(npc.simulatedPlayer){drawActionStateVisuals(ctx,npc,camera);drawCombatProjectiles(ctx,npc,camera);}
 
-  const displayName = npc.disposition==='hostile' ? getEnemyNameplate(npc).text : renameLastDawn(getNpcDisplayName(npc));
+  const displayName = npc.simulatedPlayer ? `${npc.name} · Lv ${npc.skillState?.combat?.level || npc.combatLevel || 1}` : npc.disposition==='hostile' ? getEnemyNameplate(npc).text : renameLastDawn(getNpcDisplayName(npc));
 
+  if (npc.simulatedPlayer && questActor && Math.hypot(npc.x-questActor.x,npc.y-questActor.y)>240) return;
   if (!npc.hideLabel && (!npc.orrakaiResident || !questActor || Math.hypot(npc.x-questActor.x,npc.y-questActor.y)<190)) {
     label(ctx, displayName, p.x, p.y - 48, {
       priority: npc.labelPriority || 4,
@@ -916,6 +917,7 @@ function getNpcDisplayName(npc) {
 }
 
 function getNpcLabelColor(npc) {
+  if (npc?.simulatedPlayer) return '#edc56d';
   if (npc?.disposition === 'hostile') return '#ff7777';
   if (npc?.disposition === 'fearful') return '#d8c7ff';
   if (npc?.disposition === 'uncertain') return '#d8c7ff';

@@ -291,7 +291,7 @@ export function createSaveState(game) {
     // Do not save overworld tiles/features/objects/enemies.
     worldTiles: isInstancedWorld ? sanitizeForSave(game.world.tiles || []) : null,
     worldTerrainFeatures: null,
-    worldObjects: isInstancedWorld ? sanitizeForSave(game.world.objects || []) : null,
+    worldObjects: isInstancedWorld ? sanitizeForSave((game.world.objects || []).filter(object=>!object.livingAdventurer)) : null,
     enemies: isInstancedWorld ? sanitizeForSave(game.world.enemies || []) : null,
     worldDrops: isInstancedWorld ? sanitizeForSave(game.world.drops || []) : [],
 

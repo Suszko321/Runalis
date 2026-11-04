@@ -13,6 +13,7 @@ import {createDeathScreen} from './deathScreen.js';
 import {installReleaseUpdates} from './releaseUpdates.js';
 import {bindFullscreenButtons} from './fullscreenMenu.js';
 import { getKeyboardAbilitySlot } from './abilityBindings.js';
+import {updateLivingAdventurers,changeAdventurerContract} from './livingAdventurers.js';
 import {updateSimulatedSubclassPlayers} from './simulatedSubclassPlayers.js';
 import {menuDirection,directionalMenuItem} from './menuNavigation.js';
 import {migrateOrrakaiPosition} from './orrakaiLayout.js';
@@ -1872,6 +1873,11 @@ class RunalisGame {
     }
     this.dialogue.pendingAction = null;
     closeDialogue(this.dialogue, { immediate: true });
+    if(action.type==='hireAdventurer'||action.type==='dismissAdventurer'){
+      const changed=changeAdventurerContract(this,serviceNpc,actor,action.type==='hireAdventurer');
+      if(!changed&&actor!==this.player)this.log('Only the party host can manage hired adventurers.');
+      return true;
+    }
     if(action.type==='bank')return this.banking.open(actor,serviceNpc);
     if(action.type==='maraApothecary')return useMaraApothecary(this.setUiOwner(actor),serviceNpc);
     if(['workshopWeapons','workshopArmour','workshopCraft'].includes(action.type)){
@@ -2457,6 +2463,7 @@ class RunalisGame {
   }
 
   updateAmbientNpcs(dt) {
+    updateLivingAdventurers(this,dt);
     updateSimulatedSubclassPlayers(this,dt);
     if (!this.world?.objects?.length) return;
 

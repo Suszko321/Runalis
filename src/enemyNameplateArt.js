@@ -21,13 +21,13 @@ export function drawEnemyNameplate(ctx,enemy,x,y,{hideLabel=false}={}){
    const lift=p.modifiers?12:0;
    ctx.lineWidth=4;ctx.strokeStyle='#0a1013';ctx.strokeText(p.name,Math.round(x),top-22-lift);
    ctx.lineWidth=2;ctx.strokeStyle='#b79957';ctx.strokeText(p.name,Math.round(x),top-22-lift);
-   ctx.fillStyle='#f2e6c8';ctx.fillText(p.name,Math.round(x),top-22-lift);
-   const symbol=p.rank==='boss'?'♛':'◆',rank=p.rank==='boss'?'BOSS':['rare','champion'].includes(enemy.encounterTier)?enemy.encounterTier.toUpperCase():'ELITE';
+   ctx.fillStyle=p.label.color;ctx.fillText(p.name,Math.round(x),top-22-lift);
+   const symbol='☠',rank=p.rank==='boss'?'BOSS':['rare','champion'].includes(enemy.encounterTier)?enemy.encounterTier.toUpperCase():'ELITE';
    ctx.lineWidth=3;ctx.strokeStyle='#0a1013';ctx.font='bold 9px sans-serif';ctx.fillStyle='#e28b73';const rankText=`${symbol} ${rank} · Lv. ${p.label.level}`;ctx.strokeText(rankText,Math.round(x),top-9-lift);ctx.fillText(rankText,Math.round(x),top-9-lift);
    if(p.modifiers){ctx.font='9px sans-serif';ctx.fillStyle='#c9b894';ctx.strokeText(p.modifiers,Math.round(x),top-9);ctx.fillText(p.modifiers,Math.round(x),top-9);}
   }else{
    const nameWidth=ctx.measureText(p.name).width,level=`Lv. ${p.label.level}`;ctx.font='bold 9px sans-serif';const levelWidth=ctx.measureText(level).width,total=nameWidth+9+levelWidth,start=Math.round(x-total/2);
-   ctx.textAlign='left';ctx.font='bold 10px Georgia';ctx.strokeText(p.name,start,top-7);ctx.fillStyle='#e6dfcd';ctx.fillText(p.name,start,top-7);ctx.font='bold 9px sans-serif';ctx.strokeText(level,start+nameWidth+9,top-7);ctx.fillStyle='#df8275';ctx.fillText(level,start+nameWidth+9,top-7);
+   ctx.textAlign='left';ctx.font='bold 10px Georgia';ctx.strokeText(p.name,start,top-7);ctx.fillStyle=p.label.color;ctx.fillText(p.name,start,top-7);ctx.font='bold 9px sans-serif';ctx.strokeText(level,start+nameWidth+9,top-7);ctx.fillStyle='#df8275';ctx.fillText(level,start+nameWidth+9,top-7);
   }
  }
  ctx.restore();
