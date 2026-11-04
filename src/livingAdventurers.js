@@ -145,17 +145,15 @@ export function updateLivingAdventurers(game,dt) {
         actor.nextRoute=follows ? .65 : 12+index*2;
       }
       actor.nextRoute-=dt;
+      while(actor.route?.length&&Math.hypot(actor.route[0].x-actor.x,actor.route[0].y-actor.y)<3)actor.route.shift();
       const point=actor.route?.[0];
       actor.isMoving=false;
       if(point){
         const dx=point.x-actor.x,dy=point.y-actor.y,d=Math.hypot(dx,dy);
-        if(d<3)actor.route.shift();
-        else {
-          const speed=Math.min(d,58*dt);
-          actor.dirX=dx/d;actor.dirY=dy/d;
-          actor.isMoving=moveActorWithCollision(actor,world,actor.dirX*speed,actor.dirY*speed,10);
-          if(actor.isMoving)actor.walkTime=(actor.walkTime||0)+dt;
-        }
+        const speed=Math.min(d,58*dt);
+        actor.dirX=dx/d;actor.dirY=dy/d;
+        actor.isMoving=moveActorWithCollision(actor,world,actor.dirX*speed,actor.dirY*speed,10);
+        if(actor.isMoving)actor.walkTime=((actor.walkTime||0)+dt*9)%10000;
       }
       if(phase==='town')actor.hp=Math.min(actor.maxHp,actor.hp+dt*4);
     }

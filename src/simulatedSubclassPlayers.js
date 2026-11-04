@@ -72,8 +72,9 @@ export function updateSimulatedSubclassPlayers(game,dt,now=performance.now()/100
       const melee=skills.filter(a=>['melee','retaliation','ward','empower'].includes(a.subclassMode)).length>=2;
       const desired=melee?52:170,retreat=npc.hp<npc.maxHp*.3||d<desired*.6;
       const movement=npc.activeChannel||npc.abilityCharge?0:retreat?-1:d>desired?1:0;
-      const speed=70*getPlayerMovementMultiplier(npc,now);moveActorWithCollision(npc,world,dx/d*movement*speed*dt,dy/d*movement*speed*dt);
-      npc.isMoving=!!movement;npc.walkTime=(npc.walkTime||0)+(movement?dt:0);
+      const speed=70*getPlayerMovementMultiplier(npc,now);
+      npc.isMoving=!!movement&&moveActorWithCollision(npc,world,dx/d*movement*speed*dt,dy/d*movement*speed*dt);
+      if(npc.isMoving)npc.walkTime=((npc.walkTime||0)+dt*9)%10000;
       input.attackPressed=melee&&d<65&&now>=brain.nextDecision;
       if(now>=brain.nextDecision&&brain.slot<0&&!npc.activeChannel&&!npc.abilityCharge){
         const support=skills.find(a=>['heal','ward','ritual','retaliation'].includes(a.subclassMode)&&[host,npc].some(p=>p.hp<p.maxHp*.7));

@@ -800,7 +800,7 @@ function drawNpc(ctx, npc, camera, questActor = null) {
 
   const p = screen(npc, camera);
 
-  if (npc.instructorType === 'class' || npc.classId) {
+  if (!npc.simulatedPlayer && !npc.isSimulatedPlayer && (npc.instructorType === 'class' || npc.classId)) {
     drawInstructorGroundMark(ctx, p.x, p.y, npc.classId);
   }
 

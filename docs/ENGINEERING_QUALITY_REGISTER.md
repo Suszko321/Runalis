@@ -780,3 +780,5 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - Contracts record the kill count at acceptance and pay once after a new recorded boss defeat. Legacy paid flags prevent duplicate payouts on older characters.
 - The lounge is an independently restored safe interior with shared-party stairs. Resting adventurers gather upstairs, and expedition anchors move away from the Orrakai landing. Older rosters clear their obsolete unhired coordinates once.
 - The guild fixture checks the vendor dialogue, new kill proof, one-time payment, both stairs and a save restored upstairs.
+
+- Adventurers now advance their gait clock at the same rate as ambient human NPCs, including during combat repositioning. Route arrivals consume reached waypoints before choosing the current frame’s movement, and the renderer skips the class-instructor ground marker for simulated adventurers.

@@ -16,6 +16,7 @@ assert.equal(adventurers.length,3);
 const original=adventurers.map(o=>[o.x,o.y]);
 for(let i=0;i<180;i++)updateLivingAdventurers(game,1/60);
 assert(adventurers.some((o,i)=>o.x!==original[i][0]||o.y!==original[i][1]));
+assert(adventurers.some(o=>o.walkTime>3),'Walking advances the NPC animation clock faster than elapsed seconds');
 assert.equal(new Set(adventurers.map(o=>o.id)).size,3);
 assert(adventurers.every(o=>o.equipment.weapon&&o.interactable));
 adventurers[0].hp=0;
