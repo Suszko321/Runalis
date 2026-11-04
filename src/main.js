@@ -230,6 +230,7 @@ import {
   handleMarketShopControllerInput,
   openMarketShop
 } from './shopSystem.js';
+import {closeTailor,isTailorBusy,handleTailorController} from './tailorService.js';
 import {openWorkshopService,closeWorkshopService,handleWorkshopControllerInput,updateWorkshopService} from './workshopService.js';
 
 import {
@@ -325,6 +326,7 @@ function isBlockingDomOverlayActive() {
   return [
     'characterCreatorOverlay',
     'workshopServiceOverlay',
+    'tailorOverlay',
     'pvpArenaOverlay',
     'deathScreenOverlay',
     'onlineMultiplayerOverlay'
@@ -941,6 +943,7 @@ class RunalisGame {
     document.getElementById('mobileDialogue')?.remove();
     cancelPartyEntry(this,'',false);
     this.started = false;
+    closeTailor(this);
     this.onlineSession?.destroy();
     this.trading?.destroy();
     this.banking?.destroy();
@@ -1197,6 +1200,7 @@ class RunalisGame {
         return true;
       }
 
+      if(controllerHasMenuAction(input)&&this.inputOwnsOverlay(input,'tailorOverlay')&&handleTailorController(input))return true;
       if(controllerHasMenuAction(input)&&this.inputOwnsOverlay(input,'workshopServiceOverlay')&&handleWorkshopControllerInput(input))return true;
       if (
         controllerHasMenuAction(input) &&
@@ -1822,6 +1826,7 @@ class RunalisGame {
   }
 
   isActorInterfaceBusy(actor) {
+    if(isTailorBusy(this,actor))return true;
     if (!actor) return false;
     if(this.trading?.isBusy(actor)||this.banking?.isBusy(actor))return true;
     if(this.localMenus?.isBusy(actor))return true;

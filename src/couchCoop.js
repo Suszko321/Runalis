@@ -1931,6 +1931,7 @@ function isCoopActorBusy(game, ally) {
 
   const ownerOverlays = [
     document.getElementById('workshopServiceOverlay'),
+    document.getElementById('tailorOverlay'),
     document.getElementById('marketShopOverlay'),
     document.getElementById('fishingMiniGameOverlay'),
     document.getElementById('characterCreatorOverlay')

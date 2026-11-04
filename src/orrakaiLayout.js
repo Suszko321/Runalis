@@ -1,7 +1,7 @@
 // Authored town geometry, in hidden gameplay cells. Narrative identities stay in hubSystem.
 import {TILE} from './data.js';
 
-export const ORRAKAI_REVISION = 3;
+export const ORRAKAI_REVISION = 4;
 export const ROOT_RETORT = Object.freeze({stairs:{x:55,y:39},arrival:{x:55,y:40},counter:{x:49,y:39}});
 // Open paving, clear of gate arches, roofs, stalls and terrace foregrounds.
 export const ORRAKAI_WATCH_POSTS = [
@@ -18,6 +18,7 @@ export const ORRAKAI_BUILDINGS = [
   {id:'smith',name:'Aren’s Forge',x:47,y:22,w:15,h:9,door:6,roof:1,partition:10,rooms:['Forge','Tool store']},
   {id:'infirmary',name:'Covenant Infirmary',x:16,y:36,w:14,h:7,door:6,roof:2,partition:9,rooms:['Receiving room','Recovery ward']},
   {id:'alchemist',name:'The Root & Retort',x:46,y:36,w:12,h:7,door:3,roof:1,partition:6,rooms:['Apothecary','Herb store']},
+  {id:'tailor',name:'The Quiet Stitch',x:6,y:36,w:5,h:7,door:2,roof:3,rooms:['Tailor shop']},
   {id:'home',name:'Corin’s Workshop',workshopName:'Corin’s Workshop',x:7,y:23,w:8,h:8,door:1,roof:3,partition:4,rooms:['Workshop','Living quarters']}
 ];
 export const ORRAKAI_TERRACES = [
@@ -71,6 +72,11 @@ export function reconstructOrrakai(world){
      else Object.assign(world.tiles[y][x],{biome:'ruin',passable:true,interiorId:b.id});
    }
  }
+ if (!world.objects.some(o=>o.id==='orrakaiTailor')) world.objects.push({
+   id:'orrakaiTailor',npcId:'orrakaiTailor',kind:'npc',name:'Nessa Reed, Tailor',
+   ...point(8,38),r:14,tailorService:true,stationary:true,disposition:'friendly',
+   factionId:'orrakai',bodyType:'female',shirt:'#567871',talk:'Welcome to the Quiet Stitch.'
+ });
  // Ilyra stands beside her book stall on the market terrace, off the main road.
  if (!world.objects.some(o=>o.id==='orrakaiSkillMerchant')) world.objects.push({
    id:'orrakaiSkillMerchant',kind:'npc',name:'Ilyra, Pact Scribe',skillMerchant:true,
@@ -102,6 +108,7 @@ export function reconstructOrrakai(world){
  ['altar-candles','candleCluster',13,10],['sanctuary-candles','candleCluster',17,10],['vestry','alchemyTable',22,10],
  ['cot-a','infirmaryCot',27,37],['cot-b','infirmaryCot',27,41],['medicine','medicineCrates',18,37],['wash','washBasin',24,37],
  ['retort','alchemyTable',48,37],['herbs','herbPlanter',56,37],['apothecary-sacks','sacks',56,40],
+ ['tailor-table','contractTable',7,37],['tailor-cloth','sacks',9,37],
  ['home-bed','infirmaryCot',13,24],['home-table','contractTable',8,25],['home-fuel','woodPile',10,29],
  ['craft-tools','weaponRack',10,24],['craft-supplies','sacks',13,28],['quench','barrels',51,23],
  ['smith-sign','workshopSign',55,31,{service:'blacksmith'}],['craft-sign','workshopSign',10,31,{service:'craftsman'}],
@@ -195,7 +202,7 @@ export function migrateOrrakaiPosition(world,player){
  let moved=false;
  for(const actor of [player,...(player.coop?.players||[])]){
    if(!actor)continue;
-   if(actor.orrakaiLayoutRevision!==ORRAKAI_REVISION||!open(actor.x,actor.y)){Object.assign(actor,world.spawn);actor.currentPosition={...world.spawn};actor.moveTarget=null;moved=true;}
+   if((actor.orrakaiLayoutRevision||0)<3||!open(actor.x,actor.y)){Object.assign(actor,world.spawn);actor.currentPosition={...world.spawn};actor.moveTarget=null;moved=true;}
    if(actor.lastSafeLocation?.worldMode==='capital'&&!open(actor.lastSafeLocation.x,actor.lastSafeLocation.y))Object.assign(actor.lastSafeLocation,world.spawn);
    actor.orrakaiLayoutRevision=ORRAKAI_REVISION;
  }

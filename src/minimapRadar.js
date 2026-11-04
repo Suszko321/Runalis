@@ -41,6 +41,7 @@ export function classifyRadarMarker(entity,group,targets={ids:new Set(),questIds
  if(!active(entity))return null;
  if(!isQuestObjectVisible(entity,targets.player))return null;
  if(entity.hideOnRadar)return null;
+ if(entity.tailorService)return {color:'#edd49a',shape:'needle',service:'tailor'};
  const service=WORKSHOP_MARKERS[entity.workshopService];
  if(service)return {...service,service:entity.workshopService,quest:ID_FIELDS.some(key=>targets.ids.has(entity[key]))};
  const friendly=entity.friendly||entity.disposition==='friendly'||['ally','friendly','player'].includes(entity.team);
@@ -67,6 +68,13 @@ function background(ctx,size){
  backgrounds.set(ctx,{size,canvas});return canvas;
 }
 function marker(ctx,x,y,color,shape,actor){
+ if(shape==='needle'){
+  ctx.save();ctx.lineCap='round';ctx.strokeStyle='#0b1012';ctx.lineWidth=4;
+  ctx.beginPath();ctx.moveTo(x-5,y+5);ctx.lineTo(x+4,y-4);ctx.stroke();
+  ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.stroke();
+  ctx.beginPath();ctx.arc(x+4,y-4,1.5,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x+4,y-3);ctx.bezierCurveTo(x+10,y+5,x-3,y-5,x-4,y+1);ctx.stroke();ctx.restore();return;
+ }
  if(shape==='anvil'||shape==='tools'){drawWorkshopIcon(ctx,shape==='anvil'?'blacksmith':'craftsman',x,y,12);return;}
  ctx.fillStyle=color;ctx.strokeStyle='#080e11';ctx.lineWidth=2;
  ctx.beginPath();

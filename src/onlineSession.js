@@ -1,3 +1,4 @@
+import {openTailor} from './tailorService.js';
 import {createSaveState,applySaveToGame,upsertProfile} from './gameSave.js';
 import {migratePlayer,getClassDefinition} from './player.js';
 import {joinOnlineCoopPlayer,leaveCouchCoopPlayer} from './couchCoop.js';
@@ -177,7 +178,8 @@ class OnlineSession {
   }
   if(packet.type==='service'&&this.role==='guest'){
    const npc=this.game.world.objects.find(o=>o.id===packet.npcId);
-   if(packet.action==='bank')this.game.banking?.open(this.game.player,npc);
+   if(packet.action==='tailor')openTailor(this.game,npc);
+   else if(packet.action==='bank')this.game.banking?.open(this.game.player,npc);
    else if(packet.action==='shop')openMarketShop(this.game,npc);
    else if(npc)openWorkshopService(this.game,npc,packet.action==='workshopWeapons'?'weapons':packet.action==='workshopArmour'?'armour':'craft');
   }
@@ -266,7 +268,7 @@ class OnlineSession {
   if(Number.isFinite(dx)&&Number.isFinite(dy)&&Math.hypot(dx,dy)>.01&&Math.hypot(dx,dy)<256){this.smoothing.set(target,{x,y,toX:source.x,toY:source.y,at:Date.now()});target.x=x;target.y=y;}
   else this.smoothing.delete(target);
  }
- isMenuBusy(){return this.game.paused||!!document.querySelector('.player-bank,.panel.open,#characterCreatorOverlay.active,#workshopServiceOverlay.active,#marketShopOverlay.active,#onlineMultiplayerOverlay.active');}
+ isMenuBusy(){return this.game.paused||!!document.querySelector('.player-bank,.panel.open,#characterCreatorOverlay.active,#tailorOverlay.active,#workshopServiceOverlay.active,#marketShopOverlay.active,#onlineMultiplayerOverlay.active');}
  updateGuest(dt){
   if(!this.ready)return;
   const g=this.game,now=Date.now(),busy=this.isMenuBusy();
@@ -319,7 +321,7 @@ class OnlineSession {
  cancelCharges(){if(this.role==='guest')this.wire?.send({type:'cancelCharge'});}
  sendPartyEntryAnswer(id,accept){if(this.role==='guest'&&this.ready)this.wire?.send({type:'party-entry',id,accept});}
  delegateService(actor,action,npc){
-  if(!['bank','shop','workshopWeapons','workshopArmour','workshopCraft'].includes(action.type))return false;
+  if(!['bank','shop','tailor','workshopWeapons','workshopArmour','workshopCraft'].includes(action.type))return false;
   const record=[...this.clients.values()].find(c=>c.actor===actor);if(!record)return false;
   actor.networkMenuBusy=true;record.wire.send({type:'service',action:action.type,npcId:npc?.id});return true;
  }

@@ -1,3 +1,4 @@
+import {dyeMaterialPixel,dyeRGB} from './gearDye.js';
 import {humanHeadLayout} from './humanHeadLayout.js';
 import {WEARABLE_CATALOGUE_ART} from './playerWearableCatalogue.js';
 import {ENDGAME_WEARABLE_ART} from './endgameEquipmentData.js';
@@ -35,8 +36,9 @@ function sourcePixels(image){
 }
 // Material transfer changes RGB only. Source alpha, limb positions, outlines,
 // frame choice and the existing body/weapon animation remain authoritative.
-export function applyFittedPlayerGarments(frame,original,bodyType,equipment,images){
+export function applyFittedPlayerGarments(frame,original,bodyType,equipment,images,dyes={}){
  const chest=fittedChest(wearableId(equipment?.chest)),legs=fittedLegs(wearableId(equipment?.legs));if(!chest&&!legs)return;
+ const colours = Object.fromEntries(Object.entries(dyes).filter(([,colour])=>colour).map(([slot,colour])=>[slot,dyeRGB(colour)]));
  const body=bodyType==='female'?1:0,width=frame.width,data=frame.data;
  for(let row=0;row<4;row++)for(let col=0;col<width/64;col++){
   const legBounds=[{left:64,right:0,top:80,bottom:0},{left:64,right:0,top:80,bottom:0}];
@@ -63,9 +65,25 @@ export function applyFittedPlayerGarments(frame,original,bodyType,equipment,imag
    const n=(((body*(fit.rows||3)+fit.row)*80+ry+ty)*image.width+row*64+rx+tx)*4;
    if(source[n+3]<128)continue;
    const light=part===1?clamp(.8+(r+g+b)/1075,.85,1.08):clamp(.8+(r+g+b)/1200,.82,1.03);
-   for(let k=0;k<3;k++)data[i+k]=Math.round(source[n+k]*light);
+   if(colours[slot])dyeMaterialPixel(data,i,source[n],source[n+1],source[n+2],colours[slot],light);
+   else for(let k=0;k<3;k++)data[i+k]=Math.round(source[n+k]*light);
   }
  }
+}
+const dyedHelmSheets = new WeakMap();
+export function dyedHelmSheet(image, dye) {
+ if(!dye)return image;
+ let variants=dyedHelmSheets.get(image);
+ if(!variants){variants=new Map();dyedHelmSheets.set(image,variants);}
+ if(variants.has(dye))return variants.get(dye);
+ const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;
+ const ctx=canvas.getContext('2d'),frame=ctx.createImageData(image.width,image.height);
+ frame.data.set(sourcePixels(image));
+ const colour=dyeRGB(dye),data=frame.data;
+ for(let i=0;i<data.length;i+=4)if(data[i+3])dyeMaterialPixel(data,i,data[i],data[i+1],data[i+2],colour);
+ ctx.putImageData(frame,0,0);
+ if(variants.size>=8)variants.delete(variants.keys().next().value);
+ variants.set(dye,canvas);return canvas;
 }
 export function drawFittedPlayerHelm(ctx,image,facing,x,y,bob,pose,fit={row:0,rows:3},profile={}){
  if(!image)return false;

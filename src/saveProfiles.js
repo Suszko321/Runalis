@@ -6,6 +6,8 @@
 // without throwing or destroying usable data.
 
 import { createPlayer, migratePlayer } from './player.js';
+import {ITEMS} from './data.js';
+import {DYE_SLOTS,validDyeColour} from './gearDye.js';
 import { retireRemovedQuestState } from './questRoster.js';
 import { rebaseCooldownMap } from './cooldownClock.js';
 import { migrateLastDawnDisplayText } from './humanoidEnemies.js';
@@ -130,6 +132,13 @@ export function normalizeProfileSave(profile, options = {}) {
   player.appearance = player.appearance && typeof player.appearance === 'object'
     ? player.appearance
     : {};
+  if (player.appearance.gearDyes) {
+    const dyes = player.appearance.gearDyes;
+    player.appearance = {...player.appearance,gearDyes:Object.fromEntries(
+      Object.values(ITEMS).filter(item => item.type==='armour' && DYE_SLOTS.includes(item.slot) &&
+        validDyeColour(dyes[item.id])).map(item => [item.id,dyes[item.id].toLowerCase()])
+    )};
+  }
 
   const migrated = migratePlayer(player);
 

@@ -760,3 +760,9 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - Lowered fitted hoods and headpieces with cowls by two native pixels while retaining the shoulder anchor and item-specific offsets. Browser review covered the Chapel Hermit and mixed outfits from four directions on both bodies.
 - Follow-up lowered the hood shell another two native pixels and cropped the covered hair above the face when fitted hood art is ready. Reviewed the 32 browser poses again, including the Hermit's front view.
 - Lowered the fitted hood shell one additional native pixel. The head fit checks and 32 browser previews passed.
+
+### Orrakai tailor
+
+- The Quiet Stitch is a walk-in house on the southwest edge of Orrakai, with a needle-and-thread radar marker. A valid nearby interaction opens the tailor for the interacting actor.
+- Dye presets and custom colours preview through the normal human renderer. Dye remaps RGB in the fitted helm atlas and garment texture samples while preserving alpha. Changes are character cosmetics keyed by armour design and exclude weapons and accessories.
+- Browser contracts covered 126 armour designs in 1,008 body/direction renders, dye apply/reset, profile reload, radar classification, radius-aware house access and mobile panel width. The historical reconstruction fixture still stops at the banker's existing NPC identity mismatch.

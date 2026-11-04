@@ -1,3 +1,4 @@
+import {gearDye,DYE_SLOTS} from './gearDye.js';
 import {drawRoyalVampire} from './vampireArt.js';
 // humanRenderer.js
 // Runalis code-drawn humanoid renderer.
@@ -112,7 +113,8 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
 
   const skin = options.skin || actor.skin || '#ffd1bd';
   const hair = options.hair || actor.hair || '#111111';
-  const shirt = fittedChest(wearableId(actor.equipment?.chest))?fittedShirt(wearableId(actor.equipment?.chest)):options.shirt || actor.shirt || '#f2a51f';
+  const gearDyes=Object.fromEntries(DYE_SLOTS.map(slot=>[slot,gearDye(actor,slot)]));
+  const shirt = gearDyes.chest || (fittedChest(wearableId(actor.equipment?.chest))?fittedShirt(wearableId(actor.equipment?.chest)):options.shirt || actor.shirt || '#f2a51f');
   const pants = fittedLegs(wearableId(actor.equipment?.legs))?'#39373d':options.pants || actor.pants || '#293fba';
   const boots = fittedLegs(wearableId(actor.equipment?.legs))?'#4b3629':options.boots || actor.boots || '#3a2a22';
   const bodyType = options.bodyType || actor.bodyType || actor.appearance?.bodyType || 'male';
@@ -150,6 +152,7 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
 
   const useSprite = humanSpriteReady(bodyType);
   animationPose.fittedPlayerWearables = useSprite;
+  animationPose.gearDyes = gearDyes;
   animationPose.bodyType = bodyType;
   animationPose.hairStyle = hairStyle;
   if (useSprite && usesSideLocomotion(animationPose, facing)) {
@@ -178,7 +181,7 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
   const drawGuard=()=>drawFactionGuard(ctx,actor,facing,sampleArmoredArms(armActor,animationPose,facing,bob).support.hand);
   const drawArms=(layer,selection)=>drawMeleeArms(ctx,armActor,animationPose,facing,bob,layer,selection,armoredArms);
   const drawLegwearGloves=selection=>drawMeleeArms(ctx,armActor,animationPose,facing,bob,'hands',selection,true);
-  const handParts={bodyType,hairStyle,skin,hair,shirt,pants,boots,facing,bob,animationPose,wearables:actor.equipment};
+  const handParts={bodyType,hairStyle,skin,hair,shirt,pants,boots,facing,bob,animationPose,wearables:actor.equipment,gearDyes};
   // The left arm is the far arm facing east, and the near arm facing west.
   if(backSheathed&&facing!=='up')drawSheathedWeapon(ctx,actor,facing,bob);
   if(modularArms&&rearArm){drawArms('arms',rearArm);drawArms('hands',rearArm);}
@@ -247,7 +250,7 @@ export function drawHumanActor(ctx, actor, camera, options = {}) {
       ctx.beginPath();ctx.rect(-100,-150,200,144+Math.round(bob));
       ctx.clip();
     }
-    drawHumanSprite(ctx, { bodyType, hairStyle, skin, hair, shirt, pants, boots, facing, bob, hideLegs:replacementLegs, animationPose:articulatedArms&&!armoredArms?{...animationPose,state:'idle',attacking:false,weaponType:'unarmed'}:animationPose, bodyOnly: spriteUsesClassicHead, wearables:actor.equipment });
+    drawHumanSprite(ctx, { bodyType, hairStyle, skin, hair, shirt, pants, boots, facing, bob, hideLegs:replacementLegs, animationPose:articulatedArms&&!armoredArms?{...animationPose,state:'idle',attacking:false,weaponType:'unarmed'}:animationPose, bodyOnly: spriteUsesClassicHead, wearables:actor.equipment,gearDyes });
     ctx.restore();
     if (spriteUsesClassicHead) {
       if(customHeadReady())drawCustomHead(ctx,{bodyType,hairStyle,facing,bob,skin,hair,headgear,eyeColor:appearanceCosmetics?.eyeColor});

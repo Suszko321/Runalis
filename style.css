@@ -1528,3 +1528,13 @@ canvas {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+#tailorOverlay{width:min(570px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;background:#20211f;color:#eee0c4;border:2px solid #9d8455;padding:14px;font:16px Georgia,serif}
+#tailorOverlay::backdrop{background:#090b0dc9}
+#tailorOverlay h2,#tailorOverlay p{margin:0 0 8px}
+.tailor-layout{display:grid;grid-template-columns:minmax(92px,152px) 1fr;gap:10px;align-items:start;margin-bottom:8px}
+.tailor-layout canvas{width:100%;image-rendering:pixelated;background:#39362e;border:1px solid #736346}
+.tailor-controls{display:flex;flex-wrap:wrap;gap:5px;margin:5px 0}
+#tailorOverlay button{padding:5px 8px;min-height:36px;background:#302b24;color:inherit;border:1px solid #887451;cursor:pointer}
+#tailorOverlay button[aria-pressed="true"],#tailorOverlay button:focus-visible{outline:2px solid #efcf86;outline-offset:-2px}
+#tailorOverlay [data-dye]{min-width:36px;background:var(--swatch)}

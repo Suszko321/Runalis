@@ -45,7 +45,7 @@ function humanVariant(bodyType, colors, attack=false) {
   const chest=wearableId(colors.wearables?.chest),legs=wearableId(colors.wearables?.legs);
   const fitted=Object.fromEntries([['chest',chest],['legs',legs]].map(([slot,id])=>[slot,fittedWearable(id)?asset(fittedWearable(id).sheet):null]));
   const fittingReady=Object.values(fitted).some(a=>a?.ready);
-  const key = `${name}|${colors.skin}|${colors.hair}|${colors.shirt}|${colors.pants}|${colors.boots}|${fittedChest(chest)?chest:''}|${fittedLegs(legs)?legs:''}|${!!fitted.chest?.ready}|${!!fitted.legs?.ready}`;
+  const key = `${name}|${colors.skin}|${colors.hair}|${colors.shirt}|${colors.pants}|${colors.boots}|${fittedChest(chest)?chest:''}|${fittedLegs(legs)?legs:''}|${!!fitted.chest?.ready}|${!!fitted.legs?.ready}|${colors.gearDyes?.chest||''}|${colors.gearDyes?.legs||''}`;
   if (variants.has(key)) return variants.get(key);
   const canvas = document.createElement('canvas');
   canvas.width = a.image.width; canvas.height = a.image.height;
@@ -72,7 +72,7 @@ function humanVariant(bodyType, colors, attack=false) {
     const target=ramps[region];
     for(let k=0;k<3;k++) d[i+k]=Math.min(255,Math.round(target[k]*Math.max(.35,Math.min(1.65,level))));
   }
-  if(original)applyFittedPlayerGarments(frame,original,bodyType,colors.wearables,Object.fromEntries(Object.entries(fitted).map(([slot,a])=>[slot,a?.ready?a.image:null])));
+  if(original)applyFittedPlayerGarments(frame,original,bodyType,colors.wearables,Object.fromEntries(Object.entries(fitted).map(([slot,a])=>[slot,a?.ready?a.image:null])),colors.gearDyes);
   c.putImageData(frame,0,0);
   if(variants.size>=MAX_VARIANTS) variants.delete(variants.keys().next().value);
   variants.set(key,canvas);

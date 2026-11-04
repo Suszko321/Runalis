@@ -1,3 +1,4 @@
+import {openTailor} from './tailorService.js';
 import {equipGearEntry} from './equipmentProgressionSystem.js';
 import {vampireOutsideHealing} from './vampireRules.js';
 import {grantWorldItem} from './lootSystem.js';
@@ -254,6 +255,7 @@ export function interact(game) {
       investigateSecret(game, nearest);
       return;
     case 'npc':
+      if (nearest.tailorService) { openTailor(game,nearest); return; }
       if (nearest.skillMerchant) { openMarketShop(game,nearest); return; }
       talk(game, nearest);
       return;
