@@ -133,6 +133,14 @@ export function grantSharedCombatKillXp(finalActor, enemy, baseXp, log) {
   for (const contribution of qualifying) {
     const actor = contribution.actor, budget = reward * (actor === credited ? 1 : .5);
     const combat = addCombatXP(actor, budget, {log});
+    if(actor.livingAdventurer){
+      const armour=wornTraining(actor);
+      const weight=['lightArmour','mediumArmour','heavyArmour'].sort((a,b)=>(armour[b]||0)-(armour[a]||0))[0];
+      if(armour[weight])gainXp(actor,weight,budget*.5,undefined,{skipClassXpMultiplier:true});
+      gainXp(actor,getWeaponSkill(actor),budget*.5,undefined,{skipClassXpMultiplier:true});
+      syncLegacySkills(actor);
+      continue;
+    }
     const awards = allocateEncounterXP(actor, contribution, budget);
     // These proficiency shares distribute the victory XP already awarded above.
     // They must not award the same mastery XP a second time.

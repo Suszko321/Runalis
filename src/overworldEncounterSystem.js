@@ -1,7 +1,6 @@
 import {updateAuthoredPopulation,populationPositionSafe} from './encounterPopulation.js';
 import {geographicEncounterProfile,configureEncounterEnemy} from './encounterData.js';
 import {ecologyAt} from './worldAuthorship.js';
-import {initializeSimulatedSubclassPlayer} from './simulatedSubclassPlayers.js';
 // overworldEncounterSystem.js
 // Lightweight Act I overworld activity spawner.
 //
@@ -178,7 +177,9 @@ function spawnHostilePatrol(world,point,encounterId,tier,now,rng=Math.random,par
 }
 
 function spawnTraveler(world, point, encounterId, now,rng=Math.random) {
-  const template = TRAVELER_TEMPLATES[Math.floor(rng() * TRAVELER_TEMPLATES.length) % TRAVELER_TEMPLATES.length];
+  const civilians=TRAVELER_TEMPLATES.filter(template=>!template.classId);
+  if(!civilians.length)return;
+  const template=civilians[Math.floor(rng()*civilians.length)];
   const npc = makeObject('npc', `${encounterId}-${template.id}`, template.name, point[0], point[1], {
     npcId: `${encounterId}-${template.id}`,
     classId: template.classId,
@@ -203,7 +204,6 @@ function spawnTraveler(world, point, encounterId, now,rng=Math.random) {
   });
 
   world.objects = world.objects || [];
-  if(npc.simulatedPlayer)initializeSimulatedSubclassPlayer(npc);
   world.objects.push(npc);
 }
 

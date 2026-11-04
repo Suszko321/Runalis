@@ -1538,3 +1538,7 @@ canvas {
 #tailorOverlay button{padding:5px 8px;min-height:36px;background:#302b24;color:inherit;border:1px solid #887451;cursor:pointer}
 #tailorOverlay button[aria-pressed="true"],#tailorOverlay button:focus-visible{outline:2px solid #efcf86;outline-offset:-2px}
 #tailorOverlay [data-dye]{min-width:36px;background:var(--swatch)}
+#adventurerGearOverlay{width:min(580px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;background:#20211f;color:#eee0c4;border:2px solid #9d8455;padding:14px;font:16px Georgia,serif}
+#adventurerGearOverlay::backdrop{background:#090b0dc9}
+#adventurerGearOverlay section{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:8px 0;padding:8px;border:1px solid #736346}
+#adventurerGearOverlay button{min-height:36px;padding:5px 8px;background:#302b24;color:inherit;border:1px solid #887451}

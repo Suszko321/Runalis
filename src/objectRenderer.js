@@ -767,6 +767,7 @@ export function getNpcRenderActor(npc) {
     y: npc.y,
     dirX: npc.dirX ?? 0,
     dirY: npc.dirY ?? 1,
+    hp:npc.adventurerDowned?0:undefined,
     walkTime: npc.walkTime || 0,
     isMoving: !!npc.isMoving,
     classId: npc.classId || null,

@@ -2600,7 +2600,7 @@ function renderUnitFrames(player,world) {
   const activeCoop = (player.coop?.players || []).filter(ally => ally && ally.active !== false);
   const companion=getHiredAdventurer(world);
   const partyEntries = [
-    ...(companion?[coopUnitFrame(companion,'Hired adventurer')]:[]),
+    ...(companion?[coopUnitFrame(companion,companion.reviveRemaining?`Revives in ${Math.ceil(companion.reviveRemaining)}s`:'Hired adventurer')]:[]),
     ...activeCoop.map(ally => coopUnitFrame(ally)),
     ...activeSummons.map(summon => summonUnitFrame(summon,player))
   ];

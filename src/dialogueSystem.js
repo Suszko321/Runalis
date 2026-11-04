@@ -2372,19 +2372,21 @@ function syncQuestStateBridgeFromQuestLog(player) {
 function openFallbackDialogue(dialogueState, npcObject, player = null) {
   const nodeId = dialogueState.dialogueId || `fallback:${npcObject.id || 'npc'}`;
   const serviceChoices=npcObject.guildContractVendor?[
+    {id:'guild-hire',text:'Hire a new adventurer · 500 gold',action:'guildHireAdventurer'},
     ...guildContractChoices(player),{id:'guild-services',text:'Milestones and travel permits',action:'guildServices'},
     {id:'leave',text:'Leave',close:true}
   ]:npcObject.livingAdventurer?[
     npcObject.hiredAdventurer
-      ? {id:'dismiss-adventurer',text:'Dismiss from party',action:'dismissAdventurer'}
-      : {id:'hire-adventurer',text:'Hire for 10 gold',action:'hireAdventurer'},
+      ? {id:'dismiss-adventurer',text:'Send upstairs',action:'dismissAdventurer'}
+      : {id:'hire-adventurer',text:'Bring into active party',action:'hireAdventurer'},
+    {id:'adventurer-gear',text:'Open equipment inventory',action:'adventurerGear'},
     {id:'leave',text:'Leave',close:true}
   ]:npcObject.workshopService||npcObject.id==='orrakaiBanker'?buildDialogueOptions(dialogueState,[],player):[];
   const node = {
     id: nodeId,
     speakerId: npcObject.npcId || npcObject.id || 'npc',
     speakerName: npcObject.name || 'Unknown',
-    text: npcObject.guildContractVendor?'Pick a hunt. Bring back proof and we’ll pay the posted reward.':npcObject.livingAdventurer ? (npcObject.hiredAdventurer?'I’ll keep pace.':'I can travel with you for ten gold.') : npcObject.talk || `${npcObject.name || 'Someone'} has nothing else to say.`,
+    text: npcObject.guildContractVendor?'Pick a hunt. Bring back proof and we’ll pay the posted reward.':npcObject.livingAdventurer ? (npcObject.hiredAdventurer?'I’ll keep pace.':'I’m available when you need me.') : npcObject.talk || `${npcObject.name || 'Someone'} has nothing else to say.`,
     closeAfterCurrent: !serviceChoices.length,
     runtimeChoices: serviceChoices
   };

@@ -96,7 +96,7 @@ export function drawSplitScreenHud(ctx, player, viewport, options = {}) {
     drawHudPortrait(ctx,companion,panelX+7,y+4,portrait,portrait);
     const x=panelX+portrait+12,width=panelWidth-portrait-20;
     ctx.font='bold 10px Georgia';ctx.textAlign='left';ctx.textBaseline='top';ctx.fillStyle='#f5edf8';
-    ctx.fillText(trimText(ctx,companion.name,width,ctx.font),x,y+5);
+    ctx.fillText(trimText(ctx,companion.reviveRemaining?'Revives in '+Math.ceil(companion.reviveRemaining)+'s':companion.name,width,ctx.font),x,y+5);
     ctx.fillStyle='#44262a';ctx.fillRect(x,y+height-10,width,5);
     ctx.fillStyle=RESOURCE_COLORS.hp;
     ctx.fillRect(x,y+height-10,width*Math.max(0,Math.min(1,companion.hp/Math.max(1,companion.maxHp))),5);

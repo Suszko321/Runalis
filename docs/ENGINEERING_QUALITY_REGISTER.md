@@ -785,3 +785,10 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - Hired adventurers appear with a human portrait and live HP in the standard and shared/split HUDs. Their follow route uses the summon movement-speed resolver. The owner must stand within talk range for three uninterrupted seconds before the companion can be selected for dialogue.
 - Adventurer pathfinding now allows diagonal steps with corner-clearance checks. Their equipped weapons use the shared six-second player stance timer, and hired adventurers look for nearby ordinary hostiles around the party instead of their original spawn. The runtime fixture verifies a diagonal walk, idle and combat weapon stance, and a hired companion casting a real class skill and defeating an ordinary hostile away from its spawn.
 - Adventurers take direct routes when the full actor footprint clears terrain. Travel speed ramps up, eases into the last waypoint, and stays lower near the owner, with separate distances for starting and stopping follow movement. Combat AI checks the real ability gate, applies a per-skill reuse delay, and independently attempts equipped-weapon attacks between casts. The runtime fixture verifies both a real class skill and a held-weapon hit against the same enemy.
+
+### Guild-hired companions
+
+- The Guild Factor hires randomized adventurers for 500 gold. Free-roaming adventurers have been retired, previously hired companions are retained, and paid reserves wait upstairs. Switching an existing hire is free.
+- At zero HP a companion is downed for 20 simulation seconds, including across save and reload, then returns at full health. The HUD displays the remaining seconds.
+- Companion dialogue opens an equipment inventory. Transfers move the original gear copy between the player's bag and the companion, preserve its tier, and honour locked items and bag capacity. Starting gear is supplied with the hire.
+- Companions use the shared exponential combat and skill curves with simpler XP awards for the held weapon and dominant worn armour weight. Runtime checks cover fee, bench and active roster, exact transfers, armour XP, recovery and real combat.

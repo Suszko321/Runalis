@@ -121,8 +121,8 @@ export function openTailor(view,npc) {
   return true;
 }
 
-export function handleTailorController(input) {
-  const dialog = document.getElementById(OVERLAY);
+export function handleTailorController(input,overlayId=OVERLAY) {
+  const dialog = document.getElementById(overlayId);
   if (!dialog?.open) return false;
   if (input.cancelPressed || input.backPressed) {dialog.close();return true;}
   if (input.confirmPressed) {document.activeElement?.click();return true;}

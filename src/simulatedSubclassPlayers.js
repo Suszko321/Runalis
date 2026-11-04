@@ -57,7 +57,7 @@ export function updateSimulatedSubclassPlayers(game,dt,now=performance.now()/100
     if(!initializeSimulatedSubclassPlayer(npc))continue;
     const brain=brains.get(npc);npc.simulatedInCombat=false;
     if(safe||npc.hp<=0||npc.depleted||Math.hypot(npc.x-host.x,npc.y-host.y)>650){
-      clearSubclassCombatState(npc);if(npc.hp<=0){npc.depleted=true;npc.isMoving=false;}continue;
+      clearSubclassCombatState(npc);if(npc.hp<=0){if(!npc.livingAdventurer)npc.depleted=true;npc.isMoving=false;}continue;
     }
     setSubclassSupportParty(npc,[host,...(host.coop?.players||[]),...actors]);
     const combatWorld=npc.livingAdventurer?Object.assign(Object.create(world),{enemies:(world.enemies||[]).filter(enemy=>canAdventurerFight(enemy,npc.hiredAdventurer))}):world;
