@@ -16,6 +16,7 @@ export const ADVENTURER_HIRE_PRICE = 10;
 const COMPANION_TALK_DELAY = 3;
 const TOWN_TIME = 75;
 const FIELD_TIME = 135;
+const ROUTE_STEPS = [[1,1],[1,-1],[-1,1],[-1,-1],[0,1],[1,0],[0,-1],[-1,0]];
 
 function roster(player) {
   const memory = player.worldMemory ||= {};
@@ -77,9 +78,12 @@ function path(world,actor,goal) {
       }
       return route.reverse();
     }
-    for(const [dx,dy] of [[0,1],[1,0],[0,-1],[-1,0]]){
+    for(const [dx,dy] of ROUTE_STEPS){
       const x=cell[0]+dx,y=cell[1]+dy,next=x+','+y;
       if(parents.has(next)||!isActorPositionPassable(world,(x+.5)*TILE,(y+.5)*TILE,10))continue;
+      if(dx&&dy&&(!isActorPositionPassable(world,(x+.5)*TILE,(cell[1]+.5)*TILE,10)||
+        !isActorPositionPassable(world,(cell[0]+.5)*TILE,(y+.5)*TILE,10)||
+        !isActorPositionPassable(world,(x+.5-dx/2)*TILE,(y+.5-dy/2)*TILE,10)))continue;
       parents.set(next,cell);queue.push([x,y]);
     }
   }
@@ -178,9 +182,7 @@ export function updateLivingAdventurers(game,dt) {
 }
 
 export function canAdventurerFight(enemy, hired = false) {
-  const engaged = hired && Object.values(enemy.combatContributors || {}).some(entry =>
-    entry.damage>0 && entry.actor && !entry.actor.simulatedPlayer);
-  return (enemy.dynamicEncounter||engaged)&&!enemy.isBoss&&!enemy.worldBoss&&!enemy.miniBoss&&
+  return (enemy.dynamicEncounter||hired)&&!enemy.rewardSuppressed&&!enemy.trainingDummy&&!enemy.friendly&&!enemy.isBoss&&!enemy.worldBoss&&!enemy.miniBoss&&
     !enemy.elite&&!enemy.isElite&&!enemy.eliteModifier&&!enemy.eliteModifiers?.length&&
     !enemy.questCritical&&!enemy.questId&&!enemy.poiId&&!enemy.majorPoiId&&!enemy.bossId;
 }

@@ -1,3 +1,5 @@
+import {getWeaponTypeFromPlayer} from './combatMoves.js';
+import {getAbilityAvailability} from './abilityLoadoutSystem.js';
 import {canAdventurerFight} from './livingAdventurers.js';
 import {createPlayer,chooseClass,migratePlayer} from './player.js';
 import {ABILITIES} from './data.js';
@@ -60,7 +62,8 @@ export function updateSimulatedSubclassPlayers(game,dt,now=performance.now()/100
     }
     setSubclassSupportParty(npc,[host,...(host.coop?.players||[]),...actors]);
     const combatWorld=npc.livingAdventurer?Object.assign(Object.create(world),{enemies:(world.enemies||[]).filter(enemy=>canAdventurerFight(enemy,npc.hiredAdventurer))}):world;
-    const target=(combatWorld.enemies||[]).filter(e=>e.hp>0&&!e.dead&&!e.friendly&&!e.remove&&Math.hypot(e.x-npc.x,e.y-npc.y)<340&&Math.hypot(e.x-brain.origin.x,e.y-brain.origin.y)<450&&hasLineOfSight(world,npc.x,npc.y,e.x,e.y,{startSkip:1,endSkip:1}))
+    const leash=npc.hiredAdventurer?host:brain.origin;
+    const target=(combatWorld.enemies||[]).filter(e=>e.hp>0&&!e.dead&&!e.friendly&&!e.remove&&Math.hypot(e.x-npc.x,e.y-npc.y)<340&&Math.hypot(e.x-leash.x,e.y-leash.y)<450&&hasLineOfSight(world,npc.x,npc.y,e.x,e.y,{startSkip:1,endSkip:1}))
       .sort((a,b)=>Math.hypot(a.x-npc.x,a.y-npc.y)-Math.hypot(b.x-npc.x,b.y-npc.y))[0];
     const input={mouseAimActive:!!target,mouseWorldX:target?.x,mouseWorldY:target?.y};
     if(brain.slot>=0){input[`ability${brain.slot}Held`]=!!target&&now<brain.releaseAt;input[`ability${brain.slot}Released`]=!input[`ability${brain.slot}Held`];if(input[`ability${brain.slot}Released`])brain.slot=-1;}
@@ -68,22 +71,23 @@ export function updateSimulatedSubclassPlayers(game,dt,now=performance.now()/100
       npc.simulatedInCombat=true;
       const dx=target.x-npc.x,dy=target.y-npc.y,d=Math.hypot(dx,dy)||1;
       npc.dirX=dx/d;npc.dirY=dy/d;
+      input.combatAimX=npc.dirX;input.combatAimY=npc.dirY;
       const skills=npc.loadout.abilitySlots.map(id=>resolveSubclassAbility(npc,ABILITIES.find(a=>a.id===id))).filter(Boolean);
-      const melee=skills.filter(a=>['melee','retaliation','ward','empower'].includes(a.subclassMode)).length>=2;
-      const desired=melee?52:170,retreat=npc.hp<npc.maxHp*.3||d<desired*.6;
+      const melee=!['bow','crossbow','spiritFocus','grimoire','eldritch'].includes(getWeaponTypeFromPlayer(npc));
+      const desired=melee?38:145,retreat=npc.hp<npc.maxHp*.3||d<desired*.6;
       const movement=npc.activeChannel||npc.abilityCharge?0:retreat?-1:d>desired?1:0;
       const speed=70*getPlayerMovementMultiplier(npc,now);
       npc.isMoving=!!movement&&moveActorWithCollision(npc,world,dx/d*movement*speed*dt,dy/d*movement*speed*dt);
       if(npc.isMoving)npc.walkTime=((npc.walkTime||0)+dt*9)%10000;
-      input.attackPressed=melee&&d<65&&now>=brain.nextDecision;
       if(now>=brain.nextDecision&&brain.slot<0&&!npc.activeChannel&&!npc.abilityCharge){
         const support=skills.find(a=>['heal','ward','ritual','retaliation'].includes(a.subclassMode)&&[host,npc].some(p=>p.hp<p.maxHp*.7));
-        const available=skills.filter(a=>npc[a.costType]>=a.cost+(a.channelProfile?.costPerSecond||0)*.8&&now-(npc.cooldowns[a.id]??-Infinity)>=a.cd&&
+        const available=skills.filter(a=>getAbilityAvailability(npc,a).usable&&(npc[a.costType||'stamina']||0)>=(a.cost||0)+(a.channelProfile?.costPerSecond||0)*.8&&now-(npc.cooldowns[a.id]??-Infinity)>=a.cd&&
           (!['auraChannel','melee','ward','retaliation','heal','ritual'].includes(a.subclassMode)||d<=(['melee'].includes(a.subclassMode)?a.range:a.subclassRadius)+15));
         const ordered=skills.map((_,i)=>skills[(brain.nextSkill+i)%skills.length]);
         const a=available.includes(support)?support:ordered.find(a=>available.includes(a));
         if(a)brain.nextSkill=(skills.indexOf(a)+1)%skills.length;
         if(a){const slot=npc.loadout.abilitySlots.indexOf(a.id);brain.slot=slot;brain.releaseAt=now+(['beam','auraChannel'].includes(a.subclassMode)?2.4:a.canCharge?.85:.12);input[`ability${slot}Pressed`]=true;input[`ability${slot}Held`]=true;}
+        else if(d<(melee?55:200))input.attackPressed=true;
         brain.nextDecision=now+1.5;
       }
     }

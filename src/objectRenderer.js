@@ -1,3 +1,4 @@
+import {sampleWeaponStance} from './weaponStance.js';
 import {drawAuthoredObject} from './worldAtmosphereRenderer.js';
 import {drawGroundLootAura} from './groundLootArt.js';
 import {drawDungeonNpc,isDungeonNpc} from './dungeonCharacterSprites.js';
@@ -816,7 +817,9 @@ function drawNpc(ctx, npc, camera, questActor = null) {
   // Do NOT pass name here.
   // humanRenderer.js can draw actor names when provided.
   // We draw exactly one NPC label below to prevent duplicated labels.
+  const weaponStance=npc.simulatedPlayer||npc.isSimulatedPlayer?sampleWeaponStance(npc):null;
   drawHumanActor(ctx, npcActor, camera, {
+    weaponSheathed:weaponStance?.sheathed,
     scale: npcStyle.scale,
     skin: npcStyle.skin,
     hair: npcStyle.hair,

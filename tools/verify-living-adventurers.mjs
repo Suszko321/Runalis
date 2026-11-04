@@ -1,3 +1,4 @@
+import {sampleWeaponStance} from '../src/weaponStance.js';
 import assert from 'node:assert/strict';
 import {createDialogueState,openDialogue,updateDialogue,chooseDialogueOption} from '../src/dialogueSystem.js';
 import {createPlayer} from '../src/player.js';
@@ -14,7 +15,12 @@ updateLivingAdventurers(game,1/60);
 const adventurers=world.objects.filter(o=>o.livingAdventurer);
 assert.equal(adventurers.length,3);
 const original=adventurers.map(o=>[o.x,o.y]);
-for(let i=0;i<180;i++)updateLivingAdventurers(game,1/60);
+let diagonal=false;
+for(let i=0;i<180;i++){
+ updateLivingAdventurers(game,1/60);
+ diagonal ||= adventurers.some(o=>o.isMoving&&Math.abs(o.dirX)>.1&&Math.abs(o.dirY)>.1);
+}
+assert(diagonal,'Town routes use diagonal steps');
 assert(adventurers.some((o,i)=>o.x!==original[i][0]||o.y!==original[i][1]));
 assert(adventurers.some(o=>o.walkTime>3),'Walking advances the NPC animation clock faster than elapsed seconds');
 assert.equal(new Set(adventurers.map(o=>o.id)).size,3);
@@ -26,6 +32,12 @@ const saved=normalizeProfileSave(JSON.parse(JSON.stringify(player)));
 assert(saved.worldMemory.livingAdventurers[0].dead);
 assert.deepEqual(saved.worldMemory.livingAdventurers,player.worldMemory.livingAdventurers);
 const recruit=adventurers[1];
+assert(sampleWeaponStance(recruit,world,1).sheathed);
+recruit.simulatedInCombat=true;
+assert(!sampleWeaponStance(recruit,world,2).sheathed);
+recruit.simulatedInCombat=false;
+assert(!sampleWeaponStance(recruit,world,3).sheathed);
+assert(sampleWeaponStance(recruit,world,9).sheathed);
 const restorePosition={x:player.x,y:player.y};
 Object.assign(player,{x:recruit.x,y:recruit.y,gold:9});
 assert(!changeAdventurerContract(game,recruit,player,true));
@@ -69,14 +81,20 @@ Object.assign(player,{x:470,y:1920});
 updateLivingAdventurers(game,1/60);
 const fighter=field.objects.find(o=>o.livingAdventurer);
 assert(fighter);
-const target={id:'test-patrol',kind:'hollowling',x:fighter.x+70,y:fighter.y,hp:8,maxHp:8,r:12,xp:20,dynamicEncounter:true};
+// A hired companion can engage an ordinary enemy after leaving their original spawn.
+fighter.hiredAdventurer=true;
+player.worldMemory.livingAdventurers.find(record=>record.id===fighter.id).hired=true;
+Object.assign(fighter,{x:1500,y:1850});
+Object.assign(player,{x:1490,y:1840});
+const target={id:'test-patrol',kind:'hollowling',x:fighter.x+70,y:fighter.y,hp:8,maxHp:8,r:12,xp:20};
 const protectedEnemy={...target,id:'quest-boss',isBoss:true,hp:100,maxHp:100};
 field.enemies.push(target,protectedEnemy);
-assert(canAdventurerFight(target)&&!canAdventurerFight(protectedEnemy));
+assert(!canAdventurerFight(target)&&canAdventurerFight(target,true)&&!canAdventurerFight(protectedEnemy,true));
 for(let i=0;i<900;i++){
  updateLivingAdventurers(game,1/60);
  updateSimulatedSubclassPlayers(game,1/60,10+i/60);
 }
+assert(Object.keys(fighter.cooldowns).some(id=>fighter.knownAbilities.includes(id)),'An actual class skill entered cooldown');
 assert.equal(target.hp,0,'A real class attack must defeat the patrol');
 assert.equal(protectedEnemy.hp,100);
 assert.equal(field.drops.length,0);

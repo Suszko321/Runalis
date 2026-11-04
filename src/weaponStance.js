@@ -28,7 +28,7 @@ export function sampleCombatReadiness(actor,world,now=performance.now()/1000){
   const previous=stances.get(actor);
   const changedAttack=!!previous&&combat.attackId!==previous.attackId&&Number(combat.attackId)>0;
   const activeAction=action&&now>=Number(action.startedAt)&&now<Number(action.startedAt)+Number(action.duration||0);
-  const busy=!!combat.attacking||!!combat.heavyChargeActive||!!activeAction||!!actor.actionState?.blocking;
+  const busy=!!actor.simulatedInCombat||!!combat.attacking||!!combat.heavyChargeActive||!!activeAction||!!actor.actionState?.blocking;
   const threatened=hasHostileTarget(actor,world);
   let readyUntil=previous?.readyUntil||0;
   if(busy||changedAttack||threatened)readyUntil=now+WEAPON_READY_SECONDS;
