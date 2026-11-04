@@ -66,6 +66,10 @@ export function changeAdventurerContract(game,npc,actor,hire) {
 
 function path(world,actor,goal) {
   if(!goal)return [];
+  const dx=goal.x-actor.x,dy=goal.y-actor.y;
+  const steps=Math.ceil(Math.hypot(dx,dy)/10);
+  if(steps<=30&&Array.from({length:steps},(_,i)=>(i+1)/steps).every(t=>
+    isActorPositionPassable(world,actor.x+dx*t,actor.y+dy*t,10)))return [goal];
   const start=[Math.floor(actor.x/TILE),Math.floor(actor.y/TILE)];
   const end=[Math.floor(goal.x/TILE),Math.floor(goal.y/TILE)].join(',');
   const queue=[start], parents=new Map([[start.join(','),null]]);
@@ -147,10 +151,15 @@ export function updateLivingAdventurers(game,dt) {
 
     if(follows&&Math.hypot(actor.x-player.x,actor.y-player.y)>700&&!actor.simulatedInCombat)Object.assign(actor,anchor);
     if(!actor.simulatedInCombat){
+      const ownerDistance=Math.hypot(actor.x-player.x,actor.y-player.y);
+      if(follows){
+        actor.following=ownerDistance>(actor.following?48:68);
+        if(!actor.following){actor.route=[];actor.nextRoute=0;}
+      }
       if((actor.nextRoute||0)<=0){
         const spot=loungeSpots[index%loungeSpots.length];
         const service={x:spot.x*TILE,y:spot.y*TILE};
-        const target=follows?(Math.hypot(actor.x-player.x,actor.y-player.y)>52?anchor:null):phase==='town'?(record.remaining<25?world.objects.find(o=>o.id==='guildLoungeStairs'):service):
+        const target=follows?(actor.following?anchor:null):phase==='town'?(record.remaining<25?world.objects.find(o=>o.id==='guildLoungeStairs'):service):
           findNearestActorPassablePoint(world,anchor.x+Math.sin(record.remaining/15+index)*180,
             anchor.y+Math.cos(record.remaining/17+index)*180,10,8);
         actor.route=path(world,actor,target);
@@ -162,11 +171,14 @@ export function updateLivingAdventurers(game,dt) {
       actor.isMoving=false;
       if(point){
         const dx=point.x-actor.x,dy=point.y-actor.y,d=Math.hypot(dx,dy);
-        const speed=Math.min(d,follows?getSummonMovementSpeed(actor,player)*Math.min(.05,dt):58*dt);
+        const travelSpeed=follows?Math.min(getSummonMovementSpeed(actor,player),90+Math.max(0,ownerDistance-65)*1.3):58;
+        const arrivalSpeed=actor.route.length===1?Math.min(travelSpeed,Math.max(26,d*4)):travelSpeed;
+        actor.routeSpeed=(actor.routeSpeed||0)+Math.max(-320*dt,Math.min(260*dt,arrivalSpeed-(actor.routeSpeed||0)));
+        const speed=Math.min(d,actor.routeSpeed*Math.min(.05,dt));
         actor.dirX=dx/d;actor.dirY=dy/d;
         actor.isMoving=moveActorWithCollision(actor,world,actor.dirX*speed,actor.dirY*speed,10);
-        if(actor.isMoving)actor.walkTime=((actor.walkTime||0)+dt*9)%10000;
-      }
+        if(actor.isMoving)actor.walkTime=((actor.walkTime||0)+dt*Math.min(15,actor.routeSpeed*.155))%10000;
+      }else actor.routeSpeed=0;
       if(phase==='town')actor.hp=Math.min(actor.maxHp,actor.hp+dt*4);
     }
     const canTalk=follows&&!player.isMoving&&!actor.isMoving&&!actor.simulatedInCombat&&

@@ -1,12 +1,11 @@
 import {getWeaponTypeFromPlayer} from './combatMoves.js';
-import {getAbilityAvailability} from './abilityLoadoutSystem.js';
 import {canAdventurerFight} from './livingAdventurers.js';
 import {createPlayer,chooseClass,migratePlayer} from './player.js';
 import {ABILITIES} from './data.js';
 import {ensureSimulatedSubclass} from './subclassSystem.js';
 import {resolveSubclassAbility} from './subclassVariants.js';
 import {getClassSubclasses} from './subclassSystem.js';
-import {updateAbilityInput,updateCombat,getPlayerMovementMultiplier} from './combat.js';
+import {updateAbilityInput,updateCombat,getPlayerMovementMultiplier,canUseAbility} from './combat.js';
 import {setSimulatedCombatActors} from './coopEnemyScaling.js';
 import {setSubclassSupportParty,clearSubclassCombatState} from './subclassCombat.js';
 import {hasLineOfSight,moveActorWithCollision} from './world.js';
@@ -40,7 +39,7 @@ export function initializeSimulatedSubclassPlayer(npc){
     for(const field of ['hp','maxHp','stamina','maxStamina','spirit','maxSpirit'])if(Number.isFinite(saved[field]))npc[field]=saved[field];
     delete npc.continentalHydrated;
   }
-  brains.set(npc,{nextDecision:0,releaseAt:0,slot:-1,nextSkill:0,origin:{x:npc.x,y:npc.y}});
+  brains.set(npc,{nextDecision:0,nextWeapon:0,skillReadyAt:new Map(),releaseAt:0,slot:-1,nextSkill:0,origin:{x:npc.x,y:npc.y}});
   return npc;
 }
 
@@ -67,6 +66,7 @@ export function updateSimulatedSubclassPlayers(game,dt,now=performance.now()/100
       .sort((a,b)=>Math.hypot(a.x-npc.x,a.y-npc.y)-Math.hypot(b.x-npc.x,b.y-npc.y))[0];
     const input={mouseAimActive:!!target,mouseWorldX:target?.x,mouseWorldY:target?.y};
     if(brain.slot>=0){input[`ability${brain.slot}Held`]=!!target&&now<brain.releaseAt;input[`ability${brain.slot}Released`]=!input[`ability${brain.slot}Held`];if(input[`ability${brain.slot}Released`])brain.slot=-1;}
+    let attemptedSkill=null,weaponInRange=false;
     if(target){
       npc.simulatedInCombat=true;
       const dx=target.x-npc.x,dy=target.y-npc.y,d=Math.hypot(dx,dy)||1;
@@ -75,22 +75,29 @@ export function updateSimulatedSubclassPlayers(game,dt,now=performance.now()/100
       const skills=npc.loadout.abilitySlots.map(id=>resolveSubclassAbility(npc,ABILITIES.find(a=>a.id===id))).filter(Boolean);
       const melee=!['bow','crossbow','spiritFocus','grimoire','eldritch'].includes(getWeaponTypeFromPlayer(npc));
       const desired=melee?38:145,retreat=npc.hp<npc.maxHp*.3||d<desired*.6;
-      const movement=npc.activeChannel||npc.abilityCharge?0:retreat?-1:d>desired?1:0;
+      const movement=npc.activeChannel||npc.abilityCharge?0:retreat?-1:d>desired+8?1:0;
       const speed=70*getPlayerMovementMultiplier(npc,now);
       npc.isMoving=!!movement&&moveActorWithCollision(npc,world,dx/d*movement*speed*dt,dy/d*movement*speed*dt);
       if(npc.isMoving)npc.walkTime=((npc.walkTime||0)+dt*9)%10000;
+      weaponInRange=d<(melee?55:200);
       if(now>=brain.nextDecision&&brain.slot<0&&!npc.activeChannel&&!npc.abilityCharge){
         const support=skills.find(a=>['heal','ward','ritual','retaliation'].includes(a.subclassMode)&&[host,npc].some(p=>p.hp<p.maxHp*.7));
-        const available=skills.filter(a=>getAbilityAvailability(npc,a).usable&&(npc[a.costType||'stamina']||0)>=(a.cost||0)+(a.channelProfile?.costPerSecond||0)*.8&&now-(npc.cooldowns[a.id]??-Infinity)>=a.cd&&
+        const available=skills.filter(a=>now>=(brain.skillReadyAt.get(a.id)||0)&&canUseAbility(npc,a,undefined,now)&&
           (!['auraChannel','melee','ward','retaliation','heal','ritual'].includes(a.subclassMode)||d<=(['melee'].includes(a.subclassMode)?a.range:a.subclassRadius)+15));
         const ordered=skills.map((_,i)=>skills[(brain.nextSkill+i)%skills.length]);
         const a=available.includes(support)?support:ordered.find(a=>available.includes(a));
-        if(a)brain.nextSkill=(skills.indexOf(a)+1)%skills.length;
+        if(a){attemptedSkill=a;brain.nextSkill=(skills.indexOf(a)+1)%skills.length;}
         if(a){const slot=npc.loadout.abilitySlots.indexOf(a.id);brain.slot=slot;brain.releaseAt=now+(['beam','auraChannel'].includes(a.subclassMode)?2.4:a.canCharge?.85:.12);input[`ability${slot}Pressed`]=true;input[`ability${slot}Held`]=true;}
-        else if(d<(melee?55:200))input.attackPressed=true;
-        brain.nextDecision=now+1.5;
+        brain.nextDecision=now+(a?1.5:.4);
       }
     }
-    updateAbilityInput(npc,combatWorld,input,dt,now,()=>{});updateCombat(npc,combatWorld,input,dt,now,()=>{});
+    const usedSkill=updateAbilityInput(npc,combatWorld,input,dt,now,()=>{});
+    if(attemptedSkill&&usedSkill)brain.skillReadyAt.set(attemptedSkill.id,now+Math.max(2,attemptedSkill.cd||0));
+    if(attemptedSkill&&!usedSkill)brain.slot=-1;
+    if(weaponInRange&&!usedSkill&&!npc.activeChannel&&!npc.abilityCharge&&brain.slot<0&&now>=brain.nextWeapon){
+      input.attackPressed=true;
+      brain.nextWeapon=now+.55;
+    }
+    updateCombat(npc,combatWorld,input,dt,now,()=>{});
   }
 }

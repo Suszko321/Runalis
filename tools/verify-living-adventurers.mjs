@@ -86,15 +86,16 @@ fighter.hiredAdventurer=true;
 player.worldMemory.livingAdventurers.find(record=>record.id===fighter.id).hired=true;
 Object.assign(fighter,{x:1500,y:1850});
 Object.assign(player,{x:1490,y:1840});
-const target={id:'test-patrol',kind:'hollowling',x:fighter.x+70,y:fighter.y,hp:8,maxHp:8,r:12,xp:20};
+const target={id:'test-patrol',kind:'hollowling',x:fighter.x+70,y:fighter.y,hp:65,maxHp:65,r:12,xp:20};
 const protectedEnemy={...target,id:'quest-boss',isBoss:true,hp:100,maxHp:100};
 field.enemies.push(target,protectedEnemy);
 assert(!canAdventurerFight(target)&&canAdventurerFight(target,true)&&!canAdventurerFight(protectedEnemy,true));
-for(let i=0;i<900;i++){
+for(let i=0;i<2400;i++){
  updateLivingAdventurers(game,1/60);
  updateSimulatedSubclassPlayers(game,1/60,10+i/60);
 }
 assert(Object.keys(fighter.cooldowns).some(id=>fighter.knownAbilities.includes(id)),'An actual class skill entered cooldown');
+assert(Object.values(target.combatContributors||{}).some(entry=>Object.keys(entry.weapons||{}).length),'The companion also landed a held-weapon hit');
 assert.equal(target.hp,0,'A real class attack must defeat the patrol');
 assert.equal(protectedEnemy.hp,100);
 assert.equal(field.drops.length,0);

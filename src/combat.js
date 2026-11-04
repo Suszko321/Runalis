@@ -1329,7 +1329,7 @@ function resolveAbilityId(index, player) {
   return index || null;
 }
 
-function canUseAbility(player, ability, log, now) {
+export function canUseAbility(player, ability, log, now) {
   if(ability.vampireMode==='form'&&player.vampireForm?.active)return true;
   if(vampireActionCommitted(player)){log?.('Finish the execution windup first.');return false;}
   if (player.activeChannel) { log?.('Finish or release your channel first.'); return false; }
