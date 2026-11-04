@@ -12,7 +12,7 @@ const TRAVEL_KINDS = new Set([
 
 export function isTravelInteraction(object) {
   if (!object) return false;
-  return TRAVEL_KINDS.has(object.kind) || object.campaignAction === 'maraHome' ||
+  return object.townStairs || TRAVEL_KINDS.has(object.kind) || object.campaignAction === 'maraHome' ||
     (object.kind === 'dungeonDoor' && (object.sideRoomTarget ||
       (Number.isFinite(Number(object.targetX)) && Number.isFinite(Number(object.targetY))))) ||
     (!!object.poiId && isCastleVeyrPoi(object));

@@ -13,6 +13,7 @@ import {createDeathScreen} from './deathScreen.js';
 import {installReleaseUpdates} from './releaseUpdates.js';
 import {bindFullscreenButtons} from './fullscreenMenu.js';
 import { getKeyboardAbilitySlot } from './abilityBindings.js';
+import {handleGuildContract} from './adventurersGuildContracts.js';
 import {updateLivingAdventurers,changeAdventurerContract} from './livingAdventurers.js';
 import {updateSimulatedSubclassPlayers} from './simulatedSubclassPlayers.js';
 import {menuDirection,directionalMenuItem} from './menuNavigation.js';
@@ -244,12 +245,12 @@ import {
 
 import {
   createCapitalHubWorld,
-  useMaraApothecary
+  useMaraApothecary,useGuildClerk
 } from './hubSystem.js';
 
 import {
   createCaravanOpeningWorld,
-  createMaraHouseWorld,
+  createMaraHouseWorld,createAdventurersLounge,
   requestAct1OpeningSkip,
   updateAct1Opening
 } from './act1OpeningSystem.js';
@@ -1873,6 +1874,11 @@ class RunalisGame {
     }
     this.dialogue.pendingAction = null;
     closeDialogue(this.dialogue, { immediate: true });
+    if(serviceNpc?.guildContractVendor && (action.type==='guildServices'||action.type.startsWith('guild-contract-'))){
+      if(action.type==='guildServices')useGuildClerk(this.getActorGameView(actor),false);
+      else handleGuildContract(actor,action.type,this.log);
+      return true;
+    }
     if(action.type==='hireAdventurer'||action.type==='dismissAdventurer'){
       const changed=changeAdventurerContract(this,serviceNpc,actor,action.type==='hireAdventurer');
       if(!changed&&actor!==this.player)this.log('Only the party host can manage hired adventurers.');
@@ -2995,6 +3001,8 @@ class RunalisGame {
       ? this.world
       : this.world.mode === 'act1Opening'
       ? createCaravanOpeningWorld()
+      : this.world.mode === 'adventurersLounge'
+      ? createAdventurersLounge()
       : this.world.mode === 'maraHouse'
       ? createMaraHouseWorld()
       : this.world.mode === 'travelRoute' && this.world.routeId

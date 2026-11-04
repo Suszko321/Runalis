@@ -397,7 +397,7 @@ export function useMaraApothecary(game,npc){
   return useAlchemist(game);
 }
 
-export function useGuildClerk(game) {
+export function useGuildClerk(game,legacyBounties=true) {
   const player = game.player;
   player.guildBounties = player.guildBounties || {};
   player.flags = player.flags || {};
@@ -413,7 +413,7 @@ export function useGuildClerk(game) {
     return true;
   }
 
-  if (player.bossKills?.theVeyrWarden && !player.guildBounties.veyrWardenPaid) {
+  if (legacyBounties && player.bossKills?.theVeyrWarden && !player.guildBounties.veyrWardenPaid) {
     player.guildBounties.veyrWardenPaid = true;
     player.gold += 160;
     addItem(player, 'veyrglassShard', 2);
@@ -422,14 +422,14 @@ export function useGuildClerk(game) {
     return true;
   }
 
-  if (!player.guildBounties.hollowElkPosted) {
+  if (legacyBounties && !player.guildBounties.hollowElkPosted) {
     player.guildBounties.hollowElkPosted = true;
     game.log?.('Guild Clerk: bounty posted - The Blighted Elk stalks Mirror Grove.');
     addQuestText(player, 'Bounty: The Blighted Elk', { color: '#73d18a' });
     return true;
   }
 
-  if (player.bossKills?.theHollowElk && !player.guildBounties.hollowElkPaid) {
+  if (legacyBounties && player.bossKills?.theHollowElk && !player.guildBounties.hollowElkPaid) {
     player.guildBounties.hollowElkPaid = true;
     player.gold += 120;
     addItem(player, 'briarRoot', 3);
@@ -447,7 +447,7 @@ export function useGuildClerk(game) {
     return true;
   }
 
-  if (player.bossKills?.malakarSolgateDemonLord && !player.guildBounties.redSealPaid) {
+  if (legacyBounties && player.bossKills?.malakarSolgateDemonLord && !player.guildBounties.redSealPaid) {
     player.guildBounties.redSealPaid = true;
     player.gold += 300;
     addItem(player, 'bossCore', 1);

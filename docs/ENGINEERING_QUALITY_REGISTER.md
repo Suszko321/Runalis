@@ -773,3 +773,10 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - `simulatedSubclassPlayers.js` supplies real class kits, targeting, movement, cooldowns and resource expenditure. Roster combat is restricted to ordinary dynamic encounters. Roster final blows skip world loot and quest credit while preserving normal XP for qualifying combat contributors. `objectRenderer.js` uses gold level labels, and `enemyNameplateArt.js` uses red hostile names and skulls for existing elite and boss ranks.
 - The runtime fixture tests movement in the actual capital map, save round trips, death removal, real subclass damage, boss protection and loot isolation. Dungeon participation, a simulated equipment economy, detailed resource gathering and live multiplayer validation remain outside this implementation.
 - Recruitment adds a 10-gold contract through adventurer dialogue. One hired companion follows the host across supported scenes and saves until dismissed or killed. Payment revalidates proximity, visibility and availability. Hired companions can join fights against ordinary enemies the real party has engaged. Quest and boss exclusions remain in force. The fixture covers the dialogue action, insufficient funds, duplicate payment, dismissal, reload and dungeon arrival.
+
+### Adventurers Guild in Orrakai
+
+- Warden’s Hall is now the Adventurers Guild. The two Covenant residents formerly in the hall relocated to the Sanctuary to preserve their dialogue. The Guild Factor offers six boss contracts and keeps tower milestones and travel permits in a separate service.
+- Contracts record the kill count at acceptance and pay once after a new recorded boss defeat. Legacy paid flags prevent duplicate payouts on older characters.
+- The lounge is an independently restored safe interior with shared-party stairs. Resting adventurers gather upstairs, and expedition anchors move away from the Orrakai landing. Older rosters clear their obsolete unhired coordinates once.
+- The guild fixture checks the vendor dialogue, new kill proof, one-time payment, both stairs and a save restored upstairs.

@@ -7,7 +7,7 @@ import { createWorld } from './world.js';
 import { createCapitalHubWorld, clearPartyTravelCombatState, placePartyNearHost } from './hubSystem.js';
 import { openDialogue, startQuest } from './dialogueSystem.js';
 import { applyStoryFlags } from './storyProgress.js';
-import { ROOT_RETORT } from './orrakaiLayout.js';
+import { ROOT_RETORT, GUILD_STAIRS } from './orrakaiLayout.js';
 
 const OPENING_W = 58;
 const OPENING_H = 30;
@@ -81,6 +81,32 @@ export function createMaraHouseWorld() {
     ],
     opening: { maraAddressDelay: 0.85 }
   };
+}
+
+export function createAdventurersLounge() {
+  const world=createMaraHouseWorld();
+  delete world.opening;
+  return {...world,mode:'adventurersLounge',name:'Adventurers Guild — Upstairs',
+    spawn:{x:7.5*TILE,y:9.5*TILE},objects:[
+      prop('guildLoungeTable','contractTable',4,5),
+      prop('guildLoungeLamp','lantern',7,3),
+      prop('guildLoungeSupplies','sacks',11,4),
+      {id:'guildLoungeStairs',kind:'capitalExit',name:'Downstairs — Guild Hall',
+        townStairs:true,direction:'down',x:7.5*TILE,y:10.5*TILE,r:20}
+    ]};
+}
+
+export function useGuildStairs(game,upstairs) {
+  const host=game.hostGame||game;
+  if(host.world.mode!==(upstairs?'capital':'adventurersLounge'))return false;
+  host.world=upstairs?createAdventurersLounge():createCapitalHubWorld();
+  const point=upstairs?host.world.spawn:{x:(GUILD_STAIRS.x+.5)*TILE,y:(GUILD_STAIRS.y+1.5)*TILE};
+  Object.assign(host.player,point,{currentZone:host.world.name});
+  clearPartyTravelCombatState(host);
+  placePartyNearHost(host);
+  host.camera.x=point.x-host.canvas.width/2;
+  host.camera.y=point.y-host.canvas.height/2;
+  return true;
 }
 
 export function requestAct1OpeningSkip(game) {

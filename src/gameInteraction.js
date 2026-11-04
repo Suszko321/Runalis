@@ -151,7 +151,7 @@ import {
 } from './coopEnemyScaling.js';
 import { playPoiThresholdEffect } from './poiPresentationSystem.js';
 import { recordPoiCacheClaim } from './poiEncounterSystem.js';
-import { leaveMaraHouse } from './act1OpeningSystem.js';
+import { leaveMaraHouse,useGuildStairs } from './act1OpeningSystem.js';
 
 // -----------------------------------------------------------------------------
 // CLASS DATA
@@ -238,6 +238,11 @@ export function interact(game) {
 
   if (!nearest) {
     game.log('Nothing close enough to interact with.');
+    return;
+  }
+
+  if(nearest.id==='orrakaiGuildStairs'||nearest.id==='guildLoungeStairs'){
+    if(useGuildStairs(game,nearest.id==='orrakaiGuildStairs'))renderInteractionUI(game);
     return;
   }
 
@@ -540,7 +545,7 @@ export function talk(game, npc) {
     return;
   }
 
-  if (npc.livingAdventurer || npc.dialogueId || npc.npcId) {
+  if (npc.guildContractVendor || npc.livingAdventurer || npc.dialogueId || npc.npcId) {
     const opened = openDialogue(game.dialogue, npc, actor, game.world);
 
     if (opened) {

@@ -10,17 +10,22 @@ const classes = ['fellhunter','gravecaller','oathkeeper','thornbinder','waveride
 const weapons = ['hunterBow','graveScythe','oathkeepersMace','rootStaff','tideglassRapier','crackedDawnlens'];
 const torsos = ['patchedRoadLeathers','necromancerRobe','leatherVest','thornbinderGarb','veyrCourtCoat','patchedTunic'];
 const names = ['Velka Ashreed','Serrik Dunmere','Ormira Vellthorn','Caldrin Rook','Nysera Fen','Daevren Grey'];
-const townServices = ['orrakaiTailor','orrakaiMarketVendor','smith','orrakaiCraftsman','orrakaiAlchemist','orrakaiTownHearth'];
+const loungeSpots = [{x:5.5,y:6.5},{x:8.5,y:5.5},{x:10.5,y:6.5}];
 export const ADVENTURER_HIRE_PRICE = 10;
 const TOWN_TIME = 75;
 const FIELD_TIME = 135;
 
 function roster(player) {
   const memory = player.worldMemory ||= {};
-  return memory.livingAdventurers ||= classes.map((classId,i)=>({
+  const records=memory.livingAdventurers ||= classes.map((classId,i)=>({
     id:'living-adventurer-'+i,classId,name:names[i],bodyType:i%2?'male':'female',
     phase:i<3?'town':'field',remaining:35+i*17,dead:false
   }));
+  if(!memory.adventurersGuildRoutes){
+    for(const record of records)if(!record.hired)delete record.position;
+    memory.adventurersGuildRoutes=true;
+  }
+  return records;
 }
 
 export function changeAdventurerContract(game,npc,actor,hire) {
@@ -42,7 +47,7 @@ export function changeAdventurerContract(game,npc,actor,hire) {
   npc.hiredAdventurer=hire;
   npc.nextRoute=0;
   if(!hire){
-    record.phase=game.world.mode==='capital'?'town':'field';
+    record.phase=game.world.mode==='adventurersLounge'?'town':'field';
     record.remaining=record.phase==='town'?TOWN_TIME:FIELD_TIME;
     delete record.position;
   }
@@ -74,17 +79,17 @@ function path(world,actor,goal) {
 }
 
 function entrance(world,phase,index) {
-  if(phase==='town')return findNearestActorPassablePoint(world,world.spawn.x+(index%3-1)*48,world.spawn.y+32,10,6);
+  if(phase==='town')return findNearestActorPassablePoint(world,(3.5+index%3*4)*TILE,(4.5+Math.floor(index/3)*3)*TILE,10,3);
   const gate=world.continentRuntime?.findObject?.('capital-gate-prototype') ||
     world.objects.find(o=>o.kind==='capitalGate'&&o.gateId!=='east');
   if(!gate)return null;
-  return findNearestActorPassablePoint(world,gate.x+(index-2)*190,gate.y+300,10,12);
+  return findNearestActorPassablePoint(world,gate.x+(index%2?-1:1)*(1150+index*160),gate.y+480+index*180,10,12);
 }
 
 export function updateLivingAdventurers(game,dt) {
   const {player,world}=game;
   if(!world||!player||game.onlineSession?.role==='guest')return;
-  const phase=world.mode==='capital'?'town':world.mode==='overworld'?'field':null;
+  const phase=world.mode==='adventurersLounge'?'town':world.mode==='overworld'?'field':null;
   const records=roster(player);
   let state=runtime.get(game);
   if(!state||state.world!==world){
@@ -131,8 +136,9 @@ export function updateLivingAdventurers(game,dt) {
     if(follows&&Math.hypot(actor.x-player.x,actor.y-player.y)>700&&!actor.simulatedInCombat)Object.assign(actor,anchor);
     if(!actor.simulatedInCombat){
       if((actor.nextRoute||0)<=0){
-        const service=world.objects.find(o=>o.id===townServices[index]);
-        const target=follows?(Math.hypot(actor.x-player.x,actor.y-player.y)>64?anchor:null):phase==='town'?(record.remaining<25?world.objects.find(o=>o.id==='orrakaiSouthGate'):service):
+        const spot=loungeSpots[index%loungeSpots.length];
+        const service={x:spot.x*TILE,y:spot.y*TILE};
+        const target=follows?(Math.hypot(actor.x-player.x,actor.y-player.y)>64?anchor:null):phase==='town'?(record.remaining<25?world.objects.find(o=>o.id==='guildLoungeStairs'):service):
           findNearestActorPassablePoint(world,anchor.x+Math.sin(record.remaining/15+index)*180,
             anchor.y+Math.cos(record.remaining/17+index)*180,10,8);
         actor.route=path(world,actor,target);

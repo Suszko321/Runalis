@@ -1,7 +1,8 @@
 // Authored town geometry, in hidden gameplay cells. Narrative identities stay in hubSystem.
 import {TILE} from './data.js';
 
-export const ORRAKAI_REVISION = 4;
+export const ORRAKAI_REVISION = 5;
+export const GUILD_STAIRS = {x:40,y:13};
 export const ROOT_RETORT = Object.freeze({stairs:{x:55,y:39},arrival:{x:55,y:40},counter:{x:49,y:39}});
 // Open paving, clear of gate arches, roofs, stalls and terrace foregrounds.
 export const ORRAKAI_WATCH_POSTS = [
@@ -12,7 +13,7 @@ export const ORRAKAI_WATCH_POSTS = [
  {id:'frontierRoadWatch',npcId:'orrakaiNorthGateGuard',name:'North Gate Guard',x:47,y:9}
 ];
 export const ORRAKAI_BUILDINGS = [
-  {id:'guild',name:'Warden’s Hall',x:29,y:8,w:15,h:9,door:6,roof:0,partition:9,rooms:['Guild chamber','Records room']},
+  {id:'guild',name:'Adventurers Guild',x:29,y:8,w:15,h:9,door:6,roof:0,partition:9,rooms:['Guild chamber','Records room']},
   {id:'shrine',name:'Covenant Sanctuary',x:10,y:8,w:15,h:9,door:6,roof:2,partition:9,rooms:['Sanctuary','Vestry']},
   {id:'bank',name:'Counting House',x:17,y:22,w:12,h:9,door:3,roof:3,partition:6,rooms:['Counting room','Strongroom']},
   {id:'smith',name:'Aren’s Forge',x:47,y:22,w:15,h:9,door:6,roof:1,partition:10,rooms:['Forge','Tool store']},
@@ -37,7 +38,7 @@ const placements = {
  orrakaiLowerGateGuardObject:[34,36],orrakaiRefugeeParentObject:[20,39],lightwardenCaelenObject:[13,17],
  covenantHealingRiteObject:[17,15],plagueTentAttendant:[24,40],refugeeReliefWorker:[20,41],
  covenantPhysician:[24,38],covenantReliefSister:[44,39],covenantPeacekeeper:[15,40],maskedOrrakaiChild:[18,40],
- orrakaiGraveTender:[9,13],covenantTeacher:[23,12],covenantHistorian:[41,12],covenantEnvoy:[38,14],
+ orrakaiGraveTender:[9,13],covenantTeacher:[23,12],covenantHistorian:[21,12],covenantEnvoy:[21,14],
  orrakaiCaravanMemorial:[8,16],orrakaiBurnedLedger:[41,14],orrakaiGuildRunner:[38,24],orrakaiRoadPorter:[44,36],
  orrakaiBreadCarrier:[31,30],orrakaiLampTender:[44,28],orrakaiNorthSign:[32,6],orrakaiSouthSign:[41,43],
  'auth-orrakai-workyard-resource':[60,28],'auth-orrakai-garden-resource':[60,41],'auth-orrakai-refuge-hearth':[13,39]
@@ -77,6 +78,10 @@ export function reconstructOrrakai(world){
    ...point(8,38),r:14,tailorService:true,stationary:true,disposition:'friendly',
    factionId:'orrakai',bodyType:'female',shirt:'#567871',talk:'Welcome to the Quiet Stitch.'
  });
+ if(!world.objects.some(o=>o.id==='orrakaiGuildStairs'))world.objects.push({
+   id:'orrakaiGuildStairs',kind:'signpost',name:'Upstairs — Adventurers Lounge',
+   ...point(GUILD_STAIRS.x,GUILD_STAIRS.y),townStairs:true,direction:'up',r:18
+ });
  // Ilyra stands beside her book stall on the market terrace, off the main road.
  if (!world.objects.some(o=>o.id==='orrakaiSkillMerchant')) world.objects.push({
    id:'orrakaiSkillMerchant',kind:'npc',name:'Ilyra, Pact Scribe',skillMerchant:true,
@@ -95,6 +100,7 @@ export function reconstructOrrakai(world){
  if(!world.objects.some(o=>o.id==='orrakaiCraftsman'))world.objects.push({id:'orrakaiCraftsman',npcId:'orrakaiCraftsman',kind:'npc',name:'Corin Reed, Craftsman',...point(9,26),r:14,workshopService:'craftsman',workshopName:'Corin’s Workshop',workRole:'craftsman',stationary:true,orrakaiResident:true,disposition:'friendly',factionId:'orrakai',dirX:-1,dirY:0,shirt:'#927449',pants:'#403c31',talk:'Good tools, proper materials, and patience. Bring your supplies to the bench; we will make something that lasts.'});
  for(const o of world.objects){
    if(placements[o.id])Object.assign(o,point(...placements[o.id]));
+   if(o.id==='orrakaiGuildClerk')Object.assign(o,{kind:'npc',name:'Guild Factor',guildContractVendor:true,stationary:true,disposition:'friendly',shirt:'#796641'});
    if(fixtures.includes(o.kind))o.orrakaiFixture=true;
    if(o.kind==='npc')o.orrakaiResident=true;
    o.forceLabel=false;

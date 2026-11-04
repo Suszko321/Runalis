@@ -43,7 +43,7 @@ import { createProceduralSideZoneWorld } from './sideZoneSystem.js';
 import {installOrchardDungeon} from './ashenOrchardDungeon.js';
 import {installIronMire} from './ironMireDungeon.js';
 import { createCapitalHubWorld } from './hubSystem.js';
-import { createCaravanOpeningWorld, createMaraHouseWorld } from './act1OpeningSystem.js';
+import { createCaravanOpeningWorld, createMaraHouseWorld, createAdventurersLounge } from './act1OpeningSystem.js';
 import { createPlayer, migratePlayer } from './player.js';
 import {
   SAVE_SCHEMA_VERSION,
@@ -667,6 +667,8 @@ export function migrateSaveState(saveState, fallbackWorld = null, fallbackPlayer
     ? createCapitalHubWorld()
     : worldMode === 'act1Opening'
     ? createCaravanOpeningWorld()
+    : worldMode === 'adventurersLounge'
+    ? createAdventurersLounge()
     : worldMode === 'maraHouse'
     ? createMaraHouseWorld()
     : continentalSurface
@@ -692,7 +694,7 @@ export function migrateSaveState(saveState, fallbackWorld = null, fallbackPlayer
   if (continentalSurface && freshWorld.continentId === 'runalis') worldMode='overworld';
   const isCapitalWorld = worldMode === 'capital';
   if (isCapitalWorld) migrateOrrakaiPosition(freshWorld, player);
-  if(worldMode==='maraHouse')for(const actor of [player,...(player.coop?.players||[])]){
+  if(['maraHouse','adventurersLounge'].includes(worldMode))for(const actor of [player,...(player.coop?.players||[])]){
     if(!isActorPositionPassable(freshWorld,actor.x,actor.y,actor.radius||actor.r||12))Object.assign(actor,freshWorld.spawn);
     actor.currentZone=freshWorld.name;
   }
@@ -818,7 +820,7 @@ export function cleanCooldownMap(map) {
 function isOrrakaiHubSave(worldMode, worldName, player) {
   if (worldMode === 'pvpArena') return true;
   if (worldMode === 'capital' || worldMode === 'hub' || worldMode === 'town') return true;
-  if (['overworld','travelRoute','dungeon','tower','sideZone','act1Opening','maraHouse'].includes(worldMode)) {
+  if (['overworld','travelRoute','dungeon','tower','sideZone','act1Opening','maraHouse','adventurersLounge'].includes(worldMode)) {
     // A previous safe haven is not the player's current saved world. Only the
     // old surface save explicitly named Orrakai represents a legacy town save.
     return worldMode==='overworld' && ['orrakai','capital gate district'].includes(String(worldName||'').trim().toLowerCase());

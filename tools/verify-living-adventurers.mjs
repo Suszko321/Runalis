@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 import {createDialogueState,openDialogue,updateDialogue,chooseDialogueOption} from '../src/dialogueSystem.js';
 import {createPlayer} from '../src/player.js';
-import {createCapitalHubWorld} from '../src/hubSystem.js';
+import {createAdventurersLounge} from '../src/act1OpeningSystem.js';
 import {normalizeProfileSave} from '../src/saveProfiles.js';
 import {updateLivingAdventurers,canAdventurerFight,changeAdventurerContract} from '../src/livingAdventurers.js';
 import {updateSimulatedSubclassPlayers} from '../src/simulatedSubclassPlayers.js';
 
 const player=createPlayer('Test');
-const world=createCapitalHubWorld();
+const world=createAdventurersLounge();
 Object.assign(player,world.spawn);
 const game={player,world};
 updateLivingAdventurers(game,1/60);
@@ -50,13 +50,13 @@ assert(changeAdventurerContract(game,recruit,player,false));
 assert.equal(player.gold,10);
 Object.assign(player,restorePosition);
 const field={mode:'overworld',width:90,height:90,tiles:Array.from({length:90},()=>Array.from({length:90},()=>({passable:true,biome:'grass'}))),
- objects:[{kind:'capitalGate',x:1100,y:900}],enemies:[],drops:[],effects:[],combatEffects:[]};
+ objects:[{kind:'capitalGate',x:2100,y:900}],enemies:[],drops:[],effects:[],combatEffects:[]};
 game.world=field;
-Object.assign(player,{x:1500,y:1200});
+Object.assign(player,{x:470,y:1920});
 updateLivingAdventurers(game,1/60);
 const fighter=field.objects.find(o=>o.livingAdventurer);
 assert(fighter);
-const target={id:'test-patrol',kind:'hollowling',x:fighter.x+70,y:fighter.y,hp:40,maxHp:40,r:12,xp:20,dynamicEncounter:true};
+const target={id:'test-patrol',kind:'hollowling',x:fighter.x+70,y:fighter.y,hp:8,maxHp:8,r:12,xp:20,dynamicEncounter:true};
 const protectedEnemy={...target,id:'quest-boss',isBoss:true,hp:100,maxHp:100};
 field.enemies.push(target,protectedEnemy);
 assert(canAdventurerFight(target)&&!canAdventurerFight(protectedEnemy));
