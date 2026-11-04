@@ -1,5 +1,6 @@
 import {ensureAdventurerMind,rememberAdventurer,rollAdventurerName} from './adventurerMind.js';
 import {getSummonMovementSpeed} from './combat.js';
+import {addCombatXP} from './skills.js';
 import {migratePlayer} from './player.js';
 import {gearBagCount,gearEquipReason} from './gearItemization.js';
 import {GEAR_BAG_CAPACITY} from './gearRarity.js';
@@ -183,6 +184,10 @@ export function updateLivingAdventurers(game,dt) {
       migratePlayer(actor);
       if(record.hp!=null)actor.hp=Math.min(actor.maxHp,record.hp);
       state.actors.set(record.id,actor);
+    }
+    if(record.sharedXpPending>0){
+      addCombatXP(actor,record.sharedXpPending);
+      delete record.sharedXpPending;
     }
     actor.hiredAdventurer=hired;
     actor.reviveRemaining=record.reviveRemaining||0;

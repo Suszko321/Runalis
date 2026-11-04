@@ -1,3 +1,4 @@
+import {settlePartyXp} from './adventurerPartyXp.js';
 import { XP_CURVES, xpRequired, xpForLevels, advanceProgression, safeXP, safeLevel } from './progressionMath.js';
 import { affinityMultiplier, getClassAffinities } from './progressionProfiles.js';
 
@@ -498,7 +499,7 @@ export function addPlayerSkillXP(player, skillId, amount) {
 
   migrateSkillState(player);
 
-  const adjusted = calculateSkillXpGain(player, skillId, amount);
+  const adjusted = settlePartyXp(player,calculateSkillXpGain(player, skillId, amount));
 
   const result = addSkillXP(player.skillState, skillId, adjusted);
   return result;
@@ -552,7 +553,7 @@ export function getCombatLevel(skillStateOrPlayer) {
 }
 export function addCombatXP(player, amount, options = {}) {
   migrateSkillState(player);
-  const result = advanceProgression(player.skillState.combat, amount, XP_CURVES.combat);
+  const result = advanceProgression(player.skillState.combat, settlePartyXp(player,safeXP(amount),options), XP_CURVES.combat);
   player.combatLevel = player.skillState.combat.level;
   return result;
 }

@@ -1,3 +1,4 @@
+import {settlePartyXp} from './adventurerPartyXp.js';
 import {armourHandling} from './trainingProfiles.js';
 import {HOTBAR_SLOT_COUNT,HOTBAR_LAYOUT_VERSION} from './hotbarConfig.js';
 import {gearAcquisitionReason,equippedGearItem} from './gearItemization.js';
@@ -1271,7 +1272,7 @@ export function gainXp(player, skillId, amount, log, options = {}) {
 
   const adjustedAmount = safeXP(amount) * (options.skipClassXpMultiplier ? 1 : affinityMultiplier(player, skillId));
 
-  const result = addSkillXP(player.skillState, skillId, adjustedAmount);
+  const result = addSkillXP(player.skillState, skillId, settlePartyXp(player,adjustedAmount,options));
 
   refreshDerivedProgression(player, false);
   syncLegacySkills(player);

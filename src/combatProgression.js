@@ -1,3 +1,4 @@
+import {playerPartyXpRate} from './adventurerPartyXp.js';
 import {rememberAdventurer} from './adventurerMind.js';
 import {trainingPriority, weaponTraining, wornTraining, abilityTraining} from './trainingProfiles.js';
 import { recordAbilityDamage, recordEnemyAbilityStatistics, grantAbilityMasteryXp } from './abilityMasterySystem.js';
@@ -125,13 +126,15 @@ export function grantSharedCombatKillXp(finalActor, enemy, baseXp, log) {
   }
   enemy.combatSkillXpAwarded = true;
   const contributors = Object.values(enemy.combatContributors || {}).filter(c => c.actor && (c.damage > 0 || Object.values(c.support || {}).some(v => v > 0) || Object.keys(c.actionTraining || {}).length > 0));
-  const qualifying = contributors.filter(c => c.playerParticipation && Math.hypot((c.actor.x || 0) - (enemy.x || 0), (c.actor.y || 0) - (enemy.y || 0)) <= 1000);
+  const qualifying = contributors.filter(c => !c.actor.livingAdventurer && c.playerParticipation && Math.hypot((c.actor.x || 0) - (enemy.x || 0), (c.actor.y || 0) - (enemy.y || 0)) <= 1000);
   const credited = resolveEnemyKillActor(enemy, finalActor);
   const reward = safeXP(enemy.baseCombatXp ?? baseXp ?? enemy.xp ?? 0);
   if (!reward) return;
   recordEnemyAbilityStatistics(enemy, qualifying, performance.now()/1000);
   notifyTechniqueDeath(enemy, contributors, performance.now()/1000);
-  for (const contribution of qualifying) {
+  // The companion receives a full enemy award only on their final hit.
+  const recipients=credited?.livingAdventurer?[...qualifying,{actor:credited}]:qualifying;
+  for (const contribution of recipients) {
     const actor = contribution.actor, budget = reward * (actor === credited ? 1 : .5);
     const combat = addCombatXP(actor, budget, {log});
     if(actor.livingAdventurer){
@@ -147,11 +150,12 @@ export function grantSharedCombatKillXp(finalActor, enemy, baseXp, log) {
     const awards = allocateEncounterXP(actor, contribution, budget);
     // These proficiency shares distribute the victory XP already awarded above.
     // They must not award the same mastery XP a second time.
-    for (const award of awards) gainXp(actor, award.skillId, award.amount, log, { skipClassXpMultiplier:true });
-    for (const mastery of allocateEncounterMastery(contribution,budget)) grantAbilityMasteryXp(actor,mastery.id,mastery.amount,performance.now()/1000,log);
+    for (const award of awards) gainXp(actor, award.skillId, award.amount, log, { skipClassXpMultiplier:true, allocated:true });
+    for (const mastery of allocateEncounterMastery(contribution,budget)) grantAbilityMasteryXp(actor,mastery.id,mastery.amount,performance.now()/1000,log,{allocated:true});
     syncLegacySkills(actor);
-    actor.lastCombatReward = { combatXP:budget, allocationBudget:budget, awards, enemyName:enemy.name || enemy.kind || 'Enemy' };
+    const rate=playerPartyXpRate(actor);
+    actor.lastCombatReward = { combatXP:combat.xpAdded, allocationBudget:budget*rate, awards:awards.map(award=>({...award,amount:award.amount*rate})), enemyName:enemy.name || enemy.kind || 'Enemy' };
     if (combat.leveledUp) log?.(`Level increased to ${combat.newLevel}.`);
-    addFloatingText(actor, `+${budget} Combat XP`, { preset:'status', color:'#e7cd91', ttl:.9, size:12, offsetY:-68 });
+    addFloatingText(actor, `+${Math.round(combat.xpAdded*10)/10} Combat XP`, { preset:'status', color:'#e7cd91', ttl:.9, size:12, offsetY:-68 });
   }
 }

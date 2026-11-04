@@ -1,3 +1,4 @@
+import {settlePartyXp} from './adventurerPartyXp.js';
 import {getLivingPartyMembers} from './partySupport.js';
 import {getAbilityExpertise} from './skillExpertiseSystem.js';
 import {applyCombatTempo} from './combatTempo.js';
@@ -82,11 +83,11 @@ export function applyAbilityMastery(player, ability) {
     channelProfile:ability.channelProfile?{...ability.channelProfile,costPerSecond:ability.channelProfile.costPerSecond*efficiency}:undefined,
     _mastery:bonus,_expertise:getAbilityExpertise(player,ability)};
 }
-export function grantAbilityMasteryXp(player, abilityId, amount, now = performance.now()/1000, log = null) {
+export function grantAbilityMasteryXp(player, abilityId, amount, now = performance.now()/1000, log = null, options = {}) {
   if (!player || !getAbilityById(abilityId) || !(amount > 0) || !Number.isFinite(amount)) return 0;
   const entry = getAbilityMastery(player, abilityId, true);
   const previous = entry.level;
-  amount = safeXP(amount);
+  amount = settlePartyXp(player,safeXP(amount),options);
   advanceProgression(entry,amount,XP_CURVES.mastery);
   entry.lastMasteryGainAt = now;
   if (entry.level > previous) {
