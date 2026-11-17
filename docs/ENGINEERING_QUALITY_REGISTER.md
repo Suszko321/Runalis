@@ -811,3 +811,8 @@ memory, security or gameplay readiness claim follows solely from a green build.
 
 - Grimoires resting at the hip use an additional 0.8 scale around the existing attachment point, making the resting model 20% smaller.
 - Verified all 21 Grimoire/Focus models across both bodies and four facings, including exact hip scale and anchor checks, 6,048 movement samples and 672 active poses. Reviewed the generated resting overview.
+
+### Black elite name outlines
+
+- Elite, Rare and Champion enemy names use a four-pixel black outline. Their larger bold names, rank line, modifiers and wider health bars preserve distinction from ordinary mobs.
+- Canvas rendering checks cover normal, Elite, Rare, Champion and Boss nameplates. Reviewed the rendered comparison.

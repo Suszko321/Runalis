@@ -19,8 +19,8 @@ export function drawEnemyNameplate(ctx,enemy,x,y,{hideLabel=false}={}){
   ctx.textAlign='center';ctx.lineJoin='round';ctx.lineWidth=3;ctx.strokeStyle='#0a1013';ctx.font=p.important?'bold 12px Georgia':'bold 10px Georgia';
   if(p.important){
    const lift=p.modifiers?12:0;
-   ctx.lineWidth=4;ctx.strokeStyle='#0a1013';ctx.strokeText(p.name,Math.round(x),top-22-lift);
-   ctx.lineWidth=2;ctx.strokeStyle='#b79957';ctx.strokeText(p.name,Math.round(x),top-22-lift);
+   ctx.lineWidth=4;ctx.strokeStyle=p.rank==='elite'?'#000000':'#0a1013';ctx.strokeText(p.name,Math.round(x),top-22-lift);
+   if(p.rank==='boss'){ctx.lineWidth=2;ctx.strokeStyle='#b79957';ctx.strokeText(p.name,Math.round(x),top-22-lift);}
    ctx.fillStyle=p.label.color;ctx.fillText(p.name,Math.round(x),top-22-lift);
    const symbol='☠',rank=p.rank==='boss'?'BOSS':['rare','champion'].includes(enemy.encounterTier)?enemy.encounterTier.toUpperCase():'ELITE';
    ctx.lineWidth=3;ctx.strokeStyle='#0a1013';ctx.font='bold 9px sans-serif';ctx.fillStyle='#e28b73';const rankText=`${symbol} ${rank} · Lv. ${p.label.level}`;ctx.strokeText(rankText,Math.round(x),top-9-lift);ctx.fillText(rankText,Math.round(x),top-9-lift);
