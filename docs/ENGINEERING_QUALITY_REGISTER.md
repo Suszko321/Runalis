@@ -816,3 +816,9 @@ memory, security or gameplay readiness claim follows solely from a green build.
 
 - Elite, Rare and Champion enemy names use a four-pixel black outline. Their larger bold names, rank line, modifiers and wider health bars preserve distinction from ordinary mobs.
 - Canvas rendering checks cover normal, Elite, Rare, Champion and Boss nameplates. Reviewed the rendered comparison.
+
+### Area banners replaying after session reload
+
+- POI arrival banners and entrance captions contained performance-clock timestamps and were retained by save serialization and legacy profile normalization. A new session reaching the previous timestamp could replay an unrelated old arrival.
+- Save sanitization omits both temporary presentation fields, and profile normalization clears them from older saves. Live cards and permanent discovered locations are preserved.
+- verify-poi-arrival-save.mjs covers four player slots, host and co-op normalization, resetting and advancing the session clock, discovery persistence and a fresh arrival after loading.

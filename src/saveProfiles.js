@@ -38,6 +38,10 @@ export function normalizeProfileSave(profile, options = {}) {
     ...fallback,
     ...(profile || {})
   };
+  // Area banners use the current session's animation clock. Old saved cards
+  // would otherwise reappear when a new session reaches the old timestamp.
+  delete player.poiArrival;
+  delete player.poiTransitionText;
   // Bubble Ward is a temporary session effect. Its performance-clock expiry
   // has no meaning after logout/reload. Copy nested state before scrubbing so
   // autosaving cannot remove protection from the live character or allies.

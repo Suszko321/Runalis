@@ -591,6 +591,7 @@ export function sanitizeForSave(value) {
       return clocks;
     }
     if (key === 'floatingTexts' || key === 'lootCollections') return [];
+    if (key === 'poiArrival' || key === 'poiTransitionText') return undefined;
     if (['eliteFrost','eliteFrozenUntil','eliteFrostRecoveryUntil','eliteGuardActive','eliteGuardX','eliteGuardY','eliteHealing','eliteAttackPauseTimer','eliteTelegraph'].includes(key)) return undefined;
     if (key === 'combatEffects') return [];
     if (key === 'effects') return [];
