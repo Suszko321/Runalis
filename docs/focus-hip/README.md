@@ -1,6 +1,6 @@
 # Focus size and anatomical hip attachment
 
-All nineteen existing/new Spirit focuses and grimoires now render at75% of their
+All existing Spirit focuses and grimoires now render at65% of their
 previous world size. The correction lives at the common equipped-art boundary,
 so future `spiritFocus` items use it too. Inventory icons, projectile size,
 non-focus weapons, original raster sources and gameplay statistics are unchanged.
@@ -36,7 +36,7 @@ These are ignored local production-render captures, not alternate runtime art.
 
 - `verify-focus-hip-art.mjs`: nineteen items, 5,472 idle/walk/run hip samples,
   both bodies/four heads/four facings; 608 active action samples remain off the
-  hip; exact25% world-size reduction, fixed attachment transformed with the actual
+  hip; exact35% world-size reduction, fixed attachment transformed with the actual
   body/root, one draw per frame, correct body depth, redundant-sheathed isolation
   and actor immutability. Thirty-eight pixel comparisons confirm east is more
   exposed than west. Another1,216 samples cover four full armour/mantle ensembles,

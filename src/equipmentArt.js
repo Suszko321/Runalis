@@ -44,7 +44,7 @@ export function drawEquippedArt(ctx,id,profile,x,y,side=1) {
   // Uniform world-size correction covers every old/new focus and grimoire.
   // Inventory icons and non-focus weapon registrations retain their native sizes.
   if(['spiritFocus','grimoire'].includes(profile?.weaponType)){
-    ctx.save();ctx.translate(x,y);ctx.scale(.75,.75);
+    ctx.save();ctx.translate(x,y);ctx.scale(.65,.65);
     const drawn=drawEquippedArtModel(ctx,id,profile,0,0,side);ctx.restore();return drawn;
   }
   return drawEquippedArtModel(ctx,id,profile,x,y,side);

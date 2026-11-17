@@ -16,22 +16,22 @@ const {WEAPON_MOVESETS}=await import('../src/combatMoves.js');
 const {getHumanVisualProfile,applyHumanVisualProfile}=await import('../src/humanVisualProfiles.js');
 const {focusAtHip,focusHipTransform,focusHipBehindBody}=await import('../src/handedness.js');
 const {sampleWeaponStance,WEAPON_READY_SECONDS}=await import('../src/weaponStance.js');
-const items=Object.values(ITEMS).filter(i=>i.weaponType==='spiritFocus');assert.equal(items.length,21);
+const items=Object.values(ITEMS).filter(i=>['spiritFocus','grimoire'].includes(i.weaponType));assert(items.some(i=>i.weaponType==='spiritFocus')&&items.some(i=>i.weaponType==='grimoire'));
 for(const name of ['human-male','human-female','human-male-attack','human-female-attack','human-male-cast','human-female-cast','heads-custom','melee-arm-parts','arcane-special'])asset(name);
 for(const item of items)if(BOSS_ARMORY_ART[item.id])asset(BOSS_ARMORY_ART[item.id].sheet);
 for(let i=0;i<150&&spriteArtStatus().some(a=>!a.ready&&!a.failed);i++)await new Promise(r=>setTimeout(r,10));assert.deepEqual(spriteArtStatus().filter(a=>a.failed),[]);
 Object.defineProperty(globalThis,'performance',{value:{now:()=>5000},configurable:true});
 fs.mkdirSync('docs/focus-hip',{recursive:true});
 const canvas=createCanvas(220,220),ctx=canvas.getContext('2d'),p={x:110,y:150,hp:100,maxHp:100,skin:'#dcb48b',hair:'#242128',shirt:'#887052',pants:'#3d3a3c',boots:'#66421f',appearance:{},actionState:{}};
-let samples=0,activeCases=0;const overview=createCanvas(1440,70+items.length*200),c=overview.getContext('2d');c.fillStyle='#25292e';c.fillRect(0,0,overview.width,overview.height);c.fillStyle='#e6d3a6';c.font='16px sans-serif';c.fillText('19 focuses / grimoires · anatomical right hip · idle front / east / back / west · male & female',16,28);
+let samples=0,activeCases=0;const overview=createCanvas(1440,70+items.length*200),c=overview.getContext('2d');c.fillStyle='#25292e';c.fillRect(0,0,overview.width,overview.height);c.fillStyle='#e6d3a6';c.font='16px sans-serif';c.fillText('Focuses / grimoires · anatomical right hip · idle front / east / back / west · male & female',16,28);
 function render(item,options={}){
  const art=BOSS_ARMORY_ART[item.id],image=asset(art?.sheet||'arcane-special').image,calls=[],all=[],draw=ctx.drawImage.bind(ctx);ctx.clearRect(0,0,220,220);ctx.drawImage=(...args)=>{const record={args,m:ctx.getTransform(),order:all.length};all.push(record);if(args[0]===image)calls.push(record);draw(...args);};
  const before=JSON.stringify(p);if(options.omitFocus)ctx.drawImage=(...args)=>{const record={args,m:ctx.getTransform(),order:all.length};all.push(record);if(args[0]===image)calls.push(record);else draw(...args);};drawHumanActor(ctx,p,{x:0,y:0},{animationTime:5,...options});ctx.drawImage=draw;assert.equal(JSON.stringify(p),before);assert.equal(calls.length,1,'Exactly one focus '+item.id);return{call:calls[0],all,pixels:ctx.getImageData(0,0,220,220).data};
 }
 for(const [ii,item]of items.entries()){
  const art=BOSS_ARMORY_ART[item.id],profile=getGearVisualProfile(item.id,item),image=asset(art?.sheet||'arcane-special').image;
- // Both old shared focuses and individual books shrink by exactly25% at the pivot.
- let transform;const draw=ctx.drawImage.bind(ctx);ctx.drawImage=(...args)=>{if(args[0]===image)transform=ctx.getTransform();};drawEquippedArt(ctx,item.id,profile,23,41);ctx.drawImage=draw;assert.equal(transform.a,.75);assert.equal(transform.d,.75);assert.equal(transform.e,23);assert.equal(transform.f,41);
+ // Both old shared focuses and individual books shrink by exactly35% at the pivot.
+ let transform;const draw=ctx.drawImage.bind(ctx);ctx.drawImage=(...args)=>{if(args[0]===image)transform=ctx.getTransform();};drawEquippedArt(ctx,item.id,profile,23,41);ctx.drawImage=draw;assert(Math.abs(transform.a-.65)<1e-6);assert(Math.abs(transform.d-.65)<1e-6);assert.equal(transform.e,23);assert.equal(transform.f,41);
  for(const [bi,bodyType]of ['male','female'].entries())for(const hairStyle of ['short','ponytail','long','shaved'])for(const [di,[facing,dirX,dirY]]of [['down',0,1],['right',1,0],['up',0,-1],['left',-1,0]].entries())for(const state of ['idle','walk','run'])for(let key=0;key<(state==='idle'?1:4);key++){
   Object.assign(p,{bodyType,hairStyle,dirX,dirY,isMoving:state!=='idle',walkTime:state==='run'?(key+.1)/.72:(key+.1)/.5,equipment:{weapon:item.id},combatState:{},visualAction:null,actionState:{sprinting:state==='run'}});p.appearance.hairStyle=hairStyle;
   const pose=getHumanAnimationPose(p,{now:5});assert(focusAtHip(pose));
@@ -70,4 +70,4 @@ for(const [ii,item]of items.entries()){
 }
 fs.writeFileSync('docs/focus-hip/idle-review.png',overview.toBuffer('image/png'));
 for(let start=0;start<items.length;start+=4){const page=createCanvas(1440,870),pc=page.getContext('2d');pc.fillStyle='#25292e';pc.fillRect(0,0,1440,870);pc.fillStyle='#e6d3a6';pc.font='16px sans-serif';pc.fillText('Hip size / depth review · front / east / back / west · male and female',16,30);pc.drawImage(overview,0,45+start*200,1440,Math.min(4,items.length-start)*200,0,60,1440,Math.min(4,items.length-start)*200);fs.writeFileSync('docs/focus-hip/idle-page-'+(start/4+1)+'.png',page.toBuffer('image/png'));}
-console.log('PASS',JSON.stringify({focuses:items.length,hipSamples:samples,activeCases,worldScale:.75,bothBodies:true,heads:4,oneModelPerFrame:true,depthOrder:true,sheathedHintIsolation:true,actorUnchanged:true}));
+console.log('PASS',JSON.stringify({focuses:items.length,hipSamples:samples,activeCases,worldScale:.65,bothBodies:true,heads:4,oneModelPerFrame:true,depthOrder:true,sheathedHintIsolation:true,actorUnchanged:true}));

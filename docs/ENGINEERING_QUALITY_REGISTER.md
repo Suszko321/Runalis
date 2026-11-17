@@ -801,3 +801,8 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - On-device replies are opt-in and offered only when the browser reports its language model is already available. The game supplies limited persona and memory context, treats returned text as dialogue only, and falls back to its local conversation engine on timeout or unavailability. No model keys or remote AI services are used.
 - The runtime suite verifies uniqueness, memory retrieval, persistence, tactic changes, storage bounds and the model adapter with a mock. The touch-browser fixture verifies the chat panel and recall after profile reload. A live on-device model was not exercised.
 - While an adventurer is active, the owner's skill, combat and mastery XP is reduced by 10 percent. The adventurer receives a separate 10 percent of the owner's net award as combat XP. Encounter proficiency and mastery allocations are penalized without counting the same combat budget again for the share. An adventurer receives the full base enemy award only on their final blow. Pending share XP survives saves.
+
+### Smaller equipped Grimoires and Foci
+
+- Reduced the common equipped-model scale from 0.75 to 0.65, approximately 13% smaller than the previous rendering in both held and hip poses.
+- The production renderer check covers all 21 Grimoire and Focus models, 6,048 idle and movement samples and 672 combat action samples. Reviewed the generated hip overview. Item pivots and depth ordering pass.
