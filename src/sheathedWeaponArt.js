@@ -9,7 +9,10 @@ export function drawHipFocus(ctx,actor,facing,bob=0){
   const profile=getGearVisualProfile(id,ITEMS[id]||{});
   if(!['spiritFocus','grimoire'].includes(profile.weaponType))return;
   const {x,y,side}=focusHipTransform(actor.bodyType||actor.appearance?.bodyType,facing,bob);
-  drawEquippedArt(ctx,id,profile,x,y,side);
+  if(profile.weaponType==='grimoire'){
+    ctx.save();ctx.translate(x,y);ctx.scale(.8,.8);
+    drawEquippedArt(ctx,id,profile,0,0,side);ctx.restore();
+  }else drawEquippedArt(ctx,id,profile,x,y,side);
 }
 
 export function drawSheathedWeapon(ctx,actor,facing,bob=0){

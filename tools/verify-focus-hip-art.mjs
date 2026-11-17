@@ -10,6 +10,7 @@ const {drawHumanActor}=await import('../src/humanRenderer.js');
 const {asset,spriteArtStatus}=await import('../src/spriteArt.js');
 const {BOSS_ARMORY_ART}=await import('../src/bossArmoryArtData.js');
 const {drawEquippedArt}=await import('../src/equipmentArt.js');
+const {drawHipFocus}=await import('../src/sheathedWeaponArt.js');
 const {getGearVisualProfile}=await import('../src/gearVisualStyle.js');
 const {getHumanAnimationPose}=await import('../src/playerAnimationController.js');
 const {WEAPON_MOVESETS}=await import('../src/combatMoves.js');
@@ -30,6 +31,15 @@ function render(item,options={}){
 }
 for(const [ii,item]of items.entries()){
  const art=BOSS_ARMORY_ART[item.id],profile=getGearVisualProfile(item.id,item),image=asset(art?.sheet||'arcane-special').image;
+ for(const bodyType of ['male','female'])for(const facing of ['down','right','up','left']){
+  let hipMatrix;const original=ctx.drawImage.bind(ctx);
+  ctx.drawImage=(...args)=>{if(args[0]===image)hipMatrix=ctx.getTransform();};
+  drawHipFocus(ctx,{bodyType,equipment:{weapon:item.id}},facing);
+  ctx.drawImage=original;
+  const pivot=focusHipTransform(bodyType,facing,0),scale=item.weaponType==='grimoire'?.52:.65;
+  assert(Math.abs(Math.hypot(hipMatrix.a,hipMatrix.b)-scale)<1e-6,item.id+' hip size');
+  assert(Math.abs(hipMatrix.e-pivot.x)<1e-6&&Math.abs(hipMatrix.f-pivot.y)<1e-6,item.id+' hip anchor');
+ }
  // Both old shared focuses and individual books shrink by exactly35% at the pivot.
  let transform;const draw=ctx.drawImage.bind(ctx);ctx.drawImage=(...args)=>{if(args[0]===image)transform=ctx.getTransform();};drawEquippedArt(ctx,item.id,profile,23,41);ctx.drawImage=draw;assert(Math.abs(transform.a-.65)<1e-6);assert(Math.abs(transform.d-.65)<1e-6);assert.equal(transform.e,23);assert.equal(transform.f,41);
  for(const [bi,bodyType]of ['male','female'].entries())for(const hairStyle of ['short','ponytail','long','shaved'])for(const [di,[facing,dirX,dirY]]of [['down',0,1],['right',1,0],['up',0,-1],['left',-1,0]].entries())for(const state of ['idle','walk','run'])for(let key=0;key<(state==='idle'?1:4);key++){

@@ -58,3 +58,6 @@ These are ignored local production-render captures, not alternate runtime art.
   ascension tests; 8,960 Legendary weapon art samples; 3,776 Legendary locomotion
   samples; 23,136 melee rig samples and64 stance weapons pass. No physical-device
   or human motion-feel certification is implied by these contracts.
+
+Resting Grimoires now receive an additional 0.8 scale around the hip pivot,
+making the hip model 20% smaller than its held appearance.

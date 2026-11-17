@@ -806,3 +806,8 @@ memory, security or gameplay readiness claim follows solely from a green build.
 
 - Reduced the common equipped-model scale from 0.75 to 0.65, approximately 13% smaller than the previous rendering in both held and hip poses.
 - The production renderer check covers all 21 Grimoire and Focus models, 6,048 idle and movement samples and 672 combat action samples. Reviewed the generated hip overview. Item pivots and depth ordering pass.
+
+### Smaller Grimoires at the hip
+
+- Grimoires resting at the hip use an additional 0.8 scale around the existing attachment point, making the resting model 20% smaller.
+- Verified all 21 Grimoire/Focus models across both bodies and four facings, including exact hip scale and anchor checks, 6,048 movement samples and 672 active poses. Reviewed the generated resting overview.
