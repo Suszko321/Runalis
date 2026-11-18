@@ -830,3 +830,9 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - POI arrival banners and entrance captions contained performance-clock timestamps and were retained by save serialization and legacy profile normalization. A new session reaching the previous timestamp could replay an unrelated old arrival.
 - Save sanitization omits both temporary presentation fields, and profile normalization clears them from older saves. Live cards and permanent discovered locations are preserved.
 - verify-poi-arrival-save.mjs covers four player slots, host and co-op normalization, resetting and advancing the session clock, discovery persistence and a fresh arrival after loading.
+
+### Last Dawn Keep Nav Stone sanctuary
+
+- Reproduced 13 authored living enemies within the stone's 600-pixel travel danger check. Unlike Castle Veyreign's stone, the Keep stone had no navSafeRadius and therefore bypassed sanctuary protection.
+- Moved the Keep stone six tiles north and assigned an 800-pixel sanctuary. Existing authored-enemy registration, saved-enemy restoration, streamed destination previews, population spawning/respawning and incoming-enemy checks use that radius. Existing attunements resolve the stone by its retained ID.
+- verify-keep-nav-sanctuary.mjs verifies the position, landing footprint, authored and newly registered enemies, old saved enemy positions, exclusion from spawn/respawn candidates and a real four-player teleport with its ration cost.
