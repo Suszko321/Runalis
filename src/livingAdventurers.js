@@ -64,6 +64,7 @@ export function changeAdventurerContract(game,npc,actor,hire) {
   const records=roster(actor);
   const record=records.find(entry=>entry.id===npc.id);
   if(!record||record.hired===hire)return false;
+  saveAdventurerState(record,npc);
   if(hire)for(const other of records)other.hired=false;
   record.hired=hire;
   rememberAdventurer(ensureAdventurerMind(record),'event',hire?'Rejoined '+actor.name+' on the road.':'Returned to the upstairs guild lounge.');
@@ -71,8 +72,21 @@ export function changeAdventurerContract(game,npc,actor,hire) {
   npc.nextRoute=0;
   npc.companionTalkTime=0;
   npc.interactable=!hire;
+  if(!hire){
+    game.world.objects=game.world.objects.filter(object=>object.id!==record.id);
+    runtime.get(game)?.actors.delete(record.id);
+  }
+  updateLivingAdventurers(game,0);
   game.log?.(hire?`${npc.name} joined your party.`:`${npc.name} returned to the upstairs lounge.`);
   return true;
+}
+
+function saveAdventurerState(record,actor) {
+  record.position={x:actor.x,y:actor.y};
+  record.equipment={...actor.equipment};
+  record.hp=actor.hp;
+  record.combat={...actor.skillState.combat};
+  record.skills=actor.skillState.skills;
 }
 
 export function adventurerGearOptions(owner) {
@@ -142,6 +156,9 @@ export function updateLivingAdventurers(game,dt) {
     world.objects=world.objects.filter(o=>!o.livingAdventurer);
     state={world,actors:new Map()};runtime.set(game,state);
   }
+  // Discard stale or duplicated projections, including leftovers in older
+  // instanced worlds. Only the current roster actor may occupy a scene.
+  world.objects=world.objects.filter(object=>!object.livingAdventurer||state.actors.get(object.id)===object);
   for(const [index,record] of records.entries()){
     let actor=state.actors.get(record.id);
     const hired=record.hired===true;
@@ -230,11 +247,7 @@ export function updateLivingAdventurers(game,dt) {
       hasLineOfSight(world,player.x,player.y,actor.x,actor.y);
     actor.companionTalkTime=canTalk?Math.min(COMPANION_TALK_DELAY,(actor.companionTalkTime||0)+dt):0;
     actor.interactable=!actor.adventurerDowned&&!actor.simulatedInCombat&&(!hired||actor.companionTalkTime>=COMPANION_TALK_DELAY-1e-9);
-    record.position={x:actor.x,y:actor.y};
-    record.equipment={...actor.equipment};
-    record.hp=actor.hp;
-    record.combat={...actor.skillState.combat};
-    record.skills=actor.skillState.skills;
+    saveAdventurerState(record,actor);
   }
 }
 

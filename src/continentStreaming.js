@@ -16,7 +16,7 @@ export function createContinentalRuntime(world,{objects,enemies,terrain}){
  const treeBlocks=(o,x,y)=>['continentPine','continentWillow'].includes(o.propType)&&Math.hypot(x-o.x,y-o.y)<Math.max(7,Math.min(15,(o.artWidth||100)/10));
  const chunkAt=(x,y)=>{const key=keyOf(x,y);let chunk=chunks.get(key);if(!chunk){const [cx,cy]=key.split(',').map(Number);chunk={id:key,cx,cy,objects:[],enemies:[],drops:[],treeColliders:[]};chunks.set(key,chunk);}return chunk;};
  function register(entity,kind='objects'){
-  if(!entity?.id||byId.has(entity.id))return;
+  if(!entity?.id||entity.livingAdventurer||byId.has(entity.id))return;
   entity.sourceRegionId ||= continentRegionAt(entity.x/TILE,entity.y/TILE).id;
   entity.homeX ??=entity.x;entity.homeY ??=entity.y;
   if(playerRef)applyContinentalEntityState(entity,playerRef,kind==='enemies'?'enemy':'object');
@@ -82,7 +82,7 @@ export function createContinentalRuntime(world,{objects,enemies,terrain}){
  }
  function collectInjected(){
   for(const e of world.enemies||[])if(!byId.has(e.id)){register(e,'enemies');if(!e.dynamicEncounter)allEnemies.push(e);}
-  for(const o of world.objects||[])if(!o.id?.startsWith('terrain-detail-')&&!byId.has(o.id)){register(o);if(!o.dynamicEncounter)allObjects.push(o);}
+  for(const o of world.objects||[])if(!o.livingAdventurer&&!o.id?.startsWith('terrain-detail-')&&!byId.has(o.id)){register(o);if(!o.dynamicEncounter)allObjects.push(o);}
   for(const d of world.drops||[])if(d?.id){const c=chunkAt(d.x,d.y);if(!c.drops.some(o=>o.id===d.id))c.drops.push(d);}
  }
  function retireTransient(actors){
@@ -116,7 +116,10 @@ export function createContinentalRuntime(world,{objects,enemies,terrain}){
   }
   // An engaged enemy may pursue across a chunk boundary; never pop out in combat.
   for(const e of world.enemies||[])if(((e.dead||e.hp<=0)&&!e.deathHandled||e.hp>0&&!e.dead&&!e.remove&&(e.aggro||e.inCombat||e.alerted||e.combatTargetId))&&!residentEnemies.includes(e))residentEnemies.push(e);
-  world.objects=[...new Set(residentObjects)];world.enemies=[...new Set(residentEnemies)];world.drops=[...new Set(residentDrops)];
+  // The hire roster owns companion projections and their removal. Streaming
+  // retains active projections without registering them as world residents.
+  const companions=(world.objects||[]).filter(o=>o.livingAdventurer&&!o.remove&&!o.depleted);
+  world.objects=[...new Set([...residentObjects,...companions])];world.enemies=[...new Set(residentEnemies)];world.drops=[...new Set(residentDrops)];
   return true;
  }
  function previewAt(x,y,player){

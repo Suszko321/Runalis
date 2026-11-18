@@ -1,0 +1,74 @@
+import assert from 'node:assert/strict';
+import {createWorld} from '../src/world.js';
+import {createCapitalHubWorld} from '../src/hubSystem.js';
+import {createAdventurersLounge} from '../src/act1OpeningSystem.js';
+import {createPlayer} from '../src/player.js';
+import {hireGuildAdventurer,updateLivingAdventurers,getHiredAdventurer,changeAdventurerContract} from '../src/livingAdventurers.js';
+import {createSaveState,migrateSaveState} from '../src/gameSave.js';
+
+const player=createPlayer('Companion uniqueness');
+const game={player,world:createCapitalHubWorld(),log(){}};
+const vendor=game.world.objects.find(o=>o.guildContractVendor);
+Object.assign(player,{x:vendor.x,y:vendor.y,gold:1000});
+assert.ok(hireGuildAdventurer(game,vendor,player,()=>.25));
+updateLivingAdventurers(game,0);
+const id=getHiredAdventurer(game.world).id;
+const surface=createWorld({skipPublishedOverride:true});
+game.world=surface;
+Object.assign(player,surface.spawn);
+updateLivingAdventurers(game,0);
+const hired=getHiredAdventurer(surface);
+assert.equal(hired.id,id);
+const companionName=hired.name;
+hired.hp=Math.max(1,hired.maxHp-17);
+hired.skillState.skills.blade.xp=37;
+surface.continentRuntime.refresh(game);
+updateLivingAdventurers(game,0);
+Object.assign(player,{x:hired.x,y:hired.y});
+updateLivingAdventurers(game,3);assert.ok(changeAdventurerContract(game,hired,player,false));
+assert.equal(surface.objects.filter(o=>o.id===id).length,0,'dismissal removes actor immediately');
+updateLivingAdventurers(game,0);
+for(let i=0;i<4;i++){
+ surface.continentRuntime.refresh(game);
+ updateLivingAdventurers(game,.5);
+ assert.equal(surface.objects.filter(o=>o.id===id).length,0,'dismissed companion must not return through streaming');
+}
+assert.ok(!surface.continentRuntime.allObjects.some(o=>o.id===id),'companion excluded from permanent world objects');
+assert.ok(![...surface.continentRuntime.chunks.values()].some(c=>c.objects.some(o=>o.id===id)));
+game.world=createAdventurersLounge();
+Object.assign(player,game.world.spawn);
+updateLivingAdventurers(game,0);
+const bench=game.world.objects.filter(o=>o.id===id);
+assert.equal(bench.length,1);
+assert.equal(bench[0].name,companionName);
+assert.equal(bench[0].hiredAdventurer,false);
+assert.equal(bench[0].hp,hired.hp,'latest health retained');
+assert.equal(bench[0].skillState.skills.blade.xp,37,'training retained');
+Object.assign(player,{x:bench[0].x,y:bench[0].y});
+assert.ok(changeAdventurerContract(game,bench[0],player,true));
+updateLivingAdventurers(game,0);
+assert.equal(game.world.objects.filter(o=>o.id===id).length,1);
+game.world=surface;
+Object.assign(player,surface.spawn);
+for(let i=0;i<4;i++){updateLivingAdventurers(game,.5);surface.continentRuntime.refresh(game);}
+assert.equal(surface.objects.filter(o=>o.id===id).length,1,'rehired companion has one projection on return');
+const saved=createSaveState(game);
+const loaded=migrateSaveState(saved);
+const restored={player:loaded.player,world:loaded.worldRuntime,log(){}};
+updateLivingAdventurers(restored,0);
+restored.world.continentRuntime.refresh(restored);
+updateLivingAdventurers(restored,0);
+assert.equal(restored.world.objects.filter(o=>o.id===id).length,1,'reload has one companion');
+const current=getHiredAdventurer(restored.world);
+restored.world.objects.push({...current});
+updateLivingAdventurers(restored,0);
+assert.equal(restored.world.objects.filter(o=>o.id===id).length,1,'stale duplicate projection removed');
+Object.assign(restored.player,{x:current.x,y:current.y});
+updateLivingAdventurers(restored,3);
+assert.ok(changeAdventurerContract(restored,current,restored.player,false));
+for(let i=0;i<4;i++){
+ restored.world.continentRuntime.refresh(restored);
+ updateLivingAdventurers(restored,.5);
+ assert.equal(restored.world.objects.filter(o=>o.id===id).length,0,'dismissal remains removed after reload');
+}
+console.log('PASS dismissal, streaming, upstairs reserve, rehiring, world return and saved companion uniqueness.');

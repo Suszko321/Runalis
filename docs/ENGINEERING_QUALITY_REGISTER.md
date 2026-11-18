@@ -858,3 +858,9 @@ memory, security or gameplay readiness claim follows solely from a green build.
 
 - Other online players show a small overhead Health bar only while alive and below maximum Health. The remote-actor identity supplied by the online party controls eligibility; the local player and local co-op actors use their HUD frames.
 - verify-player-health-bars.mjs exercises the production renderer for solo, local co-op, split-screen viewports, online host and guest representations, multiple remote peers, full recovery, downed and inactive actors.
+
+### Dismissed adventurer duplicate after streaming
+
+- Reproduced a dismissed hire reappearing at their old position after continental streaming refreshed. The streamer had registered the roster's temporary companion actor as a permanent resident.
+- Companion projections are excluded from world registration and carried through streaming by the hire roster. Dismissal saves current Health and training, removes the scene actor immediately and refreshes the roster. Stale duplicate scene projections are discarded.
+- verify-adventurer-dismissal.mjs exercises dismissal, repeated streaming refreshes, one upstairs reserve, rehiring, world return, save/reload, stale duplicate cleanup and a second dismissal. Existing hire, gear, revival, combat, personality and party XP suites pass.
