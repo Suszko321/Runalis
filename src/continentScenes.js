@@ -4,6 +4,7 @@ import {SERAPH_DOMAINS,ZARYNTH_CAPITAL} from './act2CampaignData.js';
 import {TILE} from './data.js';
 import {makeEnemy} from './overworldUtils.js';
 import {configureEncounterEnemy,geographicEncounterProfile} from './encounterData.js';
+import {dressEasternRoads} from './easternRoads.js';
 import {dressAct2Overworld} from './act2Overworld.js';
 
 const SCENE_VERSION=1;
@@ -299,5 +300,6 @@ export function createContinentalScenes(){
  });
  examiner(s,2745,398);
 
+ dressEasternRoads({site,art,resource,interactive,sign,enemies,stone,hearth});
  return {version:SCENE_VERSION,objects,enemies,locations,navStones,encounterAreas,structures,clearings};
 }

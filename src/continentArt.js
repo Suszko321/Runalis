@@ -20,7 +20,7 @@ const PALETTES={
  cosmic:{ink:'#272631',dark:'#45414e',stone:'#c0c1b3',light:'#e8e3cf',roof:'#767089',roofLight:'#b9afc8',gold:'#c8b978',glass:'#8a89b4',wood:'#656368',green:'#656f68'},
  blackglass:{ink:'#151d25',dark:'#273041',stone:'#4a5764',light:'#889caa',roof:'#3d4557',roofLight:'#778095',gold:'#9cacbd',glass:'#918db5',wood:'#5b6570',green:'#465563'}
 };
-const KNOWN=new Set(['Court','Wall','House','Granary','Abbey','Tower','Gate','Pine','Willow','Farm','Market','Ruin','Aqueduct','CausewayPier','Spire','Sign','InscribedWall','TimberStack','Wagon','Fountain','Scales','Stairs','Boardwalk','FishRack','ReedBed','WardStakes','Bell','Brazier','Sluice','Cairn','SignalStandard','BellFrame','StarInstrument','Waterwheel']);
+const KNOWN=new Set(['Court','Wall','House','Granary','Abbey','Tower','Gate','Pine','Willow','Farm','Market','Ruin','Aqueduct','CausewayPier','Spire','Sign','InscribedWall','TimberStack','Wagon','Fountain','Scales','Stairs','Boardwalk','FishRack','ReedBed','WardStakes','Bell','Brazier','Sluice','Cairn','SignalStandard','BellFrame','StarInstrument','Waterwheel','DyeLine','StormHarp','GlassBloom','MadderBed','Pollard','SailMill','FerryHull']);
 
 export function drawContinentalObject(ctx,o,camera,player=null){
  if(!o?.propType?.startsWith('continent'))return false;
@@ -55,6 +55,34 @@ export function drawContinentalObject(ctx,o,camera,player=null){
   let pattern=patterns.get(bitmap);if(!pattern){pattern=ctx.createPattern(bitmap,'repeat');patterns.set(bitmap,pattern);}
   ctx.translate(Math.round(x-w/2),y-h);ctx.fillStyle=pattern;ctx.fillRect(0,0,w,h);
  }else if(bitmap)ctx.drawImage(bitmap,Math.round(x-w/2),y-h,w,h);
+ if(bitmap&&type==='SailMill'){
+  ctx.save();ctx.translate(x,y-h*.61);ctx.rotate(performance.now()*.00016);
+  for(let vane=0;vane<4;vane++){
+   ctx.rotate(Math.PI/2);ctx.fillStyle='#4e4534';ctx.fillRect(-2,-h*.37,4,h*.37);
+   ctx.fillStyle='#c39954';ctx.fillRect(2,-h*.35,11,h*.25);
+   ctx.fillStyle='#eee0a4';ctx.fillRect(3,-h*.35,3,h*.25);
+   ctx.fillStyle='#88673d';for(let slat=0;slat<5;slat++)ctx.fillRect(2,-h*.34+slat*8,11,2);
+  }
+  ctx.fillStyle='#5b4936';ctx.fillRect(-4,-4,8,8);ctx.restore();
+ }
+ if(bitmap&&(type==='StormHarp'||type==='GlassBloom')){
+  const time=performance.now()*.0007+o.x*.012,opacity=ctx.globalAlpha;
+  for(let i=0;i<4;i++){
+   const phase=(time*.38+i*.25)%1;
+   ctx.fillStyle=i%2?'#f5dfae':'#d4c7ed';ctx.globalAlpha=opacity*(1-phase*.55);
+   ctx.fillRect(Math.round(x+Math.sin(time+i*2)*w*.32),Math.round(y-h*(.25+phase*.73)),2,3);
+  }
+ }
+ if(bitmap&&type==='MadderBed'&&(o.variant||0)%2===0){
+  // Two white cabbage moths quarter the blooms, then settle between flights.
+  const time=performance.now()*.001+o.y*.07;
+  for(let i=0;i<2;i++){
+   const beat=time+i*3,flight=Math.max(0,Math.sin(beat*.55)),px=Math.round(x+Math.cos(beat)*w*.24),py=Math.round(y-h*.48-flight*13+Math.sin(beat*3)*2);
+   const wing=Math.sin(beat*15)>0?3:1;
+   ctx.fillStyle='#756949';ctx.fillRect(px,py,2,3);
+   ctx.fillStyle='#eee6ab';ctx.fillRect(px-wing,py-1,wing,2);ctx.fillRect(px+2,py-2,wing,2);
+  }
+ }
  ctx.restore();return !!bitmap;
 }
 

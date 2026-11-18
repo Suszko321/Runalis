@@ -105,6 +105,25 @@ const TRAVELER_TEMPLATES = [
   }
 ];
 
+// Each group carries its own visual and combat vocabulary across both road and open country.
+const easternPacks={
+  gleaners:{id:'gleaning-party',weight:4,members:[['archer','Sickle Bow'],['roadlessBandit','Tithe Collector'],['stalkerWolf','Tithe Hound']]},
+  strays:{id:'harvest-strays',weight:3,members:[['ashWolf','Stubble Runner'],['stalkerWolf','Briar Hound']]},
+  levy:{id:'broken-levy',weight:4,members:[['shieldKnight','Discharged Lancer'],['brute','Levy Hammer'],['archer','Pay Train Bow']]},
+  dredgers:{id:'silt-dredgers',weight:3,members:[['gravebound','Mudlark'],['gravePriest','Drowned Sounder']]},
+  chain:{id:'chain-procession',weight:4,members:[['shieldKnight','Bridge Penitent'],['cultist','Chain Singer']]},
+  chorus:{id:'missing-chorus',weight:3,members:[['wraith','Lost Interval'],['veyrWraith','Choir Remnant'],['exploder','Burst Note']]},
+  survey:{id:'erased-survey',weight:4,members:[['gravePriest','Pale Surveyor'],['gravebound','Measure Bearer'],['wraith','Broken Reflection']]},
+  salt:{id:'salt-runners',weight:4,members:[['roadlessBandit','Salt Runner'],['archer','Quayside Bow'],['brute','Ballast Hauler']]}
+};
+const easternTraffic={
+  aureateMarches:{packs:['gleaners','strays'],travelers:[['seed-broker','Rye Seed Broker','The mill wants long straw this year. It takes the dye better.'],['oven-hand','Itinerant Baker','I can find Sunmeal Mill in fog. Follow the smell of the second baking.']]},
+  imperialHeartlands:{packs:['levy','dredgers','strays'],travelers:[['rush-weaver','Rush Weaver','Three days for a dry mat. Twice that for a ferry wick.'],['wool-factor','Wool Factor','I count fleeces on the south bank and bales on the north. Something always goes missing.']]},
+  severedCauseway:{packs:['chain','chorus'],travelers:[['bridge-rigger','Bridge Rigger','If the bells fall silent, stay on this side of the span.'],['wire-carrier','Coil Carrier','The copper pulls toward the canyon. Carry it on your uphill shoulder.']]},
+  ascensionWastes:{packs:['survey','chorus'],travelers:[['slate-bearer','Slate Bearer','I copy the lake readings at noon. By dusk the first copy has usually changed.'],['glass-picker','Glass Picker','Hold a splinter to your ear. The silent ones make the best lenses.']]},
+  zarynth:{packs:['salt','dredgers','levy'],travelers:[['tally-clerk','Freight Tally Clerk','The copper scales take cloth first and salt last. Less sweeping that way.'],['reed-pilot','Estuary Pilot','Count the red poles on the way in. A missing pole means the channel moved.']]}
+};
+
 export function updateOverworldEncounters(game, dt, now = 0) {
   const world = game?.world;
   if (!world || world.mode !== 'overworld' || !world.tiles?.length) return;
@@ -153,7 +172,9 @@ export function hostilePatrolPool(ecology,tier){
 }
 function spawnHostilePatrol(world,point,encounterId,tier,now,rng=Math.random,party=[]) {
  const eco=ecologyAt(world,point[0]*TILE,point[1]*TILE),profile=point.profile||geographicEncounterProfile(point[0],point[1],point[2]);
- const template=point.area?.enemyKinds?.length?{id:point.area.id,members:point.area.enemyKinds.map(k=>[k,k.replace(/([A-Z])/g,' $1').replace(/^./,c=>c.toUpperCase())])}:chooseWeighted(hostilePatrolPool(eco,tier),rng);
+ const traffic=easternTraffic[profile.id];
+ const pool=traffic?traffic.packs.map(id=>easternPacks[id]):hostilePatrolPool(eco,tier);
+ const template=point.area?.enemyKinds?.length?{id:point.area.id,members:point.area.enemyKinds.map(k=>[k,k.replace(/([A-Z])/g,' $1').replace(/^./,c=>c.toUpperCase())])}:chooseWeighted(pool,rng);
  const count=Math.min(point.area?.maxActive||6,profile.count[0]+Math.floor(rng()*(profile.count[1]-profile.count[0]+1))),angle=rng()*Math.PI*2;
  const formation=template.id==='roadless-patrol'&&count>=3&&rng()<.55
   ?(rng()<.5?[['roadlessBandit','Roadless Flanker'],['roadlessBandit','Roadless Drifter'],['archer','Roadless Bowhand']]:[['shieldKnight','Roadless Shieldguard'],['roadlessBandit','Roadless Cutthroat'],['archer','Roadless Bowhand']]):template.members;
@@ -179,12 +200,18 @@ function spawnHostilePatrol(world,point,encounterId,tier,now,rng=Math.random,par
 function spawnTraveler(world, point, encounterId, now,rng=Math.random) {
   const civilians=TRAVELER_TEMPLATES.filter(template=>!template.classId);
   if(!civilians.length)return;
-  const template=civilians[Math.floor(rng()*civilians.length)];
+  const local=easternTraffic[point.profile?.id]?.travelers;
+  let template;
+  if(local){
+    const [id,name,talk]=local[Math.floor(rng()*local.length)];
+    template={id,name,talk,shirt:point.profile.ecology==='ascension'?'#827d9b':'#ac875f'};
+  }else template=civilians[Math.floor(rng()*civilians.length)];
   const npc = makeObject('npc', `${encounterId}-${template.id}`, template.name, point[0], point[1], {
     npcId: `${encounterId}-${template.id}`,
     classId: template.classId,
     simulatedPlayer: !!template.classId,
     disposition: 'friendly',
+    ...(local?{sourceRegionId:point.profile.id}:{}),
     role: 'traveler',
     factionId: 'outpost',
     ambientWander: true,

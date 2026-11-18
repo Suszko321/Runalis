@@ -8,7 +8,9 @@ import {spaceNavStoneNetwork,MIN_NAV_STONE_SPACING} from '../src/navStoneNetwork
 const world=createWorld({skipPublishedOverride:true}),stones=world.navStones;
 const campaignIds=new Set(['nav-hearthmereFrontier-ashenOrchard','nav-hearthmereFrontier-demonCultLair','nav-hearthmereFrontier-castleVeyr',
  ...Object.keys(SERAPH_DOMAINS).map(id=>`continent-${id}-nav`)]);
-const regional=stones.filter(stone=>!campaignIds.has(stone.id));
+const destinationsAtLandmarks=['sunmeal-mill','thirteen-bells','rushlight-ferry','white-sounding','copper-tide'].map(id=>'continent-'+id+'-nav');
+for(const id of destinationsAtLandmarks)assert(stones.some(s=>s.id===id&&s.navSafeRadius>=600),id);
+const regional=stones.filter(stone=>!campaignIds.has(stone.id)&&!destinationsAtLandmarks.includes(stone.id));
 assert.equal(regional.length,9);
 for(const id of campaignIds)assert(stones.some(stone=>stone.id===id),id);
 assert(stones.some(s=>s.name==='Saint Orvane Waystone'));

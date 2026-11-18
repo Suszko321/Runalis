@@ -1,5 +1,6 @@
 // Hand-authored continental geography. Coordinates are hidden 32px gameplay cells.
 // Acts belong to the story; region difficulty and physical routes exist independently.
+import {EASTERN_WAYSTATIONS} from './easternWaystations.js';
 import {SERAPH_DOMAINS} from './act2CampaignData.js';
 import {TILE} from './data.js';
 import {ORRAKAI_SOUTH_ROAD} from './orrakaiExterior.js';
@@ -32,6 +33,7 @@ export const CONTINENT_ROADS=[
  ,...Object.values(SERAPH_DOMAINS).map(d=>({id:`act2-road-${d.id}`,name:`Road to ${d.name}`,roadClass:'ancient',width:3,points:d.road}))
  ,{id:'aureate-quarry-trail',name:'East Quarry Trail',roadClass:'trail',width:2,points:[[1190,275],[1220,252],[1240,221],[1214,162]]}
  ,{id:'choir-shrine-walk',name:'Choir Shrine Walk',roadClass:'ancient',width:2.5,points:[[1438,191],[1437.5,201]]}
+ ,...EASTERN_WAYSTATIONS.map(s=>({id:'waystation-'+s.id,name:s.name+' Track',roadClass:'trail',width:2,points:s.trail}))
 ];
 export const CONTINENT_RIVERS=[
  ...ECHORYN_RIVERS,

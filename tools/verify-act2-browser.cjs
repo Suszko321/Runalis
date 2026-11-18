@@ -66,6 +66,21 @@ async function main(){
       const guards=act2Game().world.enemies.filter(e=>e.id.startsWith('act2-overworld-blueglass-headworks-'));
       return guards.length===4&&guards.filter(e=>e.hasDetectedPlayer||e.isInCombat).length>=2;
     },{},{timeout:5000});
+    const patrolStart=await page.evaluate(()=>{
+      const g=act2Game(),boss=g.world.continentRuntime.findObject('eastern-roamer-hush-cantor');
+      Object.assign(g.player,{x:boss.x-640,y:boss.y});
+      g.world.continentRuntime.refresh(g);
+      return {x:boss.x,y:boss.y};
+    });
+    await page.waitForFunction(start=>{
+      const boss=act2Game().world.enemies.find(e=>e.id==='eastern-roamer-hush-cantor');
+      return boss&&Math.hypot(boss.x-start.x,boss.y-start.y)>8&&!boss.isInCombat;
+    },patrolStart,{timeout:8000});
+    await page.evaluate(()=>{
+      const g=act2Game(),boss=g.world.continentRuntime.findObject('eastern-roamer-hush-cantor');
+      Object.assign(g.player,{x:boss.x+72,y:boss.y});
+    });
+    await page.waitForFunction(()=>act2Game().world.enemies.some(e=>e.id==='eastern-roamer-hush-cantor'&&e.hasDetectedPlayer),{},{timeout:5000});
     const outcomes=await page.evaluate(async()=>{
       const g=act2Game();
       const {createContinentalWorld}=await import('/src/continentWorld.js');
@@ -125,7 +140,7 @@ async function main(){
     });
     assert(rendered.every(([,colors,mobs])=>colors>12&&mobs>=8),JSON.stringify(rendered));
     assert.deepEqual(errors,[]);
-    console.log('PASS browser launch, Mael, overworld pack engagement, ward denial, capital admission, custom boss sprites, tells and mechanism draws');
+    console.log('PASS browser launch, Mael, overworld pack engagement, roaming Cantor patrol and engagement, ward denial, capital admission, custom boss sprites, tells and mechanism draws');
   } finally {
     if(browser)await browser.close();
   }

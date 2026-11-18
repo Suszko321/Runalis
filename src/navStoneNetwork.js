@@ -1,3 +1,4 @@
+import {EASTERN_WAYSTATIONS} from './easternWaystations.js';
 import {SERAPH_DOMAINS} from './act2CampaignData.js';
 import {TILE} from './data.js';
 
@@ -28,7 +29,7 @@ export function spaceNavStoneNetwork(objects) {
   // The Orchard camp, Keep and Castle approaches need their own destinations
   // even inside the general regional spacing floor. Add them after spacing so
   // they cannot displace another established stone.
-  for(const id of ['nav-hearthmereFrontier-ashenOrchard','nav-hearthmereFrontier-demonCultLair','nav-hearthmereFrontier-castleVeyr',...Object.keys(SERAPH_DOMAINS).map(id=>`continent-${id}-nav`)]){
+  for(const id of ['nav-hearthmereFrontier-ashenOrchard','nav-hearthmereFrontier-demonCultLair','nav-hearthmereFrontier-castleVeyr',...EASTERN_WAYSTATIONS.map(s=>'continent-'+s.id+'-nav'),...Object.keys(SERAPH_DOMAINS).map(id=>`continent-${id}-nav`)]){
     const stone=objects.find(o=>o.kind==='navStone'&&o.id===id);if(stone)retained.push(stone);
   }
   const keep=new Set(retained);

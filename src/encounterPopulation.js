@@ -1,4 +1,5 @@
 import {navSanctuaryAt,protectNavSanctuaries} from './navStoneSanctuary.js';
+import {getEnemyTargetablePlayers} from './coopEnemyScaling.js';
 import {TILE} from './data.js';
 import {CONTINENT_ROADS,continentRoadAt} from './continentDefinition.js';
 import {alongRoute} from './echorynGeography.js';
@@ -10,11 +11,20 @@ import {resetEliteEnemy} from './eliteEncounterSystem.js';
 
 const alive=e=>e&&!e.dead&&!e.remove&&e.hp>0;
 const protectedKinds=new Set(['navStone','campfire','capitalGate','towerEntrance','dungeonEntrance','travelRouteEntrance','travelRouteExit']);
+const fieldCaches={
+ aureateMarches:['Uncollected Harvest Tithe','dawnsage'],
+ imperialHeartlands:['Sealed Freight Pannier','ironOre'],
+ severedCauseway:['Rigger’s Spare Coil','arcaneDust'],
+ ascensionWastes:['Lost Sounding Case','lumenQuartz'],
+ zarynth:['Dry Cargo Strongbox','veyrglassShard']
+};
 export function updatePopulationPatrol(enemy,world,player,dt){
- if(!enemy.patrolRoute?.length||enemy.aggro||enemy.awakened||enemy.alerted||enemy.isInCombat||enemy.hasDetectedPlayer||enemy.returningHome||Math.hypot(enemy.x-player.x,enemy.y-player.y)<(enemy.aggroRange||240))return false;
+ if(!enemy.patrolRoute?.length||enemy.aggro||enemy.awakened||enemy.alerted||enemy.isInCombat||enemy.hasDetectedPlayer||enemy.returningHome||enemy.telegraph||enemy.boss?.pendingSpecial)return false;
+ if(getEnemyTargetablePlayers(player).some(actor=>Math.hypot(enemy.x-actor.x,enemy.y-actor.y)<(enemy.aggroRange||240)))return false;
  const point=enemy.patrolRoute[enemy.patrolIndex||0],dx=point.x-enemy.x,dy=point.y-enemy.y,d=Math.hypot(dx,dy);
  if(d<16){enemy.patrolIndex=((enemy.patrolIndex||0)+1)%enemy.patrolRoute.length;return true;}
  const beforeX=enemy.x,beforeY=enemy.y;moveActorWithCollision(enemy,world,dx/d*Math.min(d,(enemy.speed||55)*.55*dt),dy/d*Math.min(d,(enemy.speed||55)*.55*dt));
+ if(enemy.x!==beforeX||enemy.y!==beforeY){enemy.dirX=dx/d;enemy.dirY=dy/d;}
  enemy.patrolBlockedTime=Math.hypot(enemy.x-beforeX,enemy.y-beforeY)<.1?(enemy.patrolBlockedTime||0)+dt:0;
  if(enemy.patrolBlockedTime>1){enemy.patrolIndex=((enemy.patrolIndex||0)+1)%enemy.patrolRoute.length;enemy.patrolBlockedTime=0;}return true;
 }
@@ -28,7 +38,7 @@ export function createPopulationPatrol(world,enemy,rng=encounterRng(enemy.id)){
 export function buildPopulationAreas(world){
  const areas=[...(world.encounterAreas||[])].map(a=>({...a,populationType:'resident'}));
  for(const l of world.authoredLocations||[]){
-  if(!l.id||l.authoredGarrison||/orrakai|outpost|market|town|gate|ward|sanctuary|navstone|arrival/i.test(`${l.id} ${l.name}`))continue;
+  if(!l.id||l.navLandmark||l.authoredGarrison||/orrakai|outpost|market|town|gate|ward|sanctuary|navstone|arrival/i.test(`${l.id} ${l.name}`))continue;
   if(areas.some(a=>Math.hypot(a.x-l.x/TILE,a.y-l.y/TILE)<12))continue;
   areas.push({id:`site-population-${l.id}`,x:l.x/TILE,y:l.y/TILE,rx:7,ry:6,populationType:/camp|nest|ruin|grave|crypt/i.test(`${l.id} ${l.name}`)?'resident':'patrol',optional:true});
  }
@@ -36,6 +46,14 @@ export function buildPopulationAreas(world){
   if(areas.some(a=>Math.hypot(a.x-x,a.y-y)<20))return;
   areas.push({id:`road-population-${road.id}-${index++}`,x:x+nx*5,y:y+ny*5,rx:6,ry:5,populationType:'patrol',roadId:road.id});
  });}
+ // Sparse wilderness territories fill the gaps between authored routes. Tiles and
+ // visibility are checked on approach, without loading remote collision chunks here.
+ const authored=areas.slice();
+ for(let y=24;y<world.height;y+=52)for(let x=24;x<world.width;x+=52){
+  if(!['aureate','ascension'].includes(geographicEncounterProfile(x,y).ecology))continue;
+  if(authored.some(a=>Math.hypot(a.x-x,a.y-y)<32))continue;
+  areas.push({id:'wilds-'+x+'-'+y,x,y,rx:40,ry:40,maxActive:4,populationType:'patrol'});
+ }
  return areas;
 }
 export function populationPositionSafe(world,party,x,y,radius=14){
@@ -87,12 +105,21 @@ export function updateAuthoredPopulation(game,dt,spawnPack,spawnTraveler=null){
    }
    if(now<Number(ledger.nextAt??(ledger.startedAt||now)+720))continue;
   }
-  const cycle=ledger?Number(ledger.cycle||0)+1:0,id=`ow-${a.id}-${cycle}`,rng=encounterRng(id);
-  const point=[a.x+(rng()-.5)*a.rx,a.y+(rng()-.5)*a.ry,a.type||profile.id];point.stableId=a.id;point.area=a;point.profile=profile;
+  const cycle=ledger?Number(ledger.cycle||0)+1:0,id=`ow-${a.id}-${cycle}`;
+  const eastern=profile.ecology==='aureate'||profile.ecology==='ascension';
+  if(eastern)memory.easternPopulationSeed ??= Math.floor(Math.random()*0x100000000);
+  const rng=encounterRng(eastern?id+':'+memory.easternPopulationSeed:id);
+  let point;
+  for(let attempt=0;attempt<(eastern?5:1);attempt++){
+   const tx=a.x+(rng()-.5)*a.rx,ty=a.y+(rng()-.5)*a.ry;
+   if(!populationPositionSafe(w,party,(tx+.5)*TILE,(ty+.5)*TILE)||a.quietRoad&&continentRoadAt(tx,ty,a.roadBuffer||7))continue;
+   point=[tx,ty,a.type||profile.id];break;
+  }
+  if(!point)continue;
+  point.stableId=a.id;point.area=a;point.profile=profile;
   const x=(point[0]+.5)*TILE,y=(point[1]+.5)*TILE;
-  if(!populationPositionSafe(w,party,x,y)||a.quietRoad&&continentRoadAt(point[0],point[1],a.roadBuffer||7))continue;
   const nextAt=now+profile.respawn[0]+rng()*(profile.respawn[1]-profile.respawn[0]);
-  if(spawnTraveler&&a.populationType==='patrol'&&rng()<.12&&(w.objects||[]).filter(o=>o.dynamicEncounter&&o.kind==='npc'&&!o.remove).length<4){
+  if(spawnTraveler&&a.populationType==='patrol'&&rng()<(eastern ? .29 : .12)&&(w.objects||[]).filter(o=>o.dynamicEncounter&&o.kind==='npc'&&!o.remove).length<4){
    spawnTraveler(w,point,id,now,rng);memory.events[a.id]={cycle,encounterId:id,status:'traveler',startedAt:now,nextAt,memberIds:[]};spawned++;changed=true;continue;
   }
   if(rng()<.12){memory.events[a.id]={cycle,encounterId:id,status:'empty',startedAt:now,nextAt,memberIds:[]};continue;}
@@ -104,6 +131,8 @@ export function updateAuthoredPopulation(game,dt,spawnPack,spawnTraveler=null){
   if(event){
    const champion=members[0];champion.encounterEvent=event;
    const cache={id:`${id}:cache`,kind:'worldCache',name:event==='checkpoint'?'Guarded Checkpoint Supplies':event==='predator'?'Rare Predator Cache':'Guarded Ruin Cache',x,y,r:20,rewards:[['ashCoin',Math.max(3,Math.floor(profile.levels[0]/2))],['fieldRations',1]],xp:0,locked:true,completed:false,encounterEvent:event,populationAreaId:a.id,dynamicEncounter:true,spawnedAt:now,despawnAfter:900};
+   const find=fieldCaches[profile.id];
+   if(find){cache.name=find[0];cache.rewards.push([find[1],1]);}
    w.objects.push(cache);runtime.register(cache);
   }
   spawned++;changed=true;

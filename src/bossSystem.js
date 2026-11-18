@@ -72,7 +72,7 @@ export function applyBossDefeatRewards(enemy, player, world, log) {
   player.bossKills = player.bossKills || {};
   player.bossKills[bossId] = Math.max(0, Number(player.bossKills[bossId] || 0)) + 1;
 
-  if (dungeonId) {
+  if (dungeonId && !(world?.mode === 'overworld' && enemy.worldBoss)) {
     player.completedDungeons = player.completedDungeons || {};
     player.completedDungeons[dungeonId] = {
       id: dungeonId,
@@ -1014,6 +1014,8 @@ function getBossRewardBundle(enemy, firstKill) {
             chanceBossReward(0.1, 'seraphsBrokenWing', 1, '#d7e8ff')
           ])
     );
+  } else if (enemy.worldBoss && enemy.firstKillTrophy) {
+    if (firstKill) rewards.push(bossReward(enemy.firstKillTrophy));
   } else {
     rewards.push(
       ...(firstKill

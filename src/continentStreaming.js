@@ -44,11 +44,39 @@ export function createContinentalRuntime(world,{objects,enemies,terrain}){
    if(!t||t.passable===false||t.continentClearing||t.roadId||t.bridge||t.terraceStyle||t.terraceApproach||world.continentClearings.some(c=>Math.hypot(px-c.x,py-c.y)<c.r+2))continue;
    const eco=continentEcologyAt(px,py),road=continentRoadAt(px,py);if(road)continue;
    let propType=eco==='highland'?'continentPine':eco==='marsh'?'continentReedBed':eco==='aureate'?'continentFarm':eco==='ascension'?'continentRuin':'continentPine';
-   if(eco==='aureate'&&seed>.62)continue;if(eco==='ascension'&&seed>.38)continue;
+   // Broad bands give each valley a recognizable plant community as the road crosses it.
+   // Limit the kit to a handful of native sizes so adjacent views reuse the same art.
+   const variant=Math.floor(seed*4);
+   let kitSize=null;
+   if(eco==='aureate'||eco==='ascension'){
+    const band=Math.sin(px*.038+Math.sin(py*.053)*2)+Math.cos(py*.082+px*.014);
+    if(eco==='aureate'){
+     if(seed>.88)continue;
+     if(band>.48){propType='continentPollard';kitSize=[104+variant*8,94+variant*8];}
+     else if(band<-.33){propType='continentMadderBed';kitSize=[104+variant*8,53];}
+     else kitSize=[152,74];
+    }else{
+     if(seed>.79)continue;
+     if(band>.05){propType='continentGlassBloom';kitSize=[68+variant*12,52+variant*16];}
+     else if(band<-.78){propType='continentCairn';kitSize=[62,48+variant*8];}
+     else kitSize=[108,88+variant*16];
+    }
+    // Local trades leave different marks within the broad farm and ash biomes.
+    if(t.sourceRegionId==='zarynth'){
+     propType=band>.55?'continentReedBed':seed<.24?'continentFishRack':'continentWardStakes';
+     kitSize=band>.55?[116,62]:[82,72];
+    }else if(t.sourceRegionId==='imperialHeartlands'&&band<-.56){
+     propType=seed<.22?'continentTimberStack':'continentPollard';
+     kitSize=seed<.22?[95,48]:[112,104];
+    }else if(t.sourceRegionId==='severedCauseway'&&band>.45){
+     propType=seed<.24?'continentCausewayPier':'continentRuin';
+     kitSize=seed<.24?[104,148]:[96,74];
+    }
+   }
    const region=continentRegionAt(px,py);
    // Fields surround the highway; bog plants follow the wet watershed; ruins
    // lean toward the broken network. Background variation is deterministic.
-   out.push({id:`terrain-detail-${x}-${y}`,kind:'worldDressing',propType,x:Math.round(px*TILE),y:Math.round(py*TILE),artWidth:eco==='marsh'?95:eco==='aureate'?135:100+seed*55,artHeight:eco==='marsh'?74:eco==='aureate'?60:130+seed*80,variant:Math.floor(seed*4),style:eco==='highland'?'pass':eco==='marsh'?'fen':eco==='ascension'?'cosmic':region.id==='imperialHeartlands'?'imperial':'aureate',decorative:true,interactable:false,hideLabel:true,drawRadius:280});
+   out.push({id:`terrain-detail-${x}-${y}`,kind:'worldDressing',propType,x:Math.round(px*TILE),y:Math.round(py*TILE),artWidth:kitSize?.[0]??(eco==='marsh'?95:100+seed*55),artHeight:kitSize?.[1]??(eco==='marsh'?74:130+seed*80),fadeBehind:!!kitSize,variant:Math.floor(seed*4),style:eco==='highland'?'pass':eco==='marsh'?'fen':eco==='ascension'?'cosmic':region.id==='imperialHeartlands'?'imperial':'aureate',decorative:true,interactable:false,hideLabel:true,drawRadius:280});
   }
   decoration.set(chunk.id,out);if(decoration.size>MAX_DECORATION_CHUNKS)decoration.delete(decoration.keys().next().value);return out;
  }

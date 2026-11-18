@@ -54,6 +54,108 @@ function ring(c,color,x,y,rx,ry,thickness){
 
 function landmark(c,p,w,h,o,type){
  const x=Math.floor(w/2),base=h-6;
+ if(type==='FerryHull'){
+  // A shallow punt on trestles. Shortening each plank at the ends lifts both bows.
+  for(const post of [.20,.76])wood(c,p,w*post,h*.49,9,base-h*.49,true);
+  for(let col=2;col<w-2;col++){
+   const u=col/w,belly=Math.sin(u*Math.PI),top=h*(.25+.23*belly),depth=5+belly*h*.29;
+   rect(c,p.ink,col,top,1,depth);
+   for(let row=2;row<depth-2;row+=6)rect(c,row%12===2?p.wood:p.dark,col,top+row,1,Math.min(5,depth-row-2));
+   rect(c,p.gold,col,top+2,1,2);
+  }
+  wood(c,p,w*.43,h*.16,5,h*.32,true);
+  for(let i=0;i<6;i++)ring(c,p.light,w*.36+i*2,h*.53,8,5,1);
+  return;
+ }
+ if(type==='SailMill'){
+  const left=w*.28,top=h*.45,width=w*.44;
+  stone(c,p,left,top,width,base-top,true);roof(c,p,left-5,h*.24,width+10,h*.22);
+  door(c,p,x,base,h*.35);windowArt(c,p,left+8,top+14,14,21);
+  stone(c,p,left-7,base-8,width+14,8);
+  return;
+ }
+ if(type==='Pollard'){
+  const fork=base-h*.42;
+  // Multi-stemmed coppice, knotted at the crown and flared at the foot.
+  for(let y=Math.floor(fork);y<=base;y++){
+   const t=(y-fork)/(base-fork),bend=3*Math.sin(t*5),half=4+6*t**4+3*(1-t)**6;
+   rect(c,p.ink,x+bend-half,y,2*half,1);
+   rect(c,'#6b5840',x+bend-half+1,y,half*1.5,1);
+   rect(c,'#948462',x+bend-half+2,y,2,1);
+  }
+  for(let i=0;i<7;i++){
+   const cx=w*(.14+i*.12),cy=h*(.23+Math.abs(i-3)*.07);
+   for(let j=0;j<24;j++){const t=j/23;rect(c,p.wood,x+(cx-x)*t,fork+(cy-fork)*t,5,4);}
+   const ry=h*(.15+hash(i,o.variant||0)*.05);
+   for(let row=-ry;row<=ry;row++){
+    const span=w*.13*Math.sqrt(Math.max(0,1-(row/ry)**2)),jag=hash(i,Math.floor(row/4))*4;
+    rect(c,p.dark,cx-span-jag,cy+row,span*2+jag,1);
+    if(row<ry*.66)rect(c,p.green,cx-span-jag+1,cy+row,span*1.7,1);
+    if(row>0&&row%5<1)rect(c,'#536443',cx+span*.44,cy+row,span*.42,2);
+   }
+   for(let sprig=0;sprig<24;sprig++){
+    const angle=hash(i,sprig)*Math.PI*2,r=Math.sqrt(hash(sprig,i))*0.93;
+    const lx=cx+Math.cos(angle)*r*w*.13,ly=cy+Math.sin(angle)*r*ry;
+    rect(c,ly<cy?'#8c995f':'#526843',lx,ly,4,2);
+    rect(c,ly<cy?'#a8ad72':'#748750',lx+2,ly-1,4,2);
+   }
+  }
+  return;
+ }
+ if(type==='MadderBed'){
+  for(let i=0;i<36;i++){
+   const px=4+hash(i,o.variant||0)*(w-9),py=h*.35+hash(i,61)*(h*.61);
+   const stem=5+hash(i,42)*h*.24;
+   rect(c,p.dark,px-2,py,7,2);rect(c,p.green,px,py-stem,2,stem);
+   rect(c,p.green,px-3,py-stem*.5,4,2);rect(c,'#8f5141',px-2,py-stem,6,4);
+   rect(c,'#d6a575',px-1,py-stem,3,2);
+  }
+  return;
+ }
+ if(type==='DyeLine'){
+  const pole=Math.floor(w*.08),top=Math.floor(h*.16);
+  for(const px of [pole,w-pole]){stone(c,p,px-8,base-9,16,9);wood(c,p,px-3,top-6,7,base-top-2,true);}
+  for(let col=pole;col<w-pole;col++){
+   const u=(col-pole)/(w-2*pole),sag=Math.round(12*Math.sin(Math.PI*u));
+   rect(c,p.ink,col,top+sag,1,2);
+   const panel=Math.floor(u*5),fold=Math.floor(u*5*w/6)%9;
+   if(u*5-panel<.12||u*5-panel>.9)continue;
+   const length=Math.floor(h*(panel%2?.37:.49))+fold%3;
+   const cloth=o.style==='blackglass'?['#978f9c','#bfb4b3']:['#853f39','#b66950'];
+   rect(c,fold<3?cloth[0]:cloth[1],col,top+sag+2,1,length);
+   rect(c,p.gold,col,top+sag+length-4,1,2);
+  }
+  return;
+ }
+ if(type==='StormHarp'){
+  const left=Math.round(w*.18),right=w-left,top=Math.round(h*.12);
+  stone(c,p,left-11,base-10,right-left+22,10,true);
+  for(const [px,cap] of [[left,top],[right,top+20]]){
+   stone(c,p,px-7,cap,14,base-cap-8);ring(c,p.gold,px,cap,9,9,3);
+  }
+  for(let i=0;i<7;i++){
+   for(let col=left;col<=right;col++){const u=(col-left)/(right-left);
+    rect(c,i%2?p.glass:p.gold,col,top+9+i*8+20*u+3*Math.sin(Math.PI*u),1,1);}
+  }
+  return;
+ }
+ if(type==='GlassBloom'){
+  for(let i=0;i<23;i++){
+   const px=w*(.1+.8*hash(i,42)),py=base-hash(i,22)*7;
+   rect(c,p.dark,px,py,4+i%5,3);rect(c,p.glass,px+1,py,3,1);
+  }
+  for(const [u,size,lean] of [[.17,.38,-.25],[.76,.55,.18],[.36,.7,-.13],[.57,.94,.12],[.82,.27,.35]]){
+   const height=Math.round(h*size),width=w*.105;
+   for(let row=0;row<height;row++){
+    const t=row/height,half=width*Math.min(t*3,1)*(1-.35*t),cx=w*u+lean*(height-row);
+    rect(c,p.ink,cx-half,base-height+row,half*2+1,1);
+    rect(c,p.glass,cx-half+1,base-height+row,half,1);
+    rect(c,p.dark,cx+1,base-height+row,half-1,1);
+    if(t>.08&&t<.56)rect(c,p.light,cx-half+1,base-height+row,2,1);
+   }
+  }
+  return;
+ }
  if(type==='SignalStandard'){
   const top=Math.round(h*.12),hem=Math.round(h*.67),left=Math.round(w*.23),right=Math.round(w*.76);
   stone(c,p,x-w*.23,base-19,w*.46,17,true);stone(c,p,x-w*.33,base-5,w*.66,5);
@@ -207,7 +309,7 @@ function prop(c,p,w,h,o,type){
  }
 }
 const STRUCTURES=new Set(['House','Granary','Abbey','Tower','Gate','Wall','InscribedWall','Ruin','Aqueduct','CausewayPier','Spire']);
-const LANDMARKS=new Set(['SignalStandard','BellFrame','StarInstrument','Waterwheel']);
+const LANDMARKS=new Set(['SignalStandard','BellFrame','StarInstrument','Waterwheel','DyeLine','StormHarp','GlassBloom','MadderBed','Pollard','SailMill','FerryHull']);
 export function makeNativeScenery(type,o,p){
  const w=Math.max(16,Math.round(o.artWidth||96)),h=Math.max(16,Math.round(o.artHeight||128));
  const canvas=typeof document!=='undefined'?document.createElement('canvas'):typeof OffscreenCanvas!=='undefined'?new OffscreenCanvas(w,h):null;if(!canvas)return null;

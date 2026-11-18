@@ -2987,6 +2987,23 @@ export const ITEMS = {
     desc: 'A plain iron ring worn by frontier wardens.'
   },
 
+  ochreTine: {
+    id:'ochreTine',name:'Madder-Stained Tine',type:'trinket',slot:'trinket',rarity:'rare',stack:false,
+    value:115,power:3,spirit:1,desc:'A fork of the Ochre Hart’s antler. The red runs all the way through the bone.'
+  },
+  lastTollLink: {
+    id:'lastTollLink',name:'Last Toll Link',type:'trinket',slot:'trinket',rarity:'rare',stack:false,
+    value:125,armour:4,power:1,desc:'An iron link worn thin on one side by a dead tollman’s endless round.'
+  },
+  spanTooth: {
+    id:'spanTooth',name:'Pierbreaker Tooth',type:'trinket',slot:'trinket',rarity:'rare',stack:false,
+    value:135,power:4,armour:1,desc:'The Span Eater’s back molar. A sliver of bridge stone still sits in its groove.'
+  },
+  stillPitch: {
+    id:'stillPitch',name:'Still-Pitch Fork',type:'trinket',slot:'trinket',rarity:'rare',stack:false,
+    value:150,spirit:5,armour:1,desc:'A two-pronged splinter carried by the Cantor. Plucked in silence, it takes a breath before it rings.'
+  },
+
   redSealRing: {
     id: 'redSealRing',
     name: 'Last Dawn Ring',

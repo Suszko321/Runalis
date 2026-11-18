@@ -50,6 +50,22 @@ function drawTerraceCell(c,t,x,y,tx,ty){
   }
  }
 }
+// Low brush follows long swales in the farm country. In the Wastes the same
+// contours break into exposed seams and pale slivers of mineral crust.
+function drawEasternGround(c,x,y,tx,ty,wastes){
+ const swale=Math.sin(tx*.18+Math.sin(ty*.23))+Math.cos(ty*.31-tx*.09);
+ if(swale<-.25)return;
+ const shade=wastes?'rgba(35,29,46,.22)':'rgba(61,76,43,.22)';
+ const rim=wastes?'#746978':'#8b8c58';
+ for(let i=0;i<3;i++){
+  const n=hash(tx*3+i,ty),xx=x+Math.floor(n*19),yy=y+3+Math.floor(hash(ty*3+i,tx)*25);
+  const length=4+Math.floor(n*9);
+  box(c,shade,xx,yy,length,3);box(c,shade,xx+2,yy-2,length-2,2);
+  if(wastes){box(c,rim,xx+3,yy-2,length*.5,1);box(c,shade,xx+length,yy+2,3,2);}
+  else{box(c,'#616d46',xx+2,yy-3,2,4);box(c,rim,xx+4,yy-5,1,4);box(c,'#64704b',xx+7,yy-2,2,3);}
+ }
+}
+
 function surface(world,cx,cy){
  const canvas=document.createElement('canvas');canvas.width=SIZE;canvas.height=SIZE;const c=canvas.getContext('2d');c.imageSmoothingEnabled=false;const ox=cx*SIZE,oy=cy*SIZE;
  box(c,continentGroundColor((ox+SIZE/2)/TILE,(oy+SIZE/2)/TILE),0,0,SIZE,SIZE);
@@ -60,6 +76,9 @@ function surface(world,cx,cy){
  for(let y=0;y<SIZE;y+=12)for(let x=0;x<SIZE;x+=12){const n=hash(ox+x,oy+y),eco=continentEcologyAt((ox+x)/TILE,(oy+y)/TILE);if(n>.72)box(c,eco==='ascension'?'#72707d':eco==='marsh'?'#56745f':eco==='aureate'?'#90946a':'#607064',x+n*6,y,4,2);else if(n<.1)box(c,'rgba(18,26,22,.16)',x,y,6,2);}
  for(let ty=cy*24;ty<(cy+1)*24;ty++)for(let tx=cx*24;tx<(cx+1)*24;tx++){
   const t=world.tiles[ty]?.[tx];if(!t)continue;const x=tx*TILE-ox,y=ty*TILE-oy,eco=t.ecology||continentEcologyAt(tx,ty),n=hash(tx,ty);
+  if((eco==='aureate'||eco==='ascension')&&t.passable!==false&&!t.roadId&&!t.terraceStyle&&!t.structureId&&!t.bridge&&t.biome!=='path'){
+   drawEasternGround(c,x,y,tx,ty,eco==='ascension');
+  }
   if(t.biome==='water'){
    box(c,eco==='marsh'?'#284849':eco==='ascension'?'#394452':'#365962',x,y,TILE,TILE);
    for(let i=0;i<2;i++){const xx=x+3+hash(tx+i,ty)*12,yy=y+3+hash(ty+i,tx)*24;box(c,eco==='marsh'?'#567c71':'#60868a',xx,yy,4+Math.floor(hash(tx,ty+i)*12),1);}

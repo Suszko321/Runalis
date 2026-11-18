@@ -56,7 +56,9 @@ export function updateWorldExploration(game,dt) {
   }
   for(const site of w.authoredLocations||[]){const key=`${worldEntityMemoryKey(w,site)}:${worldEntityMemoryId(site)}`;
     if(!m.locations[key]&&party.some(a=>Math.hypot(a.x-site.x,a.y-site.y)<(site.discoveryRadius||180))){
-      m.locations[key]={name:site.name,x:site.x,y:site.y,sourceRegionId:site.sourceRegionId};addQuestText(p,site.name,{color:'#dfcc9e',ttl:2,size:18});game.log?.(`${site.name}${site.lore?': '+site.lore:''}`);
+      m.locations[key]={name:site.name,x:site.x,y:site.y,sourceRegionId:site.sourceRegionId};
+      if(!site.navLandmark||!m.stones[site.id+'-nav'])addQuestText(p,site.name,{color:'#dfcc9e',ttl:2,size:18});
+      game.log?.(`${site.name}${site.lore?': '+site.lore:''}`);
     }else if(m.locations[key]&&w.continentId==='runalis'){
       Object.assign(m.locations[key],{x:site.x,y:site.y,sourceRegionId:site.sourceRegionId});
     }

@@ -11,6 +11,16 @@ meaningful duplication or coverage/coupling risks; LOW = cleanup with limited im
 An investigation is not a demonstrated defect. File length and dependency cycles
 do not establish severity by themselves.
 
+## Act II and III continental roads
+
+- **Waystations and wilderness traffic.** Five signed spurs lead to Sunmeal Mill, the Thirteen Bells, Rushlight Ferry, the White Sounding and Copper Tide Exchange. Each site has two local residents, supplies, a hearth and a protected, discoverable Nav Stone. Eastern roads and open-country patrol territories draw from eight regional pack compositions and ten civilian roles. A per-save roll and the existing encounter cycle determine traffic. Defeats, first kills and Nav Stone identities use their existing ledgers.
+- **Verified.** `verify-eastern-waystations.mjs` walks the five track centerlines against production collision, checks the residents and supplies, attunes the stones and fast-travels between them. It compares two wilderness seeds, reloads a populated save and observes a fresh encounter cycle on a later visit. The Nav Stone spacing suite retains all nine established regional destinations alongside the campaign and waystation stones. Chromium rendered all five sites. Remote co-op and sustained pacing across the full map remain unmeasured.
+- **Existing suite failure.** The broad enemy-density verifier stops at the empty entry refuge on floor one of Iron Mire Dungeon. The same assertion fails on the unchanged Git HEAD. The continental encounter, visibility, persistence and sanctuary suites run independently.
+
+- **Implemented.** Six new workplaces have wandering residents and gatherable supplies. Pollarded groves, madder beds, glass outcrops and exposed mineral seams vary across the Marches, Heartlands, Causeway and Wastes. Ten named elite packs and four optional world bosses use the existing continental population, combat and reward systems. Each boss carries a distinct first-kill trinket.
+- **Corrected during integration.** A roaming enemy can yield to a nearby co-op target while the host is outside detection range. Overworld world-boss kills award boss credit without writing the continent name into the completed-dungeon ledger.
+- **Verification.** `verify-eastern-roads.mjs` traverses each patrol circuit with production collision, checks protected landings and approach notices, verifies all new spawn footprints and supplies, and exercises first-kill trophies, duplicate reward suppression and persisted boss defeats. The campaign browser suite observes the Cantor walking and detecting the player through the live update loop. Full-length balance and remote multiplayer play remain unverified.
+
 ## Act II campaign and admission
 
 - **Implemented.** The Three Seraphs adds three independently visitable domains, physical relic custody, a host-owned admission decision, Zarynth's inner ward and the aqueduct finale. Character saves retain the admission, individual resolutions, outbreak outcome and completed instance state. Previous completed campaign records and earned rewards are retained. See [N-001 and N-002](RUNALIS_NARRATIVE_AUDIT.md).
