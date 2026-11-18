@@ -257,6 +257,7 @@ import {
   updateAct1Opening
 } from './act1OpeningSystem.js';
 import { updateOldWellQuest } from './oldWellSystem.js';
+import { updateAct2Campaign } from './act2CampaignRuntime.js';
 import { updateAct1Campaign } from './act1CampaignRuntime.js';
 
 import {
@@ -1609,6 +1610,7 @@ class RunalisGame {
       updateAct1Opening(this, dt, now);
       updateOldWellQuest(this, dt, now);
       updateAct1Campaign(this, dt);
+      updateAct2Campaign(this, dt);
       this.applyPendingQuestRewards();
     }
     if (this.world?.mode === 'act1Opening') {

@@ -1,5 +1,6 @@
 // Deliberately composed continental places. Stable identities and authored tile
 // coordinates are independent of enemy, loot and weather randomness.
+import {SERAPH_DOMAINS,ZARYNTH_CAPITAL} from './act2CampaignData.js';
 import {TILE} from './data.js';
 
 const SCENE_VERSION=1;
@@ -94,6 +95,11 @@ export function createContinentalScenes(){
  art(s,'court-water','Fountain',995,176,{style:'aureate',artWidth:115,artHeight:75});
  art(s,'scales','Scales',978,188,{artWidth:92,artHeight:96});
  sign(s,987,196,'Saint Orvane pilgrimage court. Quartermaster and companions on the south approach. Confession is recorded.');
+ const examiner=(scene,x,y)=>interactive(scene,'act2-examiner','npc','Examiner Sera',x,y,{
+  npcId:'act2-examiner',dialogueId:'act2Examiner',disposition:'friendly',shirt:'#796174',
+  pants:'#423b4a',hair:'#9f8c6a',bodyType:'female',ambientWander:false,forceLabel:true
+ });
+ examiner(s,999,198);
 
  s=site('gilded-granary','The Gilded Granary',1085,246,'aureateMarches','Raised granaries face the canal. Sealed stores stand above fields still being worked by pilgrim families.',17);
  building(s,'granary-a',1073,232,9,7,'aureate',{type:'Granary'});
@@ -227,8 +233,23 @@ export function createContinentalScenes(){
  resource(s,'mint','forage','orrakaiMint',2586,495,'Roadside Mint');
  sign(s,2581,493,'Zarynth Eastern Trade Ward. Public camp, market and traveler shrine beyond the outer gate.');
 
- // This is a real playable arrival ward, explicitly not a claim to have built
- // the whole capital. Existing service kinds work without a new hub transition.
+ const landmarks={
+  lastStandBastion:['Gate','frontier','Bastion Gate','The watch takes refugees by the east cistern. Kaedros hears petitioners past the muster hall.'],
+  forgottenOssuary:['Abbey','blackglass','Descent into the Ossuary','Speak softly below. The keeper has heard every name ever carried down this road.'],
+  unfinishedHour:['Spire','cosmic','Enter the Broken Observatory','Nothing you see beyond the lens is promised. Keep a hand on the stone until the light settles.']
+ };
+ for(const domain of Object.values(SERAPH_DOMAINS)){
+  const [x,y]=domain.site,[silhouette,style,entrance,inscription]=landmarks[domain.id];
+  s=site(domain.id,domain.name,x,y,'imperialHeartlands',domain.description,15);
+  art(s,'landmark',silhouette,x,y-1,{style,artWidth:304,artHeight:218,openWidth:120});
+  for(const dx of [-6,6])art(s,`flank-${dx}`,domain.id==='forgottenOssuary'?'Cairn':'Tower',x+dx,y-3,{style,artWidth:144,artHeight:208});
+  interactive(s,'entrance','dungeonEntrance',entrance,x,y,{dungeonId:domain.id,dungeonName:domain.name,theme:domain.theme,depth:3,tier:3,forceLabel:true});
+  sign(s,x-4,y+3,inscription);
+  hearth(s,x+5,y+3);
+  stone(s,x+3,y+5,domain.name);
+ }
+
+ // The public Trade Ward services are outside the Concordant Ward.
  s=site('zarynth-trade-ward','Zarynth Trade Ward',2732,436,'zarynthApproach','The capital begins here with customs yards, red roof stores and a traveler shrine. Merchants receive arriving caravans in this ward while the northern city gates remain closed.',38);
  art(s,'trade-court-paving','Court',2733,447,{style:'imperial',artWidth:66*TILE,artHeight:56*TILE,sortY:-1});
  wall(s,'north-wall',2698,389,70,2,{style:'imperial',height:3});
@@ -253,7 +274,12 @@ export function createContinentalScenes(){
  hearth(s,2727,437,'Zarynth Traveler');stone(s,2727,439,'Zarynth Trade Ward');
  interactive(s,'steward','npc','Trade Ward Steward',2721,414,{npcId:'zarynthTradeWardSteward',disposition:'friendly',factionId:'zarynth',shirt:'#7f4136',pants:'#453d36',dirX:0,dirY:1,talk:'Welcome to Zarynth’s Trade Ward. The market, traveler hearth and shrine are open. The northern city gates remain sealed; arrivals lodge in these courts.',ambientWander:false,forceLabel:true});
  for(const [id,name,x,y,talk] of [['porter','Caravan Porter',2736,433,'The Longwater wagons bring grain. Those from Black Pine carry timber. Leave the shrine lane clear.'],['innkeeper','Wayfarer Innkeeper',2725,433,'Warm yourself at the hearth. The market sells traveling supplies, and the shrine can restore you before the return journey.'],['gate-watch','Trade Ward Watch',2701,438,'The west toll passage and the southern freight arch both lead to the highway. Orrakai lies far beyond the western pass.']])interactive(s,id,'npc',name,x,y,{npcId:`zarynth-${id}`,disposition:'friendly',factionId:'zarynth',shirt:id==='gate-watch'?'#b3a479':'#926d54',pants:'#453d36',talk,ambientWander:false});
- sign(s,2735,443,'Zarynth Trade Ward: travelers welcome. Market east, hearth west, shrine north. Greater capital districts lie beyond the closed northern wall.','Zarynth Arrival Ward');
+ sign(s,2735,443,'Zarynth Trade Ward: travelers welcome. Market east, hearth west, shrine north. The Concordant Gate stands at the northern wall.','Zarynth Arrival Ward');
+ art(s,'concordant-gate','Gate',2744,392,{style:'aureate',artWidth:308,artHeight:223,openWidth:138});
+ interactive(s,'concordant-entry','dungeonEntrance','The Concordant Gate',2744,394,{
+  dungeonId:ZARYNTH_CAPITAL,dungeonName:'Zarynth · City of a Thousand Banners',theme:'holy',depth:4,tier:4,forceLabel:true
+ });
+ examiner(s,2745,398);
 
  return {version:SCENE_VERSION,objects,locations,navStones,encounterAreas,structures,clearings};
 }

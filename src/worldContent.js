@@ -15,6 +15,7 @@
 // quest systems, and UI scripts can import this as the source of truth.
 
 import { STORY_DIALOGUE_TRIGGERS } from './dialogueData.js';
+import {ACT2_DIALOGUES} from './act2DialogueData.js';
 import { CAMPAIGN_DIALOGUES } from './act1CampaignData.js';
 import {
   ALL_RUNALIS_QUESTS,
@@ -614,7 +615,6 @@ export const NPCS = {
     tileX: 34,
     tileY: 24,
     dialogueId: 'elianTrainerDialogue',
-    questIds: ['act2AureateReckoning'],
     description: 'A sincere Covenant priestess and relief defender who treats protection as the first obligation of faith.'
   },
 
@@ -1412,7 +1412,7 @@ export function getNpcByObjectId(objectId) {
 }
 
 export function getDialogue(id) {
-  return CAMPAIGN_DIALOGUES[id] || DIALOGUES[id] || STORY_DIALOGUE_TRIGGERS[id] || null;
+  return ACT2_DIALOGUES[id] || CAMPAIGN_DIALOGUES[id] || DIALOGUES[id] || STORY_DIALOGUE_TRIGGERS[id] || null;
 }
 
 export function getQuest(id) {

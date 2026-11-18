@@ -9,6 +9,7 @@ import {handleVeyreignInteraction} from './veyreignDungeon.js';
 import {handleOrchardInteraction} from './ashenOrchardDungeon.js';
 import {handleIronMireInteraction} from './ironMireDungeon.js';
 import {isQuestObjectVisible} from './questInteractables.js';
+import {handleAct2Station} from './act2CampaignRuntime.js';
 import {handleCampaignInteraction} from './act1CampaignRuntime.js';
 import {CAMPFIRE_RECIPES} from './workshopAccess.js';
 import {prepareDiscoveryClaim,rememberDiscoveryClaim,announceLootDiscovery} from './gameplayDiscoveries.js';
@@ -246,7 +247,7 @@ export function interact(game) {
     return;
   }
 
-  if (handleIronMireInteraction(game,nearest)||handleVeyreignInteraction(game,nearest)||handleOrchardInteraction(game,nearest)||handleGroveInteraction(game,nearest)||handleCampaignInteraction(game,nearest)) return;
+  if (handleAct2Station(game,nearest)||handleIronMireInteraction(game,nearest)||handleVeyreignInteraction(game,nearest)||handleOrchardInteraction(game,nearest)||handleGroveInteraction(game,nearest)||handleCampaignInteraction(game,nearest)) return;
 
   switch (nearest.kind) {
     case 'worldRelic':
@@ -687,6 +688,7 @@ function claimDungeonChest(game, chest) {
 
   const dungeonState = game.world?.dungeonState || null;
   if (chest.locked) {
+    if (chest.act2CacheGuard) {game.log(chest.lockedMessage);return false;}
     if (chest.chestType === 'boss') {
       game.log('The boss chest is sealed until the dungeon boss falls.');
       addStatusText(game.player, 'Sealed', { color: '#b68cff' });

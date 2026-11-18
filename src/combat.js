@@ -128,6 +128,7 @@ import {
   updateBossFramework,
   applyBossDefeatRewards
 } from './bossSystem.js';
+import {recordAct2Kill} from './act2CampaignRuntime.js';
 
 import {
   hasPersistentDungeonAggro,
@@ -5741,6 +5742,7 @@ function handleEnemyDeath(enemy, player, world, log) {
     return;
   }
   const questPlayer = player.questOwner || player;
+  if(enemy.act2Heart)recordAct2Kill(questPlayer,enemy,world,log);
   recordPoiEnemyDefeat(questPlayer, enemy, world);
   markKillObjective(player, enemy);
 

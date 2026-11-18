@@ -233,17 +233,23 @@ Critical prerequisites: two wreck clues; Hessa's explicit acceptance; three dist
 
 Malakar: four leaders knowingly sacrifice themselves; 18-second staged ritual; three introduction responses converge intentionally on the **mandatory** battle. They are characterization choices, not advertised alternate peaceful outcomes. Party readiness, skip/retry/save handling and synchronized arrival are implemented. Keep completion does not use the generic timed reset. Preserve exact-entrance return behavior and separate final testimony.
 
-Completion rewards include Pilgrim Road permit, boss core, supplies/coin and `story.act1Complete` / `travel.pilgrimRoad.unlocked`. Region arrival starts the old next act only when both preceding quest completion and flag are present. Boss callback progression does not currently enforce the same protection; see backlog N-001.
+Completion rewards include Pilgrim Road permit, boss core, supplies/coin and `story.act1Complete` / `travel.pilgrimRoad.unlocked`. The Act I epilogue opens Mael's Act II commission. Walking the Pilgrim Road records a story arrival when Act I quest completion and its flag are present.
 
 ### Act II — The Three Seraphs
 
-**CONFIRMED DIRECTOR DIRECTION:** After Malakar the player continues working with the Covenant despite his warning. Three distinct domains on the journey toward Zarynth; obtain an artifact from each; all three required before entry. Meaningful alternative resolutions where justified; open-ended order.
+Warden Mael asks the player to testify about Malakar and the Last Dawn. Examiner Sera explains the residual signature and the Law of Three Witnesses at Saint Orvane or the Concordant Gate. The public Trade Ward remains outside the warded inner city.
 
-**PROVISIONAL OPTIONS:** Fortress/castle, ancient dungeon and supernatural/dimensional realm are candidate domain forms, not assigned locations or final canon.
+| Custodian | Domain | Relic | Terms |
+| --- | --- | --- | --- |
+| Kaedros, the Last Banner | Bastion of the Last Stand | The Iron Vow | Clear the road and secure a cistern, escort the wagons with the watch, or open and stock the old freight line. Kaedros can also be challenged in the ring. |
+| Morisyl, Keeper of the Last Names | Ossuary of Forgotten Names | The Mourning Bell | Preserve the contradictory testimony and restore the memorial, or use earth, blood and breath to sound the funeral chimes and bring the lesson of the ninth alcove to Morisyl. The Bell can also be won in a duel. |
+| Elyndra, the Unwritten | The Unfinished Hour | The Lucid Mirror | Examine three unrealized lives, or align the dawn, dusk and midnight glasses to anchor the true route. Elyndra also accepts a duel. |
 
-**CURRENT CONFLICTING IMPLEMENTATION:** `act2AureateReckoning`, The Beautiful Cage, has three sequential stages: discover Pilgrim Bridge, speak to Elian/kill six eligible enemies, enter/clear Shattered Choir and defeat Seraphel. No Three Seraphs quest, trio artifact contract, negotiation outcomes or Zarynth admission check was identified. Do not rename three existing objects and claim this requirement fulfilled.
+The domains can be visited in any order. Relics belong to the party host's campaign. With unanimous party consent, the Concordant Gate verifies all three relics, returns them to their custodians and permanently records the host's admission. The method of acquisition and individual choices persist as distinct outcomes.
 
-**UNRESOLVED:** identities; domain anchors; why three artifacts are necessary; custody/loss/recovery rules; negotiation/combat consequences; Covenant's specific commission; Seraphel's role; whether the public Trade Ward lies outside the restricted entry boundary; migration of current Act II saves.
+In Zarynth the player witnesses Zephyr's healing, speaks to Seraphel and receives Cassian's commission. The underworks support immediate containment, evacuation first, or clearing both galleries to accomplish both. Three root hearts must fall before the Root-Crowned Behemoth rises. Zephyr stems the remaining infection. Mael's private reading of the missing reports closes the act.
+
+The Beautiful Cage is archived. Completed records and earned rewards survive migration. The Shattered Choir remains an optional dungeon. Its boss does not advance the main story.
 
 ### Later story and endings
 

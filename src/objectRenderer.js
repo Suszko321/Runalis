@@ -1,3 +1,4 @@
+import {drawSeraphActor,drawSeraphFixture} from './seraphSprites.js';
 import {sampleWeaponStance} from './weaponStance.js';
 import {drawAuthoredObject} from './worldAtmosphereRenderer.js';
 import {drawGroundLootAura} from './groundLootArt.js';
@@ -174,6 +175,11 @@ function drawObject(ctx, object, camera, questActor = null) {
 
 function drawObjectUnrotated(ctx, object, camera, questActor = null) {
   if (!object || object.depleted) return;
+  if(drawSeraphFixture(ctx,object,camera)){
+    const p=screen(object,camera);
+    label(ctx,object.name,p.x,p.y-54,{priority:7});
+    return;
+  }
   if(drawIronMireObject(ctx,object,camera))return;
   if(isDungeonNpc(object)&&drawDungeonNpc(ctx,object,camera)){
     return;
@@ -819,7 +825,7 @@ function drawNpc(ctx, npc, camera, questActor = null) {
   // humanRenderer.js can draw actor names when provided.
   // We draw exactly one NPC label below to prevent duplicated labels.
   const weaponStance=npc.simulatedPlayer||npc.isSimulatedPlayer?sampleWeaponStance(npc):null;
-  drawHumanActor(ctx, npcActor, camera, {
+  if (!drawSeraphActor(ctx,npc,camera,{guardianOnly:true,showLabel:false})) drawHumanActor(ctx, npcActor, camera, {
     weaponSheathed:weaponStance?.sheathed,
     scale: npcStyle.scale,
     skin: npcStyle.skin,
@@ -840,14 +846,14 @@ function drawNpc(ctx, npc, camera, questActor = null) {
 
   if (npc.simulatedPlayer && questActor && Math.hypot(npc.x-questActor.x,npc.y-questActor.y)>240) return;
   if (!npc.hideLabel && (!npc.orrakaiResident || !questActor || Math.hypot(npc.x-questActor.x,npc.y-questActor.y)<190)) {
-    label(ctx, displayName, p.x, p.y - 48, {
+    label(ctx, displayName, p.x, p.y - (npc.seraphSprite ? 84 : 48), {
       priority: npc.labelPriority || 4,
       color: getNpcLabelColor(npc)
     });
   }
 
   if (!npc.suppressQuestMarker && npcHasQuestInteraction(questActor, npc)) {
-    drawQuestMark(ctx, p.x, p.y - 62);
+    drawQuestMark(ctx, p.x, p.y - (npc.seraphSprite ? 101 : 62));
   }
 }
 
@@ -861,7 +867,7 @@ export function drawWorldInteractionIndicators(ctx, world, camera, actors) {
 function drawWorldInteractionIndicator(ctx, camera, target) {
   const p = screen(target, camera);
   if (target.kind === 'npc') {
-    const offset = isDungeonNpc(target) ? (target.groveSkull ? 60 : 87) : 86;
+    const offset = target.seraphSprite ? 112 : isDungeonNpc(target) ? (target.groveSkull ? 60 : 87) : 86;
     drawDialogueReadyIndicator(ctx, p.x, p.y - offset);
   } else if (isTravelInteraction(target)) {
     const glyph = target.locked ? 'lock' : target.direction || (target.kind === 'towerStairs' ? 'down' : 'door');

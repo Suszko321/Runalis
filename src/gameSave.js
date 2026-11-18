@@ -41,6 +41,8 @@ import { createWorld,isActorPositionPassable } from './world.js';
 import { createRegionWorld, createTravelRouteWorld } from './regionWorlds.js';
 import { createProceduralSideZoneWorld } from './sideZoneSystem.js';
 import {installOrchardDungeon} from './ashenOrchardDungeon.js';
+import {repairSeraphWorld} from './act2World.js';
+import {updateAct2Instance} from './act2CampaignRuntime.js';
 import {installIronMire} from './ironMireDungeon.js';
 import { createCapitalHubWorld } from './hubSystem.js';
 import { createCaravanOpeningWorld, createMaraHouseWorld, createAdventurersLounge } from './act1OpeningSystem.js';
@@ -1401,6 +1403,7 @@ export function applySaveToGame(game, saveState) {
     const profile=w.mode==='tower'?{id:`${w.regionId}:tower:${w.floor}`,levels:[level,level+2],eliteChance:.12,rareChance:.03,championChance:.006}:dungeonEncounterProfile(w);
     for(const e of w.enemies){configureEncounterEnemy(e,profile,`${w.floorSeed||w.seed}:${e.id}`,{dungeon:true});e.eliteHealing=e.eliteGuardActive=false;e.eliteAttackPauseTimer=0;e.bossTell=e.telegraph=null;if(e.boss){e.boss.pendingSpecial=null;e.boss.recoveryUntil=0;e.boss.specialTimer=Math.max(2,e.boss.specialTimer||0);}}
     for(const o of w.objects||[])if(o.pendingSpawnDelay!=null){o.pendingSpawnDelay=1.5;w.effects.push({kind:'bossTelegraph',x:o.x,y:o.y,radius:80,ttl:1.5,color:'#bd91d4'});}
+    repairSeraphWorld(w);
     initializeDungeonArena(w);
     for(const e of w.enemies)if(e.groveMother){e.groveAttack=null;e.groveRecovery=2;}
     for(const e of w.enemies)if(e.orchardCustodian){e.orchardAttack=null;e.orchardRecovery=2;}
@@ -1416,6 +1419,7 @@ export function applySaveToGame(game, saveState) {
   if(game.world.dungeonState?.ironMire)initializeDungeonArena(game.world);
   if(game.world.veyreignLayoutMigrated){for(const [i,a]of [game.player,...(game.player.coop?.players||[])].entries())Object.assign(a,{x:game.world.spawn.x+(i%2)*32,y:game.world.spawn.y+Math.floor(i/2)*32});delete game.world.veyreignLayoutMigrated;}
   if(game.world.dungeonState?.veyreign)initializeDungeonArena(game.world);
+  if(game.onlineSession?.role!=='guest')updateAct2Instance(game.world,game.player,game.log);
   syncDungeonCompletion(game.world);
   syncBossReturnPortals(game.world);
   game.logLines = migrated.logLines;

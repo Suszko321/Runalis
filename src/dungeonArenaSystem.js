@@ -1,3 +1,4 @@
+import {isAct2Instance} from './act2CampaignData.js';
 import {prepareVeyreignTransformation,resetVeyreignTransformation} from './veyreignTransformation.js';
 import {resetIronMireCombat} from './ironMireCombat.js';
 import {isMalakarSanctum,encounterState,resetMalakar} from './malakarEncounter.js';
@@ -22,6 +23,7 @@ export function bossRetryArrival(world){
 export function initializeDungeonArena(world){
  if(!['dungeon','tower'].includes(world?.mode)&&!(world?.mode==='sideZone'&&world.dungeonState?.grove))return null;
  const bosses=(world.enemies||[]).filter(e=>e.isDungeonMainBoss||e.isBoss&&!e.miniBoss&&!e.summonedBy&&!e.summonedByBoss);
+ if(isAct2Instance(world.dungeonId)&&!bosses.length&&!world.dungeonState?.cleared)return null;
  const room=(world.rooms||[]).find(r=>r.role==='boss')|| (bosses.length?(world.rooms||[]).find(r=>contains({x:r.x*TILE,y:r.y*TILE,w:r.w*TILE,h:r.h*TILE},bosses[0])):null);
  if(!room)return null;
  const state=world.dungeonState||(world.dungeonState={}),arenas=state.arenas||(state.arenas={});
@@ -33,7 +35,7 @@ export function initializeDungeonArena(world){
  world.arenaGates=arenaGates(world,room);
  if(a.phase==='active')sealArena(world,a);
  for(const e of bosses){e.arenaId=a.id;e.arenaDormant=a.phase==='dormant';e.homeGuard=true;e.homeX=world.bossRoomCenter.x;e.homeY=world.bossRoomCenter.y;e.leashRadius=Math.max(a.w,a.h);}
- for(const e of bosses)if(e.groveMother||e.orchardCustodian||e.veyreignLord||e.ironMireForeman)tuneDungeonBoss(e,e.dungeonBossPartySize||state.coopPlayerCount||e.runalisCoopBossPlayerCount||1);
+ for(const e of bosses)if(e.groveMother||e.orchardCustodian||e.veyreignLord||e.ironMireForeman||e.act2Boss)tuneDungeonBoss(e,e.dungeonBossPartySize||state.coopPlayerCount||e.runalisCoopBossPlayerCount||1);
  return a;
 }
 function arenaGates(world,room){
@@ -60,7 +62,7 @@ function activateArena(world,a,party,bosses){
  a.phase='active';sealArena(world,a);
  for(const p of party.filter(living)){placeInside(world,a,p);for(const s of p.summons||[])if(living(s))placeInside(world,a,s);}
  for(const e of bosses){e.arenaDormant=false;e.awakened=true;e.aggro=true;e.hasDetectedPlayer=true;e.isInCombat=true;}
- for(const e of bosses)if(e.groveMother||e.orchardCustodian||e.veyreignLord||e.ironMireForeman){tuneDungeonBoss(e,party.length);e.dungeonBossPartyLocked=true;}
+ for(const e of bosses)if(e.groveMother||e.orchardCustodian||e.veyreignLord||e.ironMireForeman||e.act2Boss){tuneDungeonBoss(e,party.length);e.dungeonBossPartyLocked=true;}
 }
 export function updateDungeonArena(world,player,game=null){
  if(!['dungeon','tower'].includes(world?.mode)&&!(world?.mode==='sideZone'&&world.dungeonState?.grove))return;
@@ -85,7 +87,7 @@ export function updateDungeonArena(world,player,game=null){
   activateArena(world,a,party,bosses);
  }
  if(a.phase==='active'){
-  for(const e of bosses)if(e.groveMother||e.orchardCustodian||e.veyreignLord||e.ironMireForeman)tuneDungeonBoss(e,party.filter(p=>p.active!==false&&p.joined!==false).length);
+  for(const e of bosses)if(e.groveMother||e.orchardCustodian||e.veyreignLord||e.ironMireForeman||e.act2Boss)tuneDungeonBoss(e,party.filter(p=>p.active!==false&&p.joined!==false).length);
   sealArena(world,a);
   for(const p of party.filter(living)){placeInside(world,a,p);for(const s of p.summons||[])if(living(s))placeInside(world,a,s);}
   for(const e of bosses.filter(living))placeInside(world,a,e);

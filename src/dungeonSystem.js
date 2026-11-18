@@ -1,3 +1,6 @@
+import {ZARYNTH_CAPITAL,isAct2Instance} from './act2CampaignData.js';
+import {buildAct2Instance,repairSeraphWorld} from './act2World.js';
+import {checkAct2Entrance,recordAct2Entrance,updateAct2Instance} from './act2CampaignRuntime.js';
 import {installIronMire,updateIronMire} from './ironMireDungeon.js';
 import {installVeyreign,updateVeyreign,leaveVeyreign} from './veyreignDungeon.js';
 import {isVeyreign} from './veyreignRules.js';
@@ -190,6 +193,9 @@ export function enterDungeon(game, entrance, options = {}) {
     y: actor?.y || hostGame.player.y
   };
 
+  const admission=checkAct2Entrance(hostGame.player,safeEntrance.dungeonId||safeEntrance.poiId||safeEntrance.id);
+  if(admission){hostGame.log?.(admission);addStatusText(actor,'Passage sealed',{color:'#e6c890'});return false;}
+
   if (!options.partyEntryCommitted && !requestPartyEntry(hostGame, {
     key: `dungeon:${safeEntrance.id}`, title: safeEntrance.dungeonName || safeEntrance.name || 'the dungeon',
     initiator: actor, commit: () => enterDungeon(game, safeEntrance, {...options, partyEntryCommitted: true})
@@ -212,7 +218,7 @@ export function enterDungeon(game, entrance, options = {}) {
   const ledger=hostGame.player.worldMemory.dungeonRuns ||= {};
   const prior=ledger[dungeonOptions.dungeonId];
   const now=Number(hostGame.player.worldMemory.elapsed)||0;
-  const canReset=!isMalakarDungeon({dungeonId:dungeonOptions.dungeonId})&&prior?.cleared&&now>=Number(prior.resetAt||Infinity);
+  const canReset=!isAct2Instance(dungeonOptions.dungeonId)&&!isMalakarDungeon({dungeonId:dungeonOptions.dungeonId})&&prior?.cleared&&now>=Number(prior.resetAt||Infinity);
   const dungeonState = prior&&!canReset ? prior : createDungeonRunState({...dungeonOptions,seed:`${dungeonOptions.seed}-cycle-${prior?Number(prior.populationCycle||0)+1:0}`});
   if(!prior||canReset)dungeonState.populationCycle=prior?Number(prior.populationCycle||0)+1:0;
   dungeonOptions.seed=dungeonState.seed;
@@ -223,7 +229,7 @@ export function enterDungeon(game, entrance, options = {}) {
   const dungeon = createDungeonWorld({
     ...dungeonOptions,
     dungeonState,
-    floor: retryFloor||dungeonState.currentFloor||1,
+    floor: dungeonOptions.dungeonId===ZARYNTH_CAPITAL?1:(retryFloor||dungeonState.currentFloor||1),
     playerCount: getCoopEnemyScalingPlayerCount(hostGame.player)
   });
 
@@ -255,6 +261,7 @@ export function enterDungeon(game, entrance, options = {}) {
   if(arrival)hostGame.log?.('The cleared route remains open. You return to the boss threshold; enter when the party is ready.');
   beginOrchardDungeon(hostGame);
   updateIronMire(hostGame);
+  recordAct2Entrance(hostGame);
   markPartyDungeonEnteredObjective(actor || hostGame.player, dungeon.dungeonId || dungeon.poiId || dungeon.entranceId);
 
   addStatusText(actor || hostGame.player, 'Dungeon Entered', {
@@ -299,7 +306,9 @@ export function returnDungeonToNavStone(game){
 export function resetDungeonSession(game){
  const host=getWorldTransitionGame(game);if(!host?.player||host.onlineSession?.role==='guest')return false;
  const returned=returnDungeonToNavStone(host);
- if(host.player.worldMemory)host.player.worldMemory.dungeonRuns={};
+ if(host.player.worldMemory)host.player.worldMemory.dungeonRuns=Object.fromEntries(
+   Object.entries(host.player.worldMemory.dungeonRuns||{}).filter(([id])=>isAct2Instance(id))
+ );
  if(returned){
   host.player.currentPosition={x:host.player.x,y:host.player.y};
   host.camera.x=host.player.x-(host.canvas?.width||0)/2;host.camera.y=host.player.y-(host.canvas?.height||0)/2;
@@ -315,7 +324,8 @@ export function exitDungeon(game, exit = {}) {
   if (!hostGame || !hostGame.player) return false;
 
   syncDungeonCompletion(hostGame.world);
-  if (!exit.force && (exit.locked || isMalakarDungeon(hostGame.world)&&!canUseBossReturnPortal(hostGame.world,exit) || hostGame.world?.mode === 'dungeon' && !hostGame.world.dungeonState?.cleared && !canUseBossReturnPortal(hostGame.world,exit))) {
+  const campaignExit=exit.act2SurfaceExit&&hostGame.world.objects?.includes(exit)&&hostGame.world.bossArena?.phase!=='active';
+  if (!exit.force && !campaignExit && (exit.locked || isMalakarDungeon(hostGame.world)&&!canUseBossReturnPortal(hostGame.world,exit) || hostGame.world?.mode === 'dungeon' && !hostGame.world.dungeonState?.cleared && !canUseBossReturnPortal(hostGame.world,exit))) {
     hostGame.log?.('The exit is sealed.');
 
     addStatusText(actor || hostGame.player, 'Sealed', {
@@ -436,6 +446,7 @@ export function transitionDungeonFloor(game, stairs = {}) {
   });
 
   hostGame.world = nextWorld;
+  updateAct2Instance(nextWorld,hostGame.player,hostGame.log);
 
   const arrival = findDungeonArrivalPoint(nextWorld, stairs.direction === 'up' ? 'fromDownstairs' : 'fromUpstairs');
   hostGame.player.x = arrival.x;
@@ -1000,6 +1011,7 @@ export function restoreDungeonFromSaveState(saveState) {
   installOrchardDungeon(world);
   installIronMire(world);
   installVeyreign(world);
+  repairSeraphWorld(world);
   initializeDungeonArena(world);
   syncDungeonCompletion(world);
   return world;
@@ -1151,11 +1163,19 @@ export function createDungeonWorld(options = {}) {
     structureImportance: options.structureImportance
   });
   if(dungeonId==='castleVeyr')dungeonState.totalFloors=5;
+  if(isAct2Instance(dungeonId))dungeonState.totalFloors=dungeonId===ZARYNTH_CAPITAL?2:1;
   const totalFloors = Math.max(1, Number(dungeonState.totalFloors || classification.floors || 1));
   const floor = clampInt(options.floor || dungeonState.currentFloor || 1, 1, totalFloors);
   dungeonState.currentFloor = floor;
   dungeonState.totalFloors = totalFloors;
   dungeonState.classification = dungeonState.classification || classification.id;
+  if(isAct2Instance(dungeonId)){
+    dungeonState.coopPlayerCount=options.playerCount||dungeonState.coopPlayerCount||1;
+    const world=buildAct2Instance({...options,dungeonId,depth,tier,seed},dungeonState,floor);
+    initializeDungeonArena(world);
+    syncDungeonCompletion(world);
+    return world;
+  }
   const scaleProfile = getDungeonScaleProfile({
     dungeonId,
     entranceId: options.entranceId || dungeonId,

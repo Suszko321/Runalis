@@ -1,5 +1,6 @@
 // Hand-authored continental geography. Coordinates are hidden 32px gameplay cells.
 // Acts belong to the story; region difficulty and physical routes exist independently.
+import {SERAPH_DOMAINS} from './act2CampaignData.js';
 import {TILE} from './data.js';
 import {ORRAKAI_SOUTH_ROAD} from './orrakaiExterior.js';
 import {ECHORYN_ROADS,ECHORYN_RIVERS,ECHORYN_LAKES,routeDistance,echorynRegionAt,echorynGroundColor} from './echorynGeography.js';
@@ -28,6 +29,7 @@ export const CONTINENT_ROADS=[
  {id:'heartland-river-road',name:'South Bank Road',roadClass:'rural',width:3,points:[[1550,552],[1590,651],[1660,713],[1740,722],[1800,692],[1880,630]]},
  {id:'west-lantern-road',name:'Last Lantern Track',roadClass:'trail',width:2.5,points:[[1600,260],[1610,324],[1660,376],[1720,430],[1760,482],[1760,620]]},
  {id:'zarynth-outskirts',name:'Zarynth West Approach',roadClass:'imperial',width:7,points:[[2580,490],[2630,518],[2680,512],[2715,485],[2730,450],[2730,430],[2760,408]]}
+ ,...Object.values(SERAPH_DOMAINS).map(d=>({id:`act2-road-${d.id}`,name:`Road to ${d.name}`,roadClass:'ancient',width:3,points:d.road}))
  ,{id:'aureate-quarry-trail',name:'East Quarry Trail',roadClass:'trail',width:2,points:[[1190,275],[1220,252],[1240,221],[1214,162]]}
  ,{id:'choir-shrine-walk',name:'Choir Shrine Walk',roadClass:'ancient',width:2.5,points:[[1438,191],[1437.5,201]]}
 ];

@@ -45,6 +45,7 @@ import {gearRewardReason} from './gearItemization.js';
 import {addStatusText} from './floatingText.js';
 import { ACT1_ROUTES } from './act1CampaignData.js';
 import { QUEST_ROSTER_VERSION, isQuestEnabled, retireRemovedQuestState, dialogueReferencesRemovedQuest } from './questRoster.js';
+import {act2CommissionDialogue,resolveAct2Dialogue} from './act2CampaignRuntime.js';
 import { getCampaignConversation } from './campaignConversations.js';
 import { applyEnemyStrengthScaling } from './enemyScaling.js';
 import { playSfx } from './audioSystem.js';
@@ -122,7 +123,8 @@ export function openDialogue(dialogueState, npcObject, player, world) {
     getNpcByObjectId(npcObject.npcId) ||
     null;
 
-  const campaign = getCampaignConversation(npcObject,player,world);
+  const commission = npcObject.npcId==='wardenMael' && act2CommissionDialogue(player,world);
+  const campaign = commission ? getDialogue(commission) : getCampaignConversation(npcObject,player,world);
   const contextual = campaign;
   const dialogueId = contextual?.id ||
     npcObject.dialogueId ||
@@ -472,7 +474,7 @@ function executeDialogueChoice(dialogueState, option, player, world, options = {
     ? '__close__'
     : option.nextNodeId || option.next || null;
   const returnNodeId = explicitNext || originNodeId || dialogueState.dialogueId;
-  const replyText = String(option.response || effectReplyText || '');
+  const replyText = String(option.act2Action ? effectReplyText || option.response || '' : option.response || effectReplyText || '');
   let continuationId = returnNodeId;
 
   if (replyText) {
@@ -588,7 +590,7 @@ function getDialogueChoiceEventId(dialogueState, nodeId, option) {
 
 function choiceHasCommittedEffects(option) {
   return !!(
-    option.orderAction || option.regulatorStep !== undefined || option.karma || option.relationships || option.learnRoute ||
+    option.act2Action || option.orderAction || option.regulatorStep !== undefined || option.karma || option.relationships || option.learnRoute ||
     option.startsQuest || option.completesQuest || option.confirmsBloodlineQuest || option.poiResolution ||
     option.flagsSet || option.flagsCleared || option.revealsPoi || option.hostile || option.hostileNpcObjectId || option.costItems || option.requiresItems ||
     option.rewardItems || option.rewardXp || option.completesTalkObjective || option.action || option.opensShop || option.opensInventory || option.opensUi
@@ -664,7 +666,8 @@ export function npcHasQuestInteraction(player, npcObject) {
     return option && option.id !== 'leave' && (
       option.startsQuest ||
       option.completesQuest ||
-      option.confirmsBloodlineQuest
+      option.confirmsBloodlineQuest ||
+      option.act2Action
     );
   });
 }
@@ -1173,6 +1176,11 @@ function conditionValues(value) {
 
 function applyDialogueOptionEffects(dialogueState, option, player, world, originNodeId = null) {
   if (!option) return;
+  if (option.act2Action) {
+    const result=resolveAct2Dialogue(option.act2Action,player,world,dialogueState.npcId);
+    dialogueState.effectReplyText=result.text||'';
+    return;
+  }
   if(option.veyreignFate&&!chooseVeyreignFate(player,world,option.veyreignFate)){dialogueState.effectReplyText='This offer is no longer available. No change has been made to your bloodline.';return;}
   const campaignOwner=getQuestOwner(player);
   if(Number.isInteger(option.regulatorStep)&&!getStoryFlag(campaignOwner,'act1.machineAligned')) {
@@ -1363,7 +1371,7 @@ function startQuestFromDialogue(player, questId, dialogueState) {
   if (!player || !questId) return false;
 
   const quest = getQuest(questId);
-  if (!quest) return false;
+  if (!quest || quest.archived) return false;
 
   const questPlayer = getQuestProgressOwner(player, quest);
   ensureQuestLog(questPlayer);
@@ -1816,7 +1824,7 @@ export function updateQuestStageCompletion(player, questId) {
   const questState = player.quests.active[questId];
   const quest = getQuest(questId);
 
-  if (!quest) return false;
+  if (!quest || quest.archived) return false;
 
   const complete = areObjectivesComplete(questState.objectives || []);
 

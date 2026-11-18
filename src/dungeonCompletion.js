@@ -1,3 +1,4 @@
+import {ZARYNTH_CAPITAL} from './act2CampaignData.js';
 import {TILE} from './data.js';
 import {findNearestActorPassablePoint} from './world.js';
 import {syncBossReturnPortals} from './bossReturnPortals.js';
@@ -33,6 +34,7 @@ export function syncDungeonCompletion(world){
   }
   for(const object of world.objects||[]){
     if(object.kind==='dungeonExit'){
+      if(object.act2SurfaceExit){object.locked=world.bossArena?.phase==='active';continue;}
       if(world.dungeonState?.ironMire&&object.id==='ironMireSurface'){object.locked=false;continue;}
       if(object.bossVictoryPortal)continue;
       object.locked=!state.cleared;
@@ -45,7 +47,7 @@ export function syncDungeonCompletion(world){
     syncBossReturnPortals(world);
     return;
   }
-  if(!finalFloor(world)){syncBossReturnPortals(world);return;}
+  if(!finalFloor(world)||world.dungeonId===ZARYNTH_CAPITAL){syncBossReturnPortals(world);return;}
   const portal=(world.objects||[]).find(o=>o.id===PORTAL_ID);
   if(portal){syncBossReturnPortals(world);return;}
   const center=state.returnPortalPoint||world.bossRoomCenter

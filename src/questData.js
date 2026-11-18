@@ -1,6 +1,7 @@
 // questData.js
 // Implementation-ready story and companion quests for the three-act Runalis arc.
 
+import {ACT2_QUESTS} from './act2CampaignData.js';
 import { MERCY_ENDING, CAMPAIGN_STAGES } from './act1CampaignData.js';
 import {VEYREIGN_QUEST_DATA} from './veyreignData.js';
 import {GROVE_QUEST,GROVE_QUEST_DATA} from './blightedGroveData.js';
@@ -242,7 +243,7 @@ export const STORY_QUESTS = {
   act2AureateReckoning: {
     id: 'act2AureateReckoning',
     title: 'The Beautiful Cage',
-    giverNpcId: 'sisterElian',
+    archived: true,
     recommendedLevel: 10,
     type: 'main',
     summary:
@@ -343,6 +344,7 @@ STORY_QUESTS.act1HearthmereAshes.stages = CAMPAIGN_STAGES;
 
 export const ALL_RUNALIS_QUESTS = {
   ...STORY_QUESTS,
+  ...ACT2_QUESTS,
   vampireRedChalice: VEYREIGN_QUEST_DATA,
   [GROVE_QUEST]: GROVE_QUEST_DATA,
   [ORCHARD_QUEST]: ORCHARD_QUEST_DATA,

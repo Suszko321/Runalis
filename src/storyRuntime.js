@@ -1,9 +1,11 @@
 // storyRuntime.js
 // Small runtime glue that turns boss kills, travel, and class choices into story progress.
 
+import {ensureAct2Campaign,recordAct2Kill} from './act2CampaignRuntime.js';
+import { isAct2Instance } from './act2CampaignData.js';
 import { addItem, countItem } from './player.js';
 import { addQuestText, addStatusText } from './floatingText.js';
-import { applyStoryFlags, ensureStoryProgress, setRouteState } from './storyProgress.js';
+import { applyStoryFlags, ensureStoryProgress } from './storyProgress.js';
 import { startQuest, completeQuest, markDiscoverPoiObjective } from './dialogueSystem.js';
 import { getTrainerByClass } from './trainerData.js';
 
@@ -11,6 +13,9 @@ export function ensureActQuest(player, actId = 'act1') {
   if (!player) return false;
 
   ensureStoryProgress(player);
+
+  if (actId === 'act2') return ensureAct2Campaign(player);
+  if (actId === 'act1' && (player.quests?.completed?.act1HearthmereAshes || player.story.flags.act1Complete)) return false;
 
   if (
     actId === 'act1' &&
@@ -22,7 +27,6 @@ export function ensureActQuest(player, actId = 'act1') {
 
   const questId =
     actId === 'act3' ? 'act3Severance' :
-    actId === 'act2' ? 'act2AureateReckoning' :
     'act1HearthmereAshes';
 
   player.story.mainQuestline = questId;
@@ -66,9 +70,8 @@ export function applyBossStoryProgress(enemy, player, world, log = null) {
 
   ensureStoryProgress(player);
 
-  const bossId = enemy.bossId || enemy.bossType || enemy.id || '';
   const dungeonId = world?.dungeonId || world?.poiId || world?.entranceId || '';
-  const text = `${bossId} ${enemy.bossName || ''} ${enemy.name || ''} ${dungeonId}`.toLowerCase();
+  if (isAct2Instance(dungeonId)) return recordAct2Kill(player,enemy,world,log);
 
   if (!enemy.miniBoss && enemy.isDungeonMainBoss && /demoncultlair|dawnspireroot|emberveil/i.test(dungeonId)) {
     applyStoryFlags(player, [
@@ -86,23 +89,9 @@ export function applyBossStoryProgress(enemy, player, world, log = null) {
     return true;
   }
 
-  if (text.includes('seraphel') || text.includes('shatteredchoir')) {
-    applyStoryFlags(player, [
-      'story.act2Complete',
-      'story.zephyrNamed',
-      'unbound.seraphelConfirmed',
-      'travel.severedCauseway.unlocked'
-    ]);
-    completeOrRecordQuest(player, 'act2AureateReckoning', 'The Beautiful Cage');
-    grantMissing(player, 'severedCausewayChart', 1);
-    grantMissing(player, 'lightstormWard', 2);
-    setRouteState(player, 'severedCauseway', { unlocked: true, storyUnlocked: true });
-    log?.('Seraphel falls, but his warning remains: the Covenant does not worship Light. It feeds it.');
-    addQuestText(player, 'Act II Complete', { color: '#b68cff', ttl: 1.8, size: 17 });
-    return true;
-  }
-
-  if (text.includes('zephyr') || text.includes('ascensionspire')) {
+  const act3 = player.quests?.active?.act3Severance;
+  if (dungeonId==='ascensionSpire' && enemy.isDungeonMainBoss && !enemy.miniBoss &&
+    player.story.flags.act3Started && (act3?.currentStageId==='ascensionSpire' || player.quests?.completed?.act3Severance)) {
     applyStoryFlags(player, [
       'story.act3Complete',
       'unbound.zephyrDirectVoice',
@@ -124,10 +113,10 @@ export function markTravelStoryProgress(player, routeId, arrivedRegionId, log = 
   ensureStoryProgress(player);
 
   if (routeId === 'pilgrimRoad') {
-    applyStoryFlags(player, ['story.act2Started', 'region.aureateMarches.reached']);
+    applyStoryFlags(player, ['region.aureateMarches.reached']);
     ensureActQuest(player, 'act2');
     markRouteArrivalDiscovery(player, 'pilgrimBridge', 'Pilgrim Road Checkpoint');
-    log?.('Main quest updated: The Beautiful Cage.');
+    log?.('The Pilgrim Road reaches Saint Orvane. Ask for Examiner Sera about the Concordant Ward.');
     addStatusText(player, 'Act II Started', { color: '#ffcc66', ttl: 1.2 });
   }
 

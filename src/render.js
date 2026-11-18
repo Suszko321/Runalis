@@ -1,3 +1,4 @@
+import {drawAct2Ground,drawAct2Enemy,drawAct2Tells,drawAct2Impacts} from './act2Art.js';
 import {drawVampireBat} from './vampireArt.js';
 import {drawEnemyNameplate,enemyPlateLayout} from './enemyNameplateArt.js';
 import {drawVeyreignGround,drawVeyreignEffects,drawVeyreignBat,royalBeastScale} from './veyreignArt.js';
@@ -117,6 +118,7 @@ export function draw(ctx, world, player, camera, options = {}) {
   drawOrchardGround(ctx,world,camera);
   drawVeyreignGround(ctx,world,camera);
   drawIronMireGround(ctx,world,camera);
+  drawAct2Ground(ctx,world,camera);
   drawSceneArtBack(ctx, world, camera);
   drawEnvironmentAtmosphere(ctx, world, camera, 'back');
   drawPresentationBack(ctx, world, player, camera, options);
@@ -129,7 +131,7 @@ export function draw(ctx, world, player, camera, options = {}) {
   // Ground dressing precedes ground effects and loot. Otherwise a courtyard
   // drawn in the depth queue could hide a danger zone or a dropped item.
   actorLayers.push({sortY:-Number.MAX_SAFE_INTEGER,
-    drawActor:()=>drawWorldEffects(ctx, world, camera, 'behind')});
+    drawActor:()=>{drawWorldEffects(ctx, world, camera, 'behind');drawAct2Impacts(ctx,world,camera);}});
   actorLayers.push({sortY:-Number.MAX_SAFE_INTEGER+1,
     drawActor:()=>drawWorldDrops(ctx, world, camera)});
   const nameplates = selectEnemyNameplates(ctx, world.enemies || [], camera);
@@ -137,7 +139,7 @@ export function draw(ctx, world, player, camera, options = {}) {
   for (const enemy of world.enemies || []) if (enemy && enemy.alive !== false && !enemy.remove) {
     const p = screen(enemy, camera);
     if (isOnScreen(ctx, p.x, p.y, 260)) actorLayers.push({y: enemy.y+WORLD_ART_STANDARD.actorFootOffset,
-      drawActor: () => drawIronMireBoss(ctx,enemy,world,camera,()=>drawOrchardBoss(ctx,enemy,world,camera,()=>drawGroveMother(ctx,enemy,world,camera,()=>drawMalakarActor(ctx,enemy,world,()=>drawEnemy(ctx, enemy, camera, {hideNameplate: !nameplates.has(enemy)})))))});
+      drawActor: () => drawAct2Enemy(ctx,enemy,camera,()=>drawIronMireBoss(ctx,enemy,world,camera,()=>drawOrchardBoss(ctx,enemy,world,camera,()=>drawGroveMother(ctx,enemy,world,camera,()=>drawMalakarActor(ctx,enemy,world,()=>drawEnemy(ctx, enemy, camera, {hideNameplate: !nameplates.has(enemy)}))))))});
   }
   for (const summon of player.summons || []) if (summon && summon.alive !== false) {
     const p = screen(summon, camera);
@@ -160,6 +162,7 @@ export function draw(ctx, world, player, camera, options = {}) {
   drawGroveTells(ctx,world,camera);
   drawOrchardTells(ctx,world,camera);
   drawIronMireTells(ctx,world,camera);
+  drawAct2Tells(ctx,world,camera);
   drawVeyreignEffects(ctx,world,camera);
   drawEnvironmentAtmosphere(ctx, world, camera, 'front');
   drawPresentationFront(ctx, world, player, camera, options);

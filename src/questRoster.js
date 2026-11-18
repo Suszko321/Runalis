@@ -1,8 +1,11 @@
+import {ACT2_QUESTS} from './act2CampaignData.js';
+
 // Director-approved playable roster. Retired tasks must not return through saves,
 // compatibility journals, dialogue snapshots or cached world marker metadata.
 export const QUEST_ROSTER_VERSION = 1;
 export const PLAYABLE_QUEST_IDS = Object.freeze([
   'mercy_in_orrakai', 'act1HearthmereAshes', 'act2AureateReckoning', 'act3Severance',
+  ...Object.keys(ACT2_QUESTS),
   'vampireRedChalice', 'groveLastLullaby', 'orchardBelowTheBurn', 'ironMireLastShift'
 ]);
 const playable = new Set(PLAYABLE_QUEST_IDS);

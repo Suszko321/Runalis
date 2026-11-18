@@ -1,6 +1,8 @@
 // travelData.js
 // Long-distance act travel routes, costs, and state helpers.
 
+import {ACT2_FINALE,LEGACY_ACT2} from './act2CampaignData.js';
+
 export const TRAVEL_RESOURCE_IDS = {
   rations: 'fieldRations',
   gold: 'gold'
@@ -85,7 +87,7 @@ export const TRAVEL_ROUTES = {
       }
     ],
     requirements: {
-      questCompleted: ['act2AureateReckoning'],
+      questCompletedAny: [ACT2_FINALE, LEGACY_ACT2],
       flags: ['story.act2Complete'],
       items: [
         ['fieldRations', 520],
@@ -135,6 +137,10 @@ export function getRouteRequirementStatus(player, routeId) {
     if (!player.questState?.completed?.[questId] && !player.quests?.completed?.[questId]) {
       missing.push(`quest:${questId}`);
     }
+  }
+
+  if (requirements.questCompletedAny && !requirements.questCompletedAny.some(id=>player.questState?.completed?.[id]||player.quests?.completed?.[id])) {
+    missing.push(`quest:${requirements.questCompletedAny[0]}`);
   }
 
   for (const [itemId, qty] of requirements.items || []) {

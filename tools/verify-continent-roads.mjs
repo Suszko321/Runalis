@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {ACT2_FINALE,LEGACY_ACT2} from '../src/act2CampaignData.js';
 import {createPlayer,addItem,countItem} from '../src/player.js';
 import {startTravelRoute,completeTravelRoute,returnAlongRoute,startStoryExpedition,updateContinentalTravelArrival} from '../src/travelSystem.js';
 import {setStoryFlag} from '../src/storyProgress.js';
@@ -23,15 +24,16 @@ check('Orrakai north gate gives an open-road exit direction without charging or 
  startTravelRoute(game,'pilgrimRoad');assert.equal(game.world,world);assert.equal(game.player.gold,20);assert.match(game.logLines.at(-1),/South Town Gate/);
 });
 check('early physical exploration cannot start either later act or its main quest',()=>{
- const game=fixture('aureateMarches');assert.equal(updateContinentalTravelArrival(game),false);assert.equal(game.player.story.act,'act1');assert.ok(!game.player.quests.active.act2AureateReckoning);
+ const game=fixture('aureateMarches');assert.equal(updateContinentalTravelArrival(game),false);assert.equal(game.player.story.act,'act1');assert.ok(!game.player.quests.active.act2AshesAfterDawn);
  game.world.regionId='ascensionWastes';assert.equal(updateContinentalTravelArrival(game),false);assert.equal(game.player.story.act,'act1');assert.ok(!game.player.quests.active.act3Severance);
 });
 check('physical story arrival requires both the previous quest and its completion flag, then advances once',()=>{
  const game=fixture('aureateMarches');game.player.quests.completed.act1HearthmereAshes={id:'act1HearthmereAshes'};
  assert.equal(updateContinentalTravelArrival(game),false);setStoryFlag(game.player,'act1Complete');assert.ok(updateContinentalTravelArrival(game));
- assert.equal(game.player.story.act,'act2');assert.ok(game.player.quests.active.act2AureateReckoning);assert.ok(game.player.travel.routes.pilgrimRoad.arrivedOnFoot);assert.equal(game.saved,1);assert.equal(updateContinentalTravelArrival(game),false);
+ assert.equal(game.player.story.act,'act2');assert.ok(game.player.quests.active.act2AshesAfterDawn);assert.ok(game.player.travel.routes.pilgrimRoad.arrivedOnFoot);assert.equal(game.saved,1);assert.equal(updateContinentalTravelArrival(game),false);
  game.world.regionId='ascensionWastes';setStoryFlag(game.player,'act2Complete');assert.equal(updateContinentalTravelArrival(game),false);
- game.player.quests.completed.act2AureateReckoning={id:'act2AureateReckoning'};assert.ok(updateContinentalTravelArrival(game));assert.equal(game.player.story.act,'act3');assert.ok(game.player.quests.active.act3Severance);assert.equal(game.saved,2);
+ game.player.quests.completed[ACT2_FINALE]={id:ACT2_FINALE};assert.ok(updateContinentalTravelArrival(game));assert.equal(game.player.story.act,'act3');assert.ok(game.player.quests.active.act3Severance);assert.equal(game.saved,2);
+ const veteran=fixture('ascensionWastes');setStoryFlag(veteran.player,'act2Complete');veteran.player.quests.completed[LEGACY_ACT2]={id:LEGACY_ACT2};assert.ok(updateContinentalTravelArrival(veteran));assert.ok(veteran.player.quests.active.act3Severance);
 });
 check('explicit escorted expedition retains story and supply requirements without gating walking',()=>{
  const game=fixture(),world=game.world;

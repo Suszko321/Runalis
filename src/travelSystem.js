@@ -262,12 +262,12 @@ export function updateContinentalTravelArrival(game) {
   if (!world?.continentId || !player) return false;
   ensureStoryProgress(player);
   const arrivals = [
-    ['pilgrimRoad', 'aureateMarches', 'act1HearthmereAshes', 'act1Complete', 'act2Started'],
-    ['severedCauseway', 'ascensionWastes', 'act2AureateReckoning', 'act2Complete', 'act3Started']
+    ['pilgrimRoad', 'aureateMarches', ['act1HearthmereAshes'], 'act1Complete', 'region.aureateMarches.reached'],
+    ['severedCauseway', 'ascensionWastes', ['act2MissingReports','act2AureateReckoning'], 'act2Complete', 'act3Started']
   ];
-  for (const [routeId, destinationId, questId, completedFlag, startedFlag] of arrivals) {
+  for (const [routeId, destinationId, questIds, completedFlag, startedFlag] of arrivals) {
     if (world.regionId !== destinationId || getStoryFlag(player, startedFlag)) continue;
-    const completed = player.questState?.completed?.[questId] || player.quests?.completed?.[questId];
+    const completed = questIds.some(id=>player.questState?.completed?.[id] || player.quests?.completed?.[id]);
     if (!completed || !getStoryFlag(player, completedFlag)) continue;
     setRouteState(player, routeId, { completed: true, completedAt: Date.now(), arrivedOnFoot: true });
     if (player.travel.activeRoute?.id === routeId) player.travel.activeRoute = null;
@@ -393,6 +393,6 @@ function readableItemName(id) {
 
 function readableQuestName(id) {
   if (id === 'act1HearthmereAshes') return 'Act 1: The Stolen Dawn';
-  if (id === 'act2AureateReckoning') return 'Act 2: Aureate Reckoning';
+  if (id === 'act2MissingReports' || id === 'act2AureateReckoning') return 'Act II completion';
   return readableItemName(id);
 }

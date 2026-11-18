@@ -710,6 +710,19 @@ export const ITEMS = {
     desc: 'A rare logging axe for spiritwood, briarheart timber, and ancient roots.'
   },
 
+  concordantRelic_lastStandBastion: {
+    id:'concordantRelic_lastStandBastion', name:'The Iron Vow', type:'quest', rarity:'relic',
+    stack:true, value:0, noTrade:true, questItem:true, desc:'Kaedros\u2019s black-iron signet. The Concordant Ward recognizes its testimony.'
+  },
+  concordantRelic_forgottenOssuary: {
+    id:'concordantRelic_forgottenOssuary', name:'The Mourning Bell', type:'quest', rarity:'relic',
+    stack:true, value:0, noTrade:true, questItem:true, desc:'Morisyl\u2019s silver bell. Its note carries the testimony of the dead.'
+  },
+  concordantRelic_unfinishedHour: {
+    id:'concordantRelic_unfinishedHour', name:'The Lucid Mirror', type:'quest', rarity:'relic',
+    stack:true, value:0, noTrade:true, questItem:true, desc:'Elyndra\u2019s mirror. It distinguishes a living will from its reflections.'
+  },
+
   pilgrimRoadPermit: {
     id: 'pilgrimRoadPermit',
     name: 'Pilgrim Road Permit',

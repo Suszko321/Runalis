@@ -11,6 +11,14 @@ meaningful duplication or coverage/coupling risks; LOW = cleanup with limited im
 An investigation is not a demonstrated defect. File length and dependency cycles
 do not establish severity by themselves.
 
+## Act II campaign and admission
+
+- **Implemented.** The Three Seraphs adds three independently visitable domains, physical relic custody, a host-owned admission decision, Zarynth's inner ward and the aqueduct finale. Character saves retain the admission, individual resolutions, outbreak outcome and completed instance state. Previous completed campaign records and earned rewards are retained. See [N-001 and N-002](RUNALIS_NARRATIVE_AUDIT.md).
+- **Confirmed corrections.** The Shattered Choir no longer grants Act II completion. The Ascension Spire story callback requires the main boss and Act III progression. The new Concordant Gate verifies all three relics after party readiness. The Act II completion flag comes from Mael's final report.
+- **Coverage.** `verify-act2-campaign.mjs` exercises reachability, all three duels, all three negotiated routes, the three aqueduct outcomes, unanimous admission, save and reload, and boss tell geometry. `verify-act2-browser.cjs` exercises profile launch, Mael's interaction, Ward denial, capital admission and Canvas rendering. Full-length balance and remote network play remain unverified.
+- **Seraph polish.** The three domains now have separate trial annexes, animated pixel-art custodians and distinct mob silhouettes. Optional freight, funeral and parallax routes persist their intermediate steps. Attack volleys use a second committed warning before the follow-up hit. The instance repair adds missing fixtures and updates surviving enemies while preserving killed enemies and claimed caches. The model suite exercises retries, an interrupted trial, supply deductions, legacy instance repair and both bell volleys. Browser smoke checks draw all three custom bosses and trial fixtures.
+- **Historical baseline.** `verify-world-rebuild-contracts.mjs` has the same two failures on the starting revision and the updated code. Its captured roster expects the retired `hollowCrown` quest and an older `nav-hearthmereFrontier-pilgrimBridge` stone.
+
 ## Correctness and progression: act first
 
 ### E01 · CRITICAL · Save migration/quota can discard characters · FIXED, local validation passed

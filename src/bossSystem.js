@@ -1,3 +1,4 @@
+import {ACT2_PHASE_LINES,buildAct2BossTell,releaseAct2BossTell} from './act2BossPatterns.js';
 import {vampireIncoming} from './vampireRules.js';
 import {encounterRng} from './encounterData.js';
 import { rewardAbilitySupport } from './abilityMasterySystem.js';
@@ -57,7 +58,7 @@ export function updateBossFramework(enemy, world, player, dt, now, log, canStart
   enemy.boss.specialTimer = Math.max(0, (enemy.boss.specialTimer || 0) - dt);
 
   if (enemy.boss.specialTimer <= 0 && canStartAttack) {
-    beginBossSpecial(enemy, world, now);
+    beginBossSpecial(enemy, world, now, player);
   }
 }
 
@@ -189,9 +190,9 @@ function maybeTriggerBossIntro(enemy, world, player, now, log) {
   return true;
 }
 
-function beginBossSpecial(enemy, world, now=performance.now()/1000) {
-  const tell = getBossTellData(enemy);
-  const profile = getEnemyAttackProfile(tell.profileKind);
+function beginBossSpecial(enemy, world, now=performance.now()/1000, player=null) {
+  const tell = enemy.act2Boss&&player ? buildAct2BossTell(enemy,player) : getBossTellData(enemy);
+  const profile = enemy.act2Boss ? null : getEnemyAttackProfile(tell.profileKind);
 
   enemy.boss.pendingSpecial = {
     ...tell,
@@ -208,7 +209,7 @@ function beginBossSpecial(enemy, world, now=performance.now()/1000) {
     y: enemy.y
   };
 
-  beginEnemyAttackPresentation(enemy,{...enemy.boss.pendingSpecial,kind:'bossSpecial',x:enemy.x+(enemy.dirX??0),y:enemy.y+(enemy.dirY??1)},now);
+  beginEnemyAttackPresentation(enemy,{...enemy.boss.pendingSpecial,kind:'bossSpecial',x:enemy.x+(tell.facingX??enemy.dirX??0),y:enemy.y+(tell.facingY??enemy.dirY??1)},now);
   playSfx('bossWindup', { volume: 0.72, throttle: 0.2 });
 }
 
@@ -221,12 +222,20 @@ function updatePendingBossSpecial(enemy, world, player, dt, now, log) {
     y: enemy.y
   };
 
-  syncEnemyAttackPresentation(enemy,{...pending,kind:'bossSpecial',x:enemy.x+(enemy.dirX??0),y:enemy.y+(enemy.dirY??1)},now);
+  syncEnemyAttackPresentation(enemy,{...pending,kind:'bossSpecial',x:enemy.x+(pending.facingX??enemy.dirX??0),y:enemy.y+(pending.facingY??enemy.dirY??1)},now);
   if (pending.time > 0) return;
 
   releaseEnemyAttackPresentation(enemy,now);
-  runBossSpecial(enemy, world, player, now, log);
+  let volley;
+  if (enemy.act2Boss) volley=releaseAct2BossTell(enemy,world,player,now,damageNearbyParty);
+  else runBossSpecial(enemy, world, player, now, log);
   playSfx('bossImpact', { volume: 0.9, throttle: 0.16 });
+  if(volley){
+    enemy.boss.pendingSpecial=volley;
+    enemy.bossTell=volley;
+    beginEnemyAttackPresentation(enemy,{...volley,kind:'bossSpecial',x:enemy.x+volley.facingX,y:enemy.y+volley.facingY},now);
+    return;
+  }
   enemy.boss.pendingSpecial = null;
   enemy.bossTell = null;
   enemy.boss.recoveryUntil = now + Number(pending.recovery || 0.9);
@@ -326,6 +335,7 @@ function enterBossPhase(enemy, world, player, phase, log) {
 }
 
 function getBossPhaseLine(enemy, phase) {
+  if (enemy.act2Boss) return ACT2_PHASE_LINES[enemy.act2Boss]?.[phase-2];
   const name = enemy?.boss?.name || enemy?.bossName || enemy?.name || 'The boss';
   const type = enemy?.boss?.type || getBossType(enemy);
 
