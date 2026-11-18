@@ -236,10 +236,25 @@ function drawCoopPlayers(ctx, player, camera, world, allies = getActiveCoopPlaye
     drawCombatProjectiles(ctx, ally, camera);
     drawAttackVisual(ctx, ally, camera);
     drawActionStateVisuals(ctx, ally, camera);
+    if (ally !== player && ally.networkRemote && ally.hp > 0 && ally.hp < ally.maxHp) {
+      drawRemotePlayerHealth(ctx, p.x, p.y - 54, ally.hp, ally.maxHp);
+    }
     drawPvpEliminatedIndicator(ctx, ally, camera);
     drawDownedIndicator(ctx, ally, camera);
     drawFloatingTexts(ctx, ally, camera);
   }
+}
+
+function drawRemotePlayerHealth(ctx, x, y, health, maximum) {
+  const width = 38, fill = Math.round(34 * health / maximum);
+  ctx.save();
+  ctx.fillStyle = 'rgba(2,3,5,.82)';
+  ctx.fillRect(Math.round(x - width / 2), Math.round(y - 1), width, 7);
+  ctx.fillStyle = '#5a1f27';
+  ctx.fillRect(Math.round(x - width / 2 + 2), Math.round(y + 1), 34, 3);
+  ctx.fillStyle = health / maximum < .28 ? '#d86a4a' : '#c84845';
+  ctx.fillRect(Math.round(x - width / 2 + 2), Math.round(y + 1), fill, 3);
+  ctx.restore();
 }
 
 function drawPvpEliminatedIndicator(ctx, actor, camera) {

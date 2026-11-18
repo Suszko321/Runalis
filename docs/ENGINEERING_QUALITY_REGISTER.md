@@ -853,3 +853,8 @@ memory, security or gameplay readiness claim follows solely from a green build.
 ### Player Health display on HUD
 
 - Removed the overhead Health bar from the player and co-op player render paths. Player Health is displayed by the existing HUD unit frames.
+
+### Injured online player overhead Health
+
+- Other online players show a small overhead Health bar only while alive and below maximum Health. The remote-actor identity supplied by the online party controls eligibility; the local player and local co-op actors use their HUD frames.
+- verify-player-health-bars.mjs exercises the production renderer for solo, local co-op, split-screen viewports, online host and guest representations, multiple remote peers, full recovery, downed and inactive actors.
