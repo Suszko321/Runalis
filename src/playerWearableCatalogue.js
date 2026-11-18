@@ -247,7 +247,7 @@ export const WEARABLE_CATALOGUE_ART={
     "part": 0,
     "color": "#245366",
     "iconColumns": 8,
-    "headOffset": -5,
+    "headOffset": 1,
     "rects": [
       [
         20,
@@ -278,7 +278,7 @@ export const WEARABLE_CATALOGUE_ART={
     "part": 0,
     "color": "#70543a",
     "iconColumns": 8,
-    "headOffset": -5,
+    "headOffset": 1,
     "rects": [
       [
         20,
@@ -325,7 +325,7 @@ export const WEARABLE_CATALOGUE_ART={
     "part": 0,
     "color": "#4b325e",
     "iconColumns": 8,
-    "headOffset": -5,
+    "headOffset": 1,
     "rects": [
       [
         20,
@@ -364,7 +364,7 @@ export const WEARABLE_CATALOGUE_ART={
     "part": 0,
     "color": "#4b2d59",
     "iconColumns": 8,
-    "headOffset": -5,
+    "headOffset": 1,
     "rects": [
       [
         20,
@@ -634,7 +634,7 @@ export const WEARABLE_CATALOGUE_ART={
     "part": 0,
     "color": "#3f6038",
     "iconColumns": 8,
-    "headOffset": -5,
+    "headOffset": 1,
     "rects": [
       [
         20,
