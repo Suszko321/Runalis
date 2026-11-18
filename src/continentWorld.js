@@ -41,6 +41,7 @@ function buildBlueprint(){
   e.combatLevel=e.level=range[0]+Math.round(Math.min(1,Math.max(0,(e.x/TILE-range[2])/304))*(range[1]-range[0]));
   e.baseCombatXp=e.xp=Math.max(e.xp||0,enemyXPForLevel(e.combatLevel,e.elite?1.4:1));
  }
+ enemies.push(...scene.enemies);
  const south=objects.find(o=>o.id==='capital-gate-prototype');if(south)Object.assign(south,{gateId:'south',propType:'continentGate',artWidth:170,artHeight:165,style:'orrakai',hideLabel:true});
  // A retained quest POI had no discovery marker in the old implementation.
  if(!objects.some(o=>o.poiId==='lanternMarsh'))objects.push({id:'lanternMarsh-discovery',kind:'poiMarker',poiId:'lanternMarsh',name:'Lantern Marsh',x:245*TILE,y:325*TILE,sourceRegionId:'hearthmereFrontier',decorative:true,interactable:false,hideLabel:true});

@@ -1,6 +1,6 @@
 // Bounded collision chunks behind the existing Array-compatible tile contract.
 // Immutable authored cells are packed; texture noise never decides macro geography.
-import {CONTINENT_WIDTH,CONTINENT_HEIGHT,continentRegionAt,continentEcologyAt,CONTINENT_ROADS,CONTINENT_RIVERS,CONTINENT_LAKES,CONTINENT_ESCARPMENTS,continentRoadAt} from './continentDefinition.js';
+import {CONTINENT_WIDTH,CONTINENT_HEIGHT,continentRegionAt,continentEcologyAt,CONTINENT_ROADS,CONTINENT_RIVERS,CONTINENT_LAKES,CONTINENT_ESCARPMENTS,ACT2_TERRACES} from './continentDefinition.js';
 import {routeDistance} from './echorynGeography.js';
 export const TERRAIN_CHUNK_TILES=24,MAX_COLLISION_CHUNKS=80;
 const integer=k=>typeof k==='string'&&/^\d+$/.test(k);
@@ -42,6 +42,21 @@ export function createContinentalTiles(authored,{structures=[],clearings=[]}={})
    for(const r of features.filter(r=>CONTINENT_RIVERS.includes(r)))if(routeDistance(x+.5,y+.5,r)<r.width/2){t.biome='water';t.passable=false;t.riverId=r.id;}
    for(const l of CONTINENT_LAKES)if(((x+.5-l.x)/l.rx)**2+((y+.5-l.y)/l.ry)**2<1){t.biome='water';t.passable=false;t.lakeId=l.id;}
    for(const e of CONTINENT_ESCARPMENTS){if(x>=e.x&&x<e.x+e.w&&y>=e.y&&y<e.y+e.h){const gap=e.gaps.some(([a,b])=>x-e.x>=a&&x-e.x<=b);Object.assign(t,{biome:gap?'path':'cliff',passable:gap,elevation:e.level,escarpment:e.id,connector:gap?e.id:null});}else if(x>=e.x&&x<e.x+e.w&&y>=e.y-15&&y<e.y)t.elevation=e.level;}
+   for(const e of ACT2_TERRACES){
+    const dx=x-e.x,dy=y-e.y;
+    if(dx<0||dx>=e.w||dy< -3||dy>=e.h+3||t.biome==='water')continue;
+    if(dy<0||dy>=e.h){
+     const [a,b]=dy<0?e.north:e.south;
+     if(x>=a&&x<=b)t.terraceApproach=e.style;
+     continue;
+    }
+    const edge=dy<2?'north':dy>=e.h-2?'south':dx===0?'west':dx===e.w-1?'east':null;
+    const stair=edge&&e[edge]&&x>=e[edge][0]&&x<=e[edge][1];
+    const path=(dy<e.h/2?e.north:e.south);
+    Object.assign(t,{terraceStyle:e.style,terraceEdge:edge,terraceLip:dy===0||dy===e.h-2,
+      terracePath:x>=path[0]&&x<=path[1],elevation:2});
+    if(edge)Object.assign(t,{biome:stair?'path':'cliff',passable:!!stair,escarpment:e.id,connector:stair?e.id:null});
+   }
   }
   // Only authored roads bridge a watercourse. Outside crossings the water is solid.
   for(const r of features.filter(r=>CONTINENT_ROADS.includes(r)))if(routeDistance(x+.5,y+.5,r)<r.width/2+.9){const wet=t.biome==='water';Object.assign(t,{biome:'path',passable:true,roadId:r.id,roadClass:r.roadClass,bridge:wet||t.bridge,connector:t.escarpment||null});}

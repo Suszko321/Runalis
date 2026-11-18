@@ -2,6 +2,9 @@
 // coordinates are independent of enemy, loot and weather randomness.
 import {SERAPH_DOMAINS,ZARYNTH_CAPITAL} from './act2CampaignData.js';
 import {TILE} from './data.js';
+import {makeEnemy} from './overworldUtils.js';
+import {configureEncounterEnemy,geographicEncounterProfile} from './encounterData.js';
+import {dressAct2Overworld} from './act2Overworld.js';
 
 const SCENE_VERSION=1;
 const point=(x,y)=>({x:Math.round((x+.5)*TILE),y:Math.round((y+.5)*TILE)});
@@ -9,7 +12,7 @@ const point=(x,y)=>({x:Math.round((x+.5)*TILE),y:Math.round((y+.5)*TILE)});
 // Bounds and gaps describe actual solid footprints in tile coordinates.
 // All other object/location coordinates use the normal runtime pixel units.
 export function createContinentalScenes(){
- const objects=[],locations=[],navStones=[],encounterAreas=[],structures=[],clearings=[];
+ const objects=[],enemies=[],locations=[],navStones=[],encounterAreas=[],structures=[],clearings=[];
  const site=(id,name,x,y,region,lore,r=11)=>{
   const value={id:`continent-${id}`,name,...point(x,y),tileX:x,tileY:y,sourceRegionId:region,regionId:region,lore,description:lore,sceneVersion:SCENE_VERSION,discoveryRadius:Math.max(180,r*TILE)};
   locations.push(value);clearings.push({id:value.id,x,y,r:['saint-orvane','zarynth-trade-ward'].includes(id)?r:Math.min(r,8)});
@@ -41,6 +44,15 @@ export function createContinentalScenes(){
   Object.assign(objects.at(-1),{kind:'signpost',name:heading,talk:text,decorative:false,interactable:true,r:14});
  };
  const encounter=(site,id,x,y,rx,ry,tier,kinds)=>encounterAreas.push({id:`${site.id}-${id}`,sourceRegionId:site.sourceRegionId,regionId:site.sourceRegionId,x,y,rx,ry,r:Math.max(rx,ry),worldX:(x+.5)*TILE,worldY:(y+.5)*TILE,tier,enemyKinds:kinds,quietRoad:true,roadBuffer:7,maxActive:4});
+ const pack=(id,region,x,y,level,members)=>{
+  const profile={...geographicEncounterProfile(x,y),id:region,levels:[level,level]};
+  for(const [slot,[kind,name,dx,dy,modifier]] of members.entries()){
+   const enemy=makeEnemy(kind,`act2-overworld-${id}-${slot}`,name,x+dx,y+dy,{sourceRegionId:region});
+   configureEncounterEnemy(enemy,profile,enemy.id,{rank:modifier?'elite':'ordinary'});
+   if(modifier){enemy.eliteModifiers=[modifier];enemy.eliteModifier=modifier;}
+   enemies.push(enemy);
+  }
+ };
  const grove=(site,id,x,y,count,type='Pine',extra={})=>{
   // Authored staggered silhouette groups, deliberately leaving a walkable center.
   for(let i=0;i<count;i++)art(site,`${id}-${i}`,type,x+(i%3-1)*4+(i%2)*1.5,y+Math.floor(i/3)*4,{variant:i%4,artWidth:100+(i%3)*14,artHeight:150+(i%4)*16,...extra});
@@ -93,6 +105,10 @@ export function createContinentalScenes(){
  building(s,'records-wing',1004,160,12,7,'aureate');
  art(s,'confession-wall','InscribedWall',1018,179,{style:'aureate',artWidth:160,artHeight:86});
  art(s,'court-water','Fountain',995,176,{style:'aureate',artWidth:115,artHeight:75});
+ for(const [i,x] of [981,1009].entries()){
+  art(s,`walk-banner-${i}`,'SignalStandard',x,182,{style:'aureate',artWidth:70,artHeight:118});
+  art(s,`walk-basin-${i}`,'Fountain',x,177,{style:'aureate',artWidth:79,artHeight:54});
+ }
  art(s,'scales','Scales',978,188,{artWidth:92,artHeight:96});
  sign(s,987,196,'Saint Orvane pilgrimage court. Quartermaster and companions on the south approach. Confession is recorded.');
  const examiner=(scene,x,y)=>interactive(scene,'act2-examiner','npc','Examiner Sera',x,y,{
@@ -119,6 +135,7 @@ export function createContinentalScenes(){
  resource(s,'glass','runestone','veyrglassShard',1170,225,'Blueglass Spill');
  art(s,'maintenance','Stairs',1184,215,{style:'aureate',artWidth:128,artHeight:90});
  sign(s,1167,222,'Aqueduct service path. Keep the crossing clear for the water carts.');
+ for(const [i,x] of [1161,1173,1185].entries())art(s,`water-gauge-${i}`,'Sluice',x,212,{style:'aureate',artWidth:66,artHeight:71});
 
  s=site('clean-hands','Abbey Road Shelter',1224,292,'aureateMarches','White stone arches shelter a roadside ward. The clean outward wall hides soot around the inward-facing braziers.',15);
  building(s,'ward',1214,277,10,6,'aureate',{type:'Abbey'});art(s,'brazier','Brazier',1228,287,{style:'aureate',artWidth:64,artHeight:84});
@@ -235,8 +252,8 @@ export function createContinentalScenes(){
 
  const landmarks={
   lastStandBastion:['Gate','frontier','Bastion Gate','The watch takes refugees by the east cistern. Kaedros hears petitioners past the muster hall.'],
-  forgottenOssuary:['Abbey','blackglass','Descent into the Ossuary','Speak softly below. The keeper has heard every name ever carried down this road.'],
-  unfinishedHour:['Spire','cosmic','Enter the Broken Observatory','Nothing you see beyond the lens is promised. Keep a hand on the stone until the light settles.']
+  forgottenOssuary:['BellFrame','blackglass','Descent into the Ossuary','Speak softly below. The keeper has heard every name ever carried down this road.'],
+  unfinishedHour:['StarInstrument','cosmic','Enter the Broken Observatory','Nothing you see beyond the lens is promised. Keep a hand on the stone until the light settles.']
  };
  for(const domain of Object.values(SERAPH_DOMAINS)){
   const [x,y]=domain.site,[silhouette,style,entrance,inscription]=landmarks[domain.id];
@@ -248,6 +265,7 @@ export function createContinentalScenes(){
   hearth(s,x+5,y+3);
   stone(s,x+3,y+5,domain.name);
  }
+ dressAct2Overworld({site,art,sign,pack,interactive});
 
  // The public Trade Ward services are outside the Concordant Ward.
  s=site('zarynth-trade-ward','Zarynth Trade Ward',2732,436,'zarynthApproach','The capital begins here with customs yards, red roof stores and a traveler shrine. Merchants receive arriving caravans in this ward while the northern city gates remain closed.',38);
@@ -281,5 +299,5 @@ export function createContinentalScenes(){
  });
  examiner(s,2745,398);
 
- return {version:SCENE_VERSION,objects,locations,navStones,encounterAreas,structures,clearings};
+ return {version:SCENE_VERSION,objects,enemies,locations,navStones,encounterAreas,structures,clearings};
 }

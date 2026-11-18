@@ -28,7 +28,7 @@ export function createPopulationPatrol(world,enemy,rng=encounterRng(enemy.id)){
 export function buildPopulationAreas(world){
  const areas=[...(world.encounterAreas||[])].map(a=>({...a,populationType:'resident'}));
  for(const l of world.authoredLocations||[]){
-  if(!l.id||/orrakai|outpost|market|town|gate|ward|sanctuary|navstone|arrival/i.test(`${l.id} ${l.name}`))continue;
+  if(!l.id||l.authoredGarrison||/orrakai|outpost|market|town|gate|ward|sanctuary|navstone|arrival/i.test(`${l.id} ${l.name}`))continue;
   if(areas.some(a=>Math.hypot(a.x-l.x/TILE,a.y-l.y/TILE)<12))continue;
   areas.push({id:`site-population-${l.id}`,x:l.x/TILE,y:l.y/TILE,rx:7,ry:6,populationType:/camp|nest|ruin|grave|crypt/i.test(`${l.id} ${l.name}`)?'resident':'patrol',optional:true});
  }

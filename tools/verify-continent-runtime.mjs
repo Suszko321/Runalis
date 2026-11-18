@@ -9,6 +9,7 @@ import {captureContinentalState} from '../src/continentPersistence.js';
 import {updateOverworldEncounters} from '../src/overworldEncounterSystem.js';
 import {setStoryFlag} from '../src/storyProgress.js';
 import {rememberHarvest} from '../src/worldExploration.js';
+import {LEGACY_ACT2} from '../src/act2CampaignData.js';
 const checks=[],report={};
 function check(name,fn){fn();checks.push(name);console.log('PASS '+name);}
 function fixture(){const player=createPlayer('Continental verification'),world=createWorld();Object.assign(player,world.spawn);return {world,player,canvas:{width:960,height:600},camera:{x:0,y:0},log(){},save(){},shake(){}};}
@@ -41,8 +42,8 @@ check('loaded continental runtime continues streaming at distant positions',()=>
  Object.assign(game.player,{x:lantern.x,y:lantern.y});game.world.continentRuntime.update(game,1);assert(game.world.objects.some(o=>o.id===lantern.id));assert(game.world.continentRuntime.stats().activeEntityChunks<=25);
 });
 check('physical region crossing advances eligible story progress, never early exploration',()=>{
- const g=fixture();Object.assign(g.player,{x:1150*32,y:305*32});g.world.continentRuntime.update(g,0);assert.equal(g.player.story.act,'act1');
- g.player.quests.completed.act1HearthmereAshes={id:'act1HearthmereAshes'};setStoryFlag(g.player,'act1Complete');g.world.continentRuntime.update(g,0);assert.equal(g.player.story.act,'act2');assert(g.player.quests.active.act2AureateReckoning);
+ const g=fixture();Object.assign(g.player,{x:1150*32,y:305*32});g.world.continentRuntime.update(g,0);assert.equal(g.player.story.act,'act1');assert(!g.player.quests.active.act2AshesAfterDawn);
+ g.player.quests.completed.act1HearthmereAshes={id:'act1HearthmereAshes'};setStoryFlag(g.player,'act1Complete');g.world.continentRuntime.update(g,0);assert.equal(g.player.story.act,'act2');assert(g.player.quests.active.act2AshesAfterDawn);assert(!g.player.quests.active[LEGACY_ACT2]);
 });
 check('encounter identities and geography survive reload without extra rewards or player scaling',()=>{
  function spawn(level){const g=fixture();g.player.combatLevel=level;g.player.worldMemory={elapsed:0};Object.assign(g.player,{x:708*32,y:160*32});g.world.continentRuntime.update(g,0);g.world.overworldEncounterState={timer:0,spawnSerial:1};updateOverworldEncounters(g,1,99999);return g;}

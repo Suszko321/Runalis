@@ -43,6 +43,84 @@ function wheel(c,p,x,y,r){
  for(let dy=-r+2;dy<=r-2;dy++){const half=Math.floor(Math.sqrt(Math.max(0,(r-2)**2-dy*dy)));rect(c,p.wood,x-half,y+dy,half*2+1,1);}
  rect(c,p.dark,x-r+3,y-1,r*2-5,2);rect(c,p.dark,x-1,y-r+3,2,r*2-5);rect(c,p.gold,x-2,y-2,4,4);
 }
+function ring(c,color,x,y,rx,ry,thickness){
+ for(let row=-ry;row<=ry;row++){
+  const outer=Math.floor(rx*Math.sqrt(1-(row/ry)**2));
+  const inner=Math.abs(row)<ry-thickness?Math.floor((rx-thickness)*Math.sqrt(1-(row/(ry-thickness))**2)):0;
+  if(inner){rect(c,color,x-outer,y+row,outer-inner+1,1);rect(c,color,x+inner,y+row,outer-inner+1,1);}
+  else rect(c,color,x-outer,y+row,outer*2+1,1);
+ }
+}
+
+function landmark(c,p,w,h,o,type){
+ const x=Math.floor(w/2),base=h-6;
+ if(type==='SignalStandard'){
+  const top=Math.round(h*.12),hem=Math.round(h*.67),left=Math.round(w*.23),right=Math.round(w*.76);
+  stone(c,p,x-w*.23,base-19,w*.46,17,true);stone(c,p,x-w*.33,base-5,w*.66,5);
+  wood(c,p,x-5,top-9,10,base-top+2,true);
+  rect(c,p.ink,left-7,top,right-left+14,7);rect(c,p.gold,left-6,top+1,right-left+12,2);
+  const cloth=o.style==='aureate'?'#a7783d':'#884c47',shade=o.style==='aureate'?'#745434':'#593737';
+  for(let col=left;col<=right;col++){
+   const fold=(col-left)%15,drop=Math.round(Math.abs(col-x)*.29)+(fold===0?3:0);
+   rect(c,p.ink,col,top+7,1,hem-top-drop+1);
+   rect(c,fold<4?shade:cloth,col,top+7,1,hem-top-drop-1);
+   rect(c,p.roofLight,col,hem-drop+2,1,2);
+  }
+  rect(c,p.gold,x-2,top+17,4,Math.round(h*.27));
+  rect(c,p.gold,x-11,top+27,22,3);rect(c,p.light,x-1,top+17,1,Math.round(h*.22));
+  rect(c,p.ink,right-9,hem-9,3,12);rect(c,p.ink,left+7,hem-5,4,8);
+  return;
+ }
+ if(type==='BellFrame'){
+  const pier=Math.round(w*.16),top=Math.round(h*.13),cy=Math.round(h*.53);
+  for(const xx of [w*.11,w*.73]){
+   stone(c,p,xx,top+6,pier,base-top-6,true);
+   stone(c,p,xx-7,top-2,pier+14,14);stone(c,p,xx-9,base-13,pier+18,15);
+   rect(c,p.glass,xx+6,cy-7,3,16);
+  }
+  wood(c,p,w*.11,top+16,w*.78,13);wood(c,p,x-4,top+28,8,cy-top-26,true);
+  for(let row=0;row<h*.29;row++){
+   const span=Math.round(w*(.105+.084*(row/(h*.29))**3));
+   rect(c,p.ink,x-span-1,cy+row,span*2+2,1);
+   rect(c,p.glass,x-span+2,cy+row,span*2-4,1);rect(c,p.light,x-span+4,cy+row,4,1);
+  }
+  const lip=cy+Math.round(h*.29);
+  rect(c,p.ink,x-w*.21,lip,w*.42,7);rect(c,p.gold,x-w*.2,lip+1,w*.4,2);rect(c,p.dark,x-4,lip+7,8,8);
+  if(o.damaged)for(let row=0;row<Math.round(h*.22);row++)rect(c,p.ink,x+11-Math.floor(row/5),lip-row,3,1);
+  return;
+ }
+ const ry=Math.round(h*.29),rx=Math.round(w*.32),cy=Math.round(h*.42);
+ stone(c,p,x-w*.35,base-13,w*.7,12,true);
+ if(type==='Waterwheel'){
+  for(const xx of [x-rx-17,x+rx-4])stone(c,p,xx,cy-10,21,base-cy+10,true);
+  wood(c,p,x-rx-17,cy-8,2*rx+34,16);
+  for(let i=0;i<8;i++){
+   const a=i*Math.PI/4;
+   for(let step=4;step<=100;step+=2){
+    if(o.damaged&&i===2&&step>45)continue;
+    rect(c,p.wood,x+Math.cos(a)*rx*step/100-3,cy+Math.sin(a)*ry*step/100-3,7,7);
+   }
+   rect(c,p.dark,x+Math.cos(a)*rx-6,cy+Math.sin(a)*ry-3,13,9);
+  }
+  ring(c,p.ink,x,cy,rx,ry,8);ring(c,p.wood,x,cy-1,rx-1,ry-2,5);ring(c,p.light,x,cy-2,rx-2,ry-3,2);
+  rect(c,p.ink,x-8,cy-8,16,16);rect(c,p.gold,x-5,cy-5,10,10);rect(c,p.light,x-4,cy-4,6,2);
+  for(let i=0;i<5;i++){rect(c,p.glass,x+10+i*6,cy+ry+3+i*2,3,7);rect(c,p.light,x+10+i*6,cy+ry+3+i*2,1,4);}
+  return;
+ }
+ for(const xx of [x-rx-8,x+rx-8])stone(c,p,xx,cy,16,base-cy,true);
+ stone(c,p,x-13,cy+ry*.58,26,base-cy-ry*.58,true);
+ ring(c,p.ink,x,cy,rx,ry,9);ring(c,p.gold,x,cy-1,rx-2,ry-2,5);ring(c,p.light,x-1,cy-2,rx-4,ry-3,2);
+ ring(c,p.ink,x,cy,Math.round(rx*.58),ry+8,7);ring(c,p.roofLight,x,cy,Math.round(rx*.56),ry+5,4);
+ ring(c,p.dark,x,cy,Math.round(rx*.95),Math.round(ry*.37),6);ring(c,p.gold,x,cy-1,Math.round(rx*.92),Math.round(ry*.34),2);
+ const lensX=Math.round(rx*.22),lensY=Math.round(ry*.43);
+ for(let row=-lensY;row<=lensY;row++){
+  const span=Math.round(lensX*(1-Math.abs(row)/(lensY+1)));
+  if(o.damaged&&row<0&&row%5===0)continue;
+  rect(c,p.ink,x-span-2,cy+row,span*2+4,1);rect(c,p.glass,x-span,cy+row,span*2,1);
+  rect(c,p.light,x-span+2,cy+row,Math.min(3,span),1);
+ }
+ rect(c,p.light,x-1,cy-7,2,8);rect(c,p.light,x-4,cy-4,8,2);
+}
 function architecture(c,p,w,h,o,type){
  const base=h-7;
  if(['House','Granary','Abbey','Tower'].includes(type)){
@@ -66,6 +144,19 @@ function architecture(c,p,w,h,o,type){
   if(type==='CausewayPier'){stone(c,p,w*.2,h*.2,w*.6,h*.75,true);stone(c,p,w*.12,h*.2-8,w*.76,10);}
   else if(type==='Ruin'){for(let i=0;i<5;i++){const ph=h*(.28+hash(i,Number(o.variant||0))*.65);stone(c,p,5+i*(w-12)/5,h-ph-5,Math.max(12,w*.12),ph,true);}for(let x=0;x<w-12;x+=22)stone(c,p,x,base-9+hash(x,2)*4,20,10);}
   else {const pier=Math.max(20,w*(type==='Gate'?.23:.16)),top=h*.25;stone(c,p,1,top,w-2,Math.max(18,h*.15),true);for(const x of [1,w-pier-1])stone(c,p,x,top,pier,base-top,true);for(let row=0;row<14;row++){const inset=Math.floor((14-row)*.8);rect(c,p.stone,pier+inset,top+h*.15+row,w-2*(pier+inset),1);}crenels(c,p,0,top,w);if(type==='Gate'){if(o.style==='imperial')for(const x of [0,w-pier-4])roof(c,p,x,1,pier+4,top-2);for(const x of [pier/2,w-pier/2]){rect(c,p.dark,x-7,top+24,14,35);rect(c,p.roof,x-5,top+25,10,28);rect(c,p.gold,x-1,top+30,2,14);}}}
+  if(type==='Aqueduct'&&o.style==='aureate'){
+   const band=Math.round(h*.31),pier=Math.max(20,w*.16),middle=w/2;
+   rect(c,p.dark,3,band,w-6,9);rect(c,p.light,3,band,w-6,1);
+   for(let xx=8;xx<w-9;xx+=11){
+    rect(c,'#456b72',xx,band+2,9,5);rect(c,'#80a9a1',xx,band+2,7,1);
+   }
+   stone(c,p,middle-11,band+8,22,15);
+   rect(c,p.ink,middle-3,band+10,6,7);rect(c,p.glass,middle-2,band+11,4,5);
+   for(const xx of [pier-6,w-pier+2]){
+    rect(c,'#839182',xx,band+9,4,Math.round(h*.32));
+    rect(c,'#a6a987',xx,band+29,2,Math.round(h*.15));
+   }
+  }
   return;
  }
  if(type==='Spire'){for(let row=2;row<h-7;row++){const half=Math.min(w*.36,(row+4)*.25),shift=(Number(o.variant||0)%2?1:-1)*Math.floor(row/27);rect(c,p.ink,w/2-half+shift,row,half*2+2,1);rect(c,p.dark,w/2-half+shift+2,row,half*2-3,1);rect(c,p.stone,w/2+shift-2,row,3,1);if(row%17===0)rect(c,p.light,w/2-half+shift+3,row,half-3,1);}return;}
@@ -88,7 +179,8 @@ function prop(c,p,w,h,o,type){
   else {wood(c,p,2,5,w-4,5);for(let x=13;x<w-8;x+=16){rect(c,p.gold,x,10,1,h*.28);rect(c,p.dark,x-3,h*.3,7,h*.25);rect(c,p.light,x-2,h*.3+2,3,h*.2);}}
   return;
  }
- if(type==='Wagon'){const top=h*.35;wood(c,p,3,top,w-6,b-12-top);wood(c,p,3,top+4,w-6,5);wood(c,p,4,b-15,w-8,5);for(const x of [w*.22,w*.77])wheel(c,p,x,b-10,Math.min(15,h*.17));for(const x of [w*.15,w*.8])wood(c,p,x,7,4,top+7,true);rect(c,p.light,w*.13,5,w*.73,3);return;}
+ if(type==='Wagon'){const top=h*.35;wood(c,p,3,top,w-6,b-12-top);wood(c,p,3,top+4,w-6,5);wood(c,p,4,b-15,w-8,5);for(const x of [w*.22,w*.77])wheel(c,p,x,b-10,Math.min(15,h*.17));for(const x of [w*.15,w*.8])wood(c,p,x,7,4,top+7,true);rect(c,p.light,w*.13,5,w*.73,3);
+  if(o.damaged){c.clearRect(w*.48,4,w*.38,8);for(let i=0;i<17;i++)c.clearRect(w-3-i,h*.35+i,3+i,1);rect(c,p.ink,w*.45,top+9,w*.32,3);rect(c,p.wood,w*.57,b-8,13,4);rect(c,p.light,w*.62,b-10,8,2);}return;}
  if(['Sign','WardStakes','Scales','Bell','Brazier'].includes(type)){
   wood(c,p,cx-3,5,6,b-5,true);wood(c,p,cx-14,b-4,28,5);
   if(type==='Sign'){wood(c,p,2,6,w-4,h*.38);rect(c,p.light,8,12,w-16,2);rect(c,p.gold,8,19,w*.53,1);}
@@ -115,10 +207,13 @@ function prop(c,p,w,h,o,type){
  }
 }
 const STRUCTURES=new Set(['House','Granary','Abbey','Tower','Gate','Wall','InscribedWall','Ruin','Aqueduct','CausewayPier','Spire']);
+const LANDMARKS=new Set(['SignalStandard','BellFrame','StarInstrument','Waterwheel']);
 export function makeNativeScenery(type,o,p){
  const w=Math.max(16,Math.round(o.artWidth||96)),h=Math.max(16,Math.round(o.artHeight||128));
  const canvas=typeof document!=='undefined'?document.createElement('canvas'):typeof OffscreenCanvas!=='undefined'?new OffscreenCanvas(w,h):null;if(!canvas)return null;
  canvas.width=w;canvas.height=h;const c=canvas.getContext('2d');c.imageSmoothingEnabled=false;
- if(STRUCTURES.has(type))architecture(c,p,w,h,o,type);else prop(c,p,w,h,o,type);
+ if(LANDMARKS.has(type))landmark(c,p,w,h,o,type);
+ else if(STRUCTURES.has(type))architecture(c,p,w,h,o,type);
+ else prop(c,p,w,h,o,type);
  return canvas;
 }

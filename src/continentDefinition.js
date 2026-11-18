@@ -57,6 +57,16 @@ export const CONTINENT_ESCARPMENTS=[
  {id:'longwater-bluff',x:1930,y:555,w:235,h:4,level:1,gaps:[[60,90],[126,150],[198,222]]},
  {id:'capital-west-rise',x:2650,y:478,w:175,h:3,level:1,gaps:[[12,27],[64,88]]}
 ];
+// Raised sites have a walkable crown bounded by retaining faces on all sides.
+// Stair spans are absolute tile coordinates, inclusive.
+export const ACT2_TERRACES=[
+ {id:'saffron-steps',x:1034,y:205,w:25,h:15,north:[1043,1046],south:[1047,1051],style:'ivory'},
+ {id:'blueglass-overlook',x:1162,y:187,w:26,h:18,north:[1178,1181],south:[1170,1174],style:'ivory'},
+ {id:'bastion-signal-ridge',x:1449,y:451,w:24,h:16,north:[1466,1469],south:[1455,1459],style:'iron'},
+ {id:'ossuary-bell-bank',x:1793,y:628,w:23,h:17,north:[1804,1807],south:[1810,1813],style:'silt'},
+ {id:'parallax-shelf',x:2305,y:539,w:18,h:17,north:[2316,2319],south:[2311,2314],style:'glass'},
+ {id:'estuary-spillway',x:2557,y:510,w:26,h:17,north:[2562,2565],south:[2574,2577],style:'silt'}
+];
 export function continentRegionAt(x,y){
  if(x<640&&y<480)return CONTINENT_REGIONS[0];
  let result=CONTINENT_REGIONS[1],best=Infinity;

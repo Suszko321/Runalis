@@ -14,7 +14,7 @@ export const SERAPH_DOMAINS = {
     id: 'forgottenOssuary', name: 'Ossuary of Forgotten Names', quest: 'act2DeadRemember',
     guardian: 'Morisyl, Keeper of the Last Names', relic: 'The Mourning Bell', oath: 'Remembrance',
     level: 26, theme: 'grave', color: '#9bd5d6', bossKind: 'gravePriest',
-    site: [1822, 645], road: [[1830,605],[1818,622],[1822,645]],
+    site: [1822, 645], road: [[1830,605],[1819,606],[1818,622],[1822,645]],
     description: 'An Orunic burial city. A road of unmarked stones descends below the southern bank.'
   },
   unfinishedHour: {

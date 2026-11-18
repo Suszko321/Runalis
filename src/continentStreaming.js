@@ -41,7 +41,7 @@ export function createContinentalRuntime(world,{objects,enemies,terrain}){
   for(let y=chunk.cy*ENTITY_CHUNK_TILES+3;y<(chunk.cy+1)*ENTITY_CHUNK_TILES;y+=7)for(let x=chunk.cx*ENTITY_CHUNK_TILES+3;x<(chunk.cx+1)*ENTITY_CHUNK_TILES;x+=7){
    if(x<640&&y<480)continue;
    const seed=hash(x,y),px=x+(seed-.5)*3,py=y+(hash(y,x)-.5)*3,t=terrain.get(Math.floor(px),Math.floor(py));
-   if(!t||t.passable===false||t.continentClearing||t.roadId||t.bridge||world.continentClearings.some(c=>Math.hypot(px-c.x,py-c.y)<c.r+2))continue;
+   if(!t||t.passable===false||t.continentClearing||t.roadId||t.bridge||t.terraceStyle||t.terraceApproach||world.continentClearings.some(c=>Math.hypot(px-c.x,py-c.y)<c.r+2))continue;
    const eco=continentEcologyAt(px,py),road=continentRoadAt(px,py);if(road)continue;
    let propType=eco==='highland'?'continentPine':eco==='marsh'?'continentReedBed':eco==='aureate'?'continentFarm':eco==='ascension'?'continentRuin':'continentPine';
    if(eco==='aureate'&&seed>.62)continue;if(eco==='ascension'&&seed>.38)continue;

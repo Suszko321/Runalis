@@ -55,6 +55,17 @@ async function main(){
       return !!g.player.quests.completed.act2AshesAfterDawn;
     });
     assert(afterMael);
+    await page.evaluate(async()=>{
+      const g=act2Game(),{createContinentalWorld}=await import('/src/continentWorld.js');
+      g.world=createContinentalWorld({spawnRegionId:'aureateMarches',player:g.player});
+      const shelf=g.world.authoredLocations.find(o=>o.id==='continent-blueglass-overlook');
+      Object.assign(g.player,{x:shelf.x,y:shelf.y});
+      g.world.continentRuntime.refresh(g);
+    });
+    await page.waitForFunction(()=>{
+      const guards=act2Game().world.enemies.filter(e=>e.id.startsWith('act2-overworld-blueglass-headworks-'));
+      return guards.length===4&&guards.filter(e=>e.hasDetectedPlayer||e.isInCombat).length>=2;
+    },{},{timeout:5000});
     const outcomes=await page.evaluate(async()=>{
       const g=act2Game();
       const {createContinentalWorld}=await import('/src/continentWorld.js');
@@ -114,7 +125,7 @@ async function main(){
     });
     assert(rendered.every(([,colors,mobs])=>colors>12&&mobs>=8),JSON.stringify(rendered));
     assert.deepEqual(errors,[]);
-    console.log('PASS browser launch, Mael, ward denial, capital admission, all three custom boss sprites, tells and mechanism draws');
+    console.log('PASS browser launch, Mael, overworld pack engagement, ward denial, capital admission, custom boss sprites, tells and mechanism draws');
   } finally {
     if(browser)await browser.close();
   }

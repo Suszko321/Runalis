@@ -20,7 +20,7 @@ const PALETTES={
  cosmic:{ink:'#272631',dark:'#45414e',stone:'#c0c1b3',light:'#e8e3cf',roof:'#767089',roofLight:'#b9afc8',gold:'#c8b978',glass:'#8a89b4',wood:'#656368',green:'#656f68'},
  blackglass:{ink:'#151d25',dark:'#273041',stone:'#4a5764',light:'#889caa',roof:'#3d4557',roofLight:'#778095',gold:'#9cacbd',glass:'#918db5',wood:'#5b6570',green:'#465563'}
 };
-const KNOWN=new Set(['Court','Wall','House','Granary','Abbey','Tower','Gate','Pine','Willow','Farm','Market','Ruin','Aqueduct','CausewayPier','Spire','Sign','InscribedWall','TimberStack','Wagon','Fountain','Scales','Stairs','Boardwalk','FishRack','ReedBed','WardStakes','Bell','Brazier','Sluice','Cairn']);
+const KNOWN=new Set(['Court','Wall','House','Granary','Abbey','Tower','Gate','Pine','Willow','Farm','Market','Ruin','Aqueduct','CausewayPier','Spire','Sign','InscribedWall','TimberStack','Wagon','Fountain','Scales','Stairs','Boardwalk','FishRack','ReedBed','WardStakes','Bell','Brazier','Sluice','Cairn','SignalStandard','BellFrame','StarInstrument','Waterwheel']);
 
 export function drawContinentalObject(ctx,o,camera,player=null){
  if(!o?.propType?.startsWith('continent'))return false;
