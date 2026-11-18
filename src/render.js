@@ -205,8 +205,6 @@ function drawPlayer(ctx, player, camera, world) {
   });
   drawPlayerGroundIndicator(ctx,player,camera,1,stance.ready);
 
-  const p = screen(player, camera);
-  hp(ctx, p.x, p.y - 54, player.hp, player.maxHp);
   drawPvpEliminatedIndicator(ctx, player, camera);
   drawDownedIndicator(ctx, player, camera);
 }
@@ -238,7 +236,6 @@ function drawCoopPlayers(ctx, player, camera, world, allies = getActiveCoopPlaye
     drawCombatProjectiles(ctx, ally, camera);
     drawAttackVisual(ctx, ally, camera);
     drawActionStateVisuals(ctx, ally, camera);
-    hp(ctx, p.x, p.y - 54, ally.hp, ally.maxHp);
     drawPvpEliminatedIndicator(ctx, ally, camera);
     drawDownedIndicator(ctx, ally, camera);
     drawFloatingTexts(ctx, ally, camera);
@@ -2193,31 +2190,6 @@ function isOnScreen(ctx, x, y, margin = 60) {
     x <= ctx.canvas.width + margin &&
     y <= ctx.canvas.height + margin
   );
-}
-
-function hp(ctx, x, y, value, max) {
-  const safeMax = Math.max(1, max || 1);
-  const pct = Math.max(0, Math.min(1, (value || 0) / safeMax));
-  const width = 38;
-  const fillWidth = Math.round((width - 4) * pct);
-
-  ctx.fillStyle = 'rgba(2,3,5,.82)';
-  ctx.fillRect(Math.round(x - width / 2), Math.round(y - 1), width, 7);
-
-  ctx.fillStyle = '#5a1f27';
-  ctx.fillRect(Math.round(x - width / 2 + 2), Math.round(y + 1), width - 4, 3);
-
-  ctx.fillStyle = pct < 0.28 ? '#d86a4a' : '#c84845';
-  ctx.fillRect(Math.round(x - width / 2 + 2), Math.round(y + 1), fillWidth, 3);
-
-  ctx.globalAlpha = 0.58;
-  ctx.fillStyle = '#f3a098';
-  ctx.fillRect(Math.round(x - width / 2 + 2), Math.round(y + 1), fillWidth, 1);
-  ctx.globalAlpha = 1;
-
-  ctx.strokeStyle = 'rgba(237,240,242,0.25)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(Math.round(x - width / 2), Math.round(y - 1), width, 7);
 }
 
 function enemyNameLabel(ctx, text, x, y, color='#ff7777') {

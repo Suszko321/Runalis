@@ -849,3 +849,7 @@ memory, security or gameplay readiness claim follows solely from a green build.
 - Reproduced 13 authored living enemies within the stone's 600-pixel travel danger check. Unlike Castle Veyreign's stone, the Keep stone had no navSafeRadius and therefore bypassed sanctuary protection.
 - Moved the Keep stone six tiles north and assigned an 800-pixel sanctuary. Existing authored-enemy registration, saved-enemy restoration, streamed destination previews, population spawning/respawning and incoming-enemy checks use that radius. Existing attunements resolve the stone by its retained ID.
 - verify-keep-nav-sanctuary.mjs verifies the position, landing footprint, authored and newly registered enemies, old saved enemy positions, exclusion from spawn/respawn candidates and a real four-player teleport with its ration cost.
+
+### Player Health display on HUD
+
+- Removed the overhead Health bar from the player and co-op player render paths. Player Health is displayed by the existing HUD unit frames.
